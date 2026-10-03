@@ -1,0 +1,13 @@
+import { defineConfig } from "eslint/config";
+
+import { baseConfig, restrictEnvAccess } from "@jitaspace/eslint-config/base";
+import { reactConfig } from "@jitaspace/eslint-config/react";
+
+export default defineConfig(
+  {
+    ignores: ["dist/**", "coverage/**"],
+  },
+  baseConfig,
+  reactConfig,
+  restrictEnvAccess,
+);

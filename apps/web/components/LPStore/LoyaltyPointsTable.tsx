@@ -14,8 +14,6 @@ import {
 
 import type { AugmentedOffer } from "./pricing";
 import { DataTable } from "~/components/DataTable";
-import { usePreferencesStore } from "~/lib/preferences";
-import { LoyaltyPointsTableClassic } from "./LoyaltyPointsTableClassic";
 import {
   buyIskPerLp,
   buyProfit,
@@ -193,18 +191,18 @@ function makeRequiredItemsPriceColumn(
 }
 
 // ---------------------------------------------------------------------------
-// Experimental component (engine-agnostic, with per-table engine selector)
+// Component
 // ---------------------------------------------------------------------------
 
-const LoyaltyPointsTableExperimental = memo(
+export const LoyaltyPointsTable = memo(
   ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
-    const { sortedCorporations, augmentedOffers } = useAugmentedOffers({
+    const augmentedOffers = useAugmentedOffers({
       corporations,
       types,
       offers,
     });
 
-    const showCorporation = sortedCorporations.length > 1;
+    const showCorporation = corporations.length > 1;
     const showAkCost = offers.some((offer) => !!offer.akCost);
 
     const columns = useMemo<LpColumn[]>(
@@ -219,9 +217,10 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "corporationId",
           header: "Corporation",
-          // accessor returns the name so global filter + sort work by name
+          // accessor returns the name so search, sort and filter work by name
           accessor: (row) => row.corporationName ?? "",
           sortable: true,
+          filter: { type: "select" },
           defaultVisible: showCorporation,
           cell: corporationCell,
         },
@@ -237,9 +236,10 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "typeId",
           header: "Item",
-          // accessor returns the name so global filter + sort work by name
+          // accessor returns the name so search, sort and filter work by name
           accessor: (row) => row.typeName ?? "",
           sortable: true,
+          filter: { type: "select" },
           cell: itemCell,
         },
         {
@@ -247,6 +247,7 @@ const LoyaltyPointsTableExperimental = memo(
           header: "LP Cost",
           accessor: "lpCost",
           sortable: true,
+          filter: { type: "range", min: 0 },
           align: "right",
           cell: lpCostCell,
         },
@@ -255,6 +256,7 @@ const LoyaltyPointsTableExperimental = memo(
           header: "ISK Cost",
           accessor: "iskCost",
           sortable: true,
+          filter: { type: "range", min: 0 },
           align: "right",
           cell: iskCostCell,
         },
@@ -263,6 +265,7 @@ const LoyaltyPointsTableExperimental = memo(
           header: "AK Cost",
           accessor: "akCost",
           sortable: true,
+          filter: { type: "range", min: 0 },
           defaultVisible: showAkCost,
           align: "right",
           cell: akCostCell,
@@ -416,7 +419,9 @@ const LoyaltyPointsTableExperimental = memo(
         withGlobalFilter
         withColumnVisibility
         initialSort={{ columnId: "id", direction: "desc" }}
-        rowId={(row) => row.offerId}
+        // An offer id is only unique within one corporation's store: most
+        // offers appear in several, and /lp-store/all lists every store.
+        rowId={(row) => `${row.corporationId}:${row.offerId}`}
         verticalSpacing="xs"
         withTableBorder
         highlightOnHover
@@ -425,23 +430,4 @@ const LoyaltyPointsTableExperimental = memo(
     );
   },
 );
-LoyaltyPointsTableExperimental.displayName = "LoyaltyPointsTableExperimental";
-
-// ---------------------------------------------------------------------------
-// Public component — picks the implementation based on the experimental setting.
-// OFF (default): the original mantine-react-table table (unchanged behaviour).
-// ON: the engine-agnostic table with a per-table engine selector.
-// ---------------------------------------------------------------------------
-
-export const LoyaltyPointsTable = memo((props: LoyaltyPointsTableProps) => {
-  const experimentalEnabled = usePreferencesStore(
-    (state) => state.experimentalDataTables,
-  );
-
-  if (!experimentalEnabled) {
-    return <LoyaltyPointsTableClassic {...props} />;
-  }
-
-  return <LoyaltyPointsTableExperimental {...props} />;
-});
 LoyaltyPointsTable.displayName = "LoyaltyPointsTable";

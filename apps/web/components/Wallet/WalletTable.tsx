@@ -1,13 +1,7 @@
-import type {
-  MRT_Cell,
-  MRT_Column,
-  MRT_ColumnDef,
-  MRT_Row,
-} from "mantine-react-table";
 import { memo, useMemo } from "react";
-import { Badge, Group, rem, Text, Tooltip } from "@mantine/core";
-import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
+import { Badge, Group, Text, Tooltip } from "@mantine/core";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
@@ -16,6 +10,7 @@ import {
 } from "@jitaspace/eve-components";
 import { DateHoverCard, FormattedDateText, ISKAmount } from "@jitaspace/ui";
 
+import { DataTable } from "~/components/DataTable";
 import {
   getAccountingEntryType,
   getAccountingEntryTypeName,
@@ -45,30 +40,34 @@ export interface WalletJournalRow extends CharacterWalletJournalEntry {
 export const walletRowKey = (row: WalletJournalRow) =>
   `${row.subjectId}:${row.division ?? "c"}:${row.id}`;
 
-function OwnerCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
+/** A party to an entry, as an avatar and linked name. */
+function EntityCell({ entityId }: Readonly<{ entityId: number }>) {
   return (
     <Group wrap="nowrap" gap="xs">
-      <EveEntityAvatar entityId={row.original.subjectId} size="sm" />
-      <EveEntityAnchor
-        size="sm"
-        entityId={row.original.subjectId}
-        target="_blank"
-      >
-        <EveEntityName entityId={row.original.subjectId} />
+      <EveEntityAvatar entityId={entityId} size="sm" />
+      <EveEntityAnchor size="sm" entityId={entityId} target="_blank">
+        <EveEntityName entityId={entityId} />
       </EveEntityAnchor>
-      {row.original.division !== undefined && (
+    </Group>
+  );
+}
+
+function ownerCell(row: WalletJournalRow) {
+  return (
+    <Group wrap="nowrap" gap="xs">
+      <EntityCell entityId={row.subjectId} />
+      {row.division !== undefined && (
         <Badge size="xs" variant="light">
-          Div {row.original.division}
+          Div {row.division}
         </Badge>
       )}
     </Group>
   );
 }
 
-function RefTypeCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
-  const refType = row.original.ref_type;
-  const name = getAccountingEntryTypeName(refType);
-  const description = getAccountingEntryType(refType)?.description;
+function refTypeCell(row: WalletJournalRow) {
+  const name = getAccountingEntryTypeName(row.ref_type);
+  const description = getAccountingEntryType(row.ref_type)?.description;
 
   if (!description) {
     return <Text size="sm">{name}</Text>;
@@ -94,290 +93,207 @@ function RefTypeCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
   );
 }
 
-function DateCell({ cell }: Readonly<{ cell: MRT_Cell<WalletJournalRow> }>) {
+function dateCell(_row: WalletJournalRow, value: unknown) {
+  const date = value as Date;
   return (
-    <DateHoverCard date={cell.getValue<Date>()}>
-      <FormattedDateText size="sm" date={cell.getValue<Date>()} />
+    <DateHoverCard date={date}>
+      <FormattedDateText size="sm" date={date} />
     </DateHoverCard>
   );
 }
 
-function DateHeader({
-  column,
-}: Readonly<{ column: MRT_Column<WalletJournalRow> }>) {
-  return <em>{column.columnDef.header}</em>;
-}
-
-function ContextTypeCell({
-  row,
-}: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
-  return row.original.context_id_type ? (
+function contextTypeCell(row: WalletJournalRow) {
+  return row.context_id_type ? (
     <Badge size="sm" variant="light">
-      {row.original.context_id_type.replaceAll("_", " ")}
+      {row.context_id_type.replaceAll("_", " ")}
     </Badge>
   ) : undefined;
 }
 
-function FirstPartyCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
-  return (
-    <Group>
-      <Group wrap="nowrap">
-        <EveEntityAvatar entityId={row.original.first_party_id} size="sm" />
-        <EveEntityAnchor
-          size="sm"
-          entityId={row.original.first_party_id}
-          target="_blank"
-        >
-          <EveEntityName entityId={row.original.first_party_id} />
-        </EveEntityAnchor>
-      </Group>
-    </Group>
-  );
+function partyCell(_row: WalletJournalRow, value: unknown) {
+  return typeof value === "number" ? <EntityCell entityId={value} /> : null;
 }
 
-function SecondPartyCell({
-  row,
-}: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
-  return (
-    <Group>
-      <Group wrap="nowrap">
-        <EveEntityAvatar entityId={row.original.second_party_id} size="sm" />
-        <EveEntityAnchor
-          size="sm"
-          entityId={row.original.second_party_id}
-          target="_blank"
-        >
-          <EveEntityName entityId={row.original.second_party_id} />
-        </EveEntityAnchor>
-      </Group>
-    </Group>
-  );
-}
-
-function OtherPartyCell({
-  cell,
-}: Readonly<{ cell: MRT_Cell<WalletJournalRow> }>) {
-  return (
-    <Group>
-      <Group wrap="nowrap">
-        <EveEntityAvatar entityId={cell.getValue<number>()} size="sm" />
-        <EveEntityAnchor
-          size="sm"
-          entityId={cell.getValue<number>()}
-          target="_blank"
-        >
-          <EveEntityName entityId={cell.getValue<number>()} />
-        </EveEntityAnchor>
-      </Group>
-    </Group>
-  );
-}
-
-function AmountCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
-  return row.original.amount === undefined ? undefined : (
+function amountCell(row: WalletJournalRow) {
+  return row.amount === undefined ? undefined : (
     <ISKAmount
       size="sm"
-      amount={Math.abs(row.original.amount)}
-      c={row.original.amount >= 0 ? "green" : "red"}
+      amount={Math.abs(row.amount)}
+      c={row.amount >= 0 ? "green" : "red"}
     />
   );
 }
 
-function TaxReceiverCell({
-  row,
-}: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
-  return row.original.tax_receiver_id ? (
-    <Group>
-      <Group wrap="nowrap">
-        <EveEntityAvatar entityId={row.original.tax_receiver_id} size="sm" />
-        <EveEntityAnchor
-          entityId={row.original.tax_receiver_id}
-          target="_blank"
-        >
-          <EveEntityName entityId={row.original.tax_receiver_id} />
-        </EveEntityAnchor>
-      </Group>
-    </Group>
-  ) : undefined;
-}
-
 interface WalletTableProps {
   entries: WalletJournalRow[];
+  /**
+   * Render a page of skeleton rows while the journal loads, so the table is
+   * at its loaded height before the entries arrive.
+   */
+  isLoading?: boolean;
 }
 
-export const WalletTable = memo(({ entries }: WalletTableProps) => {
-  // One wallet needs no owner column — it would repeat the same name on every
-  // row. It earns its place only once entries come from more than one.
-  const hasMultipleOwners = useMemo(
-    () =>
-      new Set(
-        entries.map((entry) => `${entry.subjectId}:${entry.division ?? ""}`),
-      ).size > 1,
-    [entries],
-  );
+export const WalletTable = memo(
+  ({ entries, isLoading = false }: WalletTableProps) => {
+    // One wallet needs no owner column — it would repeat the same name on
+    // every row. It earns its place only once entries come from more than one.
+    const hasMultipleOwners = useMemo(
+      () =>
+        new Set(
+          entries.map((entry) => `${entry.subjectId}:${entry.division ?? ""}`),
+        ).size > 1,
+      [entries],
+    );
 
-  const columns = useMemo<MRT_ColumnDef<WalletJournalRow>[]>(
-    () => [
-      ...(hasMultipleOwners
-        ? [
-            {
-              id: "owner",
-              header: "Owner",
-              accessorKey: "subjectId",
-              size: 40,
-              Cell: OwnerCell,
-            } satisfies MRT_ColumnDef<WalletJournalRow>,
-          ]
-        : []),
-      {
-        id: "id",
-        header: "ID",
-        accessorKey: "id",
-        size: 40,
-      },
-      {
-        id: "date",
-        header: "Date",
-        accessorFn: (row) => {
-          // convert to Date for sorting and filtering
-          return new Date(row.date);
+    const columns = useMemo<DataTableColumn<WalletJournalRow>[]>(
+      () => [
+        ...(hasMultipleOwners
+          ? [
+              {
+                id: "owner",
+                header: "Owner",
+                accessor: "subjectId",
+                sortable: true,
+                cell: ownerCell,
+              } satisfies DataTableColumn<WalletJournalRow>,
+            ]
+          : []),
+        {
+          id: "id",
+          header: "ID",
+          accessor: "id",
+          sortable: true,
+          defaultVisible: false,
         },
-        filterVariant: "date-range",
-        sortingFn: "datetime",
-        size: 40,
-        enableColumnFilterModes: false, //keep this as only date-range filter with between inclusive filterFn
-        Cell: DateCell, //render Date as a string
-        Header: DateHeader, //custom header markup
-      },
-      {
-        id: "refType",
-        header: "Type",
-        // The entry type name EVE itself uses, so the column sorts and filters
-        // on what is actually displayed rather than on the raw ESI ref_type.
-        accessorFn: (row) => getAccountingEntryTypeName(row.ref_type),
-        filterVariant: "multi-select",
-        // Exact match. The multi-select variant defaults to arrIncludesSome,
-        // which calls `.includes` on the cell value — a string here, so it
-        // matched substrings: picking "Brokers Fee" also kept both contract
-        // broker fees, and "Bounty" kept six other types. A custom filterFn
-        // loses arrIncludesSome's autoRemove, so an emptied selection has to
-        // mean "no filter" in here.
-        filterFn: (row, columnId, filterValue: string[] | undefined) =>
-          !filterValue?.length ||
-          filterValue.includes(row.getValue<string>(columnId)),
-        size: 40,
-        Cell: RefTypeCell,
-      },
-      {
-        id: "context_id",
-        header: "Context ID",
-        accessorKey: "context_id",
-        size: 40,
-      },
-      {
-        id: "context_id_type",
-        header: "Context Type",
-        accessorKey: "context_id_type",
-        size: 40,
-        Cell: ContextTypeCell,
-      },
-      {
-        id: "firstParty",
-        header: "First Party",
-        accessorKey: "first_party_id",
-        size: 40,
-        Cell: FirstPartyCell,
-      },
-      {
-        id: "secondParty",
-        header: "Second Party",
-        accessorKey: "second_party_id",
-        size: 40,
-        Cell: SecondPartyCell,
-      },
-      {
-        id: "otherParty",
-        header: "Other Party",
-        accessorFn: (row) => {
-          return (row.amount ?? 0) < 0
-            ? row.second_party_id
-            : row.first_party_id;
+        {
+          id: "date",
+          header: "Date",
+          // A Date, so the column sorts chronologically and the date-range
+          // filter can compare days.
+          accessor: (row) => new Date(row.date),
+          sortable: true,
+          filter: { type: "date-range" },
+          cell: dateCell,
         },
-        size: 40,
-        Cell: OtherPartyCell,
-      },
-      {
-        id: "amount",
-        header: "Amount",
-        accessorKey: "amount",
-        size: 40,
-        Cell: AmountCell,
-      },
-      {
-        id: "balance",
-        header: "Balance",
-        accessorKey: "balance",
-        size: 40,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          `${row.original.balance?.toLocaleString()} ISK`,
-      },
-      {
-        id: "description",
-        header: "Description",
-        accessorKey: "description",
-        size: 40,
-      },
-      {
-        id: "reason",
-        header: "Reason",
-        accessorKey: "reason",
-        size: 40,
-      },
-      {
-        id: "tax",
-        header: "Tax",
-        accessorKey: "tax",
-        size: 40,
-      },
-      {
-        id: "taxReceiverId",
-        header: "Tax Receiver",
-        accessorKey: "tax_receiver_id",
-        size: 40,
-        Cell: TaxReceiverCell,
-      },
-    ],
-    [hasMultipleOwners],
-  );
+        {
+          id: "refType",
+          header: "Type",
+          // The entry type name EVE itself uses, so the column sorts, searches
+          // and filters on what is actually displayed rather than on the raw
+          // ESI ref_type.
+          accessor: (row) => getAccountingEntryTypeName(row.ref_type),
+          sortable: true,
+          // An exact match on the name. Never a substring: "Brokers Fee" is
+          // contained in both contract broker fees, and "Bounty" in six other
+          // types, so picking one used to keep the others too.
+          filter: { type: "multi-select" },
+          cell: refTypeCell,
+        },
+        {
+          id: "context_id",
+          header: "Context ID",
+          accessor: "context_id",
+          sortable: true,
+          defaultVisible: false,
+        },
+        {
+          id: "context_id_type",
+          header: "Context Type",
+          accessor: "context_id_type",
+          sortable: true,
+          cell: contextTypeCell,
+        },
+        {
+          id: "firstParty",
+          header: "First Party",
+          accessor: "first_party_id",
+          sortable: true,
+          defaultVisible: false,
+          cell: partyCell,
+        },
+        {
+          id: "secondParty",
+          header: "Second Party",
+          accessor: "second_party_id",
+          sortable: true,
+          defaultVisible: false,
+          cell: partyCell,
+        },
+        {
+          id: "otherParty",
+          header: "Other Party",
+          accessor: (row) =>
+            (row.amount ?? 0) < 0 ? row.second_party_id : row.first_party_id,
+          sortable: true,
+          cell: partyCell,
+        },
+        {
+          id: "amount",
+          header: "Amount",
+          accessor: "amount",
+          sortable: true,
+          filter: { type: "range" },
+          align: "right",
+          cell: amountCell,
+        },
+        {
+          id: "balance",
+          header: "Balance",
+          accessor: "balance",
+          sortable: true,
+          align: "right",
+          cell: (row) => `${row.balance?.toLocaleString()} ISK`,
+        },
+        {
+          id: "description",
+          header: "Description",
+          accessor: "description",
+          sortable: true,
+        },
+        {
+          id: "reason",
+          header: "Reason",
+          accessor: "reason",
+          sortable: true,
+        },
+        {
+          id: "tax",
+          header: "Tax",
+          accessor: "tax",
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+        },
+        {
+          id: "taxReceiverId",
+          header: "Tax Receiver",
+          accessor: "tax_receiver_id",
+          sortable: true,
+          defaultVisible: false,
+          cell: partyCell,
+        },
+      ],
+      [hasMultipleOwners],
+    );
 
-  const table = useMantineReactTable({
-    columns,
-    // Journal ids repeat across wallets, so the default row id (the index into
-    // `data`) would be reused by React across re-sorts of a merged list.
-    getRowId: walletRowKey,
-    positionPagination: "top",
-    enableFacetedValues: true,
-    // Reserve vertical space so the table doesn't grow (and push the page down)
-    // as the wallet journal loads in.
-    mantineTableContainerProps: { style: { minHeight: rem(420) } },
-    data: entries,
-    initialState: {
-      density: "xs",
-      pagination: {
-        pageIndex: 0,
-        pageSize: 25,
-      },
-      columnVisibility: {
-        id: false,
-        tax: false,
-        taxReceiverId: false,
-        firstParty: false,
-        secondParty: false,
-        context_id: false,
-      },
-    },
-  });
-
-  return <MantineReactTable table={table} />;
-});
+    return (
+      <DataTable
+        data={entries}
+        columns={columns}
+        // Journal ids repeat across wallets, so the default row id (the index
+        // into `data`) would be reused by React across re-sorts of a merged
+        // list.
+        rowId={walletRowKey}
+        isLoading={isLoading}
+        withGlobalFilter
+        withColumnVisibility
+        withPagination
+        defaultPageSize={25}
+        verticalSpacing="xs"
+        highlightOnHover
+        striped
+      />
+    );
+  },
+);
 WalletTable.displayName = "WalletTable";

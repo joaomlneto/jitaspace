@@ -9,12 +9,49 @@
  *   - `@jitaspace/datatable-mantine`  — the `mantine-datatable` library
  *
  * Both export a `DataTable` component assignable to {@link DataTableComponent}.
+ * The runtime semantics they share — how a value sorts, what a filter matches —
+ * live in `@jitaspace/datatable-common`, so the two engines cannot drift apart.
  */
 import type { ReactNode } from "react";
 
 export type SortDirection = "asc" | "desc";
 
 export type ColumnAlign = "left" | "center" | "right";
+
+/** One choice offered by a `select` or `multi-select` column filter. */
+export interface DataTableFilterOption {
+  /** Compared against the row's filter value, stringified. */
+  value: string;
+  /** Text shown in the dropdown. */
+  label: string;
+}
+
+/**
+ * A per-column filter, shown as a control in the column's header. Every variant
+ * tests the column's filter value — {@link DataTableColumn.filterAccessor}, or
+ * the {@link DataTableColumn.accessor} value when that is omitted.
+ *
+ * - `text` — case-insensitive substring match.
+ * - `select` — exact match against one chosen option.
+ * - `multi-select` — exact match against any of the chosen options. Never a
+ *   substring match: picking "Brokers Fee" must not also keep "Contract Brokers
+ *   Fee".
+ * - `range` — inclusive numeric range; either bound may be left open. Rows
+ *   whose value is not a number are dropped while a bound is set.
+ * - `boolean` — the value's truthiness equals the chosen Yes / No.
+ * - `date-range` — inclusive range of whole local days; either bound may be
+ *   left open. The value may be a `Date`, an ISO string or a timestamp.
+ *
+ * For `select` and `multi-select`, omitting `options` offers every distinct
+ * value present in the data. An array value matches when any element does.
+ */
+export type DataTableColumnFilter =
+  | { type: "text" }
+  | { type: "select"; options?: DataTableFilterOption[] }
+  | { type: "multi-select"; options?: DataTableFilterOption[] }
+  | { type: "range"; min?: number; max?: number; step?: number }
+  | { type: "boolean" }
+  | { type: "date-range" };
 
 /** Mantine-aligned size scale, kept as a primitive union so this package has
  * no dependency on `@mantine/core`. */
@@ -42,7 +79,12 @@ export interface DataTableColumn<TData> {
    * the accessed value is rendered as text.
    */
   cell?: (row: TData, value: unknown) => ReactNode;
-  /** Allow click-to-sort on this column's header. Default: `false`. */
+  /**
+   * Allow sorting by this column from its header (click, or Enter on the
+   * focused header). One column at a time: ascending first, then toggling.
+   * Rows without a sort value (`null`, `undefined`, `""`, an invalid date)
+   * sort last in either direction. Default: `false`.
+   */
   sortable?: boolean;
   /**
    * Custom sort key. When provided, sorting compares the values returned by
@@ -50,6 +92,14 @@ export interface DataTableColumn<TData> {
    * by its resolved name). Only relevant when {@link sortable} is `true`.
    */
   sortAccessor?: (row: TData) => string | number | null | undefined;
+  /** Add a filter control to this column's header. */
+  filter?: DataTableColumnFilter;
+  /**
+   * The value {@link filter} tests, when it should differ from the
+   * {@link accessor} value (e.g. filter an entity column by name while it sorts
+   * by id). Only relevant when {@link filter} is set.
+   */
+  filterAccessor?: (row: TData) => unknown;
   /** Whether the column may be hidden via the visibility menu. Default: `true`. */
   enableHiding?: boolean;
   /** Initial visibility of the column. Default: `true`. */
@@ -76,21 +126,33 @@ export interface DataTableProps<TData> {
   /** Column definitions. */
   columns: DataTableColumn<TData>[];
 
-  /** Show a loading indicator instead of rows. */
+  /**
+   * Render a page of skeleton rows in place of the data — one per row of the
+   * current page size, or 10 without pagination — so the table already has its
+   * loaded height and the rows arriving do not push the page down.
+   */
   isLoading?: boolean;
   /** Message shown when there are no rows. Default: `"No data"`. */
   emptyText?: string;
 
-  /** Render a search box that filters rows across all accessor columns. */
+  /**
+   * Render a search box that filters rows across all accessor columns,
+   * hidden ones included.
+   */
   withGlobalFilter?: boolean;
   /** Render a "Columns" control to show/hide individual columns. */
   withColumnVisibility?: boolean;
   /** Render pagination controls and a page-size selector. */
   withPagination?: boolean;
-  /** Page size used when {@link withPagination} is enabled. Default: `10`. */
+  /**
+   * Page size used when {@link withPagination} is enabled; offered in the
+   * rows-per-page choices even when it is not a standard size. The current
+   * page survives a change of `data` identity, and steps back if the data
+   * shrinks under it. Default: `10`.
+   */
   defaultPageSize?: number;
 
-  /** Initial sort applied on first render. */
+  /** Initial sort applied on first render. Must name a sortable column. */
   initialSort?: DataTableSort;
   /** Called with the row's data when a row is clicked. */
   onRowClick?: (row: TData) => void;

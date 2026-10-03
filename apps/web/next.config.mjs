@@ -174,6 +174,7 @@ const config = {
   transpilePackages: [
     "@jitaspace/auth",
     "@jitaspace/datatable",
+    "@jitaspace/datatable-common",
     "@jitaspace/datatable-mantine",
     "@jitaspace/datatable-tanstack",
     "@jitaspace/db",

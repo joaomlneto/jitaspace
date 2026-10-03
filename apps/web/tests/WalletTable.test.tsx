@@ -1,19 +1,14 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import {
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 
 // WalletTable takes `entries` directly (no internal data hook). Rendering the
-// real mantine-react-table with rows executes the module-scope Cell renderers.
+// real DataTable with rows executes the module-scope cell renderers.
 // @jitaspace/ui supplies the ISKAmount / EveEntity* / date children — stub them
 // to no-ops; the assertable text (balance "… ISK", description, reason, and the
 // context-type Badge) is produced by the cells themselves.
@@ -22,29 +17,6 @@ jest.mock(
   "@jitaspace/eve-icons",
   () => new Proxy({}, { get: () => () => null }),
 );
-
-// Pass-through to the real mantine-react-table that can seed column filters —
-// the same state the Type column's multi-select writes when a user picks
-// entries. Empty by default, so every other test renders exactly as before.
-let mockColumnFilters: { id: string; value: unknown }[] = [];
-jest.mock("mantine-react-table", () => {
-  const actual = jest.requireActual<typeof import("mantine-react-table")>(
-    "mantine-react-table",
-  );
-  return {
-    ...actual,
-    useMantineReactTable: (
-      options: Parameters<typeof actual.useMantineReactTable>[0],
-    ) =>
-      actual.useMantineReactTable({
-        ...options,
-        initialState: {
-          ...options.initialState,
-          columnFilters: mockColumnFilters,
-        },
-      }),
-  };
-});
 
 // Minimal shape — the table reads a subset of fields. Cast through unknown so we
 // don't have to satisfy the full generated ESI response type.
@@ -86,11 +58,16 @@ const ENTRY_NEGATIVE = {
   tax_receiver_id: undefined,
 } as unknown as CharacterWalletJournalEntry;
 
-function renderTable(entries: CharacterWalletJournalEntry[]) {
+function renderTable(
+  entries: CharacterWalletJournalEntry[],
+  isLoading = false,
+) {
   const { WalletTable } = require("~/components/Wallet/WalletTable");
+  // env="test" turns off Mantine's transitions, so the filter dropdowns are
+  // visible as soon as they open.
   return render(
-    <MantineProvider>
-      <WalletTable entries={entries} />
+    <MantineProvider env="test">
+      <WalletTable entries={entries} isLoading={isLoading} />
     </MantineProvider>,
   );
 }
@@ -119,8 +96,8 @@ describe("WalletTable", () => {
     expect(screen.getByText("market transaction id")).toBeInTheDocument();
   });
 
-  // The Type column filters via a multi-select, whose faceted options render the
-  // same labels outside the table body — so match the occurrence in a cell.
+  // The Type column filters via a multi-select, whose options and chosen pills
+  // render the same labels outside the table body — so match a cell.
   function typeCell(label: string) {
     return screen
       .getAllByText(label)
@@ -161,42 +138,87 @@ describe("WalletTable", () => {
         "Transaction Tax",
       ].filter((label) => typeCell(label) !== undefined);
 
-    afterEach(() => {
-      mockColumnFilters = [];
+    async function pickTypes(...labels: string[]) {
+      await userEvent.click(
+        screen.getByRole("button", { name: "Filter Type" }),
+      );
+      const input = await screen.findByRole("combobox", {
+        name: "Filter Type",
+      });
+      for (const label of labels) {
+        await userEvent.click(input);
+        await userEvent.click(screen.getByRole("option", { name: label }));
+      }
+    }
+
+    it("offers each entry type once, by its displayed name", async () => {
+      renderTable(ENTRIES);
+      await userEvent.click(
+        screen.getByRole("button", { name: "Filter Type" }),
+      );
+      await userEvent.click(
+        await screen.findByRole("combobox", { name: "Filter Type" }),
+      );
+      expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
+        "Brokers Fee",
+        "Contract Brokers Fee",
+        "Contract Brokers Fee (corp)",
+        "Transaction Tax",
+      ]);
     });
 
-    it("keeps only the selected entry type, not every type containing its name", () => {
-      // The multi-select variant defaults to arrIncludesSome, which runs
-      // String.prototype.includes against the display name — so picking
-      // "Brokers Fee" also kept both contract broker fees.
-      mockColumnFilters = [{ id: "refType", value: ["Brokers Fee"] }];
-
+    it("keeps only the selected entry type, not every type containing its name", async () => {
+      // A substring match ran String.prototype.includes against the display
+      // name — so picking "Brokers Fee" also kept both contract broker fees.
       renderTable(ENTRIES);
-
+      await pickTypes("Brokers Fee");
       expect(typeCells()).toEqual(["Brokers Fee"]);
     });
 
-    it("keeps every selected entry type", () => {
-      mockColumnFilters = [
-        { id: "refType", value: ["Brokers Fee", "Transaction Tax"] },
-      ];
-
+    it("keeps every selected entry type", async () => {
       renderTable(ENTRIES);
-
+      await pickTypes("Brokers Fee", "Transaction Tax");
       expect(typeCells()).toEqual(["Brokers Fee", "Transaction Tax"]);
     });
 
-    it("shows every row when the selection is emptied", () => {
-      // arrIncludesSome relies on its autoRemove hook to drop an emptied
-      // filter; the exact-match filterFn does not have one, so it has to treat
-      // an empty selection as "no filter" itself or the table goes blank.
-      mockColumnFilters = [{ id: "refType", value: [] }];
-
+    it("shows every row again once the filter is cleared", async () => {
       renderTable(ENTRIES);
-
+      await pickTypes("Brokers Fee");
+      await userEvent.click(
+        screen.getByRole("button", { name: "Clear filters (1)" }),
+      );
       expect(typeCells()).toHaveLength(4);
     });
+
+    it("shows every row when the last selected type is removed", async () => {
+      // An emptied selection has to mean "no filter" rather than "match
+      // nothing", or the table goes blank.
+      renderTable(ENTRIES);
+      await pickTypes("Brokers Fee");
+      expect(typeCells()).toEqual(["Brokers Fee"]);
+      await userEvent.type(
+        screen.getByRole("combobox", { name: "Filter Type" }),
+        "{Backspace}",
+      );
+      expect(typeCells()).toHaveLength(4);
+      expect(
+        screen.queryByRole("button", { name: /Clear filters/ }),
+      ).not.toBeInTheDocument();
+    });
   });
+
+  // mantine-react-table sorted every column with a value; these are sortable
+  // again ("none" = sortable, not yet sorted).
+  it.each(["Description", "Reason", "Other Party", "Amount", "Date"])(
+    "lets the %s column be sorted",
+    (header) => {
+      renderTable([ENTRY_POSITIVE, ENTRY_NEGATIVE]);
+      const th = screen
+        .getAllByRole("columnheader")
+        .find((cell) => cell.textContent.startsWith(header));
+      expect(th).toHaveAttribute("aria-sort", "none");
+    },
+  );
 
   it("humanizes a ref_type that has no known entry type", () => {
     renderTable([
@@ -216,40 +238,20 @@ describe("WalletTable", () => {
     expect(screen.getByText("Brokers fee")).toBeInTheDocument();
   });
 
-  // The firstParty / secondParty / taxReceiverId columns are hidden by default
-  // (initialState.columnVisibility). Toggling them on via MRT's show/hide-columns
-  // menu makes their Cell renderers (FirstPartyCell / SecondPartyCell /
-  // TaxReceiverCell) execute for every row. Their inner @jitaspace/ui children
-  // are no-op-stubbed, so we assert on the now-visible table column headers
-  // (proof the columns mounted and their Cells ran) rather than cell text.
-  //
-  // MRT's menu items pair the header text with a Mantine Switch but don't wire
-  // them via a `for`/aria-label association, so we locate the switch by climbing
-  // from the header-text node to the nearest element containing it.
-  function toggleColumn(label: string) {
-    // The header text also appears in the table header, so pick the occurrence
-    // that lives inside the open column-visibility menu, then climb to its switch.
-    const labelNode = screen
-      .getAllByText(label)
-      .find((node) => node.closest('[role="menu"]') !== null);
-    if (!labelNode) {
-      throw new Error(`No menu entry found for column "${label}"`);
-    }
-    let el: HTMLElement | null = labelNode;
-    for (let i = 0; i < 8 && el; i++) {
-      const sw = el.querySelector('[role="switch"]');
-      if (sw) {
-        fireEvent.click(sw);
-        return;
-      }
-      el = el.parentElement;
-    }
-    throw new Error(`Could not find a visibility switch for column "${label}"`);
-  }
+  it("renders skeleton rows instead of entries while loading", () => {
+    const { container } = renderTable([ENTRY_POSITIVE], true);
+    expect(container.querySelectorAll("tr[data-skeleton]")).toHaveLength(25);
+    expect(screen.queryByText("1,000,000 ISK")).not.toBeInTheDocument();
+  });
 
+  // The firstParty / secondParty / taxReceiverId columns are hidden by default.
+  // Toggling them on from the Columns menu makes their cell renderers execute
+  // for every row. Their inner @jitaspace/ui children are no-op-stubbed, so we
+  // assert on the now-visible column headers (proof the columns mounted and
+  // their cells ran) rather than on cell text.
   it("executes the hidden First/Second-Party and Tax-Receiver cells when their columns are toggled on", async () => {
     // ENTRY_POSITIVE carries first/second party + tax_receiver ids so all three
-    // cells hit their populated branch (TaxReceiverCell needs tax_receiver_id).
+    // cells hit their populated branch.
     const table = renderTable([ENTRY_POSITIVE]).getByRole("table");
 
     // These columns start hidden -> their headers are absent from the table.
@@ -257,21 +259,13 @@ describe("WalletTable", () => {
     expect(within(table).queryByText("Second Party")).not.toBeInTheDocument();
     expect(within(table).queryByText("Tax Receiver")).not.toBeInTheDocument();
 
-    // Open MRT's "Show/Hide columns" menu from the top toolbar.
-    fireEvent.click(
-      screen.getByRole("button", { name: /show.*hide columns/i }),
-    );
-    await screen.findAllByRole("switch");
+    await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+    await userEvent.click(screen.getByLabelText("First Party"));
+    await userEvent.click(screen.getByLabelText("Second Party"));
+    await userEvent.click(screen.getByLabelText("Tax Receiver"));
 
-    toggleColumn("First Party");
-    toggleColumn("Second Party");
-    toggleColumn("Tax Receiver");
-
-    // Once visible, the column headers render in the table (Cells have executed).
-    await waitFor(() => {
-      expect(within(table).getByText("First Party")).toBeInTheDocument();
-      expect(within(table).getByText("Second Party")).toBeInTheDocument();
-      expect(within(table).getByText("Tax Receiver")).toBeInTheDocument();
-    });
+    expect(within(table).getByText("First Party")).toBeInTheDocument();
+    expect(within(table).getByText("Second Party")).toBeInTheDocument();
+    expect(within(table).getByText("Tax Receiver")).toBeInTheDocument();
   });
 });

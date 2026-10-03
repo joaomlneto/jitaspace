@@ -28,10 +28,6 @@ jest.mock(
   "@jitaspace/tiptap-eve",
   () => new Proxy({}, { get: () => () => null }),
 );
-jest.mock(
-  "mantine-react-table",
-  () => new Proxy({}, { get: () => () => null }),
-);
 jest.mock("mantine-datatable", () => new Proxy({}, { get: () => () => null }));
 jest.mock("~/lib/db", () => ({ prisma: {} }));
 // The status page's server actions read the SDE ingest marker from Redis;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
 import { WarsIcon } from "@jitaspace/eve-icons";
@@ -42,6 +43,9 @@ export function ActiveWarsView({ data }: Readonly<{ data: WarRoomData }>) {
   const experimental = usePreferencesStore(
     (state) => state.experimentalActiveWars,
   );
+  // Stable across re-renders: the table resets to its first page whenever its
+  // rows change identity.
+  const tableWars = useMemo(() => data.wars.map(toTableWar), [data.wars]);
 
   if (experimental) {
     return <WarRoom data={data} />;
@@ -54,7 +58,7 @@ export function ActiveWarsView({ data }: Readonly<{ data: WarRoomData }>) {
           <WarsIcon width={48} />
           <Title>Active Wars ({data.wars.length})</Title>
         </Group>
-        <WarsTable wars={data.wars.map(toTableWar)} />
+        <WarsTable wars={tableWars} />
       </Stack>
     </Container>
   );

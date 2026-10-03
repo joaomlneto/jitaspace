@@ -163,26 +163,41 @@ describe("DataTable — empty state", () => {
 });
 
 describe("DataTable — loading state", () => {
-  // mantine-datatable always keeps a `.mantine-datatable-loader` element in the
-  // DOM; it adds the `--fetching` modifier (and the actual <Loader>) only while
-  // `fetching` is true. So we key off the modifier class, not mere presence.
-  it("renders without crashing while loading and shows the loader overlay", () => {
-    const { container } = renderWithMantine(
-      <DataTable columns={columns} data={data} isLoading />,
+  // A full page of placeholders keeps the table at its loaded height, so rows
+  // arriving do not push the page down — the same contract as TanStack.
+  const skeletonRows = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll("tbody tr")).filter(
+      (row) => row.querySelector(".mantine-Skeleton-root") !== null,
     );
-    expect(
-      container.querySelector(".mantine-datatable-loader-fetching"),
-    ).toBeInTheDocument();
+
+  it("renders a page of skeleton rows instead of the data", () => {
+    const { container } = renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={data}
+        isLoading
+        withPagination
+        defaultPageSize={25}
+      />,
+    );
+    expect(skeletonRows(container)).toHaveLength(25);
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument();
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
-  it("does not show the active loader overlay when not loading", () => {
+  it("renders 10 skeleton rows without pagination", () => {
+    const { container } = renderWithMantine(
+      <DataTable columns={columns} data={[]} isLoading emptyText="No data" />,
+    );
+    expect(skeletonRows(container)).toHaveLength(10);
+    expect(screen.queryByText("No data")).not.toBeInTheDocument();
+  });
+
+  it("renders no skeleton rows when not loading", () => {
     const { container } = renderWithMantine(
       <DataTable columns={columns} data={data} />,
     );
-    expect(
-      container.querySelector(".mantine-datatable-loader-fetching"),
-    ).not.toBeInTheDocument();
+    expect(skeletonRows(container)).toHaveLength(0);
   });
 });
 
@@ -532,5 +547,250 @@ describe("DataTable — row click", () => {
     await expect(
       user.click(screen.getByText("Alice")),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe("DataTable — missing values sort last", () => {
+  interface MRow {
+    id: number;
+    name: string;
+    value: number | null;
+  }
+  const cols: DataTableColumn<MRow>[] = [
+    { id: "name", header: "Name", accessor: "name" },
+    { id: "value", header: "Value", accessor: "value", sortable: true },
+  ];
+  const mdata: MRow[] = [
+    { id: 1, name: "Charlie", value: null },
+    { id: 2, name: "Alice", value: 1 },
+    { id: 3, name: "Bob", value: 2 },
+  ];
+
+  it("in both directions", async () => {
+    const user = userEvent.setup();
+    renderWithMantine(<DataTable columns={cols} data={mdata} />);
+    const header = screen.getByText("Value").closest("th")!;
+    await user.click(header);
+    expect(nameOrder()).toEqual(["Alice", "Bob", "Charlie"]);
+    await user.click(header);
+    expect(nameOrder()).toEqual(["Bob", "Alice", "Charlie"]);
+  });
+});
+
+describe("DataTable — column filters", () => {
+  const filterColumns: DataTableColumn<Row>[] = [
+    {
+      id: "name",
+      header: "Name",
+      accessor: "name",
+      filter: { type: "select" },
+    },
+    {
+      id: "score",
+      header: "Score",
+      accessor: "score",
+      filter: { type: "range" },
+    },
+  ];
+
+  // mantine-datatable renders its own header filter button, without an
+  // accessible name; find it by its class, in column order.
+  const filterButtons = () =>
+    Array.from(
+      document.querySelectorAll<HTMLElement>(
+        ".mantine-datatable-header-cell-filter-action-icon",
+      ),
+    );
+
+  const renderFiltered = () =>
+    render(
+      <MantineProvider env="test">
+        <DataTable columns={filterColumns} data={data} withGlobalFilter />
+      </MantineProvider>,
+    );
+
+  it("adds a filter button only to filterable columns", () => {
+    renderWithMantine(
+      <DataTable columns={[filterColumns[0]!, columns[1]!]} data={data} />,
+    );
+    expect(filterButtons()).toHaveLength(1);
+  });
+
+  it("filters rows through the header popover and marks the column", async () => {
+    const user = userEvent.setup();
+    renderFiltered();
+    await user.click(filterButtons()[0]!);
+    await user.click(
+      await screen.findByRole("combobox", { name: "Filter Name" }),
+    );
+    await user.click(screen.getByRole("option", { name: "Bob" }));
+
+    expect(nameOrder()).toEqual(["Bob"]);
+    expect(filterButtons()[0]).toHaveAttribute("data-active", "true");
+  });
+
+  it("filters by range and clears every filter from the toolbar", async () => {
+    const user = userEvent.setup();
+    renderFiltered();
+    await user.click(filterButtons()[1]!);
+    await user.type(await screen.findByRole("textbox", { name: "Min" }), "80");
+    expect(nameOrder()).toEqual(["Charlie", "Alice"]);
+
+    await user.click(screen.getByRole("button", { name: "Clear filters (1)" }));
+    expect(nameOrder()).toEqual(["Charlie", "Alice", "Bob"]);
+  });
+});
+
+describe("DataTable — the current page", () => {
+  // mantine-datatable scrolls its viewport back to the top on a page change;
+  // jsdom has no layout, so it has no Element.scrollTo either.
+  beforeAll(() => {
+    Element.prototype.scrollTo = () => {
+      /* no-op: jsdom does not scroll */
+    };
+  });
+
+  const rowsOf = (n: number): Row[] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: i,
+      name: `Row ${String(i).padStart(2, "0")}`,
+      score: i,
+    }));
+  const table = (rows: Row[]) => (
+    <MantineProvider>
+      <DataTable
+        columns={columns}
+        data={rows}
+        rowId={(row) => row.id}
+        withPagination
+        defaultPageSize={10}
+      />
+    </MantineProvider>
+  );
+
+  it("steps back to the last page when the data shrinks under it", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(table(rowsOf(30)));
+    await user.click(screen.getByRole("button", { name: "3" }));
+    expect(screen.getByText("Row 20")).toBeInTheDocument();
+
+    rerender(table(rowsOf(15)));
+    // Page 3 no longer exists: the table shows page 2 rather than an empty
+    // slice. (Not asserted through "No data": under jsdom mantine-datatable
+    // leaves its empty-state node mounted after any page change.)
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+    expect(screen.getByText("Row 14")).toBeInTheDocument();
+    expect(screen.getByText("11 - 15 / 15")).toBeInTheDocument();
+  });
+
+  it("survives a new data array (a refetch)", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(table(rowsOf(30)));
+    await user.click(screen.getByRole("button", { name: "2" }));
+    rerender(table(rowsOf(30)));
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — loading keeps the footer", () => {
+  it("renders the pagination footer while loading, as when loaded", () => {
+    const { container } = renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={[]}
+        isLoading
+        withPagination
+        defaultPageSize={20}
+      />,
+    );
+    expect(
+      container.querySelector(".mantine-datatable-pagination"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — sort direction matches TanStack", () => {
+  // mantine-datatable carries the current direction over to a newly clicked
+  // column; the contract starts every column ascending.
+  it("sorts a newly clicked column ascending after a descending sort", async () => {
+    const user = userEvent.setup();
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={data}
+        initialSort={{ columnId: "score", direction: "desc" }}
+      />,
+    );
+    await user.click(screen.getByText("Name").closest("th")!);
+    expect(nameOrder()).toEqual(["Alice", "Bob", "Charlie"]);
+    await user.click(screen.getByText("Name").closest("th")!);
+    expect(nameOrder()).toEqual(["Charlie", "Bob", "Alice"]);
+  });
+});
+
+describe("DataTable — page size", () => {
+  beforeAll(() => {
+    Element.prototype.scrollTo = () => {
+      /* no-op: jsdom does not scroll */
+    };
+  });
+
+  it("keeps the first row in view when the page size changes, as TanStack does", async () => {
+    const user = userEvent.setup();
+    const rows: Row[] = Array.from({ length: 100 }, (_, i) => ({
+      id: i,
+      name: `Row ${String(i).padStart(2, "0")}`,
+      score: i,
+    }));
+    render(
+      <MantineProvider env="test">
+        <DataTable
+          columns={columns}
+          data={rows}
+          rowId={(row) => row.id}
+          withPagination
+          defaultPageSize={25}
+        />
+      </MantineProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "3" }));
+    expect(screen.getByText("51 - 75 / 100")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "25" }));
+    await user.click(screen.getByRole("menuitem", { name: "10" }));
+    expect(screen.getByText("51 - 60 / 100")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — initialSort", () => {
+  it("shows no sort arrow for an unsortable initialSort column", () => {
+    renderWithMantine(
+      <DataTable
+        columns={[
+          { id: "name", header: "Name", accessor: "name" },
+          { id: "score", header: "Score", accessor: "score", sortable: true },
+        ]}
+        data={data}
+        initialSort={{ columnId: "name", direction: "asc" }}
+      />,
+    );
+    // mantine-datatable labels its arrow ("Sorted ascending", "Not sorted").
+    expect(
+      screen.queryByRole("img", { name: /^Sorted (ascending|descending)$/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("is ignored for a column that is not sortable, as in TanStack", () => {
+    renderWithMantine(
+      <DataTable
+        columns={[
+          { id: "name", header: "Name", accessor: "name" },
+          { id: "score", header: "Score", accessor: "score" },
+        ]}
+        data={data}
+        initialSort={{ columnId: "name", direction: "asc" }}
+      />,
+    );
+    expect(nameOrder()).toEqual(["Charlie", "Alice", "Bob"]);
   });
 });

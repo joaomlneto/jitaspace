@@ -24,40 +24,20 @@ interface UseAugmentedOffersArgs {
   }[];
 }
 
-interface UseAugmentedOffersResult {
-  sortedCorporations: { corporationId: number; name: string }[];
-  sortedTypes: { typeId: number; name: string }[];
-  augmentedOffers: AugmentedOffer[];
-}
-
 /** Jita's region (The Forge) — where market prices are sampled. */
 const THE_FORGE_REGION_ID = 10000002;
 
 /**
- * Shared data preparation for both LP store table engines (the classic
- * mantine-react-table and the experimental engine-agnostic DataTable).
- *
- * It sorts the corporation/type option lists, builds id→name lookups from the
- * server-resolved props, fetches Jita market aggregates for every type, and
- * augments each offer — and each of its required items — with the resolved name
- * and market stats. Centralising it here keeps the two engine components from
- * duplicating this logic.
+ * The LP store table's rows: builds id→name lookups from the server-resolved
+ * props, fetches Jita market aggregates for every type, and augments each
+ * offer — and each of its required items — with the resolved name and market
+ * stats.
  */
 export function useAugmentedOffers({
   corporations,
   types,
   offers,
-}: UseAugmentedOffersArgs): UseAugmentedOffersResult {
-  const sortedCorporations = useMemo(
-    () => [...corporations].sort((a, b) => a.name.localeCompare(b.name)),
-    [corporations],
-  );
-
-  const sortedTypes = useMemo(
-    () => [...types].sort((a, b) => a.name.localeCompare(b.name)),
-    [types],
-  );
-
+}: UseAugmentedOffersArgs): AugmentedOffer[] {
   const typeIds = useMemo(() => types.map((type) => type.typeId), [types]);
 
   const marketStats = useFuzzworkRegionalMarketAggregates(
@@ -95,5 +75,5 @@ export function useAugmentedOffers({
     [offers, typeNames, corporationNames, marketStats.data],
   );
 
-  return { sortedCorporations, sortedTypes, augmentedOffers };
+  return augmentedOffers;
 }

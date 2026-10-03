@@ -1,176 +1,132 @@
-import type { MRT_ColumnDef } from "mantine-react-table";
-import { memo, useMemo } from "react";
+import { memo } from "react";
 import { Group } from "@mantine/core";
 import { addDays } from "date-fns";
-import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import type { RegionalMarketOrder } from "@jitaspace/hooks";
 import { EveEntityAnchor, EveEntityName } from "@jitaspace/eve-components";
 import { DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
+import { DataTable } from "~/components/DataTable";
 
 interface MarketOrdersDataTableProps {
   orders: RegionalMarketOrder[];
   sortPriceDescending: boolean;
   /**
-   * While loading, and only for as long as `orders` is still empty, the table
-   * renders a full page of skeleton rows instead of collapsing to nothing. That
-   * keeps it at its final height from the first paint, so the orders arriving
-   * later don't push the rest of the page down.
+   * While loading, the table renders a full page of skeleton rows instead of
+   * collapsing to nothing. That keeps it at its final height from the first
+   * paint, so the orders arriving later don't push the rest of the page down.
    */
   isLoading?: boolean;
 }
+
+function locationCell(order: RegionalMarketOrder) {
+  return (
+    <Group wrap="nowrap">
+      <SolarSystemSecurityStatusBadge solarSystemId={order.system_id} />
+      <EveEntityAnchor inherit entityId={order.location_id} target="_blank">
+        <EveEntityName inherit entityId={order.location_id} />
+      </EveEntityAnchor>
+    </Group>
+  );
+}
+
+function dateCell(_order: RegionalMarketOrder, value: unknown) {
+  const date = value as Date;
+  return (
+    <DateHoverCard date={date}>
+      <TimeAgoText inherit date={date} addSuffix />
+    </DateHoverCard>
+  );
+}
+
+const columns: DataTableColumn<RegionalMarketOrder>[] = [
+  {
+    id: "orderId",
+    header: "Order ID",
+    accessor: "order_id",
+    sortable: true,
+    defaultVisible: false,
+  },
+  {
+    id: "remainingVolume",
+    header: "Remaining Volume",
+    accessor: "volume_remain",
+    sortable: true,
+    align: "right",
+    cell: (order) => order.volume_remain.toLocaleString(),
+  },
+  {
+    id: "price",
+    header: "Price",
+    accessor: "price",
+    sortable: true,
+    align: "right",
+    cell: (order) => `${order.price.toLocaleString()} ISK`,
+  },
+  {
+    id: "location",
+    header: "Location",
+    accessor: "location_id",
+    sortable: true,
+    cell: locationCell,
+  },
+  {
+    id: "duration",
+    header: "Duration",
+    accessor: "duration",
+    sortable: true,
+  },
+  {
+    id: "range",
+    header: "Range",
+    accessor: "range",
+    sortable: true,
+    filter: { type: "multi-select" },
+  },
+  {
+    id: "issued",
+    header: "Issued",
+    accessor: (order) => new Date(order.issued),
+    sortable: true,
+    cell: dateCell,
+  },
+  {
+    id: "expires",
+    header: "Expires",
+    accessor: (order): Date => {
+      const issued: unknown = order.issued;
+      return addDays(new Date(typeof issued === "string" ? issued : ""), 30);
+    },
+    sortable: true,
+    cell: dateCell,
+  },
+];
 
 export const MarketOrdersDataTable = memo(
   ({
     orders,
     sortPriceDescending,
     isLoading = false,
-  }: MarketOrdersDataTableProps) => {
-    const columns = useMemo<MRT_ColumnDef<RegionalMarketOrder>[]>(
-      () => [
-        {
-          id: "orderId",
-          header: "Order ID",
-          accessorKey: "order_id",
-          size: 40,
-        },
-        {
-          id: "remainingVolume",
-          header: "Remaining Volume",
-          accessorKey: "volume_remain",
-          size: 40,
-          mantineTableHeadCellProps: {
-            align: "right",
-          },
-          mantineTableBodyCellProps: {
-            align: "right",
-          },
-          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-            row.original.volume_remain.toLocaleString(),
-        },
-        {
-          id: "price",
-          header: "Price",
-          accessorKey: "price",
-          size: 40,
-          mantineTableHeadCellProps: {
-            align: "right",
-          },
-          mantineTableBodyCellProps: {
-            align: "right",
-          },
-          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-            `${row.original.price.toLocaleString()} ISK`,
-        },
-        {
-          id: "location",
-          header: "Location",
-          accessorKey: "location_id",
-          Cell: ({
-            renderedCellValue: _renderedCellValue,
-            row,
-            cell: _cell,
-          }) => (
-            <Group wrap="nowrap">
-              <SolarSystemSecurityStatusBadge
-                solarSystemId={row.original.system_id}
-              />
-              <EveEntityAnchor
-                inherit
-                entityId={row.original.location_id}
-                target="_blank"
-              >
-                <EveEntityName inherit entityId={row.original.location_id} />
-              </EveEntityAnchor>
-            </Group>
-          ),
-        },
-        {
-          id: "duration",
-          header: "Duration",
-          accessorKey: "duration",
-        },
-        {
-          id: "range",
-          header: "Range",
-          accessorKey: "range",
-        },
-        {
-          id: "issued",
-          header: "Issued",
-          accessorKey: "issued",
-          Cell: ({
-            renderedCellValue: _renderedCellValue,
-            row,
-            cell: _cell,
-          }) => (
-            <DateHoverCard date={new Date(row.original.issued)}>
-              <TimeAgoText
-                inherit
-                date={new Date(row.original.issued)}
-                addSuffix
-              />
-            </DateHoverCard>
-          ),
-        },
-        {
-          id: "expires",
-          header: "Expires",
-          accessorFn: (row): Date => {
-            const issued: unknown = row.issued;
-            return addDays(
-              new Date(typeof issued === "string" ? issued : ""),
-              30,
-            );
-          },
-          Cell: ({
-            renderedCellValue: _renderedCellValue,
-            row: _row,
-            cell,
-          }) => (
-            <DateHoverCard date={cell.getValue<Date>()}>
-              <TimeAgoText inherit date={cell.getValue<Date>()} addSuffix />
-            </DateHoverCard>
-          ),
-        },
-        /*
-        {
-          id: "json",
-          header: "JSON",
-          Cell: ({ renderedCellValue, row, cell }) => (
-            <JsonInput
-              value={JSON.stringify(row.original, null, 2)}
-              autosize
-              maxRows={5}
-            />
-          ),
-        },*/
-      ],
-      [],
-    );
-
-    const table = useMantineReactTable({
-      columns,
-      positionPagination: "top",
-      enableFacetedValues: true,
-      data: orders,
-      state: { isLoading },
-      initialState: {
-        density: "xs",
-        pagination: {
-          pageIndex: 0,
-          pageSize: 20,
-        },
-        columnVisibility: {
-          orderId: false,
-        },
-        sorting: [{ id: "price", desc: sortPriceDescending }],
-      },
-    });
-
-    return <MantineReactTable table={table} />;
-  },
+  }: MarketOrdersDataTableProps) => (
+    <DataTable
+      data={orders}
+      columns={columns}
+      rowId={(order) => order.order_id}
+      isLoading={isLoading}
+      withGlobalFilter
+      withColumnVisibility
+      withPagination
+      defaultPageSize={20}
+      initialSort={{
+        columnId: "price",
+        direction: sortPriceDescending ? "desc" : "asc",
+      }}
+      verticalSpacing="xs"
+      highlightOnHover
+      striped
+    />
+  ),
 );
 MarketOrdersDataTable.displayName = "MarketOrdersDataTable";

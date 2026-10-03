@@ -1,28 +1,25 @@
 "use client";
 
 import type {
-  Column,
   ColumnDef,
+  ColumnFiltersState,
+  FilterFn,
+  OnChangeFn,
   PaginationState,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
-  Button,
   Center,
-  Checkbox,
-  Divider,
   Group,
-  Loader,
   Pagination,
-  Popover,
   Select,
+  Skeleton,
   Stack,
   Table,
   Text,
-  TextInput,
 } from "@mantine/core";
 import {
   flexRender,
@@ -34,24 +31,36 @@ import {
 } from "@tanstack/react-table";
 
 import type { DataTableColumn, DataTableProps } from "@jitaspace/datatable";
+import type { SortKey } from "@jitaspace/datatable-common";
+import {
+  ColumnFilterButton,
+  ColumnFilterControl,
+  columnSortKey,
+  compareSortKeys,
+  DataTableToolbar,
+  matchesColumnFilter,
+  matchesGlobalFilter,
+  primitiveString,
+  readColumnValue,
+  readFilterValue,
+} from "@jitaspace/datatable-common";
 
-const PAGE_SIZE_OPTIONS = ["10", "25", "50", "100"];
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+/** Skeleton rows rendered while loading without pagination. */
+const UNPAGINATED_SKELETON_ROWS = 10;
+
+/** The standard page sizes, plus the table's own default if it is not one. */
+function pageSizeOptions(defaultPageSize: number): string[] {
+  return [...new Set([...PAGE_SIZE_OPTIONS, defaultPageSize])]
+    .sort((a, b) => a - b)
+    .map(String);
+}
 
 function getSortIcon(sorted: "asc" | "desc" | false): string {
   if (sorted === "asc") return "↑";
   if (sorted === "desc") return "↓";
   return "⇅";
-}
-
-function renderValue(value: unknown): ReactNode {
-  if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
-    return String(value);
-  }
-  return "";
 }
 
 function alignToJustify(
@@ -62,62 +71,61 @@ function alignToJustify(
   return "flex-start";
 }
 
-/** Resolve the agnostic accessor into TanStack's accessorFn/accessorKey shape. */
-function accessorPartFor<TData>(
-  accessor: DataTableColumn<TData>["accessor"],
-): Record<string, unknown> {
-  if (typeof accessor === "function") return { accessorFn: accessor };
-  if (typeof accessor === "string" || typeof accessor === "number") {
-    return { accessorKey: String(accessor) };
-  }
-  return {};
+/** For a sortable header; "none" tells assistive tech it can be sorted. */
+function ariaSort(sorted: "asc" | "desc" | false) {
+  if (sorted === "asc") return "ascending";
+  if (sorted === "desc") return "descending";
+  return "none";
 }
 
-function compareValues(
-  a: string | number | null | undefined,
-  b: string | number | null | undefined,
-): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return -1;
-  if (b == null) return 1;
-  if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b));
-}
-
-/** Translate the engine-agnostic columns into TanStack column defs. */
+/**
+ * Translate the engine-agnostic columns into TanStack column defs.
+ *
+ * TanStack's own notion of a column's value is the *sort key*: that lets its
+ * `sortUndefined: "last"` keep rows without one at the bottom in both
+ * directions, which a comparator alone cannot (it is never told the
+ * direction). Rendering, searching and filtering read the raw value through
+ * `@jitaspace/datatable-common` instead, exactly as the mantine-datatable
+ * engine does.
+ */
 function buildColumnDefs<TData>(
   columns: DataTableColumn<TData>[],
-): ColumnDef<TData>[] {
+): ColumnDef<TData, SortKey>[] {
   return columns.map((col) => {
-    // Capture into a local so the closure below keeps the narrowed type
-    // (control-flow narrowing on `col.sortAccessor` does not reach into the
-    // nested `sortingFn` arrow).
-    const sortAccessor = col.sortAccessor;
+    const filter = col.filter;
+    const filterFn: FilterFn<TData> | undefined = filter
+      ? (row, _columnId, filterValue) =>
+          matchesColumnFilter(
+            filter,
+            readFilterValue(col, row.original),
+            filterValue,
+          )
+      : undefined;
     return {
       id: col.id,
       header: col.header,
+      accessorFn: (row: TData) => columnSortKey(col, row),
       enableSorting: col.sortable ?? false,
+      sortUndefined: "last",
+      sortingFn: (a, b, columnId) =>
+        // Only reached when both keys are present (see `sortUndefined`).
+        compareSortKeys(
+          a.getValue<string | number>(columnId),
+          b.getValue<string | number>(columnId),
+        ),
       enableHiding: col.enableHiding ?? true,
-      ...accessorPartFor(col.accessor),
+      enableColumnFilter: filterFn !== undefined,
+      enableGlobalFilter: col.accessor != null,
+      ...(filterFn ? { filterFn } : {}),
       ...(typeof col.width === "number" ? { size: col.width } : {}),
-      ...(sortAccessor
-        ? {
-            sortingFn: (a, b) =>
-              compareValues(sortAccessor(a.original), sortAccessor(b.original)),
-          }
-        : {}),
-      cell: (ctx) =>
-        col.cell
-          ? col.cell(ctx.row.original, ctx.getValue())
-          : renderValue(ctx.getValue()),
-    } satisfies ColumnDef<TData>;
+      cell: (ctx) => {
+        const value = readColumnValue(col, ctx.row.original);
+        return col.cell
+          ? col.cell(ctx.row.original, value)
+          : primitiveString(value);
+      },
+    } satisfies ColumnDef<TData, SortKey>;
   });
-}
-
-// Prefer a string header for the visibility menu label; fall back to the id.
-function columnLabel<TData>(column: Column<TData>): string {
-  const header = column.columnDef.header;
-  return typeof header === "string" && header.length > 0 ? header : column.id;
 }
 
 export function DataTable<TData>({
@@ -158,11 +166,27 @@ export function DataTable<TData>({
       }, {}),
   );
   const [globalFilter, setGlobalFilter] = useState("");
-  const [columnsMenuOpened, setColumnsMenuOpened] = useState(false);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: defaultPageSize,
   });
+
+  // Back to the first page when what the rows are (search, filters) or their
+  // order changes — but not when `data` merely gets a new identity. Callers
+  // refetch (the LP store re-prices every 5 minutes) and some hooks return a
+  // fresh array on every render; TanStack's own auto-reset would bounce the
+  // reader to page 1 each time, so it is off and this replaces it.
+  const resetPage = () =>
+    setPagination((current) =>
+      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
+    );
+  const andResetPage =
+    <T,>(setState: OnChangeFn<T>): OnChangeFn<T> =>
+    (updater) => {
+      setState(updater);
+      resetPage();
+    };
 
   const table = useReactTable({
     data,
@@ -171,13 +195,36 @@ export function DataTable<TData>({
     state: {
       sorting,
       globalFilter,
+      columnFilters,
       columnVisibility,
       ...(withPagination ? { pagination } : {}),
     },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: andResetPage(setSorting),
+    onGlobalFilterChange: andResetPage(setGlobalFilter),
+    onColumnFiltersChange: andResetPage(setColumnFilters),
     onColumnVisibilityChange: setColumnVisibility,
     ...(withPagination ? { onPaginationChange: setPagination } : {}),
+    autoResetPageIndex: false,
+    // Sort the way mantine-datatable does, so the engines agree: one column at
+    // a time, ascending on the first click, then toggling between directions.
+    // TanStack's defaults would start numeric columns descending and add an
+    // "unsorted" step — so a column that starts ascending (the market's sell
+    // orders, by price) would lose its sort on the first click.
+    enableMultiSort: false,
+    enableSortingRemoval: false,
+    sortDescFirst: false,
+    // Search the raw value, not the sort key TanStack holds (a date column's
+    // key is a timestamp nobody would type).
+    globalFilterFn: (row, columnId, query: string) => {
+      const col = columnsById.get(columnId);
+      return (
+        col !== undefined &&
+        matchesGlobalFilter(readColumnValue(col, row.original), query)
+      );
+    },
+    // TanStack only searches columns whose first value is a string or number
+    // by default; `enableGlobalFilter` per column already says which to search.
+    getColumnCanGlobalFilter: () => true,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -186,23 +233,37 @@ export function DataTable<TData>({
       : {}),
   });
 
+  // Data shrinking under the current page (a refetch, a wallet deselected)
+  // would leave it past the end, showing "No data" while rows exist. Step back
+  // to the last page — during render, so the empty page is never painted.
+  const lastPageIndex = Math.max(table.getPageCount() - 1, 0);
+  if (withPagination && pagination.pageIndex > lastPageIndex) {
+    setPagination({ ...pagination, pageIndex: lastPageIndex });
+  }
+
   const rows = table.getRowModel().rows;
+  const visibleColumns = table.getVisibleLeafColumns();
 
   let tbodyContent: ReactNode;
   if (isLoading) {
-    tbodyContent = (
-      <Table.Tr>
-        <Table.Td colSpan={columns.length}>
-          <Center py="xl">
-            <Loader />
-          </Center>
-        </Table.Td>
+    // A full page of placeholders, so the table is at its loaded height from
+    // the first paint and the rows arriving do not shift the page.
+    const skeletonRows = withPagination
+      ? pagination.pageSize
+      : UNPAGINATED_SKELETON_ROWS;
+    tbodyContent = Array.from({ length: skeletonRows }, (_, index) => (
+      <Table.Tr key={index} data-skeleton>
+        {visibleColumns.map((column) => (
+          <Table.Td key={column.id}>
+            <Skeleton height={20} />
+          </Table.Td>
+        ))}
       </Table.Tr>
-    );
+    ));
   } else if (rows.length === 0) {
     tbodyContent = (
       <Table.Tr>
-        <Table.Td colSpan={columns.length}>
+        <Table.Td colSpan={Math.max(visibleColumns.length, 1)}>
           <Center py="xl">
             <Text c="dimmed">{emptyText}</Text>
           </Center>
@@ -227,69 +288,29 @@ export function DataTable<TData>({
 
   const hideableColumns = table
     .getAllLeafColumns()
-    .filter((column) => column.getCanHide());
+    .filter((column) => column.getCanHide())
+    .map((column) => ({
+      id: column.id,
+      label: columnsById.get(column.id)?.header ?? column.id,
+      visible: column.getIsVisible(),
+    }));
 
   return (
     <Stack gap="sm">
-      {(withGlobalFilter || withColumnVisibility) && (
-        <Group justify="space-between" align="flex-start">
-          {withGlobalFilter ? (
-            <TextInput
-              placeholder="Search..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.currentTarget.value)}
-              style={{ flex: 1, maxWidth: 320 }}
-            />
-          ) : (
-            <span />
-          )}
-          {withColumnVisibility && (
-            <Popover
-              opened={columnsMenuOpened}
-              onChange={setColumnsMenuOpened}
-              position="bottom-end"
-              shadow="md"
-              withinPortal
-            >
-              <Popover.Target>
-                <Button
-                  variant="default"
-                  size="xs"
-                  onClick={() => setColumnsMenuOpened((opened) => !opened)}
-                >
-                  Columns
-                </Button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <div style={{ maxHeight: 360, overflowY: "auto" }}>
-                  <Stack gap="xs">
-                    <Checkbox
-                      size="xs"
-                      label="Toggle all"
-                      checked={table.getIsAllColumnsVisible()}
-                      indeterminate={
-                        table.getIsSomeColumnsVisible() &&
-                        !table.getIsAllColumnsVisible()
-                      }
-                      onChange={table.getToggleAllColumnsVisibilityHandler()}
-                    />
-                    <Divider />
-                    {hideableColumns.map((column) => (
-                      <Checkbox
-                        key={column.id}
-                        size="xs"
-                        label={columnLabel(column)}
-                        checked={column.getIsVisible()}
-                        onChange={column.getToggleVisibilityHandler()}
-                      />
-                    ))}
-                  </Stack>
-                </div>
-              </Popover.Dropdown>
-            </Popover>
-          )}
-        </Group>
-      )}
+      <DataTableToolbar
+        withGlobalFilter={withGlobalFilter}
+        globalFilter={globalFilter}
+        // Through the table, so the search goes back to the first page.
+        onGlobalFilterChange={(value) => table.setGlobalFilter(value)}
+        withColumnVisibility={withColumnVisibility}
+        hideableColumns={hideableColumns}
+        onToggleColumn={(id) => table.getColumn(id)?.toggleVisibility()}
+        onToggleAllColumns={() =>
+          table.toggleAllColumnsVisible(!table.getIsAllColumnsVisible())
+        }
+        activeFilterCount={columnFilters.length}
+        onClearFilters={() => table.resetColumnFilters(true)}
+      />
 
       <Table.ScrollContainer minWidth={400}>
         <Table
@@ -304,17 +325,31 @@ export function DataTable<TData>({
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
-                  const canSort = header.column.getCanSort();
-                  const sorted = header.column.getIsSorted();
-                  const meta = columnsById.get(header.column.id);
+                  const column = header.column;
+                  const canSort = column.getCanSort();
+                  const sorted = column.getIsSorted();
+                  const meta = columnsById.get(column.id);
+                  const toggleSorting = column.getToggleSortingHandler();
                   return (
                     <Table.Th
                       key={header.id}
                       ta={meta?.align}
                       w={meta?.width}
-                      onClick={
+                      aria-sort={canSort ? ariaSort(sorted) : undefined}
+                      onClick={canSort ? toggleSorting : undefined}
+                      // Sortable from the keyboard too: focusable, and Enter or
+                      // Space sorts — unless it was pressed on the filter
+                      // button inside the header.
+                      tabIndex={canSort ? 0 : undefined}
+                      onKeyDown={
                         canSort
-                          ? header.column.getToggleSortingHandler()
+                          ? (event: KeyboardEvent<HTMLTableCellElement>) => {
+                              if (event.target !== event.currentTarget) return;
+                              if (event.key !== "Enter" && event.key !== " ")
+                                return;
+                              event.preventDefault();
+                              toggleSorting?.(event);
+                            }
                           : undefined
                       }
                       style={
@@ -330,13 +365,28 @@ export function DataTable<TData>({
                           justify={alignToJustify(meta?.align)}
                         >
                           {flexRender(
-                            header.column.columnDef.header,
+                            column.columnDef.header,
                             header.getContext(),
                           )}
                           {canSort && (
                             <Text size="xs" c="dimmed" component="span">
                               {getSortIcon(sorted)}
                             </Text>
+                          )}
+                          {meta?.filter && (
+                            <ColumnFilterButton
+                              label={meta.header}
+                              active={column.getIsFiltered()}
+                            >
+                              <ColumnFilterControl
+                                column={meta}
+                                rows={data}
+                                value={column.getFilterValue()}
+                                onChange={(value) =>
+                                  column.setFilterValue(value)
+                                }
+                              />
+                            </ColumnFilterButton>
                           )}
                         </Group>
                       )}
@@ -355,11 +405,13 @@ export function DataTable<TData>({
           <Group gap="xs">
             <Text size="sm">Rows per page:</Text>
             <Select
+              aria-label="Rows per page"
               value={String(table.getState().pagination.pageSize)}
               onChange={(value) =>
                 table.setPageSize(Number(value ?? defaultPageSize))
               }
-              data={PAGE_SIZE_OPTIONS}
+              data={pageSizeOptions(defaultPageSize)}
+              allowDeselect={false}
               w={80}
               size="xs"
             />

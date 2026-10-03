@@ -1,8 +1,7 @@
-import type { MRT_Cell, MRT_ColumnDef, MRT_Row } from "mantine-react-table";
 import { memo, useMemo } from "react";
 import { Badge, Group, Text } from "@mantine/core";
-import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import type {
   AllianceContact,
   CharacterContact,
@@ -15,6 +14,8 @@ import {
 } from "@jitaspace/eve-components";
 import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
 
+import { DataTable } from "~/components/DataTable";
+
 type Contact = AllianceContact & CorporationContact & CharacterContact;
 export interface ContactsDataTableProps {
   contacts?: Contact[];
@@ -23,55 +24,76 @@ export interface ContactsDataTableProps {
   hideWatchedColumn?: boolean;
 }
 
+const CONTACT_TYPE_OPTIONS = [
+  { value: "character", label: "Character" },
+  { value: "corporation", label: "Corporation" },
+  { value: "alliance", label: "Alliance" },
+  { value: "faction", label: "Faction" },
+];
+
+const NO_CONTACTS: Contact[] = [];
+
 const capitalizeFirstLetter = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1);
 
-function ContactNameCell({ row }: Readonly<{ row: MRT_Row<Contact> }>) {
+function contactNameCell(contact: Contact) {
   return (
     <Group wrap="nowrap">
-      <StandingIndicator standing={row.original.standing}>
+      <StandingIndicator standing={contact.standing}>
         <EveEntityAvatar
-          entityId={row.original.contact_id}
-          category={row.original.contact_type}
+          entityId={contact.contact_id}
+          category={contact.contact_type}
           size="sm"
         />
       </StandingIndicator>
       <EveEntityAnchor
         size="sm"
-        entityId={row.original.contact_id}
-        category={row.original.contact_type}
+        entityId={contact.contact_id}
+        category={contact.contact_type}
       >
         <EveEntityName
-          entityId={row.original.contact_id}
-          category={row.original.contact_type}
+          entityId={contact.contact_id}
+          category={contact.contact_type}
         />
       </EveEntityAnchor>
     </Group>
   );
 }
 
-function ContactWatchedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
-  return cell.getValue<boolean>() ? (
+function contactWatchedCell(contact: Contact) {
+  return contact.is_watched ? (
     <Badge variant="filled" size="xs">
       watched
     </Badge>
   ) : null;
 }
 
-function ContactBlockedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
-  const isBlocked = cell.getValue<boolean | undefined>();
-  if (isBlocked === undefined) {
+function contactBlockedCell(contact: Contact) {
+  if (contact.is_blocked === undefined) {
     return (
       <Text size="sm" c="dimmed" fs="italic">
         Unknown
       </Text>
     );
   }
-  return isBlocked ? "Yes" : "No";
+  return contact.is_blocked ? "Yes" : "No";
 }
 
-function ContactStandingsCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
-  return <StandingsBadge standing={cell.getValue<number>()} />;
+/** The label names the accessor resolved, as badges. */
+function contactLabelsCell(_contact: Contact, value: unknown) {
+  return (
+    <Group gap="xs">
+      {(value as string[] | undefined)?.map((name) => (
+        <Badge size="sm" key={name}>
+          {name}
+        </Badge>
+      ))}
+    </Group>
+  );
+}
+
+function contactStandingsCell(contact: Contact) {
+  return <StandingsBadge standing={contact.standing} />;
 }
 
 export const ContactsDataTable = memo(
@@ -89,95 +111,86 @@ export const ContactsDataTable = memo(
       return labelName;
     }, [labels]);
 
-    const columns = useMemo<MRT_ColumnDef<Contact>[]>(
+    const columns = useMemo<DataTableColumn<Contact>[]>(
       () => [
         {
           id: "id",
           header: "Contact ID",
-          accessorKey: "contact_id",
-          size: 40,
+          accessor: "contact_id",
+          sortable: true,
+          defaultVisible: false,
         },
         {
           id: "type",
           header: "Contact Type",
-          accessorKey: "contact_type",
-          size: 40,
-          filterVariant: "select",
-          Cell: ({ cell }) => capitalizeFirstLetter(cell.getValue<string>()),
+          accessor: "contact_type",
+          sortable: true,
+          filter: { type: "select", options: CONTACT_TYPE_OPTIONS },
+          defaultVisible: false,
+          cell: (contact) => capitalizeFirstLetter(contact.contact_type),
         },
         {
           id: "name",
           header: "Contact",
-          accessorKey: "contact_id",
-          size: 40,
-          Cell: ContactNameCell,
+          accessor: "contact_id",
+          sortable: true,
+          cell: contactNameCell,
         },
         {
           id: "isWatched",
           header: "Watchlist",
-          accessorFn: (row) => row.is_watched ?? false,
-          filterVariant: "checkbox",
-          Cell: ContactWatchedCell,
+          accessor: (contact) => contact.is_watched ?? false,
+          sortable: true,
+          filter: { type: "boolean" },
+          defaultVisible: !hideWatchedColumn,
+          cell: contactWatchedCell,
         },
         {
           id: "isBlocked",
           header: "Blocked",
-          accessorKey: "is_blocked",
-          Cell: ContactBlockedCell,
+          accessor: "is_blocked",
+          sortable: true,
+          defaultVisible: !hideBlockedColumn,
+          cell: contactBlockedCell,
         },
         {
           id: "labels",
           header: "Labels",
-          accessorKey: "label_ids",
-          Cell: ({ cell }) => (
-            <Group gap="xs">
-              {cell.getValue<number[] | undefined>()?.map((labelId) => (
-                <Badge size="sm" key={labelId}>
-                  {labelName[labelId] ?? String(labelId)}
-                </Badge>
-              ))}
-            </Group>
-          ),
+          // The resolved names, so searching for a label finds its contacts.
+          accessor: (contact) =>
+            contact.label_ids?.map(
+              (labelId) => labelName[labelId] ?? String(labelId),
+            ),
+          filter: { type: "multi-select" },
+          cell: contactLabelsCell,
         },
         {
           id: "standings",
           header: "Standings",
-          accessorKey: "standing",
-          filterVariant: "range-slider",
-          filterFn: "betweenInclusive",
-          mantineFilterRangeSliderProps: {
-            min: -10,
-            max: 10,
-            step: 0.1,
-          },
-          Cell: ContactStandingsCell,
+          accessor: "standing",
+          sortable: true,
+          filter: { type: "range", min: -10, max: 10, step: 0.1 },
+          cell: contactStandingsCell,
         },
       ],
-      [labelName],
+      [labelName, hideBlockedColumn, hideWatchedColumn],
     );
 
-    const table = useMantineReactTable({
-      columns,
-      positionPagination: "top",
-      enableFacetedValues: true,
-      data: contacts ?? [], //must be memoized or stable (useState, useMemo, defined outside of this component, etc.)
-      initialState: {
-        density: "xs",
-        sorting: [{ id: "standings", desc: true }],
-        pagination: {
-          pageIndex: 0,
-          pageSize: 25,
-        },
-        columnVisibility: {
-          id: false,
-          type: false,
-          isBlocked: !hideBlockedColumn,
-          isWatched: !hideWatchedColumn,
-        },
-      },
-    });
-
-    return <MantineReactTable table={table} />;
+    return (
+      <DataTable
+        data={contacts ?? NO_CONTACTS}
+        columns={columns}
+        rowId={(contact) => contact.contact_id}
+        withGlobalFilter
+        withColumnVisibility
+        withPagination
+        defaultPageSize={25}
+        initialSort={{ columnId: "standings", direction: "desc" }}
+        verticalSpacing="xs"
+        highlightOnHover
+        striped
+      />
+    );
   },
 );
 

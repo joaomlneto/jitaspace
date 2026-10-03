@@ -7,7 +7,7 @@ export const PREFERENCES_STORAGE_KEY = "jitaspace.preferences";
 
 export const DEFAULT_ESI_ACCEPT_LANGUAGE = "en";
 export const DEFAULT_APP_THEME = "default";
-export const DEFAULT_EXPERIMENTAL_DATA_TABLES = false;
+export const DEFAULT_DATA_TABLE_ENGINE = "tanstack";
 export const DEFAULT_EXPERIMENTAL_ACTIVE_WARS = false;
 
 export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
@@ -32,18 +32,26 @@ export const APP_THEME_OPTIONS = [
   { value: "whpd", label: "WHPD" },
 ] as const;
 
+/** The engines every data table can render with (`~/components/DataTable`). */
+export const DATA_TABLE_ENGINE_OPTIONS = [
+  { value: "tanstack", label: "TanStack" },
+  { value: "mantine-datatable", label: "mantine-datatable" },
+] as const;
+
 export type EsiAcceptLanguage =
   (typeof ESI_ACCEPT_LANGUAGE_OPTIONS)[number]["languageCode"];
 export type AppTheme = (typeof APP_THEME_OPTIONS)[number]["value"];
+export type DataTableEngine =
+  (typeof DATA_TABLE_ENGINE_OPTIONS)[number]["value"];
 
 interface PreferencesState {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
-  experimentalDataTables: boolean;
+  dataTableEngine: DataTableEngine;
   experimentalActiveWars: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
-  setExperimentalDataTables: (value: boolean) => void;
+  setDataTableEngine: (value: DataTableEngine) => void;
   setExperimentalActiveWars: (value: boolean) => void;
 }
 
@@ -62,6 +70,9 @@ export const sanitizeAppTheme = (
 
   return themeOption?.value;
 };
+
+const sanitizeDataTableEngine = (value: unknown): DataTableEngine | undefined =>
+  DATA_TABLE_ENGINE_OPTIONS.find((item) => item.value === value)?.value;
 
 const sanitizeEsiAcceptLanguage = (
   value: string | null | undefined,
@@ -82,12 +93,11 @@ export const usePreferencesStore = create<PreferencesState>()(
     (set) => ({
       esiAcceptLanguage: DEFAULT_ESI_ACCEPT_LANGUAGE,
       appTheme: DEFAULT_APP_THEME,
-      experimentalDataTables: DEFAULT_EXPERIMENTAL_DATA_TABLES,
+      dataTableEngine: DEFAULT_DATA_TABLE_ENGINE,
       experimentalActiveWars: DEFAULT_EXPERIMENTAL_ACTIVE_WARS,
       setEsiAcceptLanguage: (value) => set({ esiAcceptLanguage: value }),
       setAppTheme: (value) => set({ appTheme: value }),
-      setExperimentalDataTables: (value) =>
-        set({ experimentalDataTables: value }),
+      setDataTableEngine: (value) => set({ dataTableEngine: value }),
       setExperimentalActiveWars: (value) =>
         set({ experimentalActiveWars: value }),
     }),
@@ -103,10 +113,9 @@ export const usePreferencesStore = create<PreferencesState>()(
             sanitizeEsiAcceptLanguage(persisted.esiAcceptLanguage) ??
             DEFAULT_ESI_ACCEPT_LANGUAGE,
           appTheme: sanitizeAppTheme(persisted.appTheme) ?? DEFAULT_APP_THEME,
-          experimentalDataTables:
-            typeof persisted.experimentalDataTables === "boolean"
-              ? persisted.experimentalDataTables
-              : DEFAULT_EXPERIMENTAL_DATA_TABLES,
+          dataTableEngine:
+            sanitizeDataTableEngine(persisted.dataTableEngine) ??
+            DEFAULT_DATA_TABLE_ENGINE,
           experimentalActiveWars:
             typeof persisted.experimentalActiveWars === "boolean"
               ? persisted.experimentalActiveWars
