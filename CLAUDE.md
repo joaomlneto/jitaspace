@@ -12,36 +12,9 @@ JitaSpace is a Turborepo + pnpm monorepo for an EVE Online companion web app (ma
 
 Use **pnpm exclusively** — the root `preinstall` hook runs `only-allow pnpm`, so `npm install`/`yarn` fail. Pinned to `pnpm@11.3.0`; Node `>=24.15.0` (see `.nvmrc`).
 
-```bash
-pnpm install                    # install all workspace dependencies
-pnpm install --frozen-lockfile  # CI-safe install (does not alter lockfile)
-```
-
 ## Key Commands
 
-```bash
-pnpm dev            # all dev servers (turbo dev --parallel)
-pnpm build          # build all packages/apps
-pnpm test           # Jest unit tests across workspaces (writes coverage/)
-pnpm test:watch     # Jest watch mode
-pnpm lint           # ESLint (flat config) + manypkg workspace checks
-pnpm lint:fix       # auto-fix lint issues
-pnpm type-check     # tsc --noEmit across all workspaces
-pnpm format         # Prettier (also sorts imports)
-pnpm format:check   # Prettier in check mode — what lint.yml runs
-pnpm db:generate    # generate Prisma client from packages/db/prisma/schema.prisma
-pnpm db:diff        # read-only: show what db:push WOULD change (run this first)
-pnpm db:push        # apply the Prisma schema to the DB (also runs db:generate)
-pnpm kubb:generate  # generate API clients from OpenAPI specs
-pnpm cypress:run    # run web E2E tests headlessly
-pnpm cypress:open   # open Cypress runner
-pnpm clean          # remove all node_modules, from the root down
-pnpm clean:workspaces # `turbo clean` — runs each workspace's own clean script.
-                      # NOTE: 27 of those delete the workspace's node_modules as
-                      # well as its build output, so this uninstalls dependencies
-                      # too; it is not a build-output-only clean. Re-run
-                      # `pnpm install` afterwards.
-```
+Scripts are in the root `package.json`. One does more than its name suggests: `pnpm clean:workspaces` (`turbo clean`) runs each workspace's own clean script, and 27 of those delete the workspace's `node_modules` as well as its build output — so it uninstalls dependencies too. Re-run `pnpm install` afterwards.
 
 ### Running a single test
 
@@ -105,29 +78,7 @@ Reads behind `connection()` (e.g. `app/history/page.tsx:24`) or behind `await pa
 
 ## Never catch a database error inside a `"use cache"` scope
 
-**A `catch` that swallows a database failure inside a cached scope turns a blip into a cached 404.** `notFound()` is not an error — it is a _successful_ 404 render, so Next.js stores it as a normal ISR entry. With `cacheLife("days")` (`stale 300 / revalidate 86400 / expire 604800`) that 404 is served to everyone for **up to 24 hours after the database recovers**, and nothing reports it. SDE reads now use `cacheLife("max")` (see **SDE reads are cached until the next ingest**), where the same 404 would last **up to 30 days**, or until the next SDE ingest purges it.
-
-This is not only a build-time hazard. On 2026-08-29 the production deployment was six days old and healthy when the CockroachDB cluster hit its monthly Request Unit limit and was disabled (`Too many database connections opened: This cluster has reached its Request Unit limit for the month and is now disabled`). Five routes happened to run their daily background revalidation during the outage window (15:08–17:43 UTC) and each latched a 404; the four routes that revalidated outside the window were untouched. Exposure is to **the moment of render**, not to query cost — `/lp-store/all` runs a strict superset of `/lp-store`'s queries and stayed healthy while `/lp-store` 404ed.
-
-The rule:
-
-- **Let the read throw.** At build time this fails the build loudly, which is the desired signal. At request time it produces a transient error instead of a stored 404 — nothing wrong is written to the cache, so the route recovers as soon as the database does.
-- **`notFound()` is still correct for a genuinely absent row**, and is legitimately cached. `app/ship-scanner/page.tsx` is the worked example: it reads with `findUnique` and tests for null, precisely so a missing row (a 404) stays distinguishable from a failed query (a throw). Prefer that over `findUniqueOrThrow`, which collapses the two into one error — that collapse fails the build against an empty database, which is what the CI Cypress job prerenders against.
-- **If a partial failure is genuinely tolerable**, split it: a `readX()` that carries `"use cache"` and throws, plus an uncached caller that catches and degrades. `readTypeDogmaMeta` (`app/type/[typeId]/page.tsx`) and `readSolarSystemSdeInfo` (`app/system/[systemId]/page.tsx`) are the reference implementations — commit `e60062ec` established the split (for a cached _empty value_; the cached-404 variant is the same defect class). Never catch on the cached side of that split.
-- **Don't add a manual `Sentry.captureException`** to these paths. `apps/web/instrumentation.ts` exports `onRequestError = Sentry.captureRequestError`, so an uncaught render error is already reported; a catch is what makes it invisible.
-
-**The dynamic `[param]` routes are a deliberate exception, not an oversight.** `category/[categoryId]`, `group/[groupId]`, `type/[typeId]`, `dogma/effect/[effectId]`, `lp-store/[corporationId]`, `dogma/attribute/[attributeId]` and `active-wars`/`travel` still reach `notFound()` on a failed query. Because that throw happens inside a `<Suspense>` boundary the response is HTTP **200** with the not-found UI and nothing is stored, so it self-heals per request rather than latching. `app/sitemap.ts` is the other sanctioned exception: it degrades to a partial sitemap deliberately and reports it to Sentry (`sitemap.ts:385`). The cost in both cases is a wrong-but-transient response, not a poisoned cache.
-
-**What "throws instead" actually costs, measured against Next 16.2.11.** Don't reason about this from the self-hosted code path — Vercel does not run it:
-
-| cached read throws during revalidation | result                                                                 |
-| -------------------------------------- | ---------------------------------------------------------------------- |
-| `next start` (self-hosted)             | serves the previous entry (`200`, `x-nextjs-cache: HIT`), retries ~30s |
-| Vercel (`NEXT_PRIVATE_MINIMAL_MODE=1`) | origin returns **`500`**                                               |
-
-Next's serve-the-previous-entry recovery (`server/response-cache/index.js:290-307`) is unreachable in minimal mode, because `:193` reads `previousIncrementalCacheEntry = !this.minimal_mode ? … : null`. On Vercel what shields users is the **CDN** serving the last successful ISR version while revalidation fails — a platform guarantee, not a Next one. So on a genuine cache MISS during an outage (a region with no copy, a purge, or past `expire`) the visitor gets an error page, where the old code gave them a rendered — but wrong, and stored — 404. Still the better trade: an error is transient and uncached, whereas `notFound()` is a _success_ Next stores and serves for the full `cacheLife`. But it is a trade, not a free win — and `apps/web` has no `app/error.tsx`, so that error page is Next's unbranded default.
-
-Diagnosing a suspected instance: check `x-nextjs-prerender` / `x-vercel-cache` / `age` on the response, grep the body for `secret place` (the `not-found.tsx` marker), and confirm against Vercel runtime logs — the poisoning revalidation appears as a `cache=STALE` serverless invocation carrying the `prisma:error`. A `notFound()` thrown inside a `<Suspense>` boundary returns **HTTP 200** with the not-found UI, so status code alone does not tell you whether the read succeeded.
+In `apps/web`, a `catch` that swallows a database failure inside a cached scope turns a blip into a cached 404 that is served for up to 30 days, and nothing reports it. **Let the read throw.** The full rule, its sanctioned exceptions, and how to diagnose an instance are in `apps/web/CLAUDE.md`.
 
 ## Environment variables & `SKIP_ENV_VALIDATION`
 
@@ -137,69 +88,30 @@ Copy `.env.example` to `.env` at the repo root. `apps/web/env.ts` validates env 
 
 ## Repository Structure
 
-```
-apps/
-  web/   # Next.js 16 (App Router) — the main product, deployed to Vercel.
-  cli/   # Developer CLI utilities
-packages/
-  auth/ auth-utils/          # EVE Online SSO (OAuth2 PKCE + state), token seal/refresh
-  db/                        # Prisma 7 client + PostgreSQL schema
-  kv/                        # Redis client + Bull job queues
-  esi-client/                # Kubb-generated ESI API client
-  evekill-client/ evetycoon-client/ fuzzworks-market-client/  # more generated clients
-  esi-metadata/ eve-data/    # ESI scopes/ID ranges; static EVE datasets
-  hooks/                     # React Query hooks over ESI / third-party APIs
-  ui/                        # Presentational Mantine components (dependency-light: no hooks/data fetching)
-  eve-components/            # Data-aware EVE components (names, avatars, anchors, selects)
-  eve-icons/ tiptap-eve/     # EVE icon set; EVE-HTML Tiptap extension
-  solar-system-map/          # publishable R3F 3D solar-system map (presentational)
-  ship-tree/                 # adapter for @eve-online-tools/eve-ship-tree (the in-game ship tree); powers /ship-tree
-  datatable/ datatable-common/ datatable-mantine/ datatable-tanstack/  # table contract, shared semantics + controls, two engines
-  chat/                      # Discord-backed in-app chat
-  background-jobs/           # Platform-agnostic EVE-data background job logic (source of truth)
-  background-jobs-triggerdev/ # Trigger.dev adapter (active runner) for background-jobs
-  utils/ sde-utils/          # shared utilities
-tooling/
-  eslint/ prettier/ tsconfig/  # shared presets (extend these, don't redefine)
-```
+Workspaces are `apps/*`, `packages/*` and `tooling/*`; each `package.json` describes its package. What the layout does not tell you:
 
-> Note: there is no `apps/worker` — background jobs run on Trigger.dev (the
-> `@jitaspace/background-jobs-triggerdev` adapter).
+- `packages/ui` is presentational and dependency-light: no hooks, no data fetching. Data-aware components go in `packages/eve-components`.
+- `tooling/eslint`, `tooling/prettier` and `tooling/tsconfig` are shared presets: extend them, don't redefine them.
+- There is no `apps/worker`. Background jobs run on Trigger.dev: the logic lives in `@jitaspace/background-jobs`, and the `@jitaspace/background-jobs-triggerdev` adapter runs it.
 
 ## Tech Stack
 
-- **Runtime/Lang:** Node.js ≥24.15.0, TypeScript ~5.9
-- **Monorepo:** Turborepo ~2.9 + pnpm 11
-- **Frontend:** Next.js 16 (App Router), React 19, Mantine 9, Zustand
-- **Data fetching:** TanStack React Query 5
-- **DB / cache:** PostgreSQL + Prisma 7; Redis + Bull
-- **Auth:** Custom EVE Online SSO OAuth2 flow (authorization code + PKCE)
-- **Background jobs:** Trigger.dev — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter
-- **API codegen:** Kubb 4 (OpenAPI → TypeScript). Keep `@kubb/*` at `>=4.38.0` — 4.37.x had codegen bugs (object-array collapse, `#`-prefixed keys).
-- **Rich text:** Tiptap + EVE HTML extensions
+Versions are in the manifests. Two notes they do not carry:
+
+- **Kubb:** keep `@kubb/*` at `>=4.38.0` — 4.37.x had codegen bugs (object-array collapse, `#`-prefixed keys).
 - **Testing:** Jest 30 (unit). Cypress 15 runs a small smoke suite (`apps/web/cypress/e2e/smoke.cy.ts`) whose assertions are request-level: the homepage does not 5xx, `/about` server-renders, the PWA manifest is served, and an unknown route 404s. It gates "this deploy came up and serves real routes", not feature behaviour — there is still no meaningful E2E coverage.
-- **Monitoring:** Sentry + PostHog
 
 ## Key Conventions
 
 - **Internal imports:** `@jitaspace/<name>` with `workspace:*` version specifiers in `package.json`.
-- **`@jitaspace/db-builds` is an npm dependency, not a workspace package.** jovespace writes the build-history DB (`/history`), owns its schema, and publishes this package with the Prisma client already generated, so there is no `db:generate` for it here. Schema changes arrive as Renovate PRs, which `apps/web/tests/historySchemaContract.test.ts` and type-check gate. Don't copy the schema into this repo.
 - **Adding a new `@jitaspace/*` package to the web app:** if it ships TypeScript source, add it to `transpilePackages` in `apps/web/next.config.mjs`; server-only/Node-only deps go in `serverExternalPackages` instead (e.g. `bull`).
 - **New dependencies** go in the consuming package's `package.json`, not root.
 - **ESLint:** flat config only (`eslint.config.ts`); never `.eslintrc.*`. `apps/web` lints with `--flag unstable_native_nodejs_ts_config`.
 - **TypeScript:** `moduleResolution: Bundler`, `strict`, `noUncheckedIndexedAccess`; all packages extend `tooling/tsconfig/base.json`.
 - **Prettier import order** (via `@ianvs/prettier-plugin-sort-imports`): React/Next → third-party → `@jitaspace/*` types → `@jitaspace/*` values → relative.
-- **URL-synced filter state (nuqs):** use `useQueryState`/`useQueryStates` for filter/sort/view state that should be shareable (see `app/mail/page.client.tsx`, `components/Wars/WarRoom/WarList.tsx`). Two rules: (1) the consuming component **must** sit under a `<Suspense>` boundary — nuqs calls `useSearchParams()` internally, and without one the route silently drops out of static prerendering under `cacheComponents`; (2) prefer a validating parser (`parseAsInteger`, `parseAsStringLiteral`) over `parseAsString` so hand-edited URLs can't reach an API. Page-owned params may use bare names (`status`, `sort`); a **shared** component that adopts nuqs must namespace via `urlKeys` to avoid colliding with its host page. In a page cached whole (ISR, below), also wrap the consumer in `NuqsAdapter` from `nuqs/adapters/react`, which takes over from the app-wide Next adapter: the Next adapter's `useSearchParams()` drops its subtree out of the cached HTML, which then holds only the loader, while the React adapter reads the URL after hydration.
-- **ISR for a dynamic `[param]` route:** under Next 16.2 a param `generateStaticParams` did not list is served from the fallback shell, and everything after `await params` re-renders on **every** request — `"use cache"` can save the queries, not the render, and on Vercel it rarely saves even those (see the next bullet). Caching the whole page per param needs `generateStaticParams` on that segment (at least one entry; when the DB is unreachable at build, as in CI, a placeholder the page 404s before querying) plus `experimental.partialFallbacks`, already on in `next.config.mjs`. Reference: `app/history/build/[build]/page.tsx`. Verify with `next start`: the second request carries `x-nextjs-cache: HIT`. An ISR route stores its `notFound()` output, so a `[param]` route that catches a DB error into `notFound()` (see **Never catch a database error inside a `"use cache"` scope**) drops that catch first.
-- **SDE reads are cached until the next ingest.** A `"use cache"` scope that reads only tables `ingest-sde-all` writes starts with `cacheSdeRead()` (`apps/web/lib/sdeCache.ts`) instead of `cacheLife(...)`. That tags the entry `sde` and keeps it for `cacheLife("max")` (revalidated at most every 30 days). When the ingest finishes it fires the `revalidate-sde-cache` Trigger.dev job, which POSTs to `/api/revalidate/sde` with `Authorization: Bearer $CRON_SECRET`, and the route runs `revalidateTag("sde", "max")`. Neither way this goes wrong breaks a page. Data the ingest does not write (LP store offers, wars, prices, the build-history database) keeps its own `cacheLife`: tagged `sde`, it would stay stale for up to a month and nothing would report it. And if the Trigger.dev environment lacks the web app's `CRON_SECRET`, the job fails (the adapter reports it to Sentry) while every SDE page keeps serving the previous build. After writing SDE tables any other way (`bootstrap-database`, a single `ingest-sde-*` task), run `revalidate-sde-cache` by hand. `max` only helps where Next stores the output: prerendered pages, and the argument-free reads in shells. A `[param]` route's read runs per request against a per-instance memory cache that rarely hits on Vercel: Sentry counted ~2 `Type` queries per `/type/[typeId]` render over 7 days (2026-09-28).
-- **Data tables:** render tables through `~/components/DataTable` with `DataTableColumn`s from `@jitaspace/datatable`, never through an engine directly. The user picks the engine (TanStack, the default, or `mantine-datatable`) under Settings → General, so a table must not depend on either. Per-column filters (`filter: { type: … }`), skeleton loading rows and nulls-last sorting are part of the contract, and their semantics live once in `@jitaspace/datatable-common` (see `packages/datatable/README.md`). Give `data` a stable identity (`useMemo`) anyway: the page survives a new array, but faceting and sorting rerun on every one. `mantine-react-table` was removed in favour of this; don't reintroduce it.
-- **Page metadata:** every public page describes itself through `pageMetadata()` (`apps/web/lib/metadata.ts`) rather than a hand-written `export const metadata`. Next merges metadata per key and only re-resolves `openGraph` for a segment that declares one, so a page setting only `title`/`description` inherits the root layout's card (and unfurls on Discord as the generic site blurb), while a page declaring `openGraph` itself replaces the root's wholesale (dropping `siteName`/`type`). The helper states the full block and builds the `og:image` — a card rendered by `app/api/og/route.tsx` via Next's built-in `next/og`. `tests/pageMetadataCoverage.test.ts` enforces the rule; a `"use client"` page carries its metadata in a sibling `layout.tsx`. Its `path` is what emits the canonical URL, so an entity route parses its id with `parsePositiveEntityId` (`lib/routeParams.ts`) and passes the parsed value — never the raw segment, which would canonicalise `/type/0587` as a page of its own.
-- **Ship tree (`@jitaspace/ship-tree`, `/ship-tree`).** A thin adapter over `@eve-online-tools/eve-ship-tree`; the web app never imports the third-party package. Four things that are not obvious from the code:
-  - **Its data is its own pinned SDE snapshot, not our database.** The library fetches 13 JSONL tables in the browser. `app/api/ship-tree-data/[file]/route.ts` prerenders them at build from the installed package (`generateStaticParams` over `SHIP_TREE_DATA_FILE_NAMES`), so nothing is committed or copied into `public/`. The read must sit inside `"use cache"`: under `cacheComponents`, I/O outside a cache scope makes a handler dynamic, and the build summary shows `ƒ` where it should show `●`. Dev and Jest cannot tell the difference, so check `next build`'s route summary after touching it. It also revalidates for a year (`cacheLife` with `revalidate` = `expire` = 365 days), not `"max"`'s 30: a regeneration runs inside the deployed function, whose file trace cannot see `node_modules`, so it would fail. `outputFileTracingIncludes` does not fix that; it had no effect in this Turbopack build. New game data needs a version bump of the library, not an `ingest-sde-all`.
-  - **Locate the data with `findPackageJSON`, never `require.resolve`.** Turbopack turns a templated `require.resolve` into a glob over `data/generated/*` and fails the build trying to bundle each `.jsonl` as a module (`server.ts` explains).
-  - **`apps/web/postcss.config.cjs` loads `@jitaspace/ship-tree/postcss`, and removing it breaks the build.** The library's `styles.css` ships twenty empty `url("")` values that Turbopack refuses to resolve (`Can't resolve ''`). The plugin drops them, for that file only.
-  - **Don't trust the library's README or footer defaults.** It claims only the four empires have layouts; all 17 render (`SHIP_TREE_FACTIONS`). Its `Grid` footer defaults to an invented client version (`V1.569.496`) and in-game flavour text; `ShipTreeView` suppresses them. A version bump fails type-check if a table or faction is added or dropped (`data.ts`, `factions.ts`).
 - **Build note:** `apps/web` sets `typescript.ignoreBuildErrors: true` in CI, so TS errors don't fail the Next build — but they still fail `pnpm type-check`. Always run `pnpm type-check` to validate types.
+
+Conventions specific to the web app (nuqs, ISR, SDE caching, data tables, page metadata, ship tree, `@jitaspace/db-builds`) live in `apps/web/CLAUDE.md`, which loads when you work under `apps/web`.
 
 ## Changesets
 
@@ -235,16 +147,3 @@ Four GitHub Actions run on pushes to `main` and on pull requests (all set `SKIP_
 Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm peers check` → `pnpm lint` → `pnpm format:check` → `pnpm type-check` → `pnpm test`.
 
 > After merging `main`, re-run `pnpm db:generate` before trusting a type-check: a schema change plus a stale client makes valid columns look missing and cascades into unrelated errors. If a fresh worktree reports errors inside a `dist/` or `prisma/generated/` path, that is a stale `tsbuildinfo` or an unbuilt package, not repo state — clear `node_modules/.cache` and rebuild.
-
-## Where to look first
-
-| Area              | Path                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------ |
-| Turbo pipeline    | `turbo.json`                                                                         |
-| Web config / env  | `apps/web/next.config.mjs`, `apps/web/env.ts`                                        |
-| Web routes        | `apps/web/app/`                                                                      |
-| DB schema         | `packages/db/prisma/schema.prisma`                                                   |
-| ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`             |
-| Auth              | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)                    |
-| Shared tooling    | `tooling/eslint/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
-| Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                              |
