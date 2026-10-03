@@ -33,6 +33,13 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      # The only peer-dependency gate. A frozen install skips resolution, so a
+      # lockfile with unmet peers installs with exit 0 even though
+      # strictPeerDependencies is true — and `pnpm add`/`pnpm update` write
+      # such a lockfile with only a warning. This fails on any unmet or missing
+      # peer in the committed lockfile.
+      - name: Check peer dependencies
+        run: pnpm peers check
       # The turbo `lint` task depends on the Prisma and Kubb generators, so a
       # clean checkout produces them itself. `pnpm lint` also runs
       # `manypkg check`, which fails on a dependency declared at different

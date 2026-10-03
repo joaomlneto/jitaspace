@@ -226,13 +226,13 @@ patch = bug fix/internal; minor = new feature/export; major = breaking.
 Four GitHub Actions run on pushes to `main` and on pull requests (all set `SKIP_ENV_VALIDATION=1`):
 
 - **`type-check.yml`:** `pnpm install --frozen-lockfile` → `pnpm type-check`. A hard gate — the repo is expected to be **green**, so a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
-- **`lint.yml`:** `pnpm install --frozen-lockfile` → `pnpm lint` → `pnpm format:check`. `pnpm lint` also runs `manypkg check`, which fails on a dependency declared at different versions across workspaces.
+- **`lint.yml`:** `pnpm install --frozen-lockfile` → `pnpm peers check` → `pnpm lint` → `pnpm format:check`. `pnpm lint` also runs `manypkg check`, which fails on a dependency declared at different versions across workspaces. `pnpm peers check` is the only peer-dependency gate. `strictPeerDependencies` is `true`, but a frozen install never resolves, and `pnpm add`/`pnpm update` write a lockfile with unmet peers after only a warning. Every `@mantine/*` package peers on `@mantine/core`/`@mantine/hooks` at exactly its own version, so keep all `@mantine/*` specifiers on one caret floor and bump them together — updating one alone is what this step catches.
 - **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → run the smoke suite. It gates that the build succeeds, the server boots, and four real routes respond. Recording and `--parallel` are enabled only when `CYPRESS_RECORD_KEY` is present, so fork PRs run the suite unrecorded instead of failing. The job also supplies placeholder `NEXT_PUBLIC_*` values: `SKIP_ENV_VALIDATION` is never inlined into the client bundle, so `env.ts` always validates in the browser and a build without them produces a bundle that throws on load.
 - **`sonarcloud.yml`:** `pnpm install --frozen-lockfile` → `pnpm test` (coverage) → SonarQube scan. New code must keep coverage above the quality gate.
 
 `.githooks/pre-commit` also runs `pnpm lint` locally. It is bypassable with `--no-verify`, and it is only installed once the root `prepare` script has run — so a failed `pnpm install` leaves a checkout with no local lint gate. `lint.yml` is the backstop.
 
-Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm format:check` → `pnpm type-check` → `pnpm test`.
+Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm peers check` → `pnpm lint` → `pnpm format:check` → `pnpm type-check` → `pnpm test`.
 
 > After merging `main`, re-run `pnpm db:generate` before trusting a type-check: a schema change plus a stale client makes valid columns look missing and cascades into unrelated errors. If a fresh worktree reports errors inside a `dist/` or `prisma/generated/` path, that is a stale `tsbuildinfo` or an unbuilt package, not repo state — clear `node_modules/.cache` and rebuild.
 

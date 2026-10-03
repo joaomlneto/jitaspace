@@ -89,6 +89,13 @@ pnpm test                          # Jest unit tests across workspaces (generate
 
 Four GitHub Actions workflows run on pushes to `main` and on pull requests:
 
+**Lint** (`.github/workflows/lint.yml`):
+
+- Sequence: `pnpm install --frozen-lockfile` → `pnpm peers check` → `pnpm lint` → `pnpm format:check`
+- `pnpm peers check` is the only peer-dependency gate: `strictPeerDependencies` is `true` in `pnpm-workspace.yaml`, but a frozen install never resolves, and `pnpm add`/`pnpm update` write a lockfile with unmet peers after only a warning. Keep every `@mantine/*` specifier on one caret floor and bump them together — each Mantine package peers on `@mantine/core`/`@mantine/hooks` at exactly its own version.
+- `pnpm lint` also runs `manypkg check`, which fails on a dependency declared at different versions across workspaces
+- Uses `SKIP_ENV_VALIDATION=1`
+
 **Type Check** (`.github/workflows/type-check.yml`):
 
 - Sequence: `pnpm install --frozen-lockfile` → `pnpm type-check`
