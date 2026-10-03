@@ -3,7 +3,7 @@
 ---
 
 The site's sortable data tables now all use one table component: the LP Store,
-Agents, Contacts, Market orders, Wallet, Active Wars, and the Dogma attribute and
+Agents, Contacts, Market orders, Wallet, and the Dogma attribute and
 effect lists. They share one look and one set of controls: a search box, a Columns
 menu to show or hide columns, and a filter button in the header of each filterable
 column. A "Clear filters" button resets every filter at once.
@@ -14,7 +14,6 @@ Filters by table:
 - **Wallet:** a date range, entry types, and a new amount range.
 - **Contacts:** contact type, watchlist, a standings range, and a new labels filter.
 - **Agents:** type, division, locator and level.
-- **Active Wars:** mutual, open for allies, and declared or started dates.
 - **Market orders:** order range.
 - **Dogma attributes and effects:** the number of types.
 

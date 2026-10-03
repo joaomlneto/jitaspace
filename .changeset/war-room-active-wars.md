@@ -2,7 +2,7 @@
 "@jitaspace/web": minor
 ---
 
-Added a compact, data-first redesign of the Active Wars page, available as an opt-in under **Settings → Experimental → "New Active Wars page"**. When off (the default), the existing table is unchanged.
+Redesigned the Active Wars page into a compact, data-first overview.
 
 - **At-a-glance header** — active, starting, ending, in-combat, total ISK destroyed, and ships lost.
 - **Belligerents** — leaderboards of the corporations and alliances declaring the most wars, and the heaviest current fights by ISK destroyed.

@@ -204,9 +204,7 @@ describe("SettingsCard", () => {
     expect(screen.queryByText("New data tables")).not.toBeInTheDocument();
   });
 
-  it("toggles the new Active Wars page from the Experimental tab", async () => {
-    usePreferencesStore.setState({ experimentalActiveWars: false });
-
+  it("shows that there are no experimental features right now", () => {
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
@@ -217,12 +215,9 @@ describe("SettingsCard", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: "Experimental" }));
 
-    const toggle = await screen.findByLabelText(
-      "Enable the new Active Wars page",
-    );
-    expect(toggle).not.toBeChecked();
-
-    fireEvent.click(toggle);
-    expect(usePreferencesStore.getState().experimentalActiveWars).toBe(true);
+    expect(
+      screen.getByText("No experimental features right now — stay tuned!"),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   });
 });
