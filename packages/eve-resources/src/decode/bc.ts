@@ -174,8 +174,9 @@ export function decodeBC3(
   const out = new Uint8Array(width * height * 4);
   const view = viewOf(data);
   eachBlock(width, height, 16, (off, bx, by) => {
-    decodeChannelBlock(view, off, out, bx, by, width, height, 3); // alpha
+    // Color first: it writes an opaque alpha that the alpha block then replaces.
     decodeColorBlock(view, off + 8, out, bx, by, width, height, false);
+    decodeChannelBlock(view, off, out, bx, by, width, height, 3); // alpha
   });
   return out;
 }

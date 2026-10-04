@@ -5,24 +5,29 @@ import type { ResourceEntry } from "../src/index";
 import {
   entryUrl,
   fetchAppIndex,
+  fetchBuildDate,
   fetchResfileIndex,
   fetchResourceBytes,
+  fetchResourceHead,
   fetchResourceIndex,
   getCurrentBuild,
 } from "../src/index";
+
+/** The URL a `fetch` call was made with. */
+function urlOf(input: RequestInfo | URL): string {
+  return typeof input === "string"
+    ? input
+    : input instanceof URL
+      ? input.href
+      : input.url;
+}
 
 /** A `fetch` stand-in that serves canned responses keyed by URL. */
 function mockFetch(
   routes: Record<string, { body?: BodyInit; status?: number }>,
 ): typeof fetch {
   return (input: RequestInfo | URL) => {
-    const url =
-      typeof input === "string"
-        ? input
-        : input instanceof URL
-          ? input.href
-          : input.url;
-    const route = routes[url];
+    const route = routes[urlOf(input)];
     if (!route) {
       return Promise.resolve(new Response("not found", { status: 404 }));
     }
@@ -329,5 +334,104 @@ describe("NetEase (EVE China) server resolution", () => {
       "serenity",
     );
     expect(new TextDecoder().decode(bytes)).toBe("china bytes");
+  });
+});
+
+describe("fetchResourceHead", () => {
+  const entry: ResourceEntry = {
+    path: "res:/big.bin",
+    relPath: "a/1",
+    md5: "m",
+    size: 9,
+    compressedSize: 9,
+  };
+  const URL_ = "https://resources.eveonline.com/a/1";
+
+  /** Serve `chunks` as a streamed body, recording the request's abort signal. */
+  function streaming(chunks: number[][]) {
+    let signal: AbortSignal | undefined;
+    const fetchImpl = ((input: RequestInfo | URL, init?: RequestInit) => {
+      expect(urlOf(input)).toBe(URL_);
+      signal = init?.signal ?? undefined;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          for (const c of chunks) controller.enqueue(new Uint8Array(c));
+          controller.close();
+        },
+      });
+      return Promise.resolve(new Response(body));
+    }) as typeof fetch;
+    return { fetchImpl, aborted: () => signal?.aborted };
+  }
+
+  it("stops reading once it has maxBytes, truncating the last chunk", async () => {
+    const { fetchImpl, aborted } = streaming([
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9],
+    ]);
+    const head = await fetchResourceHead(entry, 4, fetchImpl);
+    expect([...head]).toEqual([1, 2, 3, 4]);
+    expect(aborted()).toBe(true);
+  });
+
+  it("returns the whole body when it is shorter than maxBytes", async () => {
+    const { fetchImpl } = streaming([[1, 2]]);
+    const head = await fetchResourceHead(entry, 10, fetchImpl);
+    expect([...head]).toEqual([1, 2]);
+  });
+
+  it("falls back to arrayBuffer() when the response has no stream", async () => {
+    const fetchImpl = (() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        body: null,
+        arrayBuffer: () => Promise.resolve(new Uint8Array([1, 2, 3, 4]).buffer),
+      } as unknown as Response)) as typeof fetch;
+    const head = await fetchResourceHead(entry, 3, fetchImpl);
+    expect([...head]).toEqual([1, 2, 3]);
+  });
+
+  it("throws on a non-OK response", async () => {
+    const fetchImpl = mockFetch({ [URL_]: { status: 404 } });
+    await expect(fetchResourceHead(entry, 4, fetchImpl)).rejects.toThrow(
+      /HTTP 404/,
+    );
+  });
+});
+
+describe("fetchBuildDate", () => {
+  /** Answer a HEAD request for the build's app index with `headers`. */
+  function head(headers: Record<string, string>) {
+    return ((input: RequestInfo | URL, init?: RequestInit) => {
+      expect(urlOf(input)).toBe(
+        "https://binaries.eveonline.com/eveonline_3360489.txt",
+      );
+      expect(init?.method).toBe("HEAD");
+      return Promise.resolve(new Response(null, { headers }));
+    }) as typeof fetch;
+  }
+
+  it("reads the UTC date from the app index's Last-Modified header", async () => {
+    const fetchImpl = head({
+      "last-modified": "Thu, 01 Oct 2026 23:30:00 GMT",
+    });
+    await expect(fetchBuildDate(3360489, fetchImpl)).resolves.toBe(
+      "2026-10-01",
+    );
+  });
+
+  it("returns null when the header is missing or unparseable", async () => {
+    await expect(fetchBuildDate(3360489, head({}))).resolves.toBeNull();
+    await expect(
+      fetchBuildDate("3360489", head({ "last-modified": "not a date" })),
+    ).resolves.toBeNull();
+  });
+
+  it("returns null when the request fails", async () => {
+    const fetchImpl = (() =>
+      Promise.reject(new Error("offline"))) as typeof fetch;
+    await expect(fetchBuildDate(3360489, fetchImpl)).resolves.toBeNull();
   });
 });

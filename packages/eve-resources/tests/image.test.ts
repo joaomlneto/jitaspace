@@ -3,7 +3,10 @@ import { describe, expect, it } from "@jest/globals";
 
 import {
   decodeBC1,
+  decodeBC2,
+  decodeBC3,
   decodeBC4,
+  decodeBC5,
   decodeDds,
   decodeTga,
   encodePng,
@@ -312,5 +315,71 @@ describe("BC block decoders", () => {
     const block = new Uint8Array([128, 128, 0, 0, 0, 0, 0, 0]);
     const rgba = decodeBC4(block, 4, 4);
     expect([...rgba.subarray(0, 4)]).toEqual([128, 128, 128, 255]);
+  });
+
+  const texel = (rgba: Uint8Array, i: number): number[] => [
+    ...rgba.subarray(i * 4, i * 4 + 4),
+  ];
+  // 565 endpoints: pure red and pure blue.
+  const RED = [0x00, 0xf8];
+  const BLUE = [0x1f, 0x00];
+
+  it("decodeBC1 interpolates thirds in four-color mode (c0 > c1)", () => {
+    // c0 = red, c1 = black; texel 0 → code 2 (⅔ red), texel 1 → code 3 (⅓ red).
+    const block = new Uint8Array([...RED, 0, 0, 0b1110, 0, 0, 0]);
+    const rgba = decodeBC1(block, 4, 4);
+    expect(texel(rgba, 0)).toEqual([170, 0, 0, 255]);
+    expect(texel(rgba, 1)).toEqual([85, 0, 0, 255]);
+    expect(texel(rgba, 2)).toEqual([255, 0, 0, 255]);
+  });
+
+  it("decodeBC1 uses the midpoint and transparent black when c0 <= c1", () => {
+    // c0 = blue (0x001f) < c1 = red (0xf800) selects three-color + alpha mode.
+    const block = new Uint8Array([...BLUE, ...RED, 0b1110, 0, 0, 0]);
+    const rgba = decodeBC1(block, 4, 4);
+    expect(texel(rgba, 0)).toEqual([127, 0, 127, 255]);
+    expect(texel(rgba, 1)).toEqual([0, 0, 0, 0]);
+    expect(texel(rgba, 2)).toEqual([0, 0, 255, 255]);
+  });
+
+  it("decodeBC2 applies explicit 4-bit alpha over an always-opaque color block", () => {
+    // Texel 0 alpha nibble 0xf → 255, texel 1 nibble 0x8 → 0x88; the rest 0.
+    // c0 == c1 would be BC1's alpha mode, but BC2 color is always four-color.
+    const block = new Uint8Array(16);
+    block[0] = 0x8f;
+    block.set([...RED, ...RED], 8);
+    const rgba = decodeBC2(block, 4, 4);
+    expect(texel(rgba, 0)).toEqual([255, 0, 0, 255]);
+    expect(texel(rgba, 1)).toEqual([255, 0, 0, 0x88]);
+    expect(texel(rgba, 2)).toEqual([255, 0, 0, 0]);
+  });
+
+  it("decodeBC3 reads interpolated alpha, including the 0/255 extremes", () => {
+    // Alpha e0 = 10 <= e1 = 20 selects the six-value palette, whose indices 6
+    // and 7 are the literal 0 and 255. Texel 0 → 6, texel 1 → 7, others → 0.
+    const alpha = [10, 20, 6 | (7 << 3), 0, 0, 0, 0, 0];
+    const block = new Uint8Array([...alpha, ...RED, ...RED, 0, 0, 0, 0]);
+    const rgba = decodeBC3(block, 4, 4);
+    expect(texel(rgba, 0)).toEqual([255, 0, 0, 0]);
+    expect(texel(rgba, 1)).toEqual([255, 0, 0, 255]);
+    expect(texel(rgba, 2)).toEqual([255, 0, 0, 10]);
+  });
+
+  it("decodeBC5 reconstructs the normal map's Z into blue", () => {
+    const channel = (v: number) => [v, v, 0, 0, 0, 0, 0, 0];
+    // Flat normal (x = y ≈ 0) → z ≈ 1 → blue 255.
+    const flat = decodeBC5(
+      new Uint8Array([...channel(128), ...channel(128)]),
+      4,
+      4,
+    );
+    expect(texel(flat, 0)).toEqual([128, 128, 255, 255]);
+    // x = 1 leaves no room for z → z = 0 → blue at the midpoint.
+    const tilted = decodeBC5(
+      new Uint8Array([...channel(255), ...channel(128)]),
+      4,
+      4,
+    );
+    expect(texel(tilted, 0)).toEqual([255, 128, 128, 255]);
   });
 });
