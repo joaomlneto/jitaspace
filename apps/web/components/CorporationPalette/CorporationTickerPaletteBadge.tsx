@@ -32,7 +32,14 @@ export const CorporationTickerPaletteBadge = memo(
         className={clsx(fill && classes.tickerEdge, className)}
         style={[
           fill
-            ? { background: fill.background, color: fill.color, flexShrink: 0 }
+            ? {
+                // The solid main colour shows wherever OKLab gradients are
+                // unsupported, so the picked text colour still sits on it.
+                backgroundColor: fill.fallback,
+                backgroundImage: fill.background,
+                color: fill.color,
+                flexShrink: 0,
+              }
             : { flexShrink: 0 },
           style,
         ]}

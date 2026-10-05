@@ -141,12 +141,18 @@ const shiftLightness = (color: string, delta: number) => {
  */
 export const PALETTE_WASH_CHROMA = 0.224;
 
+/** How far (in OKLab lightness) a tint may darken a near-white surface. */
+const MAX_TINT_DARKENING = 0.03;
+
 /**
- * Tints `surface` towards the hue of `color` without changing its lightness.
- * Black, white and grey palettes carry no hue, so they leave the surface as it
- * is instead of greying it; text contrast on the tint matches the surface.
- * Lightness steps down just enough to keep a tint of a near-white surface in
- * sRGB.
+ * Tints `surface` towards the hue of `color` while keeping its lightness, so
+ * black, white and grey palettes (which carry no hue) leave the surface as it
+ * is instead of greying it, and text on the tint keeps its contrast.
+ *
+ * A near-white surface has no room for chroma at its own lightness, so the
+ * tint may darken it by up to {@link MAX_TINT_DARKENING}; past that it gives
+ * up chroma instead. That keeps text contrast on a light wash within ~10% of
+ * the plain card even for fully saturated colours.
  */
 export const getPaletteTint = (
   color: string,
@@ -156,10 +162,16 @@ export const getPaletteTint = (
   const [p, q] = [parseHex(color), parseHex(surface)];
   if (!p || !q) return undefined;
   const [pc, qc] = [toOklab(p), toOklab(q)];
-  const a = qc[1] + (pc[1] - qc[1]) * amount;
-  const b = qc[2] + (pc[2] - qc[2]) * amount;
+  let a = qc[1] + (pc[1] - qc[1]) * amount;
+  let b = qc[2] + (pc[2] - qc[2]) * amount;
   let L = qc[0];
-  for (let i = 0; i < 20 && !inGamut(fromOklab([L, a, b])); i++) L -= 0.004;
+  const floor = qc[0] - MAX_TINT_DARKENING;
+  while (!inGamut(fromOklab([L, a, b])) && L > floor) L -= 0.002;
+  // Converges: at zero chroma the tint is the surface itself, which is in sRGB.
+  for (let i = 0; i < 100 && !inGamut(fromOklab([L, a, b])); i++) {
+    a = qc[1] + (a - qc[1]) * 0.95;
+    b = qc[2] + (b - qc[2]) * 0.95;
+  }
   return toHex(fromOklab([L, a, b]));
 };
 
@@ -191,7 +203,7 @@ export const getCorporationPaletteWash = (
  */
 export const getCorporationTickerFill = (
   colors: readonly string[],
-): { background: string; color: string } | undefined => {
+): { background: string; fallback: string; color: string } | undefined => {
   const [main, secondary] = colors;
   if (main === undefined) return undefined;
   let stops: [string, string];
@@ -207,6 +219,7 @@ export const getCorporationTickerFill = (
   const angle = secondary !== undefined ? 135 : 180;
   return {
     background: `linear-gradient(${angle}deg in oklab, ${stops[0]}, ${stops[1]})`,
+    fallback: main,
     color: getReadableTextColor(stops),
   };
 };

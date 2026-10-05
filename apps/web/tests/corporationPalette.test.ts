@@ -89,6 +89,35 @@ describe("getPaletteTint", () => {
     expect(getPaletteTint("#0a3db0", LIGHT_CARD)).not.toBe(LIGHT_CARD);
   });
 
+  it("keeps text contrast within ~10% of the card for every hue", () => {
+    // Fully saturated hues at several lightnesses, on the card surfaces of
+    // the app's themes (Mantine's default and the custom themes' dark[6] and
+    // white).
+    const surfaces = ["#2e2e2e", "#21283c", "#ffffff", "#f2f7fb", "#eef2ff"];
+    const hsl = (h: number, l: number) => {
+      const a = Math.min(l, 1 - l);
+      const f = (n: number) => {
+        const k = (n + h / 30) % 12;
+        return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+      };
+      return `#${[f(0), f(8), f(4)]
+        .map((v) =>
+          Math.round(v * 255)
+            .toString(16)
+            .padStart(2, "0"),
+        )
+        .join("")}`;
+    };
+    for (const surface of surfaces) {
+      for (let hue = 0; hue < 360; hue += 10) {
+        for (const lightness of [0.2, 0.5, 0.8]) {
+          const tint = getPaletteTint(hsl(hue, lightness), surface);
+          expect(contrastRatio(tint ?? "", surface)).toBeLessThan(1.12);
+        }
+      }
+    }
+  });
+
   it("gives up on unparseable colours", () => {
     expect(getPaletteTint("#0a3db0", "var(--x)")).toBeUndefined();
   });
@@ -135,6 +164,7 @@ describe("getCorporationTickerFill", () => {
       background: expect.stringMatching(
         /^linear-gradient\(180deg in oklab, #[0-9a-f]{6}, #000000\)$/,
       ),
+      fallback: "#000000",
       color: "#ffffff",
     });
     // ...very light ones a darker bottom, since they cannot get lighter.
@@ -142,6 +172,7 @@ describe("getCorporationTickerFill", () => {
       background: expect.stringMatching(
         /^linear-gradient\(180deg in oklab, #ffffff, #[0-9a-f]{6}\)$/,
       ),
+      fallback: "#ffffff",
       color: "#000000",
     });
   });
