@@ -82,7 +82,7 @@ const ACRONYMS: Record<string, string> = {
   r2z2: "R2Z2",
 };
 
-/** e.g. "scrape-esi-alliances" → "Scrape ESI Alliances". Task ids equal job ids. */
+/** e.g. "esi-update-alliances" → "ESI Update Alliances". Task ids equal job ids. */
 export const jobNameFromId = (id: string): string =>
   id
     .split("-")
