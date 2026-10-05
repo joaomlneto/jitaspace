@@ -55,7 +55,11 @@ import {
 
 import type { CorporationRow } from "./corporations";
 import type { AlliancePageTab } from "./tabs";
-import type { AlliancePageData, CompositionEntry } from "./types";
+import type {
+  AlliancePageData,
+  AllianceTables,
+  CompositionEntry,
+} from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import {
   HeroCard,
@@ -257,6 +261,36 @@ const TABLE_TABS = new Set<AlliancePageTab>([
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
 
+/** Which tabs this alliance has anything to show in. */
+function visibleTabsFor(
+  profile: AlliancePageData | null,
+): Record<AlliancePageTab, boolean> {
+  return {
+    overview: true,
+    corporations: true,
+    sovereignty: (profile?.sovereigntySummary.systems ?? 0) > 0,
+    wars: (profile?.warSummary.total ?? 0) > 0,
+    killboard: true,
+  };
+}
+
+/**
+ * The member corporations the Corporations tab lists: ESI's member list alone
+ * when we have no database row, our rows (plus any ESI adds) once they load,
+ * and none while they are on their way.
+ */
+function corporationRowsFor(
+  profile: AlliancePageData | null,
+  tables: AllianceTables | undefined,
+  options: Omit<Parameters<typeof buildCorporationRows>[0], "corporations">,
+): CorporationRow[] {
+  if (profile !== null && !tables) return NO_ROWS;
+  return buildCorporationRows({
+    corporations: tables?.corporations ?? NO_ROWS,
+    ...options,
+  });
+}
+
 /**
  * Whether the creator corporation is still in the alliance: from our database
  * when we have the alliance, else from ESI's member list once it loads.
@@ -314,15 +348,9 @@ export default function AlliancePage({
   const sovereigntySummary = profile?.sovereigntySummary;
   const warSummary = profile?.warSummary;
   const sovereigntySystems = sovereigntySummary?.systems ?? 0;
-  const hasSovereignty = sovereigntySystems > 0;
-  const hasWars = (warSummary?.total ?? 0) > 0;
-  const visibleTabs: Record<AlliancePageTab, boolean> = {
-    overview: true,
-    corporations: true,
-    sovereignty: hasSovereignty,
-    wars: hasWars,
-    killboard: true,
-  };
+  const visibleTabs = visibleTabsFor(profile);
+  const hasSovereignty = visibleTabs.sovereignty;
+  const hasWars = visibleTabs.wars;
   // `?tab=wars` on an alliance with none would select a tab that is not
   // rendered, leaving the page blank; show the overview instead.
   const selectedTab = visibleTabs[activeTab]
@@ -340,14 +368,11 @@ export default function AlliancePage({
   const tablesLoading = profile !== null && tablesQuery.isPending;
   const corporationRows = useMemo(
     () =>
-      profile === null || tables
-        ? buildCorporationRows({
-            corporations: tables?.corporations ?? NO_ROWS,
-            esiMemberIds: esiMembers?.data,
-            executorCorporationId,
-            creatorCorporationId,
-          })
-        : NO_ROWS,
+      corporationRowsFor(profile, tables, {
+        esiMemberIds: esiMembers?.data,
+        executorCorporationId,
+        creatorCorporationId,
+      }),
     [
       profile,
       tables,
@@ -372,9 +397,8 @@ export default function AlliancePage({
   );
   const composition = profile?.composition ?? NO_ROWS;
   const executorCeo = profile?.executorCeo ?? null;
-  const corporationCount = profile
-    ? profile.corporationSummary.corporations
-    : (esiMembers?.data.length ?? 0);
+  const corporationCount =
+    profile?.corporationSummary.corporations ?? esiMembers?.data.length ?? 0;
   const creatorMembership = describeCreatorMembership(profile, corporationRows);
 
   const killEfficiency = iskEfficiency(
