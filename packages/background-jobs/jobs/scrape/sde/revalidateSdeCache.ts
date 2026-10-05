@@ -1,61 +1,24 @@
-import { defineJob, NonRetriableError } from "../../../core";
+import { defineJob } from "../../../core";
 import { env } from "../../../env";
+import { postWebAppRevalidation } from "../../../helpers/postWebAppRevalidation";
 
 export interface RevalidateSdeCacheEventPayload {
   data: Record<string, never>;
 }
 
-/** Where the web app lives when `NEXT_PUBLIC_SITE_URL` is unset — as in the app. */
-const DEFAULT_SITE_URL = "https://www.jita.space";
-
 /**
  * POSTs to the web app's `/api/revalidate/sde`, which drops every page and
- * cache entry built from SDE data. Returns the URL it called.
- *
- * Misconfiguration (no secret, a secret the app rejects, or a site URL that is
- * not an absolute URL) throws {@link NonRetriableError}: retrying cannot fix
- * it, and the failed run (which
- * the Trigger.dev adapter reports to Sentry) is the only sign that SDE pages
- * are still serving the previous build. Anything else (a 5xx, a timeout, a
- * network error) throws a plain error so the run is retried.
+ * cache entry built from SDE data. Returns the URL it called. Errors are as
+ * {@link postWebAppRevalidation} describes.
  */
-export async function postSdeCacheRevalidation({
+export const postSdeCacheRevalidation = ({
   siteUrl,
   cronSecret,
 }: {
   siteUrl: string | undefined;
   cronSecret: string | undefined;
-}): Promise<string> {
-  if (!cronSecret) {
-    throw new NonRetriableError(
-      "CRON_SECRET is not set, so the web app's SDE cache cannot be revalidated. Set it to the web app's CRON_SECRET.",
-    );
-  }
-  // A blank value (a cleared env var) means unset, too, which `??` would miss.
-  const base = siteUrl?.trim() ? siteUrl : DEFAULT_SITE_URL;
-  let url: string;
-  try {
-    url = new URL("/api/revalidate/sde", base).href;
-  } catch {
-    throw new NonRetriableError(
-      `NEXT_PUBLIC_SITE_URL is not an absolute URL ("${base}"). Set it to the web app's origin, e.g. https://www.jita.space.`,
-    );
-  }
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { authorization: `Bearer ${cronSecret}` },
-    signal: AbortSignal.timeout(30_000),
-  });
-  if (res.status === 401) {
-    throw new NonRetriableError(
-      `${url} rejected CRON_SECRET (401). It must match the web app's CRON_SECRET.`,
-    );
-  }
-  if (!res.ok) {
-    throw new Error(`${url} answered ${res.status}`);
-  }
-  return url;
-}
+}): Promise<string> =>
+  postWebAppRevalidation({ siteUrl, cronSecret, path: "/api/revalidate/sde" });
 
 /**
  * Tells the web app that the database is on a new SDE build, so pages cached

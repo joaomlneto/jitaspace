@@ -37,6 +37,11 @@ export interface AllianceUpdatePlan {
    * (`null` = left their alliance, or it closed).
    */
   corporationMoves: Map<number | null, number[]>;
+  /**
+   * Every alliance any of the above touches: added, changed or closed, or one
+   * a corporation joined or left. Their cached pages are now stale.
+   */
+  affectedAllianceIds: number[];
 }
 
 const sameAlliance = (a: AllianceRow, b: AllianceRow) =>
@@ -89,12 +94,20 @@ export const planAllianceUpdates = ({
     }
   }
 
+  const affectedAllianceIds = new Set<number>([
+    ...newAlliances.map((a) => a.allianceId),
+    ...changedAlliances.map((a) => a.allianceId),
+    ...closedAllianceIds,
+  ]);
+
   const dbCorporationIds = new Set<number>();
   const corporationMoves = new Map<number | null, number[]>();
   for (const { corporationId, allianceId } of dbCorporations) {
     dbCorporationIds.add(corporationId);
     const target = allianceOfCorporation.get(corporationId) ?? null;
     if (target === allianceId) continue;
+    if (allianceId !== null) affectedAllianceIds.add(allianceId);
+    if (target !== null) affectedAllianceIds.add(target);
     const bucket = corporationMoves.get(target);
     if (bucket) bucket.push(corporationId);
     else corporationMoves.set(target, [corporationId]);
@@ -113,5 +126,6 @@ export const planAllianceUpdates = ({
     closedAllianceIds,
     missingCorporationIds,
     corporationMoves,
+    affectedAllianceIds: [...affectedAllianceIds],
   };
 };

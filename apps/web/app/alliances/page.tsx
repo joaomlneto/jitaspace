@@ -1,6 +1,7 @@
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
 import type { AllianceRow } from "./page.client";
+import { ALLIANCES_CACHE_TAG } from "~/lib/alliancesCache";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
 import AlliancesPage from "./page.client";
@@ -15,7 +16,9 @@ export const metadata = pageMetadata({
 
 export default async function Page() {
   "use cache";
-  // The `esi-update-alliances` job refreshes this data at :45 every hour.
+  // The `esi-update-alliances` job refreshes this data at :45 every hour, and
+  // marks this tag stale when it changes anything.
+  cacheTag(ALLIANCES_CACHE_TAG);
   cacheLife("hours");
   // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
   // would make `notFound()` a *successful* render that Next stores and serves

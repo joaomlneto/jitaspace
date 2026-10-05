@@ -139,12 +139,34 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
       corporationsMoved += count;
     }
 
+    // 5. Evict the web app's cached pages for everything that changed. Sent
+    // as its own retryable job, so a failed call cannot lose the eviction.
+    // Corporations created above arrive already in their alliance, which
+    // therefore gained a member too.
+    const memberOf = new Map(
+      [...esiMemberCorporations].flatMap(([allianceId, corporationIds]) =>
+        corporationIds.map((corporationId) => [corporationId, allianceId]),
+      ),
+    );
+    const allianceIdsToRevalidate = [
+      ...new Set([
+        ...plan.affectedAllianceIds,
+        ...corporationsToCreate.flatMap((id) => memberOf.get(id) ?? []),
+      ]),
+    ];
+    if (allianceIdsToRevalidate.length > 0) {
+      await ctx.send("revalidate-alliance-cache", {
+        allianceIds: allianceIdsToRevalidate,
+      });
+    }
+
     const stats = {
       alliances: {
         open: allianceIds.length,
         added: plan.newAlliances.length,
         updated: plan.changedAlliances.length,
         closed: plan.closedAllianceIds.length,
+        revalidated: allianceIdsToRevalidate.length,
       },
       corporations: {
         members: memberCorporationIds.length,

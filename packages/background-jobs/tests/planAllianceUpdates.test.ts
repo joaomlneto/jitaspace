@@ -35,6 +35,7 @@ describe("planAllianceUpdates", () => {
     expect(plan.closedAllianceIds).toEqual([]);
     expect(plan.missingCorporationIds).toEqual([]);
     expect(plan.corporationMoves.size).toBe(0);
+    expect(plan.affectedAllianceIds).toEqual([]);
   });
 
   it("separates new, changed, reopened and closed alliances", () => {
@@ -58,6 +59,9 @@ describe("planAllianceUpdates", () => {
     expect(plan.changedAlliances.map((a) => a.allianceId)).toEqual([1, 3]);
     // 5 is already closed, so only 4 needs marking
     expect(plan.closedAllianceIds).toEqual([4]);
+    expect(plan.affectedAllianceIds.sort((a, b) => a - b)).toEqual([
+      1, 2, 3, 4,
+    ]);
   });
 
   it("moves corporations that joined, switched or left alliances", () => {
@@ -85,6 +89,9 @@ describe("planAllianceUpdates", () => {
       ]),
     );
     expect(plan.missingCorporationIds).toEqual([2001]);
+    // both sides of every move: 1 (joined, lost 2000), 2 (gained 2000, lost
+    // 3000) and 9 (lost 3001)
+    expect(plan.affectedAllianceIds.sort((a, b) => a - b)).toEqual([1, 2, 9]);
   });
 
   it("lists executors of new or changed alliances first among missing corporations", () => {
