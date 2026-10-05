@@ -57,6 +57,16 @@ jest.mock("../helpers/createCorpAndItsRefs.ts", () => ({
     createCorpAndItsRefRecords(args),
 }));
 
+const syncSovereignty = jest.fn((_args: unknown) =>
+  Promise.resolve({
+    affectedAllianceIds: [] as number[],
+    stats: { systems: 0 },
+  }),
+);
+jest.mock("../jobs/scrape/esi/syncSovereignty.ts", () => ({
+  syncSovereignty: (args: unknown) => syncSovereignty(args),
+}));
+
 type Rows = Record<string, unknown>[];
 const allianceFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 const allianceUpdate = jest.fn((_a: unknown) => Promise.resolve({}));
@@ -97,6 +107,7 @@ interface RunResult {
   stats: {
     alliances: Record<string, number>;
     corporations: Record<string, number>;
+    sovereignty: Record<string, number>;
   };
 }
 
@@ -286,5 +297,46 @@ describe("esi-update-alliances", () => {
     );
     expect(batches.map((ids) => ids.length)).toEqual([1000, 1000, 500]);
     expect(new Set(batches.flat()).size).toBe(2500);
+  });
+
+  it("syncs sovereignty against every open alliance and evicts the holders it reports", async () => {
+    esiAlliances.set(1, esiAlliance());
+    esiAlliances.set(2, esiAlliance());
+    allianceFindMany.mockResolvedValue([dbAlliance(1), dbAlliance(2)]);
+    syncSovereignty.mockResolvedValueOnce({
+      affectedAllianceIds: [2],
+      stats: { systems: 5485 },
+    });
+
+    const { stats } = await run();
+
+    const [args] = syncSovereignty.mock.calls[0] ?? [];
+    expect(
+      (args as { knownAllianceIds: Set<number> }).knownAllianceIds,
+    ).toEqual(new Set([1, 2]));
+    expect(send).toHaveBeenCalledWith("revalidate-alliance-cache", {
+      allianceIds: [2],
+    });
+    expect(stats.sovereignty).toEqual({ systems: 5485 });
+  });
+
+  it("still evicts the alliances it changed when the sovereignty sync fails, then fails the run", async () => {
+    // Alliance 1's executor changed (written in step 2) — its eviction must go
+    // out even though the sync after it throws.
+    esiAlliances.set(1, esiAlliance({ executor_corporation_id: 1001 }));
+    esiMembers.set(1, [1000, 1001]);
+    allianceFindMany.mockResolvedValue([dbAlliance(1)]);
+    corporationFindMany.mockResolvedValue([
+      { corporationId: 1000, allianceId: 1 },
+      { corporationId: 1001, allianceId: 1 },
+    ]);
+    syncSovereignty.mockRejectedValueOnce(new Error("ESI 503"));
+
+    await expect(run()).rejects.toThrow("ESI 503");
+
+    expect(allianceUpdate).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith("revalidate-alliance-cache", {
+      allianceIds: [1],
+    });
   });
 });

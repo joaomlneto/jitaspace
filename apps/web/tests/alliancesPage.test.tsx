@@ -19,11 +19,15 @@ type Rows = Record<string, unknown>[];
 
 const allianceFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 const corporationGroupBy = jest.fn<(a?: unknown) => Promise<Rows>>();
+const sovereigntyGroupBy = jest.fn<(a?: unknown) => Promise<Rows>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
     alliance: { findMany: (a?: unknown) => allianceFindMany(a) },
     corporation: { groupBy: (a?: unknown) => corporationGroupBy(a) },
+    solarSystemSovereignty: {
+      groupBy: (a?: unknown) => sovereigntyGroupBy(a),
+    },
   },
 }));
 
@@ -58,6 +62,7 @@ const ROWS: AllianceRow[] = [
     factionName: null,
     corporations: 809,
     pilots: 71886,
+    sovSystems: 509,
   },
   {
     allianceId: 99000001,
@@ -69,6 +74,7 @@ const ROWS: AllianceRow[] = [
     factionName: "Caldari State",
     corporations: 1,
     pilots: 12,
+    sovSystems: 0,
   },
 ];
 
@@ -98,6 +104,7 @@ describe("/alliances (server)", () => {
   beforeEach(() => {
     allianceFindMany.mockReset();
     corporationGroupBy.mockReset();
+    sovereigntyGroupBy.mockReset().mockResolvedValue([]);
   });
 
   it("joins alliances with their membership totals", async () => {
@@ -128,6 +135,9 @@ describe("/alliances (server)", () => {
         _sum: { memberCount: 42 },
       },
     ]);
+    sovereigntyGroupBy.mockResolvedValue([
+      { allianceId: 1, _count: { solarSystemId: 7 } },
+    ]);
 
     const element = await runPage();
 
@@ -147,6 +157,7 @@ describe("/alliances (server)", () => {
         factionName: "Amarr Empire",
         corporations: 3,
         pilots: 42,
+        sovSystems: 7,
       },
       {
         allianceId: 2,
@@ -158,6 +169,7 @@ describe("/alliances (server)", () => {
         factionName: null,
         corporations: 0,
         pilots: 0,
+        sovSystems: 0,
       },
     ]);
   });
@@ -184,12 +196,18 @@ describe("/alliances (client)", () => {
     expect(screen.getByText("<CONDI>")).toBeInTheDocument();
     expect(screen.getByText("71,886")).toBeInTheDocument();
     expect(screen.getByText("809")).toBeInTheDocument();
+    expect(screen.getByText("Sov systems")).toBeInTheDocument();
+    expect(screen.getByText("509")).toBeInTheDocument();
     expect(screen.getByText("DJ's Retirement Fund")).toBeInTheDocument();
     expect(screen.getByText("2010-06-01")).toBeInTheDocument();
 
     // An alliance without an executor renders no executor link.
     expect(screen.getByText("Executorless Alliance")).toBeInTheDocument();
     expect(screen.getAllByTestId("corporation-anchor")).toHaveLength(1);
+
+    // The Factional Warfare militia column is shown without opening Columns.
+    expect(screen.getByText("Militia")).toBeInTheDocument();
+    expect(screen.getByText("Caldari State")).toBeInTheDocument();
   });
 
   it("renders the table chrome with no alliances", () => {
