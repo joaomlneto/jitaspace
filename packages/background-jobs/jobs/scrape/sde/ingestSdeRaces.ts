@@ -8,6 +8,7 @@ import {
   loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
+  present,
   requiredNumber,
 } from "../../../helpers";
 
@@ -45,13 +46,12 @@ export const ingestSdeRaces = defineJob<IngestSdeRacesEventPayload["data"]>({
       idField: "raceId",
       delegate: prisma.race,
       toRow: (record, id): Prisma.RaceCreateManyInput => {
-        const shipTypeId = optionalNumber(record.shipTypeID);
+        const shipTypeId = present(typeIds, optionalNumber(record.shipTypeID));
         return {
           raceId: id,
           name: enString(record.name) ?? "",
           description: enString(record.description),
-          shipTypeId:
-            shipTypeId != null && typeIds.has(shipTypeId) ? shipTypeId : null,
+          shipTypeId,
           // A plain id, not a relation — and all 5 present ones resolve in
           // icons.yaml, so no `present()` guard is warranted.
           iconId: optionalNumber(record.iconID),

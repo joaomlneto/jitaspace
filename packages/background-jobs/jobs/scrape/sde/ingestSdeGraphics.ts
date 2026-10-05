@@ -8,6 +8,7 @@ import {
   loadSdeFiles,
   optionalNumber,
   plainString,
+  present,
 } from "../../../helpers";
 
 export interface IngestSdeGraphicsEventPayload {
@@ -35,8 +36,6 @@ export const ingestSdeGraphics = defineJob<
     // `sofMaterialSetID` is a real FK now, so drop any id that isn't there —
     // the same guard ingestSdeTypes applies to its optional refs.
     const materialSetIds = await loadSdeFileIds("graphicMaterialSets.yaml");
-    const present = (ids: ReadonlySet<number>, value: number | null) =>
-      value != null && ids.has(value) ? value : null;
 
     const graphics = await ingestSdeTable({
       filename: "graphics.yaml",

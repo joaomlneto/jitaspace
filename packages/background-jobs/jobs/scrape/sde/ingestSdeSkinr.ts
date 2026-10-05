@@ -10,6 +10,7 @@ import {
   optionalBoolean,
   optionalNumber,
   plainString,
+  present,
   requiredNumber,
 } from "../../../helpers";
 
@@ -308,14 +309,13 @@ export const ingestSdeSkinrSlots = defineJob<
       idField: "skinrSlotId",
       delegate: prisma.skinrSlot,
       toRow: (record, id): Prisma.SkinrSlotCreateManyInput => {
-        const categoryId = optionalNumber(record.category);
         return {
           skinrSlotId: id,
           name: enString(record.name) ?? "",
-          skinrSlotCategoryId:
-            categoryId != null && categoryIds.has(categoryId)
-              ? categoryId
-              : null,
+          skinrSlotCategoryId: present(
+            categoryIds,
+            optionalNumber(record.category),
+          ),
           isDeleted: false,
         };
       },

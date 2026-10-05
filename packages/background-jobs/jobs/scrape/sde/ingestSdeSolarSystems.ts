@@ -12,6 +12,7 @@ import {
   optionalBoolean,
   optionalNumber,
   plainString,
+  present,
   requiredNumber,
   subRecord,
 } from "../../../helpers";
@@ -74,12 +75,7 @@ export const ingestSdeSolarSystems = defineJob<
           positionZ: optionalNumber(position.z),
           position2dX: optionalNumber(position2d.x),
           position2dY: optionalNumber(position2d.y),
-          factionId: (() => {
-            const factionId = optionalNumber(record.factionID);
-            return factionId != null && factionIds.has(factionId)
-              ? factionId
-              : null;
-          })(),
+          factionId: present(factionIds, optionalNumber(record.factionID)),
           isDeleted: false,
         };
       },

@@ -7,6 +7,7 @@ import {
   loadSdeFileIds,
   optionalNumber,
   plainString,
+  present,
 } from "../../../helpers";
 
 export interface IngestSdeDogmaEffectModifiersEventPayload {
@@ -62,8 +63,6 @@ export const ingestSdeDogmaEffectModifiers = defineJob<
       loadSdeFileIds("groups.yaml"),
     ]);
     const knownEffectIds = new Set(Object.keys(dogmaEffects).map(Number));
-    const present = (ids: ReadonlySet<number>, value: number | null) =>
-      value != null && ids.has(value) ? value : null;
 
     const entries = Object.entries(dogmaEffects).map(([key, record]) => ({
       effectId: Number(key),

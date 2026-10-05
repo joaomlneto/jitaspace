@@ -2,10 +2,12 @@ import { describe, expect, it } from "@jest/globals";
 
 // Both modules are runtime-dependency-free (type-only Prisma import; sdeFields
 // imports nothing), so these need no p-limit / env mocks.
-import { optionalSdeDate, subRecord } from "../helpers/sdeFields";
+import { optionalSdeDate, present, subRecord } from "../helpers/sdeFields";
 import {
   mergeNpcCorporationChildRows,
+  planLegacyEnlistmentMoves,
   toNpcCorporationChildRows,
+  toSdeCorporationRow,
 } from "../jobs/scrape/sde/npcCorporationTransforms";
 
 const existing = new Set([1000001, 1000002, 1000003]);
@@ -192,5 +194,85 @@ describe("optionalSdeDate", () => {
     expect(optionalSdeDate("")).toBeNull();
     expect(optionalSdeDate(20030327)).toBeNull();
     expect(optionalSdeDate("not a date")).toBeNull();
+  });
+});
+
+describe("present", () => {
+  const ids = new Set([1, 2]);
+
+  it("keeps an id the set holds and nulls one it does not", () => {
+    expect(present(ids, 2)).toBe(2);
+    expect(present(ids, 3)).toBeNull();
+    expect(present(ids, null)).toBeNull();
+  });
+});
+
+describe("toSdeCorporationRow", () => {
+  const factionIds = new Set([500001, 500010]);
+
+  it("stores the SDE factionID as the corporation's own faction", () => {
+    // CBD Corporation: npcCorporations.yaml lists it under the Caldari State.
+    const row = toSdeCorporationRow(
+      { factionID: 500001, extent: "N", size: "H", uniqueName: true },
+      1000002,
+      factionIds,
+    );
+    expect(row).toMatchObject({
+      corporationId: 1000002,
+      factionId: 500001,
+      extent: "N",
+      size: "H",
+      isUnique: true,
+    });
+  });
+
+  it("nulls a faction the Faction table does not have, or none at all", () => {
+    expect(
+      toSdeCorporationRow({ factionID: 999 }, 1, factionIds).factionId,
+    ).toBeNull();
+    expect(toSdeCorporationRow({}, 1, factionIds).factionId).toBeNull();
+  });
+
+  it("never writes the ESI-owned columns", () => {
+    const row = toSdeCorporationRow(
+      { factionID: 500001, ceoID: 3004049, taxRate: 0.1, tickerName: "CBD" },
+      1000002,
+      factionIds,
+    );
+    for (const key of ["name", "memberCount", "ticker", "taxRate", "ceoId"]) {
+      expect(row).not.toHaveProperty(key);
+    }
+    expect(row).not.toHaveProperty("enlistedFactionId");
+  });
+});
+
+describe("planLegacyEnlistmentMoves", () => {
+  it("moves each legacy factionId into enlistedFactionId, grouped by faction", () => {
+    const { moves, clear } = planLegacyEnlistmentMoves([
+      { corporationId: 98000001, factionId: 500001, enlistedFactionId: null },
+      { corporationId: 98000002, factionId: 500002, enlistedFactionId: null },
+      { corporationId: 98000003, factionId: 500001, enlistedFactionId: null },
+    ]);
+    expect([...moves]).toEqual([
+      [500001, [98000001, 98000003]],
+      [500002, [98000002]],
+    ]);
+    expect(clear).toEqual([98000001, 98000002, 98000003]);
+  });
+
+  it("keeps an enlistedFactionId ESI has already refreshed, but still clears", () => {
+    const { moves, clear } = planLegacyEnlistmentMoves([
+      { corporationId: 98000001, factionId: 500001, enlistedFactionId: 500004 },
+    ]);
+    expect(moves.size).toBe(0);
+    expect(clear).toEqual([98000001]);
+  });
+
+  it("is a no-op once every legacy value is gone", () => {
+    const { moves, clear } = planLegacyEnlistmentMoves([
+      { corporationId: 98000001, factionId: null, enlistedFactionId: 500001 },
+    ]);
+    expect(moves.size).toBe(0);
+    expect(clear).toEqual([]);
   });
 });
