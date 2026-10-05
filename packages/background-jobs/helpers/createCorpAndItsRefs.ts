@@ -204,7 +204,7 @@ export const createCorpAndItsRefRecords = async ({
       [
         ...missingFactionIds,
         ...characters.map((character) => character.factionId),
-        ...corporations.map((corporation) => corporation.factionId),
+        ...corporations.map((corporation) => corporation.enlistedFactionId),
         ...races.map((race) => race.factionId),
       ]
         .filter((id) => id != null)
@@ -542,7 +542,7 @@ export const createCorpAndItsRefRecords = async ({
       allianceId: null,
       ceoId: null,
       creatorId: null,
-      factionId: null,
+      enlistedFactionId: null,
       homeStationId: null,
     })),
     skipDuplicates: true,
@@ -621,11 +621,11 @@ export const createCorpAndItsRefRecords = async ({
   console.log({ corporations });
   console.log(
     corporations.map(
-      ({ corporationId, ceoId, creatorId, factionId, homeStationId }) => ({
+      ({ corporationId, ceoId, creatorId, enlistedFactionId, homeStationId }) => ({
         corporationId,
         ceoId,
         creatorId,
-        factionId,
+        enlistedFactionId,
         homeStationId,
       }),
     ),
@@ -753,7 +753,7 @@ const fetchCorporationsFromEsi = (
               ? new Date(corporation.date_founded)
               : null,
             description: corporation.description,
-            factionId: corporation.enlisted_faction_id ?? null,
+            enlistedFactionId: corporation.enlisted_faction_id ?? null,
             homeStationId: corporation.home_station_id,
             memberCount: corporation.member_count,
             name: corporation.name,
@@ -776,7 +776,7 @@ const fetchCorporationsFromEsi = (
               creatorId: null,
               dateFounded: null,
               description: null,
-              factionId: null,
+              enlistedFactionId: null,
               homeStationId: null,
               memberCount: -1,
               name: "",

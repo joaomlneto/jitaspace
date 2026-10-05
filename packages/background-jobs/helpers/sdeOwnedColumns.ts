@@ -39,6 +39,7 @@ export const SDE_OWNED_CORPORATION_COLUMNS = [
   "solarSystemId",
   "raceId",
   "iconId",
+  "factionId",
 ] as const;
 
 /** Written by `ingestSdePlanets` (the `attributes` sub-object of mapPlanets.yaml). */

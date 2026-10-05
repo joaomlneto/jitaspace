@@ -202,7 +202,7 @@ export const scrapeEsiNpcCorporations = defineJob<
               ? new Date(corporation.date_founded)
               : null,
             description: corporation.description,
-            factionId: corporation.enlisted_faction_id ?? null,
+            enlistedFactionId: corporation.enlisted_faction_id ?? null,
             homeStationId:
               corporation.home_station_id > 1
                 ? corporation.home_station_id

@@ -6,6 +6,7 @@ import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalBoolean,
   optionalNumber,
@@ -60,6 +61,8 @@ export const ingestSdeNpcCorporations = defineJob<
     const start = performance.now();
     const files = await loadSdeFiles(["npcCorporations.yaml"]);
     const all = files["npcCorporations.yaml"];
+    // `loadSdeFileIds` keeps only the id projection, not the parsed records.
+    const factionIds = await loadSdeFileIds("factions.yaml");
 
     // Only corporations that already exist — see the note above.
     const sdeIds = Object.keys(all).map(Number);
@@ -111,6 +114,16 @@ export const ingestSdeNpcCorporations = defineJob<
         solarSystemId: optionalNumber(record.solarSystemID),
         raceId: optionalNumber(record.raceID),
         iconId: optionalNumber(record.iconID),
+        // The corporation's own faction. ESI's `enlisted_faction_id` (Faction
+        // Warfare) goes to `enlistedFactionId` instead. Unlike the three plain ids
+        // above this is a foreign key, so a faction the SDE no longer lists lands
+        // as null rather than failing the write.
+        factionId: (() => {
+          const factionId = optionalNumber(record.factionID);
+          return factionId != null && factionIds.has(factionId)
+            ? factionId
+            : null;
+        })(),
         // NOTE: no `name`, `memberCount`, `ticker`, `taxRate` or `ceoId` — those are
         // ESI-owned. Omitting them also keeps them out of ingestSdeTable's managed
         // key set, so the diff leaves them untouched.
