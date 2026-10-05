@@ -246,6 +246,31 @@ const ENTITY_SOURCES: EntitySource[] = [
       ).map((row) => ({ id: row.typeListId, updatedAt: row.updatedAt })),
   },
   {
+    path: "/mission",
+    rows: async () =>
+      (
+        await prisma.mission.findMany({
+          where: { isDeleted: false },
+          select: { missionId: true, updatedAt: true },
+          orderBy: { missionId: "asc" },
+        })
+      ).map((row) => ({ id: row.missionId, updatedAt: row.updatedAt })),
+  },
+  {
+    // Only the dungeons dungeons.yaml describes. The mission pockets it merely
+    // refers to also have pages, but a page holding little more than an id
+    // is not one worth advertising to crawlers.
+    path: "/dungeon",
+    rows: async () =>
+      (
+        await prisma.dungeon.findMany({
+          where: { isDeleted: false },
+          select: { dungeonId: true, updatedAt: true },
+          orderBy: { dungeonId: "asc" },
+        })
+      ).map((row) => ({ id: row.dungeonId, updatedAt: row.updatedAt })),
+  },
+  {
     // One page per NPC corporation that actually sells something, rather than
     // per corporation — a corp with no offers renders an empty store.
     //

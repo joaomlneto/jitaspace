@@ -68,6 +68,8 @@ pnpm db:push        # apply it
   ALTER TABLE "X" SET (schema_locked = true);
   ```
 
+**Renaming a column: rename it by hand, then push.** `db push` cannot express a rename: it proposes dropping the column, adding an empty `NOT NULL` one and rebuilding the primary key if the column is in it, and it stops at the data-loss prompt. Run `ALTER TABLE "X" RENAME COLUMN "old" TO "new";` in the reviewed window instead. It keeps every row, the primary key follows the column, and `db:diff` then reports no difference. On v26.1 it unlocks and re-locks a `schema_locked` table by itself (verified on v26.1.8, 2026-10-06, renaming `DungeonAllowedShip.shipTypeId`). Code still selecting the old name fails from that moment until its deploy lands, so check which deployed web and Trigger.dev code reads the table first.
+
 **Push before you merge — the consequence of forgetting used to be quiet, and is now loud.** `cacheComponents` resolves every argument-free `"use cache"` read during the build prerender, so a schema change that lands on `main` unapplied hits those reads with a database error. What happens next depends on where the `catch` sits relative to the cache boundary:
 
 - **`catch` inside the same function as `"use cache"` → silent.** The catch runs normally, `notFound()` wins, and the route is **prerendered as a 404 with a green build**. Nine routes had this shape (`regions`, `categories`, `agents`, `skills`, `ship-scanner`, `dogma/attributes`, `dogma/effects`, `lp-store`, `lp-store/all`). **All nine were fixed on 2026-08-30**, so no route in `apps/web` has it today — the shape is described here only so you can recognise and reject it. See **Never catch a database error inside a `"use cache"` scope** below.

@@ -159,6 +159,7 @@ describe("Character page", () => {
         level: 4,
         locationId: 60000001,
         isInSpace: true,
+        dungeonId: 416,
         solarSystemId: 30000142,
         typeId: 587,
         researchSkills: [11442, 11443],
@@ -261,8 +262,12 @@ describe("Character page", () => {
     // isInSpace branch rows
     expect(screen.getByText("Solar System")).toBeInTheDocument();
     expect(screen.getByText("Ship")).toBeInTheDocument();
-    // Rows dropped in the redesign
-    expect(screen.queryByText("Dungeon")).not.toBeInTheDocument();
+    // The dungeon has a page of its own to link to.
+    expect(screen.getByText("Dungeon 416").closest("a")).toHaveAttribute(
+      "href",
+      "/dungeon/416",
+    );
+    // Dropped in the redesign
     expect(screen.queryByText("Spawn Point")).not.toBeInTheDocument();
 
     // Description sanitized through tiptap-eve and shown in the mail viewer

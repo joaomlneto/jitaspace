@@ -2391,16 +2391,20 @@ model Dungeon {
   @@index([archetypeId])
 }
 
-/// A ship type allowed to enter a dungeon (dungeons.yaml `allowedShipsList`).
+/// A type list naming the ships allowed into a dungeon (dungeons.yaml
+/// `allowedShipsList`). Despite the YAML key, every value is a typeLists.yaml id
+/// ("Dungeon Ship Restrictions […]"), never a ship type id; the ships are that
+/// list's members. A plain id with no relation, like the other cross-entity ids
+/// of the SDE reference tables.
 model DungeonAllowedShip {
   dungeonId  Int
   dungeon    Dungeon  @relation(fields: [dungeonId], references: [dungeonId])
-  shipTypeId Int
+  typeListId Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
   isDeleted  Boolean  @default(false)
 
-  @@id([dungeonId, shipTypeId])
+  @@id([dungeonId, typeListId])
 }
 
 /// An Alpha-clone skill grade (cloneGrades.yaml).
