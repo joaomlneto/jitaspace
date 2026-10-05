@@ -112,8 +112,8 @@ export function matchTypeLists(
   return [...matches.values()]
     .map((match) => ({
       ...match,
-      includedBy: match.includedBy.sort(byRefTypeOrder),
-      excludedBy: match.excludedBy.sort(byRefTypeOrder),
+      includedBy: match.includedBy.toSorted(byRefTypeOrder),
+      excludedBy: match.excludedBy.toSorted(byRefTypeOrder),
     }))
     .sort((a, b) => a.typeListId - b.typeListId);
 }
