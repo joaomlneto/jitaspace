@@ -3,6 +3,7 @@ import React from "react";
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
 import {
+  AgencyIcon,
   AgentFinderIcon,
   AlliancesIcon,
   AssetsIcon,
@@ -14,6 +15,7 @@ import {
   EveMailIcon,
   FittingIcon,
   ItemsIcon,
+  JournalIcon,
   LPStoreIcon,
   MapIcon,
   MarketIcon,
@@ -341,6 +343,22 @@ export const universeApps: Record<string, JitaApp> = {
     description: "Browse all agents in the EVE Universe",
     url: "/agents",
     Icon: (props) => <AgentFinderIcon {...props} />,
+    scopes: {},
+  },
+  missions: {
+    name: "Missions",
+    description:
+      "Browse every agent mission: objectives, rewards, briefings and epic arcs.",
+    url: "/missions",
+    Icon: (props) => <JournalIcon {...props} />,
+    scopes: {},
+  },
+  dungeons: {
+    name: "Dungeons",
+    description:
+      "Browse combat sites, anomalies and mission pockets, with their ship restrictions.",
+    url: "/dungeons",
+    Icon: (props) => <AgencyIcon {...props} />,
     scopes: {},
   },
   travel: {
