@@ -4,8 +4,10 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type {
+  RaceCloneSkillRow,
   RaceCorporationRow,
   RaceItemRow,
+  RaceSkillRow,
   RaceStationRow,
 } from "~/app/race/[raceId]/types";
 
@@ -23,6 +25,8 @@ const prismaMock = {
   metaGroup: { findMany: jest.fn<Query>() },
   corporation: { findMany: jest.fn<Query>() },
   station: { findMany: jest.fn<Query>() },
+  cloneGrade: { findUnique: jest.fn<Query>() },
+  typeAttribute: { findMany: jest.fn<Query>() },
 };
 
 jest.mock("~/lib/db", () => ({ prisma: prismaMock }));
@@ -196,6 +200,75 @@ describe("GET /api/race/[raceId]/[table]", () => {
         regionId: 10000043,
         regionName: "Domain",
       },
+    ]);
+  });
+
+  it("serves the Alpha clone skills and the racial skills", async () => {
+    prismaMock.race.findUnique.mockResolvedValue(raceRow);
+    // The race's types (by raceId), then the skills' names (by id).
+    prismaMock.type.findMany.mockImplementation((args) =>
+      Promise.resolve(
+        (args as { where: { raceId?: number } }).where.raceId === undefined
+          ? [
+              {
+                typeId: 3303,
+                name: "Small Energy Turret",
+                published: true,
+                groupId: 255,
+                group: { name: "Gunnery" },
+              },
+              {
+                typeId: 3343,
+                name: "Amarr Battleship",
+                published: true,
+                groupId: 257,
+                group: { name: "Spaceship Command" },
+              },
+            ]
+          : [
+              {
+                typeId: 3343,
+                name: "Amarr Battleship",
+                published: true,
+                groupId: 257,
+                metaGroupId: null,
+                techLevel: null,
+                mass: null,
+                group: {
+                  name: "Spaceship Command",
+                  categoryId: 16,
+                  category: { name: "Skill" },
+                },
+              },
+            ],
+      ),
+    );
+    prismaMock.metaGroup.findMany.mockResolvedValue([]);
+    prismaMock.cloneGrade.findUnique.mockResolvedValue({
+      isDeleted: false,
+      skills: [{ skillTypeId: 3303, level: 4 }],
+    });
+    prismaMock.typeAttribute.findMany.mockResolvedValue([
+      { typeId: 3303, attributeId: 275, value: 1 },
+      { typeId: 3343, attributeId: 275, value: 8 },
+    ]);
+
+    const alpha = (await (
+      await get(String(AMARR), "alphaSkills")
+    ).json()) as RaceCloneSkillRow[];
+    const racial = (await (
+      await get(String(AMARR), "racialSkills")
+    ).json()) as RaceSkillRow[];
+
+    expect(alpha).toEqual([
+      expect.objectContaining({
+        name: "Small Energy Turret",
+        maxLevel: 4,
+        rank: 1,
+      }),
+    ]);
+    expect(racial).toEqual([
+      expect.objectContaining({ name: "Amarr Battleship", rank: 8 }),
     ]);
   });
 

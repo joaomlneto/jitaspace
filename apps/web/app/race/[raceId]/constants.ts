@@ -14,6 +14,8 @@ export const RACE_TABLE_NAMES = [
   "items",
   "corporations",
   "stations",
+  "alphaSkills",
+  "racialSkills",
 ] as const satisfies readonly RaceTableName[];
 
 export function isRaceTableName(value: string): value is RaceTableName {

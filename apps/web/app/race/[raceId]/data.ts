@@ -17,6 +17,7 @@ import type {
   RaceSkillRow,
   RaceStationRow,
   RaceStationTypeRow,
+  RaceTables,
 } from "./types";
 import { prisma } from "~/lib/db";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
@@ -38,9 +39,6 @@ const CHARACTER_ATTRIBUTE_BY_DOGMA_ID = new Map<number, CharacterAttribute>([
   [168, "willpower"],
 ]);
 
-/** Skill points a rank-1 skill holds at each level; the rank multiplies them. */
-const SKILL_POINTS_AT_LEVEL = [0, 250, 1415, 8000, 45255, 256000];
-
 /**
  * NPC corporation ids (`corporationIdRanges` in `@jitaspace/esi-metadata`).
  * Only NPC corporations carry a race, and bounding the query to their range
@@ -48,14 +46,24 @@ const SKILL_POINTS_AT_LEVEL = [0, 250, 1415, 8000, 45255, 256000];
  */
 const NPC_CORPORATION_IDS = { gte: 1_000_000, lt: 2_000_000 };
 
-/** Every type the SDE gives this race. `Type.raceId` has no index: a scan. */
+/** Every type the SDE gives this race, through the `Type.raceId` index. */
 const raceTypesWhere = (raceId: number) => ({ raceId, isDeleted: false });
 
 /** NPC corporations of this race, or that let its characters join them. */
 const raceCorporationsWhere = (raceId: number) => ({
   isDeleted: false,
   corporationId: NPC_CORPORATION_IDS,
-  OR: [{ raceId }, { allowedRaces: { some: { raceId, isDeleted: false } } }],
+  AND: [
+    // CCP's own deleted marker (npcCorporations.yaml `deleted`), which may be
+    // null: `not: true` would drop those rows too.
+    { OR: [{ isDeletedByCcp: null }, { isDeletedByCcp: false }] },
+    {
+      OR: [
+        { raceId },
+        { allowedRaces: { some: { raceId, isDeleted: false } } },
+      ],
+    },
+  ],
 });
 
 /** Stations ESI attributes to this race, in a known solar system. */
@@ -123,14 +131,13 @@ const attributeSelect = {
   willpower: true,
 } as const;
 
-/** A named entity from an id, with the id as the name when the row is gone. */
+/** A reference with its name, or the id as the name when the row is gone. */
 function named(
-  id: number | null,
-  names: Map<number, string>,
+  id: number,
+  name: string | undefined,
   kind: string,
-): { id: number; name: string } | null {
-  if (id === null) return null;
-  return { id, name: names.get(id) ?? `${kind} ${id}` };
+): { id: number; name: string } {
+  return { id, name: name ?? `${kind} ${id}` };
 }
 
 /** The median of a list, or null for an empty one. */
@@ -237,9 +244,10 @@ function buildShipClasses(types: RaceTypeRecord[]): RaceShipClass[] {
         (a.mass ?? Infinity) - (b.mass ?? Infinity) ||
         a.shipClass.name.localeCompare(b.shipClass.name),
     )
-    .map(({ shipClass }) => ({
+    .map(({ shipClass, mass }) => ({
       groupId: shipClass.groupId,
       name: shipClass.name,
+      mass,
       ships: shipClass.ships.map((ship) => ({
         typeId: ship.typeId,
         name: ship.name,
@@ -327,13 +335,13 @@ function whenAny<T>(
   return ids.length === 0 ? Promise.resolve([]) : read();
 }
 
-/** An optional reference with its name, or the id when the row is gone. */
+/** The same for an optional reference. */
 function namedOrNull(
   id: number | null,
   name: string | undefined,
   kind: string,
 ): { id: number; name: string } | null {
-  return id === null ? null : { id, name: name ?? `${kind} ${id}` };
+  return id === null ? null : named(id, name, kind);
 }
 
 /** By group, then by name: how the game lists skills. */
@@ -342,10 +350,15 @@ const bySkillGroup = <T extends { groupName: string; name: string }>(
   b: T,
 ) => a.groupName.localeCompare(b.groupName) || a.name.localeCompare(b.name);
 
-/** Skill points at a level, from the skill's rank; null without a rank. */
+/**
+ * Skill points at a level, from the skill's rank; null without a rank. The
+ * game's formula, rounded up per skill (as `SkillTreeNavLink` computes it):
+ * scaling a rounded rank-1 table instead overstates level II by a few points.
+ */
 function skillPointsAt(level: number, rank: number | null): number | null {
   if (rank === null) return null;
-  return Math.round((SKILL_POINTS_AT_LEVEL[level] ?? 0) * rank);
+  if (level <= 0) return 0;
+  return Math.ceil(250 * rank * Math.sqrt(32 ** (level - 1)));
 }
 
 /**
@@ -382,7 +395,7 @@ function skillRowBuilder(
     return {
       typeId,
       name: type?.name ?? `Type ${typeId}`,
-      groupId: type?.groupId ?? 0,
+      groupId: type?.groupId ?? null,
       groupName: type?.group.name ?? "Unknown",
       published: type?.published ?? false,
       rank: skillAttributes?.get(SKILL_TIME_CONSTANT_ID) ?? null,
@@ -435,7 +448,6 @@ function buildFactionRows(
         factionId: member.factionId,
         name: member.faction.name,
         isHomeFaction: member.factionId === home?.id,
-        isMemberRace: true,
       },
     ]),
   );
@@ -444,7 +456,6 @@ function buildFactionRows(
       factionId: home.id,
       name: home.name,
       isHomeFaction: true,
-      isMemberRace: false,
     });
   }
   return [...factions.values()].sort(
@@ -542,7 +553,7 @@ function buildSchoolRows(
         iconId: school.iconId,
         corporation: named(
           school.corporationId,
-          lookups.corporationNames,
+          lookups.corporationNames.get(school.corporationId),
           "Corporation",
         ),
         isStarterSpaceSchool: school.isStarterSpaceSchool ?? false,
@@ -564,8 +575,8 @@ function buildSchoolRows(
           })
           .sort((a, b) => a.stationName.localeCompare(b.stationName)),
         careerAgents: school.careerAgents
-          .flatMap(
-            ({ agentId }) => named(agentId, lookups.agentNames, "Agent") ?? [],
+          .map(({ agentId }) =>
+            named(agentId, lookups.agentNames.get(agentId), "Agent"),
           )
           .sort(byName),
       };
@@ -575,6 +586,99 @@ function buildSchoolRows(
         Number(a.isStarterSpaceSchool) - Number(b.isStarterSpaceSchool) ||
         a.schoolId - b.schoolId,
     );
+}
+
+/** The race's published skills, such as its ship skills. */
+const racialSkillIds = (types: RaceTypeRecord[]) =>
+  types
+    .filter((type) => type.categoryId === SKILL_CATEGORY_ID && type.published)
+    .map((type) => type.typeId);
+
+/**
+ * Names and groups of the given skills (and names of any other types), with
+ * the skills' rank and training attributes, in one round trip.
+ */
+async function readSkillDetails(
+  skillIds: number[],
+  otherTypeIds: number[] = [],
+) {
+  const typeIds = [...new Set([...skillIds, ...otherTypeIds])];
+  const [types, attributes] = await Promise.all([
+    whenAny(typeIds, () =>
+      prisma.type.findMany({
+        select: {
+          typeId: true,
+          name: true,
+          published: true,
+          groupId: true,
+          group: { select: { name: true } },
+        },
+        where: { typeId: { in: typeIds } },
+      }),
+    ),
+    whenAny(skillIds, () =>
+      prisma.typeAttribute.findMany({
+        select: { typeId: true, attributeId: true, value: true },
+        where: {
+          typeId: { in: skillIds },
+          attributeId: {
+            in: [
+              PRIMARY_ATTRIBUTE_ID,
+              SECONDARY_ATTRIBUTE_ID,
+              SKILL_TIME_CONSTANT_ID,
+            ],
+          },
+          isDeleted: false,
+        },
+      }),
+    ),
+  ]);
+  return { types, attributes };
+}
+
+/**
+ * The race's Alpha clone skills and racial skills: the Skills tab's two long
+ * tables, served by `/api/race/[raceId]/[table]` rather than carried by the
+ * page. All SDE data (clone grades, types, dogma), so kept until the next
+ * ingest.
+ */
+async function readRaceSkillTables(
+  raceId: number,
+): Promise<Pick<RaceTables, "alphaSkills" | "racialSkills">> {
+  "use cache";
+  cacheSdeRead();
+
+  const [types, cloneGrade] = await Promise.all([
+    readRaceTypes(raceId),
+    // Keyed by race id, as readRaceData explains.
+    prisma.cloneGrade.findUnique({
+      select: {
+        isDeleted: true,
+        skills: {
+          select: { skillTypeId: true, level: true },
+          where: { isDeleted: false },
+        },
+      },
+      where: { cloneGradeId: raceId },
+    }),
+  ]);
+  const alphaSkills =
+    cloneGrade && !cloneGrade.isDeleted ? cloneGrade.skills : [];
+  const racial = racialSkillIds(types);
+  const details = await readSkillDetails([
+    ...new Set([...alphaSkills.map((skill) => skill.skillTypeId), ...racial]),
+  ]);
+  const skillRow = skillRowBuilder(details.types, details.attributes);
+
+  return {
+    alphaSkills: alphaSkills
+      .map((skill) => ({
+        ...skillRow(skill.skillTypeId),
+        maxLevel: skill.level,
+      }))
+      .sort(bySkillGroup),
+    racialSkills: racial.map(skillRow).sort(bySkillGroup),
+  };
 }
 
 /**
@@ -602,10 +706,10 @@ export async function readRaceMetadata(raceId: number) {
 
 /**
  * Everything the race page carries: its identity and faction, bloodlines and
- * their ancestries, schools, starting and Alpha clone skills, racial skills,
- * ships by class, items by category, station architecture and NPC agents, plus
- * the row counts of the tables the page fetches separately. Returns null for
- * an unknown race.
+ * their ancestries, schools, starting skills, its Alpha clone grade, ships by
+ * class, items by category, station architecture and NPC agents, plus the row
+ * counts of the tables the page fetches separately. Returns null for an
+ * unknown race.
  *
  * Nearly all of it is SDE data, but the race's faction, its bloodlines'
  * corvettes and which stations are the race's come from the ESI scrapes. So
@@ -717,10 +821,7 @@ export async function readRaceData(
         cloneGradeId: true,
         name: true,
         isDeleted: true,
-        skills: {
-          select: { skillTypeId: true, level: true },
-          where: { isDeleted: false },
-        },
+        _count: { select: { skills: { where: { isDeleted: false } } } },
       },
       where: { cloneGradeId: raceId },
     }),
@@ -745,20 +846,10 @@ export async function readRaceData(
   ]);
 
   const grade = cloneGrade && !cloneGrade.isDeleted ? cloneGrade : null;
-  const racialSkillIds = types
-    .filter((type) => type.categoryId === SKILL_CATEGORY_ID && type.published)
-    .map((type) => type.typeId);
-  const skillIds = [
-    ...new Set([
-      ...startingSkills.map((skill) => skill.skillTypeId),
-      ...(grade?.skills ?? []).map((skill) => skill.skillTypeId),
-      ...racialSkillIds,
-    ]),
-  ];
+  const startingSkillIds = startingSkills.map((skill) => skill.skillTypeId);
   const stationTypeIds = [
     ...new Set(stationTypes.map((row) => row.stationTypeId)),
   ];
-  const namedTypeIds = [...new Set([...skillIds, ...stationTypeIds])];
   const schoolMapBySchool = new Map(
     schoolMaps.map((row) => [row.schoolId, row.solarSystemId]),
   );
@@ -789,8 +880,7 @@ export async function readRaceData(
 
   // Names and details the rows above only carry as ids, in one round trip.
   const [
-    namedTypes,
-    skillAttributes,
+    { types: namedTypes, attributes: skillAttributes },
     schoolCorporations,
     schoolStations,
     careerAgents,
@@ -798,34 +888,7 @@ export async function readRaceData(
     divisions,
     agentTypes,
   ] = await Promise.all([
-    whenAny(namedTypeIds, () =>
-      prisma.type.findMany({
-        select: {
-          typeId: true,
-          name: true,
-          published: true,
-          groupId: true,
-          group: { select: { name: true } },
-        },
-        where: { typeId: { in: namedTypeIds } },
-      }),
-    ),
-    whenAny(skillIds, () =>
-      prisma.typeAttribute.findMany({
-        select: { typeId: true, attributeId: true, value: true },
-        where: {
-          typeId: { in: skillIds },
-          attributeId: {
-            in: [
-              PRIMARY_ATTRIBUTE_ID,
-              SECONDARY_ATTRIBUTE_ID,
-              SKILL_TIME_CONSTANT_ID,
-            ],
-          },
-          isDeleted: false,
-        },
-      }),
-    ),
+    readSkillDetails(startingSkillIds, stationTypeIds),
     whenAny(schoolCorporationIds, () =>
       prisma.corporation.findMany({
         select: { corporationId: true, name: true },
@@ -915,14 +978,7 @@ export async function readRaceData(
     cloneGrade: grade && {
       cloneGradeId: grade.cloneGradeId,
       name: grade.name,
-      skills: grade.skills
-        .map((skill) => ({
-          ...skillRow(skill.skillTypeId),
-          maxLevel: skill.level,
-        }))
-        .sort(bySkillGroup),
     },
-    racialSkills: racialSkillIds.map(skillRow).sort(bySkillGroup),
     shipClasses: buildShipClasses(types),
     itemCategories: countCategories(types),
     stationTypes: buildStationTypeRows(
@@ -943,6 +999,8 @@ export async function readRaceData(
       items: types.length,
       corporations,
       stations,
+      alphaSkills: grade?._count.skills ?? 0,
+      racialSkills: racialSkillIds(types).length,
     },
   };
 }
@@ -961,6 +1019,20 @@ export async function readRaceItems(raceId: number): Promise<RaceItemRow[]> {
     metaGroupName: type.metaGroupName,
     techLevel: type.techLevel,
   }));
+}
+
+/** What an Alpha clone of the race can train, for the Skills tab. */
+export async function readRaceAlphaSkills(
+  raceId: number,
+): Promise<RaceTables["alphaSkills"]> {
+  return (await readRaceSkillTables(raceId)).alphaSkills;
+}
+
+/** The race's published skills, for the Skills tab. */
+export async function readRaceRacialSkills(
+  raceId: number,
+): Promise<RaceTables["racialSkills"]> {
+  return (await readRaceSkillTables(raceId)).racialSkills;
 }
 
 /**

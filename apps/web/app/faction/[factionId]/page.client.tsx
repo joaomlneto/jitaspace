@@ -37,7 +37,6 @@ import {
   IconTarget,
   IconUsersGroup,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -62,8 +61,6 @@ import {
   AllianceAnchor,
   AllianceAvatar,
   CategoryAnchor,
-  CorporationAnchor,
-  CorporationAvatar,
   EveIconAvatar,
   FactionAvatar,
   formatSecurityStatus,
@@ -85,7 +82,17 @@ import type {
   FactionTables,
 } from "./types";
 import { DataTable } from "~/components/DataTable";
-import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
+import {
+  CorporationLink,
+  formatCount,
+  formatCountOf,
+  HeroStat,
+  LocationTrail,
+  SectionHeading,
+  StatCard,
+  useEntityTable,
+  YesNoBadge,
+} from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
 import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
@@ -114,25 +121,9 @@ const TABLE_TABS = new Set<string>([
 
 /** The faction's table rows, from the CDN-cached `/api/faction/[factionId]`. */
 function useFactionTables(factionId: number, enabled: boolean) {
-  return useQuery({
-    queryKey: ["faction-tables", factionId],
-    queryFn: async (): Promise<FactionTables> => {
-      const response = await fetch(`/api/faction/${factionId}`);
-      if (!response.ok) {
-        throw new Error(`Faction ${factionId}: HTTP ${response.status}`);
-      }
-      return (await response.json()) as FactionTables;
-    },
-    enabled,
-    staleTime: Infinity,
-  });
+  return useEntityTable<FactionTables>(`/api/faction/${factionId}`, enabled);
 }
 
-const numberFormat = new Intl.NumberFormat("en-US");
-const formatCount = (value: number) => numberFormat.format(value);
-/** "1 epic arc", "2 epic arcs". */
-const formatCountOf = (value: number, one: string, many: string) =>
-  `${formatCount(value)} ${value === 1 ? one : many}`;
 const formatPercent = (value: number) =>
   `${(value * 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}%`;
 /**
@@ -154,14 +145,6 @@ const CONTESTED_COLORS: Record<string, string> = {
   captured: "red",
 };
 
-function YesNoBadge({ value }: Readonly<{ value: boolean }>) {
-  return (
-    <Badge color={value ? "teal" : "red"} variant="light">
-      {value ? "Yes" : "No"}
-    </Badge>
-  );
-}
-
 function SystemLink({
   location,
 }: Readonly<{
@@ -171,35 +154,6 @@ function SystemLink({
     <SolarSystemAnchor solarSystemId={location.solarSystemId}>
       {location.name}
     </SolarSystemAnchor>
-  );
-}
-
-/** "Jita · Kimotoro · The Forge", each part linked. */
-function LocationTrail({ location }: Readonly<{ location: FactionLocation }>) {
-  return (
-    <Group gap={6} wrap="wrap" component="span">
-      <SolarSystemSecurityStatusBadge
-        securityStatus={location.securityStatus}
-        size="sm"
-      />
-      <SystemLink location={location} />
-      <Text span c="dimmed">
-        ·
-      </Text>
-      <ConstellationAnchor constellationId={location.constellationId}>
-        {location.constellationName}
-      </ConstellationAnchor>
-      {location.regionId !== null && (
-        <>
-          <Text span c="dimmed">
-            ·
-          </Text>
-          <RegionAnchor regionId={location.regionId}>
-            {location.regionName}
-          </RegionAnchor>
-        </>
-      )}
-    </Group>
   );
 }
 
@@ -455,14 +409,7 @@ function TerritoryPanel({
 // ---------------------------------------------------------------------------
 
 function corporationNameCell(row: { corporationId: number; name: string }) {
-  return (
-    <Group gap="xs" wrap="nowrap">
-      <CorporationAvatar corporationId={row.corporationId} size="sm" />
-      <CorporationAnchor corporationId={row.corporationId}>
-        {row.name}
-      </CorporationAnchor>
-    </Group>
-  );
+  return <CorporationLink corporationId={row.corporationId} name={row.name} />;
 }
 
 const corporationColumns: DataTableColumn<FactionCorporationRow>[] = [

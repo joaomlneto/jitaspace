@@ -281,6 +281,12 @@ model Type {
   @@index([graphicId])
   @@index([groupId])
   @@index([iconId])
+  /// A race's types (the race page and its items table), instead of a full scan.
+  /// Not covering, so each row costs an index join; CockroachDB v24.3 still
+  /// picks it for an empire's ~7k of 53k rows (EXPLAIN, 2026-10-06). Apply it
+  /// with plain DDL, not `db push`, for the schema_locked reason given above:
+  ///   CREATE INDEX "Type_raceId_idx" ON "Type" ("raceId");
+  @@index([raceId])
   /// The variations of a base item (the type page's Variations tab).
   @@index([variationParentTypeId])
 }

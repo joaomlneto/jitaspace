@@ -23,9 +23,11 @@ import {
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type {
+  RaceCloneSkillRow,
   RaceCorporationRow,
   RaceItemRow,
   RacePageData,
+  RaceSkillRow,
   RaceStationRow,
 } from "~/app/race/[raceId]/types";
 
@@ -144,13 +146,11 @@ function raceData(overrides: Partial<RacePageData> = {}): RacePageData {
         factionId: AMARR_EMPIRE,
         name: "Amarr Empire",
         isHomeFaction: true,
-        isMemberRace: true,
       },
       {
         factionId: 500012,
         name: "Blood Raider Covenant",
         isHomeFaction: false,
-        isMemberRace: true,
       },
     ],
     bloodlines: [
@@ -225,44 +225,18 @@ function raceData(overrides: Partial<RacePageData> = {}): RacePageData {
         skillPoints: 16000,
       },
     ],
-    cloneGrade: {
-      cloneGradeId: AMARR,
-      name: "Alpha Amarr",
-      skills: [
-        {
-          typeId: 3303,
-          name: "Small Energy Turret",
-          groupId: 255,
-          groupName: "Gunnery",
-          published: true,
-          rank: 1,
-          primaryAttribute: "perception",
-          secondaryAttribute: "willpower",
-          maxLevel: 4,
-        },
-      ],
-    },
-    racialSkills: [
-      {
-        typeId: 3343,
-        name: "Amarr Battleship",
-        groupId: 257,
-        groupName: "Spaceship Command",
-        published: true,
-        rank: 8,
-        primaryAttribute: "perception",
-        secondaryAttribute: "willpower",
-      },
-    ],
+    cloneGrade: { cloneGradeId: AMARR, name: "Alpha Amarr" },
     shipClasses: [
       {
         groupId: 237,
         name: "Corvette",
+        mass: 1_148_000,
         ships: [{ typeId: 596, name: "Impairor", metaGroupName: "Tech I" }],
       },
       {
         groupId: 27,
         name: "Battleship",
+        mass: 99_300_000,
         ships: [{ typeId: 642, name: "Apocalypse", metaGroupName: "Tech I" }],
       },
     ],
@@ -290,7 +264,13 @@ function raceData(overrides: Partial<RacePageData> = {}): RacePageData {
         { id: 4, name: "GenericStorylineMissionAgent", count: 146 },
       ],
     },
-    counts: { items: 7125, corporations: 73, stations: 1300 },
+    counts: {
+      items: 7125,
+      corporations: 73,
+      stations: 1300,
+      alphaSkills: 1,
+      racialSkills: 1,
+    },
     ...overrides,
   };
 }
@@ -353,6 +333,44 @@ const stationRows: RaceStationRow[] = [
   },
 ];
 
+const alphaSkillRows: RaceCloneSkillRow[] = [
+  {
+    typeId: 3303,
+    name: "Small Energy Turret",
+    groupId: 255,
+    groupName: "Gunnery",
+    published: true,
+    rank: 1,
+    primaryAttribute: "perception",
+    secondaryAttribute: "willpower",
+    maxLevel: 4,
+  },
+];
+
+const racialSkillRows: RaceSkillRow[] = [
+  {
+    typeId: 3343,
+    name: "Amarr Battleship",
+    groupId: 257,
+    groupName: "Spaceship Command",
+    published: true,
+    rank: 8,
+    primaryAttribute: "perception",
+    secondaryAttribute: "willpower",
+  },
+  {
+    // A skill whose type the ingest dropped: no group to link to.
+    typeId: 1,
+    name: "Type 1",
+    groupId: null,
+    groupName: "Unknown",
+    published: false,
+    rank: null,
+    primaryAttribute: null,
+    secondaryAttribute: null,
+  },
+];
+
 const mockFetch = jest.fn<(url: string) => Promise<unknown>>();
 
 /** What each table route answers, keyed by the table's name. */
@@ -363,6 +381,8 @@ function tableResponses(
     items: itemRows,
     corporations: corporationRows,
     stations: stationRows,
+    alphaSkills: alphaSkillRows,
+    racialSkills: racialSkillRows,
   };
   return (url) => {
     const table = url.split("/").at(-1) ?? "";
@@ -511,7 +531,10 @@ describe("race page data", () => {
       { typeId: 3343, attributeId: 180, value: 167 },
       { typeId: 3343, attributeId: 181, value: 168 },
     ]);
-    const { readRaceData } = require("~/app/race/[raceId]/data");
+    const {
+      readRaceData,
+      readRaceRacialSkills,
+    } = require("~/app/race/[raceId]/data");
 
     const data = (await readRaceData(AMARR)) as RacePageData;
 
@@ -520,11 +543,14 @@ describe("race page data", () => {
       {
         groupId: 25,
         name: "Frigate",
+        mass: 1_047_000,
         ships: [{ typeId: 597, name: "Punisher", metaGroupName: "Tech I" }],
       },
       {
         groupId: 27,
         name: "Battleship",
+        // The median of the class's two hulls.
+        mass: 101_150_000,
         ships: [
           { typeId: 642, name: "Apocalypse", metaGroupName: "Tech I" },
           { typeId: 643, name: "Armageddon", metaGroupName: "Tech I" },
@@ -535,8 +561,10 @@ describe("race page data", () => {
       { categoryId: 6, name: "Ship", total: 4, published: 3 },
       { categoryId: 16, name: "Skill", total: 1, published: 1 },
     ]);
-    expect(data.counts.items).toBe(5);
-    expect(data.racialSkills).toEqual([
+    expect(data.counts).toMatchObject({ items: 5, racialSkills: 1 });
+    // The rows themselves are a table the Skills tab fetches.
+    expect(data).not.toHaveProperty("racialSkills");
+    expect(await readRaceRacialSkills(AMARR)).toEqual([
       {
         typeId: 3343,
         name: "Amarr Battleship",
@@ -555,11 +583,14 @@ describe("race page data", () => {
     prismaMock.raceSkill.findMany.mockResolvedValue([
       { skillTypeId: 3331, level: 3 },
       { skillTypeId: 3300, level: 0 },
+      { skillTypeId: 3319, level: 2 },
     ]);
+    // Both reads see it: the page counts its skills, the table lists them.
     prismaMock.cloneGrade.findUnique.mockResolvedValue({
       cloneGradeId: AMARR,
       name: "Alpha Amarr",
       isDeleted: false,
+      _count: { skills: 1 },
       skills: [{ skillTypeId: 3300, level: 5 }],
     });
     prismaMock.type.findMany.mockImplementation((args) =>
@@ -580,6 +611,13 @@ describe("race page data", () => {
                 groupId: 255,
                 group: { name: "Gunnery" },
               },
+              {
+                typeId: 3319,
+                name: "Missile Launcher Operation",
+                published: true,
+                groupId: 256,
+                group: { name: "Missiles" },
+              },
             ]
           : [],
       ),
@@ -587,8 +625,12 @@ describe("race page data", () => {
     prismaMock.typeAttribute.findMany.mockResolvedValue([
       { typeId: 3331, attributeId: 275, value: 2 },
       { typeId: 3300, attributeId: 275, value: 1 },
+      { typeId: 3319, attributeId: 275, value: 3 },
     ]);
-    const { readRaceData } = require("~/app/race/[raceId]/data");
+    const {
+      readRaceData,
+      readRaceAlphaSkills,
+    } = require("~/app/race/[raceId]/data");
 
     const data = (await readRaceData(AMARR)) as RacePageData;
 
@@ -596,15 +638,37 @@ describe("race page data", () => {
       expect.objectContaining({ where: { cloneGradeId: AMARR } }),
     );
     // Level 3 at rank 2 is 2 × 8,000; level 0 is injected but untrained.
+    // Level 2 at rank 3 is ceil(250 × 3 × √32) = 4,243, not 3 × 1,415.
     expect(
       data.startingSkills.map((skill) => [skill.name, skill.skillPoints]),
     ).toEqual([
       ["Gunnery", 0],
+      ["Missile Launcher Operation", 4243],
       ["Amarr Frigate", 16000],
     ]);
-    expect(data.cloneGrade).toMatchObject({
+    expect(data.cloneGrade).toEqual({
+      cloneGradeId: AMARR,
       name: "Alpha Amarr",
-      skills: [{ name: "Gunnery", maxLevel: 5, rank: 1 }],
+    });
+    expect(data.counts.alphaSkills).toBe(1);
+    expect(await readRaceAlphaSkills(AMARR)).toEqual([
+      expect.objectContaining({ name: "Gunnery", maxLevel: 5, rank: 1 }),
+    ]);
+  });
+
+  it("gives a skill whose type is gone no group to link to", async () => {
+    mockEmptyReads();
+    prismaMock.raceSkill.findMany.mockResolvedValue([
+      { skillTypeId: 99999, level: 1 },
+    ]);
+    const { readRaceData } = require("~/app/race/[raceId]/data");
+
+    const data = (await readRaceData(AMARR)) as RacePageData;
+
+    expect(data.startingSkills[0]).toMatchObject({
+      name: "Type 99999",
+      groupId: null,
+      groupName: "Unknown",
     });
   });
 
@@ -624,19 +688,16 @@ describe("race page data", () => {
         factionId: AMARR_EMPIRE,
         name: "Amarr Empire",
         isHomeFaction: true,
-        isMemberRace: false,
       },
       {
         factionId: 500012,
         name: "Blood Raider Covenant",
         isHomeFaction: false,
-        isMemberRace: true,
       },
       {
         factionId: 500008,
         name: "Khanid Kingdom",
         isHomeFaction: false,
-        isMemberRace: true,
       },
     ]);
   });
@@ -793,6 +854,12 @@ describe("race page data", () => {
     expect(countWhere(prismaMock.corporation.count)).toMatchObject({
       corporationId: { gte: 1_000_000, lt: 2_000_000 },
     });
+    // Not the ones CCP deleted, whose marker may be null rather than false.
+    expect(countWhere(prismaMock.corporation.count)).toMatchObject({
+      AND: expect.arrayContaining([
+        { OR: [{ isDeletedByCcp: null }, { isDeletedByCcp: false }] },
+      ]),
+    });
   });
 
   it("marks how each corporation relates to the race", async () => {
@@ -878,7 +945,15 @@ describe("race page (server)", () => {
     const props = tree.props.children.props;
 
     expect(props).toMatchObject({ raceId: AMARR, name: "Amarr" });
-    expect(props.counts).toEqual({ items: 0, corporations: 0, stations: 0 });
+    expect(props.counts).toEqual({
+      items: 0,
+      corporations: 0,
+      stations: 0,
+      alphaSkills: 0,
+      racialSkills: 0,
+    });
+    // The skill lists are tables the Skills tab fetches, not page props.
+    expect(props).not.toHaveProperty("racialSkills");
   });
 
   it("lists one placeholder param, which 404s without a query", () => {
@@ -942,10 +1017,15 @@ describe("race page (client)", () => {
         schools: [],
         startingSkills: [],
         cloneGrade: null,
-        racialSkills: [],
         shipClasses: [],
         stationTypes: [],
-        counts: { items: 88, corporations: 0, stations: 0 },
+        counts: {
+          items: 88,
+          corporations: 0,
+          stations: 0,
+          alphaSkills: 0,
+          racialSkills: 0,
+        },
       }),
     );
 
@@ -999,7 +1079,6 @@ describe("race page (client)", () => {
             factionId: 500026,
             name: "Triglavian Collective",
             isHomeFaction: false,
-            isMemberRace: true,
           },
         ],
       }),
@@ -1020,13 +1099,11 @@ describe("race page (client)", () => {
             factionId: 500017,
             name: "The Society of Conscious Thought",
             isHomeFaction: false,
-            isMemberRace: true,
           },
           {
             factionId: 500005,
             name: "Jove Empire",
             isHomeFaction: false,
-            isMemberRace: true,
           },
         ],
       }),
@@ -1118,7 +1195,15 @@ describe("race page (client)", () => {
 
   it("shows the station architecture without fetching when no station is the race's", () => {
     renderClient(
-      raceData({ counts: { items: 1, corporations: 1, stations: 0 } }),
+      raceData({
+        counts: {
+          items: 1,
+          corporations: 1,
+          stations: 0,
+          alphaSkills: 0,
+          racialSkills: 0,
+        },
+      }),
       "?tab=stations",
     );
 
@@ -1127,6 +1212,8 @@ describe("race page (client)", () => {
       screen.getByText("2 operations: Academy, Plantation"),
     ).toBeInTheDocument();
     expect(mockFetch).not.toHaveBeenCalled();
+    // No "0" badge on a tab that shows only the architecture.
+    expect(screen.getByRole("tab", { name: "Stations" })).toBeInTheDocument();
   });
 
   it("renders bloodlines with their attributes and ancestries", () => {
@@ -1152,12 +1239,73 @@ describe("race page (client)", () => {
     );
   });
 
-  it("totals the starting skill points and lists the Alpha clone's skills", () => {
+  it("totals the starting skill points and fetches the Alpha and racial skills", async () => {
     renderClient(raceData(), "?tab=skills");
 
     expect(screen.getAllByText("16,000").length).toBeGreaterThan(0);
-    expect(screen.getByText("Small Energy Turret")).toBeInTheDocument();
-    expect(screen.getByText("Amarr Battleship")).toBeInTheDocument();
+    expect(await screen.findByText("Small Energy Turret")).toBeInTheDocument();
+    expect(await screen.findByText("Amarr Battleship")).toBeInTheDocument();
+    expect(mockFetch).toHaveBeenCalledWith(`/api/race/${AMARR}/alphaSkills`);
+    expect(mockFetch).toHaveBeenCalledWith(`/api/race/${AMARR}/racialSkills`);
+    // A skill whose type is gone has a group name but no group link.
+    expect(screen.getByText("Unknown").closest("a")).toBeNull();
+    expect(
+      document.querySelector('a[href="/group/0"], a[href="/group/null"]'),
+    ).toBeNull();
+  });
+
+  it("fetches no skill table the race has no rows for", () => {
+    renderClient(
+      raceData({
+        cloneGrade: null,
+        counts: {
+          items: 1,
+          corporations: 1,
+          stations: 1,
+          alphaSkills: 0,
+          racialSkills: 0,
+        },
+      }),
+      "?tab=skills",
+    );
+
+    expect(screen.getByText("Starting skills")).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the heaviest class of known mass for the hero", () => {
+    const { container } = renderClient(
+      raceData({
+        iconId: null,
+        faction: null,
+        factions: [],
+        starterShip: null,
+        shipClasses: [
+          {
+            groupId: 25,
+            name: "Frigate",
+            mass: 1_000_000,
+            ships: [{ typeId: 1, name: "Small", metaGroupName: null }],
+          },
+          {
+            groupId: 30,
+            name: "Titan",
+            mass: 2_400_000_000,
+            ships: [{ typeId: 2, name: "Huge", metaGroupName: null }],
+          },
+          {
+            groupId: 99,
+            name: "Mystery",
+            mass: null,
+            ships: [{ typeId: 3, name: "Unknown size", metaGroupName: null }],
+          },
+        ],
+      }),
+    );
+
+    expect(container.querySelector("img")?.getAttribute("src")).toBe(
+      "https://images.evetech.net/types/2/render?size=256",
+    );
   });
 
   it("marks the starter ship among the hulls", () => {

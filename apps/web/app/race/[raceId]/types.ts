@@ -2,10 +2,11 @@
  * Everything the race page shows, resolved on the server from our own database
  * and handed to the client page as plain, serializable props.
  *
- * The page carries the race itself and everything small about it; the three
- * long lists (every item the SDE assigns to the race, its NPC corporations and
- * its stations) are served by `/api/race/[raceId]/[table]` and fetched when the
- * tab listing them opens. See {@link RaceTables}.
+ * The page carries the race itself and everything small about it; the long
+ * lists (every item the SDE assigns to the race, its NPC corporations and
+ * stations, its Alpha clone and racial skills) are served by
+ * `/api/race/[raceId]/[table]` and fetched when the tab listing them opens.
+ * See {@link RaceTables}.
  */
 
 import type { CHARACTER_ATTRIBUTES } from "./constants";
@@ -42,7 +43,7 @@ export interface RaceBloodlineRow {
   name: string;
   description: string;
   iconId: number | null;
-  corporation: RaceNamedEntity | null;
+  corporation: RaceNamedEntity;
   /** The bloodline's corvette, from ESI's bloodline record. */
   shipType: RaceNamedEntity | null;
   attributes: RaceAttributeValues;
@@ -54,8 +55,6 @@ export interface RaceFactionRow {
   name: string;
   /** The race's own faction, per ESI's race record. */
   isHomeFaction: boolean;
-  /** factions.yaml lists the race among the faction's member races. */
-  isMemberRace: boolean;
 }
 
 export interface RaceSchoolStation extends RaceLocation {
@@ -84,7 +83,8 @@ export interface RaceSchoolRow {
 export interface RaceSkillRow {
   typeId: number;
   name: string;
-  groupId: number;
+  /** Null when the skill's type is missing, so nothing links to it. */
+  groupId: number | null;
   groupName: string;
   published: boolean;
   /** The skill's training time multiplier; null when the SDE has none. */
@@ -105,10 +105,10 @@ export interface RaceCloneSkillRow extends RaceSkillRow {
   maxLevel: number;
 }
 
+/** The race's Alpha clone grade; its skills are the `alphaSkills` table. */
 export interface RaceCloneGrade {
   cloneGradeId: number;
   name: string;
-  skills: RaceCloneSkillRow[];
 }
 
 export interface RaceShipRow {
@@ -121,6 +121,8 @@ export interface RaceShipRow {
 export interface RaceShipClass {
   groupId: number;
   name: string;
+  /** The median mass of its hulls; null when none has one. */
+  mass: number | null;
   ships: RaceShipRow[];
 }
 
@@ -172,8 +174,6 @@ export interface RacePageData {
   schools: RaceSchoolRow[];
   startingSkills: RaceStartingSkillRow[];
   cloneGrade: RaceCloneGrade | null;
-  /** Skills the SDE assigns to this race, such as its ship skills. */
-  racialSkills: RaceSkillRow[];
   /** Published hulls, by class, the smallest classes first. */
   shipClasses: RaceShipClass[];
   /** The race's items by category, most first. */
@@ -229,6 +229,10 @@ export interface RaceTables {
   items: RaceItemRow[];
   corporations: RaceCorporationRow[];
   stations: RaceStationRow[];
+  /** What an Alpha clone of the race can train, and how far. */
+  alphaSkills: RaceCloneSkillRow[];
+  /** Published skills the SDE assigns to the race, such as its ship skills. */
+  racialSkills: RaceSkillRow[];
 }
 
 export type RaceTableName = keyof RaceTables;

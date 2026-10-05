@@ -35,7 +35,6 @@ import {
   IconUsersGroup,
   IconUserStar,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -53,8 +52,6 @@ import {
   BloodlineAnchor,
   CategoryAnchor,
   CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
   EveIconAvatar,
   FactionAvatar,
   GroupAnchor,
@@ -79,7 +76,17 @@ import type {
   RaceTables,
 } from "./types";
 import { DataTable } from "~/components/DataTable";
-import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
+import {
+  CorporationLink,
+  formatCount,
+  formatCountOf,
+  HeroStat,
+  LocationTrail,
+  SectionHeading,
+  StatCard,
+  useEntityTable,
+  YesNoBadge,
+} from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
 import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
@@ -92,38 +99,28 @@ export type PageProps = RacePageData;
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
 
-/** The tabs that list rows the page does not carry, and the table each fetches. */
-const TABLE_FOR_TAB: Partial<Record<RacePageTab, RaceTableName>> = {
-  items: "items",
-  corporations: "corporations",
-  stations: "stations",
+/** The tabs that list rows the page does not carry, and the tables each fetches. */
+const TABLES_FOR_TAB: Partial<Record<RacePageTab, RaceTableName[]>> = {
+  skills: ["alphaSkills", "racialSkills"],
+  items: ["items"],
+  corporations: ["corporations"],
+  stations: ["stations"],
 };
 
-/** One of the race's long lists, from the CDN-cached `/api/race/[raceId]/[table]`. */
+/**
+ * One of the race's long lists, from the CDN-cached `/api/race/[raceId]/[table]`:
+ * fetched once the open tab lists it, and only if it has rows.
+ */
 function useRaceTable<K extends RaceTableName>(
-  raceId: number,
+  race: Pick<PageProps, "raceId" | "counts">,
   table: K,
-  enabled: boolean,
+  fetched: ReadonlySet<RaceTableName>,
 ) {
-  return useQuery({
-    queryKey: ["race-table", raceId, table],
-    queryFn: async (): Promise<RaceTables[K]> => {
-      const response = await fetch(`/api/race/${raceId}/${table}`);
-      if (!response.ok) {
-        throw new Error(`Race ${raceId} ${table}: HTTP ${response.status}`);
-      }
-      return (await response.json()) as RaceTables[K];
-    },
-    enabled,
-    staleTime: Infinity,
-  });
+  return useEntityTable<RaceTables[K]>(
+    `/api/race/${race.raceId}/${table}`,
+    fetched.has(table) && race.counts[table] > 0,
+  );
 }
-
-const numberFormat = new Intl.NumberFormat("en-US");
-const formatCount = (value: number) => numberFormat.format(value);
-/** "1 bloodline", "2 bloodlines". */
-const formatCountOf = (value: number, one: string, many: string) =>
-  `${formatCount(value)} ${value === 1 ? one : many}`;
 
 const ATTRIBUTE_LABELS: Record<CharacterAttribute, string> = {
   intelligence: "Intelligence",
@@ -138,39 +135,6 @@ function firstSentence(text: string): string {
   return /^.*?[.!?](?=\s|$)/s.exec(text)?.[0] ?? text;
 }
 
-function YesNoBadge({ value }: Readonly<{ value: boolean }>) {
-  return (
-    <Badge color={value ? "teal" : "red"} variant="light">
-      {value ? "Yes" : "No"}
-    </Badge>
-  );
-}
-
-/** "◆ 0.9 Jita · The Forge", each part linked. */
-function LocationTrail({ location }: Readonly<{ location: RaceLocation }>) {
-  return (
-    <Group gap={6} wrap="wrap" component="span">
-      <SolarSystemSecurityStatusBadge
-        securityStatus={location.securityStatus}
-        size="sm"
-      />
-      <SolarSystemAnchor solarSystemId={location.solarSystemId}>
-        {location.name}
-      </SolarSystemAnchor>
-      {location.regionId !== null && (
-        <>
-          <Text span c="dimmed">
-            ·
-          </Text>
-          <RegionAnchor regionId={location.regionId}>
-            {location.regionName}
-          </RegionAnchor>
-        </>
-      )}
-    </Group>
-  );
-}
-
 function TypeLink({
   typeId,
   name,
@@ -179,20 +143,6 @@ function TypeLink({
     <Group gap="xs" wrap="nowrap">
       <TypeAvatar typeId={typeId} size="sm" />
       <TypeAnchor typeId={typeId}>{name}</TypeAnchor>
-    </Group>
-  );
-}
-
-function CorporationLink({
-  corporationId,
-  name,
-}: Readonly<{ corporationId: number; name: string }>) {
-  return (
-    <Group gap="xs" wrap="nowrap">
-      <CorporationAvatar corporationId={corporationId} size="sm" />
-      <CorporationAnchor corporationId={corporationId}>
-        {name}
-      </CorporationAnchor>
     </Group>
   );
 }
@@ -281,17 +231,15 @@ function BloodlinesPanel({
                   {bloodline.name}
                 </BloodlineAnchor>
                 <Group gap="lg">
-                  {bloodline.corporation && (
-                    <Group gap={6} wrap="nowrap">
-                      <Text size="xs" c="dimmed">
-                        Corporation
-                      </Text>
-                      <CorporationLink
-                        corporationId={bloodline.corporation.id}
-                        name={bloodline.corporation.name}
-                      />
-                    </Group>
-                  )}
+                  <Group gap={6} wrap="nowrap">
+                    <Text size="xs" c="dimmed">
+                      Corporation
+                    </Text>
+                    <CorporationLink
+                      corporationId={bloodline.corporation.id}
+                      name={bloodline.corporation.name}
+                    />
+                  </Group>
                   {bloodline.shipType && (
                     <Group gap={6} wrap="nowrap">
                       <Text size="xs" c="dimmed">
@@ -533,9 +481,12 @@ function skillColumns<T extends RaceSkillRow>(
       accessor: "groupName",
       sortable: true,
       filter: { type: "select" },
-      cell: (row) => (
-        <GroupAnchor groupId={row.groupId}>{row.groupName}</GroupAnchor>
-      ),
+      cell: (row) =>
+        row.groupId === null ? (
+          row.groupName
+        ) : (
+          <GroupAnchor groupId={row.groupId}>{row.groupName}</GroupAnchor>
+        ),
     },
     ...levelColumns,
     {
@@ -604,12 +555,23 @@ const cloneSkillColumns = skillColumns<RaceCloneSkillRow>([
 
 const racialSkillColumns = skillColumns<RaceSkillRow>([]);
 
+/** A fetched table's rows and whether they are still on their way. */
+interface FetchedRows<T> {
+  data: T[] | undefined;
+  isPending: boolean;
+}
+
 function SkillsPanel({
   startingSkills,
   cloneGrade,
+  counts,
+  alphaSkills,
   racialSkills,
 }: Readonly<
-  Pick<PageProps, "startingSkills" | "cloneGrade" | "racialSkills">
+  Pick<PageProps, "startingSkills" | "cloneGrade" | "counts"> & {
+    alphaSkills: FetchedRows<RaceCloneSkillRow>;
+    racialSkills: FetchedRows<RaceSkillRow>;
+  }
 >) {
   const startingSkillPoints = startingSkills.reduce(
     (total, skill) => total + (skill.skillPoints ?? 0),
@@ -659,7 +621,7 @@ function SkillsPanel({
         </Stack>
       )}
 
-      {cloneGrade && (
+      {cloneGrade && counts.alphaSkills > 0 && (
         <Stack gap="sm">
           <SectionHeading icon={<IconDna size={18} />}>
             Alpha clone skills
@@ -669,7 +631,8 @@ function SkillsPanel({
             grade) can train without Omega status, and how far.
           </Text>
           <DataTable
-            data={cloneGrade.skills}
+            data={alphaSkills.data ?? NO_ROWS}
+            isLoading={alphaSkills.isPending}
             columns={cloneSkillColumns}
             rowId={(row) => row.typeId}
             initialSort={{ columnId: "group", direction: "asc" }}
@@ -684,7 +647,7 @@ function SkillsPanel({
         </Stack>
       )}
 
-      {racialSkills.length > 0 && (
+      {counts.racialSkills > 0 && (
         <Stack gap="sm">
           <SectionHeading icon={<IconRocket size={18} />}>
             Racial skills
@@ -694,7 +657,8 @@ function SkillsPanel({
             ships require.
           </Text>
           <DataTable
-            data={racialSkills}
+            data={racialSkills.data ?? NO_ROWS}
+            isLoading={racialSkills.isPending}
             columns={racialSkillColumns}
             rowId={(row) => row.typeId}
             initialSort={{ columnId: "group", direction: "asc" }}
@@ -1231,7 +1195,7 @@ function OverviewPanel({
       value: publishedShips,
       sub: formatCountOf(race.shipClasses.length, "class", "classes"),
     },
-    { label: "Racial skills", value: race.racialSkills.length },
+    { label: "Racial skills", value: race.counts.racialSkills },
     {
       label: "Items",
       value: race.counts.items,
@@ -1298,11 +1262,7 @@ function OverviewPanel({
             <StatCard
               label="Alpha clone grade"
               value={race.cloneGrade.name}
-              sub={formatCountOf(
-                race.cloneGrade.skills.length,
-                "skill",
-                "skills",
-              )}
+              sub={formatCountOf(race.counts.alphaSkills, "skill", "skills")}
             />
           )}
           {race.startingSkills.length > 0 && (
@@ -1467,7 +1427,7 @@ function visibleRaceTabs(
   const hasSkills =
     race.startingSkills.length > 0 ||
     race.cloneGrade !== null ||
-    race.racialSkills.length > 0;
+    counts.racialSkills > 0;
   const shown: Record<RacePageTab, boolean> = {
     overview: true,
     description: hasDescription,
@@ -1511,9 +1471,12 @@ function HeroImage({
       />
     );
   }
-  // Then a hull: the starter ship, or one of the race's largest.
-  const shipId =
-    race.starterShip?.id ?? race.shipClasses.at(-1)?.ships[0]?.typeId;
+  // Then a hull: the starter ship, or one of the race's largest. Classes of
+  // unknown mass sort last, so take the last class with one.
+  const largest =
+    race.shipClasses.findLast((shipClass) => shipClass.mass !== null) ??
+    race.shipClasses.at(-1);
+  const shipId = race.starterShip?.id ?? largest?.ships[0]?.typeId;
   if (shipId !== undefined) {
     return (
       <Image
@@ -1579,24 +1542,17 @@ export default function RacePage(race: Readonly<PageProps>) {
   const selectedTab = visibleTabs.has(activeTab)
     ? activeTab
     : DEFAULT_RACE_PAGE_TAB;
-  const fetchedTable = TABLE_FOR_TAB[selectedTab];
+  const fetched = new Set(TABLES_FOR_TAB[selectedTab]);
 
-  const itemsQuery = useRaceTable(raceId, "items", fetchedTable === "items");
-  const corporationsQuery = useRaceTable(
-    raceId,
-    "corporations",
-    fetchedTable === "corporations",
-  );
-  const stationsQuery = useRaceTable(
-    raceId,
-    "stations",
-    // The tab can show the architecture alone; only fetch rows that exist.
-    fetchedTable === "stations" && counts.stations > 0,
-  );
-  const failedTable =
-    (fetchedTable === "items" && itemsQuery.isError) ||
-    (fetchedTable === "corporations" && corporationsQuery.isError) ||
-    (fetchedTable === "stations" && stationsQuery.isError);
+  const tables = {
+    items: useRaceTable(race, "items", fetched),
+    corporations: useRaceTable(race, "corporations", fetched),
+    stations: useRaceTable(race, "stations", fetched),
+    alphaSkills: useRaceTable(race, "alphaSkills", fetched),
+    racialSkills: useRaceTable(race, "racialSkills", fetched),
+  };
+  // Only the open tab's tables: a failure elsewhere is that tab's to show.
+  const failedTable = [...fetched].some((table) => tables[table].isError);
 
   const tab = (value: string, icon: ReactNode, label: string, count?: number) =>
     visibleTabs.has(value) && (
@@ -1759,7 +1715,7 @@ export default function RacePage(race: Readonly<PageProps>) {
               "stations",
               <IconBuildingStore size={16} />,
               "Stations",
-              counts.stations,
+              counts.stations > 0 ? counts.stations : undefined,
             )}
             {tab("history", <IconHistory size={16} />, "History")}
           </Tabs.List>
@@ -1804,7 +1760,9 @@ export default function RacePage(race: Readonly<PageProps>) {
               <SkillsPanel
                 startingSkills={race.startingSkills}
                 cloneGrade={race.cloneGrade}
-                racialSkills={race.racialSkills}
+                counts={counts}
+                alphaSkills={tables.alphaSkills}
+                racialSkills={tables.racialSkills}
               />
             </Tabs.Panel>
           )}
@@ -1831,10 +1789,10 @@ export default function RacePage(race: Readonly<PageProps>) {
           {visibleTabs.has("items") && (
             <Tabs.Panel value="items" pt="lg">
               <ItemsPanel
-                items={itemsQuery.data}
+                items={tables.items.data}
                 total={counts.items}
                 // Pending, not merely "no data yet": a failed fetch must stop loading.
-                isLoading={itemsQuery.isPending}
+                isLoading={tables.items.isPending}
               />
             </Tabs.Panel>
           )}
@@ -1849,8 +1807,8 @@ export default function RacePage(race: Readonly<PageProps>) {
                   Corporations with a loyalty point store link to their offers.
                 </Text>
                 <DataTable
-                  data={corporationsQuery.data ?? NO_ROWS}
-                  isLoading={corporationsQuery.isPending}
+                  data={tables.corporations.data ?? NO_ROWS}
+                  isLoading={tables.corporations.isPending}
                   columns={corporationColumns}
                   rowId={(row) => row.corporationId}
                   initialSort={{ columnId: "name", direction: "asc" }}
@@ -1871,9 +1829,9 @@ export default function RacePage(race: Readonly<PageProps>) {
             <Tabs.Panel value="stations" pt="lg">
               <StationsPanel
                 stationTypes={race.stationTypes}
-                stations={stationsQuery.data}
+                stations={tables.stations.data}
                 hasStations={counts.stations > 0}
-                isLoading={stationsQuery.isPending}
+                isLoading={tables.stations.isPending}
               />
             </Tabs.Panel>
           )}
