@@ -18,14 +18,18 @@ import type { MarketTree } from "~/components/Market/readMarketTree";
 import type { QuickbarData } from "~/lib/quickbar";
 import { MarketGroupNavLink } from "~/components/Market/MarketGroupNavLink";
 import { MarketGroupsNavigation } from "~/components/Market/MarketGroupsNavigation";
-import { Quickbar } from "~/components/Market/Quickbar";
+import { describeDeletion, Quickbar } from "~/components/Market/Quickbar";
 import {
   QUICKBAR_DRAG_TYPE,
   QUICKBAR_STORAGE_KEY,
   useQuickbarStore,
 } from "~/lib/quickbar";
 
-jest.mock("@jitaspace/eve-components", () => ({ TypeAvatar: () => null }));
+jest.mock("@jitaspace/eve-components", () => ({
+  TypeAvatar: () => null,
+  // Names an item before the market tree has loaded.
+  TypeName: ({ typeId }: { typeId: number }) => <span>{`type ${typeId}`}</span>,
+}));
 jest.mock("@jitaspace/ui", () => ({ EveIconAvatar: () => null }));
 
 const marketTree: MarketTree = {
@@ -71,6 +75,9 @@ async function seed(
     JSON.stringify({ state: { ...data, view }, version: 1 }),
   );
   await act(() => useQuickbarStore.persist.rehydrate());
+  // Storage restores the tab in view on the first load only; after that, a
+  // re-read keeps the current one. Set it as the reader would have left it.
+  useQuickbarStore.setState({ view });
 }
 
 const stored = () => {
@@ -80,8 +87,12 @@ const stored = () => {
 
 // env="test" turns Mantine's transitions off, so menus and dialogs open at once.
 function wrap(node: ReactNode) {
+  // No retries: a failed tree fetch reports at once rather than after backoff.
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider client={client}>
       <MantineProvider env="test">
         <ModalsProvider>{node}</ModalsProvider>
       </MantineProvider>
@@ -134,6 +145,7 @@ function drag(from: HTMLElement, to: HTMLElement) {
 beforeEach(async () => {
   localStorage.clear();
   await act(() => useQuickbarStore.persist.rehydrate());
+  useQuickbarStore.setState({ view: "groups" });
 });
 
 describe("Quickbar", () => {
@@ -190,6 +202,37 @@ describe("Quickbar", () => {
     expect(row("Ice")).toBeInTheDocument();
     const ice = Object.values(stored().folders).find((f) => f.name === "Ice");
     expect(ice?.parentId).toBe("ore");
+  });
+
+  it("says what deleting a folder takes with it", () => {
+    expect(describeDeletion(1, 0)).toBe(
+      "The 1 item in it is removed from your quickbar too.",
+    );
+    expect(describeDeletion(0, 2)).toBe(
+      "The 2 folders in it are removed from your quickbar too.",
+    );
+    expect(describeDeletion(3, 1)).toBe(
+      "The 1 folder and 3 items in it are removed from your quickbar too.",
+    );
+  });
+
+  it("does not save a rename that Escape cancelled, even if blur follows", async () => {
+    await seed(sample);
+    await renderQuickbar();
+
+    fireEvent.click(
+      within(openMenu("Ores")).getByRole("menuitem", { name: "Rename" }),
+    );
+    const input = screen.getByRole("textbox", { name: "Folder name" });
+    fireEvent.change(input, { target: { value: "Rocks" } });
+    // Some browsers fire blur as Escape removes the input: model that by
+    // blurring before React has re-rendered it away.
+    act(() => {
+      fireEvent.keyDown(input, { key: "Escape" });
+      fireEvent.blur(input);
+    });
+
+    expect(stored().folders.ore?.name).toBe("Ores");
   });
 
   it("renames a folder, and Escape keeps the old name", async () => {
@@ -255,7 +298,10 @@ describe("Quickbar", () => {
       within(openMenu("Ores")).getByRole("menuitem", { name: "Delete folder" }),
     );
     let dialog = screen.getByRole("dialog");
-    expect(dialog).toHaveTextContent("The item in it is removed");
+    // Ores holds Minerals, which holds Tritanium: both go.
+    expect(dialog).toHaveTextContent(
+      "The 1 folder and 1 item in it are removed from your quickbar too.",
+    );
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
     expect(stored().folders.ore).toBeDefined();
 
@@ -361,7 +407,9 @@ describe("the market sidebar", () => {
     wrap(<MarketGroupsNavigation />);
 
     const quickbarTab = await screen.findByRole("tab", { name: /Quickbar/ });
-    expect(screen.getByText("Manufacture & Research")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Manufacture & Research"),
+    ).toBeInTheDocument();
 
     fireEvent.click(quickbarTab);
     expect(screen.getByText(/Your quickbar is empty/)).toBeInTheDocument();
@@ -382,6 +430,27 @@ describe("the market sidebar", () => {
     expect(screen.getByRole("tab", { name: /Quickbar/ })).toHaveTextContent(
       "2",
     );
+  });
+
+  it("keeps the quickbar usable when the market tree fails to load", async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 503,
+        json: () => Promise.resolve({}),
+      }),
+    ) as unknown as typeof fetch;
+    await seed(sample, "quickbar");
+    wrap(<MarketGroupsNavigation />);
+
+    // Named one by one, without the tree (TypeName, here the shared stub's).
+    expect(await screen.findByText("type-36")).toBeInTheDocument();
+    expect(row("Ores")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: /Market groups/ }));
+    expect(
+      await screen.findByText("Could not load market groups."),
+    ).toBeInTheDocument();
   });
 
   it("adds an item dropped on the Quickbar tab, leaving one already there in place", async () => {
@@ -446,6 +515,36 @@ describe("the market groups tree", () => {
       }),
     );
     expect(stored().items).toEqual({});
+  });
+  it("offers the browser menu's link entries it replaces", () => {
+    const writeText = jest.fn<(text: string) => Promise<void>>(() =>
+      Promise.resolve(),
+    );
+    Object.assign(navigator, { clipboard: { writeText } });
+    render(
+      <MantineProvider env="test">
+        <MarketGroupNavLink
+          marketGroups={marketTree.marketGroups}
+          marketGroupId={1857}
+        />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByText("Minerals"));
+    const link = screen.getByText("Pyerite").closest("a");
+    if (!link) throw new Error("no Pyerite link");
+
+    fireEvent.contextMenu(link);
+    const open = screen.getByRole("menuitem", {
+      name: "Open in new tab",
+      hidden: true,
+    });
+    expect(open).toHaveAttribute("href", "/market/35");
+    expect(open).toHaveAttribute("target", "_blank");
+
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "Copy link", hidden: true }),
+    );
+    expect(writeText).toHaveBeenCalledWith("http://localhost/market/35");
   });
 });
 

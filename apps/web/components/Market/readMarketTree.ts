@@ -1,14 +1,9 @@
-import type { MarketGroupIndex } from "./MarketGroupNavLink";
+import type { MarketTree } from "~/lib/marketTree";
 import { prisma } from "~/lib/db";
 import { cacheSdeRead } from "~/lib/sdeCache";
 import { buildMarketGroupIndex } from "./buildMarketGroupIndex";
 
-/** The market sidebar's whole tree, as served by `/api/market-tree`. */
-export interface MarketTree {
-  /** Top-level market groups, sorted by name. */
-  rootMarketGroupIds: number[];
-  marketGroups: MarketGroupIndex;
-}
+export type { MarketTree } from "~/lib/marketTree";
 
 /**
  * Read the whole market tree (groups + their types) so expanding a group in the

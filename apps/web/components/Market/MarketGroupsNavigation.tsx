@@ -1,6 +1,6 @@
 "use client";
 
-import type { DragEvent } from "react";
+import type { DragEvent, ReactNode } from "react";
 import { useDeferredValue, useMemo, useState } from "react";
 import {
   ActionIcon,
@@ -80,20 +80,26 @@ export function MarketGroupsNavigation() {
     [data, deferredQuery],
   );
 
+  // The search box and the tabs show at once: only the market groups need
+  // the tree, and the quickbar, kept in this browser, works without it.
   // Only without a tree: a failed background refetch (the provider refetches
   // every query when the ESI language changes) keeps the tree it already has.
+  let groupsUnavailable: ReactNode = null;
   if (isError && !data) {
-    return (
+    groupsUnavailable = (
       <Text size="sm" c="dimmed">
         Could not load market groups.
       </Text>
     );
+  } else if (!data) {
+    groupsUnavailable = <Loader />;
   }
-  if (!data) return <Loader />;
 
-  const rootMarketGroupIds = filter
-    ? data.rootMarketGroupIds.filter((id) => filter.visibleGroupIds.has(id))
-    : data.rootMarketGroupIds;
+  const rootMarketGroupIds = !data
+    ? []
+    : filter
+      ? data.rootMarketGroupIds.filter((id) => filter.visibleGroupIds.has(id))
+      : data.rootMarketGroupIds;
   const autoExpand =
     filter !== null && filter.matchCount <= MAX_AUTO_EXPAND_MATCHES;
 
@@ -176,9 +182,11 @@ export function MarketGroupsNavigation() {
           </Tabs.List>
         </Tabs>
       </Box>
-      {view === "quickbar" ? (
+      {view === "quickbar" && (
         <Quickbar marketTree={data} query={deferredQuery} />
-      ) : (
+      )}
+      {view === "groups" && groupsUnavailable}
+      {view === "groups" && data && (
         <>
           {filter && rootMarketGroupIds.length === 0 && (
             <Text size="sm" c="dimmed">

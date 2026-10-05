@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import type { MarketTree } from "~/components/Market/readMarketTree";
+import type { MarketTree } from "~/lib/marketTree";
 
 /**
  * The market quickbar, as in the game client's market window: the reader's own
@@ -356,6 +356,21 @@ const dataOf = (state: QuickbarData): QuickbarData => ({
   items: state.items,
 });
 
+// --- hydration ----------------------------------------------------------------
+// "Settled" rather than zustand's own hasHydrated(): a failed read (stored JSON
+// that doesn't parse, storage that throws) never sets that, and no storage at
+// all (blocked site data) leaves no persist API to ask. Either way the reader
+// gets an empty, working quickbar instead of a spinner that never stops.
+
+let hydrationSettled = false;
+const settledListeners = new Set<() => void>();
+
+function settleHydration() {
+  if (hydrationSettled) return;
+  hydrationSettled = true;
+  for (const listener of settledListeners) listener();
+}
+
 export const useQuickbarStore = create<QuickbarState>()(
   persist(
     (set) => ({
@@ -392,9 +407,17 @@ export const useQuickbarStore = create<QuickbarState>()(
         return {
           ...current,
           ...sanitizeQuickbar(stored),
-          view: stored.view === "quickbar" ? "quickbar" : "groups",
+          // The tab in view is restored on the first load only: re-reading
+          // another tab's save must not switch this window's sidebar.
+          view: hydrationSettled
+            ? current.view
+            : stored.view === "quickbar"
+              ? "quickbar"
+              : "groups",
         };
       },
+      // Called once a read finishes, whether it succeeded or threw.
+      onRehydrateStorage: () => settleHydration,
     },
   ),
 );
@@ -406,16 +429,31 @@ export const useQuickbarStore = create<QuickbarState>()(
 const persistApi = () =>
   useQuickbarStore.persist as typeof useQuickbarStore.persist | undefined;
 
-const subscribeToHydration = (onChange: () => void) =>
-  persistApi()?.onFinishHydration(onChange) ?? (() => undefined);
-const isHydrated = () => persistApi()?.hasHydrated() ?? false;
+const subscribeToHydration = (onChange: () => void) => {
+  settledListeners.add(onChange);
+  return () => {
+    settledListeners.delete(onChange);
+  };
+};
+const isHydrated = () => hydrationSettled;
 // The server, and the first client render that must match it, never have it.
 const isHydratedOnServer = () => false;
 
+let listeningToOtherTabs = false;
+
+/** Re-read the quickbar when another tab saves it; one listener per page. */
+function listenToOtherTabs(api: NonNullable<ReturnType<typeof persistApi>>) {
+  if (listeningToOtherTabs) return;
+  listeningToOtherTabs = true;
+  window.addEventListener("storage", (event) => {
+    if (event.key === QUICKBAR_STORAGE_KEY) void api.rehydrate();
+  });
+}
+
 /**
  * Load the quickbar from storage once mounted, and keep it in step with other
- * tabs. Returns whether it has loaded, so a view can tell "empty" apart from
- * "not read yet".
+ * tabs. Returns whether it has loaded (or failed to, leaving it empty), so a
+ * view can tell "empty" apart from "not read yet".
  *
  * Read with useSyncExternalStore, which takes the snapshot after subscribing:
  * storage is synchronous, so another component's effect can finish hydrating
@@ -431,14 +469,13 @@ export function useQuickbarHydrated(): boolean {
 
   useEffect(() => {
     const api = persistApi();
-    if (!api) return;
-    if (!api.hasHydrated()) void api.rehydrate();
-    // Another tab saved: read its version.
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === QUICKBAR_STORAGE_KEY) void api.rehydrate();
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    if (!api) {
+      // No storage in this browser: keep the quickbar in memory instead.
+      settleHydration();
+      return;
+    }
+    if (!hydrationSettled) void api.rehydrate();
+    listenToOtherTabs(api);
   }, []);
 
   return hydrated;
@@ -480,10 +517,8 @@ export function readQuickbarDrag(
 
 /** Whether a drag may be something the quickbar accepts, before the drop. */
 export function mayBeQuickbarDrag(dataTransfer: DataTransfer): boolean {
+  // A dragged link carries a uri-list in every browser; plain text alone is
+  // just selected text, which can't be told apart until the drop.
   const types = new Set(dataTransfer.types);
-  return (
-    types.has(QUICKBAR_DRAG_TYPE) ||
-    types.has("text/uri-list") ||
-    types.has("text/plain")
-  );
+  return types.has(QUICKBAR_DRAG_TYPE) || types.has("text/uri-list");
 }

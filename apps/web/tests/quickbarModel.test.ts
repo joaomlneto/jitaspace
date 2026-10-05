@@ -11,6 +11,7 @@ import {
   deleteFolder,
   EMPTY_QUICKBAR,
   flattenFolders,
+  mayBeQuickbarDrag,
   moveFolder,
   QUICKBAR_DRAG_TYPE,
   QUICKBAR_ROOT_KEY,
@@ -226,6 +227,19 @@ function transfer(data: Record<string, string>): DataTransfer {
     types: Object.keys(data),
   } as unknown as DataTransfer;
 }
+
+describe("mayBeQuickbarDrag", () => {
+  it("lights up for a quickbar row or a dragged link, not for plain text", () => {
+    expect(mayBeQuickbarDrag(transfer({ [QUICKBAR_DRAG_TYPE]: "{}" }))).toBe(
+      true,
+    );
+    expect(mayBeQuickbarDrag(transfer({ "text/uri-list": "x" }))).toBe(true);
+    // Selected text being dragged: nothing a drop could use.
+    expect(mayBeQuickbarDrag(transfer({ "text/plain": "Jita IV" }))).toBe(
+      false,
+    );
+  });
+});
 
 describe("readQuickbarDrag", () => {
   it("reads a quickbar row's own payload", () => {

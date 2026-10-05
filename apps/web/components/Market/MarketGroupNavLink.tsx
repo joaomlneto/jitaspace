@@ -4,29 +4,21 @@ import { memo, useMemo } from "react";
 import Link from "next/link";
 import { Menu, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconStar, IconStarFilled } from "@tabler/icons-react";
+import {
+  IconExternalLink,
+  IconLink,
+  IconStar,
+  IconStarFilled,
+} from "@tabler/icons-react";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
 import { EveIconAvatar } from "@jitaspace/ui";
 
 import type { MarketTreeFilter } from "./filterMarketTree";
+import type { MarketGroupIndex } from "~/lib/marketTree";
 import { useQuickbarStore } from "~/lib/quickbar";
 
-/**
- * The whole market tree, served in one document by `/api/market-tree` (see
- * `readMarketTree`). Everything a NavLink renders — including the group icon —
- * comes from here, so expanding the tree never hits the network.
- */
-export type MarketGroupIndex = Record<
-  number,
-  {
-    name: string;
-    parentMarketGroupId: number | null;
-    childrenMarketGroupIds: number[];
-    types: { typeId: number; name: string }[];
-    iconId: number | null;
-  }
->;
+export type { MarketGroupIndex } from "~/lib/marketTree";
 
 interface MarketGroupNavLinkProps {
   marketGroups: MarketGroupIndex;
@@ -40,7 +32,8 @@ interface MarketGroupNavLinkProps {
 
 /**
  * An item in the tree. Right-click it to add it to (or take it off) the
- * quickbar, as in the game client; a star marks one that is already there.
+ * quickbar, as in the game client, or to open or copy its link as the
+ * browser's own menu would; a star marks one already on the quickbar.
  */
 const MarketTypeNavLink = memo(
   ({ typeId, name }: { typeId: number; name: string }) => {
@@ -68,6 +61,28 @@ const MarketTypeNavLink = memo(
           />
         </Menu.ContextMenu>
         <Menu.Dropdown>
+          {/* The right-click replaces the browser's own menu here, so carry
+              its two entries people reach for on a link. */}
+          <Menu.Item
+            component="a"
+            href={`/market/${typeId}`}
+            target="_blank"
+            rel="noopener"
+            leftSection={<IconExternalLink size={16} />}
+          >
+            Open in new tab
+          </Menu.Item>
+          <Menu.Item
+            leftSection={<IconLink size={16} />}
+            onClick={() =>
+              void navigator.clipboard.writeText(
+                new URL(`/market/${typeId}`, window.location.origin).href,
+              )
+            }
+          >
+            Copy link
+          </Menu.Item>
+          <Menu.Divider />
           {inQuickbar ? (
             <Menu.Item
               leftSection={<IconStar size={16} />}

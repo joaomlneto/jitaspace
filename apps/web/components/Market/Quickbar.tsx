@@ -1,7 +1,7 @@
 "use client";
 
 import type { DragEvent, ReactNode } from "react";
-import { createContext, use, useMemo, useState } from "react";
+import { createContext, use, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ActionIcon,
@@ -25,7 +25,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 
-import { TypeAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
 
 import type { MarketTreeFilter } from "./filterMarketTree";
 import type { MarketTree } from "./readMarketTree";
@@ -34,6 +34,7 @@ import {
   buildQuickbarTree,
   countItems,
   flattenFolders,
+  folderSubtree,
   isWithin,
   mayBeQuickbarDrag,
   QUICKBAR_DRAG_TYPE,
@@ -52,6 +53,8 @@ const NEW_FOLDER_NAME = "New folder";
 
 interface QuickbarContextValue {
   data: QuickbarData;
+  /** Item names from the market tree; empty until (or unless) it loads. */
+  typeNames: ReadonlyMap<number, string>;
   quickbar: ReturnType<typeof buildQuickbarTree>;
   filter: MarketTreeFilter | null;
   isOpen: (folderId: string) => boolean;
@@ -205,7 +208,11 @@ function FolderNameInput({
   name: string;
 }>) {
   const { setEditingId } = useQuickbarContext();
+  // Escape unmounts the input, and a browser may fire blur on that removal:
+  // without this, the blur would save the very name Escape set out to drop.
+  const cancelled = useRef(false);
   const commit = (value: string) => {
+    if (cancelled.current) return;
     useQuickbarStore.getState().renameFolder(folderId, value);
     setEditingId(null);
   };
@@ -219,11 +226,27 @@ function FolderNameInput({
       onBlur={(event) => commit(event.currentTarget.value)}
       onKeyDown={(event) => {
         if (event.key === "Enter") commit(event.currentTarget.value);
-        if (event.key === "Escape") setEditingId(null);
+        if (event.key === "Escape") {
+          cancelled.current = true;
+          setEditingId(null);
+        }
       }}
       py={4}
     />
   );
+}
+
+/** What deleting a folder takes with it, for its confirmation. */
+export function describeDeletion(items: number, subfolders: number): string {
+  const count = (n: number, one: string, many: string) =>
+    `${n.toLocaleString()} ${n === 1 ? one : many}`;
+  const parts = [
+    subfolders > 0 && count(subfolders, "folder", "folders"),
+    items > 0 && count(items, "item", "items"),
+  ].filter(Boolean);
+  return `The ${parts.join(" and ")} in it ${
+    items + subfolders === 1 ? "is" : "are"
+  } removed from your quickbar too.`;
 }
 
 function FolderRow({ folderKey }: Readonly<{ folderKey: number }>) {
@@ -241,20 +264,16 @@ function FolderRow({ folderKey }: Readonly<{ folderKey: number }>) {
 
   const confirmDelete = () => {
     const remove = () => useQuickbarStore.getState().deleteFolder(folderId);
-    const subfolders =
-      quickbar.tree.marketGroups[folderKey]?.childrenMarketGroupIds.length;
-    if (itemCount === 0 && !subfolders) {
+    // Every folder inside it, at any depth, goes with it.
+    const subfolders = folderSubtree(data, folderId).length - 1;
+    if (itemCount === 0 && subfolders === 0) {
       remove();
       return;
     }
     modals.openConfirmModal({
       title: `Delete “${folder.name}”?`,
       children: (
-        <Text size="sm">
-          {itemCount === 1
-            ? "The item in it is removed from your quickbar too."
-            : `The ${itemCount.toLocaleString()} items in it are removed from your quickbar too.`}
-        </Text>
+        <Text size="sm">{describeDeletion(itemCount, subfolders)}</Text>
       ),
       labels: { confirm: "Delete folder", cancel: "Cancel" },
       confirmProps: { color: "red" },
@@ -333,7 +352,7 @@ function FolderRow({ folderKey }: Readonly<{ folderKey: number }>) {
 }
 
 function ItemRow({ typeId, name }: Readonly<{ typeId: number; name: string }>) {
-  const { data } = useQuickbarContext();
+  const { data, typeNames } = useQuickbarContext();
   return (
     <div
       className={classes.row}
@@ -343,7 +362,13 @@ function ItemRow({ typeId, name }: Readonly<{ typeId: number; name: string }>) {
       <NavLink
         component={Link}
         href={`/market/${typeId}`}
-        label={name}
+        label={
+          typeNames.has(typeId) ? (
+            name
+          ) : (
+            <TypeName span inherit typeId={typeId} />
+          )
+        }
         leftSection={<TypeAvatar size={24} typeId={typeId} variation="icon" />}
         // The row is the drag handle; the link alone would drag a bare URL.
         draggable={false}
@@ -399,7 +424,14 @@ function FolderContents({ folderKey }: Readonly<{ folderKey: number }>) {
 export function Quickbar({
   marketTree,
   query,
-}: Readonly<{ marketTree: MarketTree; query: string }>) {
+}: Readonly<{
+  /**
+   * Names the items. The quickbar lives in this browser and needs no network,
+   * so it works without the tree, naming items one by one until it loads.
+   */
+  marketTree?: MarketTree;
+  query: string;
+}>) {
   const hydrated = useQuickbarHydrated();
   const folders = useQuickbarStore((state) => state.folders);
   const items = useQuickbarStore((state) => state.items);
@@ -407,7 +439,7 @@ export function Quickbar({
 
   const typeNames = useMemo(() => {
     const names = new Map<number, string>();
-    for (const group of Object.values(marketTree.marketGroups)) {
+    for (const group of Object.values(marketTree?.marketGroups ?? {})) {
       for (const type of group.types) names.set(type.typeId, type.name);
     }
     return names;
@@ -453,6 +485,7 @@ export function Quickbar({
       setManual((current) => new Map(current).set(folderId, true));
     return {
       data,
+      typeNames,
       quickbar,
       filter,
       isOpen,
@@ -471,7 +504,7 @@ export function Quickbar({
         setEditingId(id);
       },
     };
-  }, [data, quickbar, filter, autoExpand, manual, editingId]);
+  }, [data, typeNames, quickbar, filter, autoExpand, manual, editingId]);
 
   if (!hydrated) return <Loader size="sm" />;
 
