@@ -81,11 +81,14 @@ jest.mock("~/lib/db", () => ({
   },
 }));
 
-// These are `"use cache"` functions; cacheLife is a no-op here.
+// These are `"use cache"` functions; cacheLife and cacheTag do nothing here,
+// but record their calls so a route's cache policy can be asserted.
+const mockCacheLife = jest.fn();
+const mockCacheTag = jest.fn();
 jest.mock("next/cache", () => ({
-  cacheLife: () => undefined,
+  cacheLife: (...args: unknown[]) => mockCacheLife(...args),
   unstable_cacheLife: () => undefined,
-  cacheTag: () => undefined,
+  cacheTag: (...args: unknown[]) => mockCacheTag(...args),
 }));
 
 // Next's notFound() throws; mirror that so "was it called" is observable.
@@ -175,6 +178,8 @@ async function propsOf(modulePath: string): Promise<Record<string, unknown>> {
 const BLIP = "Too many database connections opened";
 
 beforeEach(() => {
+  mockCacheLife.mockReset();
+  mockCacheTag.mockReset();
   notFound.mockClear();
   agentsTableProps = null;
   categoryFindMany.mockReset().mockResolvedValue([]);
@@ -473,6 +478,15 @@ describe("skills route server data", () => {
 });
 
 describe("lp-store route server data", () => {
+  it("refreshes daily, and also when the SDE ingest moves the factions", async () => {
+    await propsOf("~/app/lp-store/page");
+    // The offers are not SDE data, so not cacheSdeRead()'s month-long "max"...
+    expect(mockCacheLife).toHaveBeenCalledWith("days");
+    expect(mockCacheLife).not.toHaveBeenCalledWith("max");
+    // ...but the factions are, so the ingest's revalidation must reach it.
+    expect(mockCacheTag).toHaveBeenCalledWith("sde");
+  });
+
   it("groups the corporations that have offers by faction, sorted by name", async () => {
     const gallente = { factionId: 500004, name: "Gallente Federation" };
     corporationFindMany.mockResolvedValue([
