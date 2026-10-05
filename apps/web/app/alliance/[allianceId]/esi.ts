@@ -6,6 +6,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { allianceCacheTag } from "~/lib/alliancesCache";
+import { isEsiNotFound } from "~/lib/esiNotFound";
 
 /**
  * The ESI reads behind the page's metadata. The page is cached whole (ISR),
@@ -23,13 +24,24 @@ export interface EsiAllianceCard {
   executorCorporationId: number | null;
 }
 
+/**
+ * The alliance as ESI describes it, or null when ESI says it does not exist.
+ * That 404 is a genuine absence, so caching it is correct; any other failure
+ * throws and is never cached.
+ */
 export async function readEsiAlliance(
   allianceId: number,
-): Promise<EsiAllianceCard> {
+): Promise<EsiAllianceCard | null> {
   "use cache";
   cacheLife("hours");
   cacheTag(allianceCacheTag(allianceId));
-  const { data } = await getAlliancesAllianceId(allianceId);
+  let data;
+  try {
+    ({ data } = await getAlliancesAllianceId(allianceId));
+  } catch (error) {
+    if (isEsiNotFound(error)) return null;
+    throw error;
+  }
   return {
     name: data.name,
     ticker: data.ticker,

@@ -65,6 +65,18 @@ function findCorporation(corporationId: number) {
       secondaryActivityId: true,
       enemyId: true,
       friendId: true,
+    },
+    where: { corporationId },
+  });
+}
+
+/**
+ * The NPC-only relations, read separately so player corporations, which have
+ * none, do not pay a query for each.
+ */
+function findNpcRelations(corporationId: number) {
+  return prisma.corporation.findUniqueOrThrow({
+    select: {
       allowedRaces: { select: { raceId: true }, where: { isDeleted: false } },
       npcDivisions: {
         select: {
@@ -105,8 +117,12 @@ function findCorporation(corporationId: number) {
 
 /** The SDE's facts about an NPC corporation, with its references named. */
 async function readNpcDetails(
-  corporation: CorporationRow,
+  row: CorporationRow,
 ): Promise<NpcCorporationDetails> {
+  const corporation = {
+    ...row,
+    ...(await findNpcRelations(row.corporationId)),
+  };
   const raceIds = [
     ...new Set([
       ...corporation.allowedRaces.map((race) => race.raceId),

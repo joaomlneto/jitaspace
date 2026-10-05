@@ -5,6 +5,7 @@ import {
   getCorporationsCorporationId,
 } from "@jitaspace/esi-client";
 
+import { isEsiNotFound } from "~/lib/esiNotFound";
 import { corporationCacheTag } from "./ids";
 
 /**
@@ -24,13 +25,24 @@ export interface EsiCorporationCard {
   allianceId: number | null;
 }
 
+/**
+ * The corporation as ESI describes it, or null when ESI says it does not
+ * exist. That 404 is a genuine absence, so caching it is correct; any other
+ * failure throws and is never cached.
+ */
 export async function readEsiCorporation(
   corporationId: number,
-): Promise<EsiCorporationCard> {
+): Promise<EsiCorporationCard | null> {
   "use cache";
   cacheLife("hours");
   cacheTag(corporationCacheTag(corporationId));
-  const { data } = await getCorporationsCorporationId(corporationId);
+  let data;
+  try {
+    ({ data } = await getCorporationsCorporationId(corporationId));
+  } catch (error) {
+    if (isEsiNotFound(error)) return null;
+    throw error;
+  }
   return {
     name: data.name,
     ticker: data.ticker,

@@ -624,6 +624,41 @@ describe("corporation page server wrapper", () => {
     expect(mockConnection).not.toHaveBeenCalled();
   });
 
+  it("404s a corporation neither we nor ESI know", async () => {
+    mockLoadCorporationProfile.mockResolvedValue({ ok: true, profile: null });
+    mockGetCorporationsCorporationId.mockRejectedValue(
+      Object.assign(new Error("Not found"), {
+        isAxiosError: true,
+        response: { status: 404 },
+      }),
+    );
+    await expect(runWrapper(String(PLAYER_ID))).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+  });
+
+  it("renders a corporation only ESI knows, and uncached when ESI fails", async () => {
+    mockLoadCorporationProfile.mockResolvedValue({ ok: true, profile: null });
+    mockGetCorporationsCorporationId.mockResolvedValue({
+      data: {
+        name: "New Corp",
+        ticker: "NEW",
+        description: "",
+        member_count: 1,
+      },
+    });
+    const known = await runWrapper(String(PLAYER_ID));
+    expect(known.props.profile).toBeNull();
+    expect(mockConnection).not.toHaveBeenCalled();
+
+    // ESI down: not a 404, so render the fallback and keep it out of the cache.
+    mockGetCorporationsCorporationId.mockRejectedValue(new Error("502"));
+    mockConnection.mockResolvedValue(undefined);
+    const unknown = await runWrapper(String(PLAYER_ID));
+    expect(unknown.props.profile).toBeNull();
+    expect(mockConnection).toHaveBeenCalled();
+  });
+
   it("keeps a render degraded by a database failure out of the ISR cache", async () => {
     mockLoadCorporationProfile.mockResolvedValue({ ok: false });
     mockConnection.mockResolvedValue(undefined);

@@ -24,6 +24,7 @@ export async function generateMetadata({
 
   try {
     const corporation = await readEsiCorporation(id);
+    if (corporation === null) return {};
 
     let alliance: string | undefined;
     if (corporation.allianceId) {
@@ -73,6 +74,19 @@ export function generateStaticParams() {
   return [{ corporationId: "0" }];
 }
 
+/**
+ * Whether ESI knows the corporation. When ESI cannot answer, assume it may
+ * and keep the render out of the cache, so an outage never caches a 404.
+ */
+async function existsInEsi(corporationId: number): Promise<boolean> {
+  try {
+    return (await readEsiCorporation(corporationId)) !== null;
+  } catch {
+    await connection();
+    return true;
+  }
+}
+
 async function PageContent({
   params,
 }: Readonly<{ params: Promise<{ corporationId: string }> }>) {
@@ -84,6 +98,9 @@ async function PageContent({
   // it out of the ISR cache, so the next request tries the database again.
   if (!result.ok) await connection();
   const profile = result.ok ? result.profile : null;
+  // Not in our database: unless ESI knows it, there is no such corporation,
+  // and an empty page would be a soft 404 cached for every id requested.
+  if (result.ok && profile === null && !(await existsInEsi(id))) notFound();
   // The table rows stay behind `/api/corporation/[corporationId]`; the page
   // carries the identity, the NPC details and the counts.
   const page = profile ? splitCorporationProfile(profile).page : null;

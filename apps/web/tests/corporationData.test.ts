@@ -19,7 +19,7 @@ type Fn = ReturnType<typeof jest.fn<(...args: unknown[]) => Promise<unknown>>>;
 const fn = (): Fn => jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 const mockPrisma = {
-  corporation: { findUnique: fn(), findMany: fn() },
+  corporation: { findUnique: fn(), findUniqueOrThrow: fn(), findMany: fn() },
   solarSystem: { findUnique: fn() },
   race: { findMany: fn() },
   corporationActivity: { findMany: fn() },
@@ -195,6 +195,8 @@ describe("readCorporationProfile", () => {
       }),
     );
     expect(mockPrisma.station.findMany).not.toHaveBeenCalled();
+    // Player corporations skip the NPC-only relations query entirely.
+    expect(mockPrisma.corporation.findUniqueOrThrow).not.toHaveBeenCalled();
   });
 
   it("names an NPC corporation's references and reads its tables", async () => {
@@ -236,6 +238,10 @@ describe("readCorporationProfile", () => {
         ],
       }),
     );
+    // The NPC-only relations come from their own query.
+    mockPrisma.corporation.findUniqueOrThrow.mockImplementation(() =>
+      mockPrisma.corporation.findUnique(),
+    );
     mockPrisma.solarSystem.findUnique.mockResolvedValue({
       solarSystemId: 30000142,
       name: "Jita",
@@ -252,20 +258,24 @@ describe("readCorporationProfile", () => {
     mockPrisma.corporation.findMany.mockResolvedValue([
       { corporationId: 1000120, name: "Enemy Corp" },
     ]);
-    mockPrisma.npcCorporationDivision.findMany
-      // The division names on the overview…
-      .mockResolvedValueOnce([
-        {
-          npcCorporationDivisionId: 22,
-          name: "distribution",
-          displayName: "Distribution",
-        },
-      ])
-      // …and the agents table's division labels.
-      .mockResolvedValueOnce([
-        { npcCorporationDivisionId: 22, name: "Distribution" },
-        { npcCorporationDivisionId: 23, name: "Unused" },
-      ]);
+    // Two division queries run concurrently: the overview's names (which
+    // select `displayName`) and the agents table's labels. Answer by shape.
+    mockPrisma.npcCorporationDivision.findMany.mockImplementation((args) =>
+      Promise.resolve(
+        (args as { select: Record<string, boolean> }).select.displayName
+          ? [
+              {
+                npcCorporationDivisionId: 22,
+                name: "distribution",
+                displayName: "Distribution",
+              },
+            ]
+          : [
+              { npcCorporationDivisionId: 22, name: "Distribution" },
+              { npcCorporationDivisionId: 23, name: "Unused" },
+            ],
+      ),
+    );
     mockPrisma.loyaltyStoreOffer.count.mockResolvedValue(120);
     mockPrisma.station.findMany.mockResolvedValue([
       {

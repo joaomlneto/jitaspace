@@ -41,6 +41,7 @@ export async function generateMetadata({
       readEsiAlliance(id),
       loadAllianceProfile(id),
     ]);
+    if (alliance === null) return {};
     const profile = profileResult.ok ? profileResult.profile : null;
 
     let executor: string | undefined;
@@ -88,6 +89,19 @@ export function generateStaticParams() {
   return [{ allianceId: "0" }];
 }
 
+/**
+ * Whether ESI knows the alliance. When ESI cannot answer, assume it may and
+ * keep the render out of the cache, so an outage never caches a 404.
+ */
+async function existsInEsi(allianceId: number): Promise<boolean> {
+  try {
+    return (await readEsiAlliance(allianceId)) !== null;
+  } catch {
+    await connection();
+    return true;
+  }
+}
+
 async function PageContent({
   params,
 }: Readonly<{ params: Promise<{ allianceId: string }> }>) {
@@ -102,6 +116,9 @@ async function PageContent({
   // Null when the alliance is not in our database (yet), or the database is
   // unavailable: the page then renders from ESI alone.
   const profile = result.ok ? result.profile : null;
+  // Not in our database: unless ESI knows it, there is no such alliance, and
+  // an empty page would be a soft 404 cached for every id requested.
+  if (result.ok && profile === null && !(await existsInEsi(id))) notFound();
   // The table rows stay behind `/api/alliance/[allianceId]`; the page carries
   // the identity and the summaries computed from them.
   const page = profile ? splitAllianceProfile(profile).page : null;

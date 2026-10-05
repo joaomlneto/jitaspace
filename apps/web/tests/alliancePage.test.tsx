@@ -685,8 +685,26 @@ describe("alliance page server wrapper", () => {
     expect(mockConnection).not.toHaveBeenCalled();
   });
 
+  it("404s an alliance neither we nor ESI know", async () => {
+    mockLoadAllianceProfile.mockResolvedValue({ ok: true, profile: null });
+    mockGetAlliancesAllianceId.mockRejectedValue(
+      Object.assign(new Error("Not found"), {
+        isAxiosError: true,
+        response: { status: 404 },
+      }),
+    );
+    await expect(runWrapper("99005338")).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
   it("caches an alliance we have not stored, rendered from ESI", async () => {
     mockLoadAllianceProfile.mockResolvedValue({ ok: true, profile: null });
+    mockGetAlliancesAllianceId.mockResolvedValue({
+      data: {
+        name: "New",
+        ticker: "NEW",
+        date_founded: "2026-01-01T00:00:00Z",
+      },
+    });
     const element = await runWrapper("99005338");
     expect(element.props.profile).toBeNull();
     expect(mockConnection).not.toHaveBeenCalled();
