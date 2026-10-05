@@ -478,19 +478,31 @@ describe("skills route server data", () => {
 });
 
 describe("lp-store route server data", () => {
-  it("sorts the corporations that have offers by name", async () => {
+  it("groups the corporations that have offers by faction, sorted by name", async () => {
+    const gallente = { factionId: 500004, name: "Gallente Federation" };
     loyaltyStoreOfferGroupBy.mockResolvedValue([
       { corporationId: 1000002 },
       { corporationId: 1000001 },
+      { corporationId: 1000125 },
     ]);
     corporationFindMany.mockResolvedValue([
-      { corporationId: 1000002, name: "Zainou" },
-      { corporationId: 1000001, name: "Aliastra" },
+      { corporationId: 1000125, name: "CONCORD", faction: null },
+      { corporationId: 1000002, name: "Zainou", faction: gallente },
+      { corporationId: 1000001, name: "Aliastra", faction: gallente },
     ]);
     expect(await propsOf("~/app/lp-store/page")).toEqual({
-      corporations: [
-        { corporationId: 1000001, name: "Aliastra" },
-        { corporationId: 1000002, name: "Zainou" },
+      groups: [
+        {
+          faction: gallente,
+          corporations: [
+            { corporationId: 1000001, name: "Aliastra" },
+            { corporationId: 1000002, name: "Zainou" },
+          ],
+        },
+        {
+          faction: null,
+          corporations: [{ corporationId: 1000125, name: "CONCORD" }],
+        },
       ],
     });
   });

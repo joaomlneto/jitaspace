@@ -76,7 +76,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
           value={query}
           onChange={(event) => setQuery(event.currentTarget.value)}
         />
-        {visibleGroups.length === 0 && (
+        {visibleGroups.length === 0 && deferredQuery.trim() !== "" && (
           <Text c="dimmed">
             No corporations or factions match &ldquo;{deferredQuery.trim()}
             &rdquo;.
