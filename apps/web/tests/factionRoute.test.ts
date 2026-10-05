@@ -132,7 +132,6 @@ describe("GET /api/faction/[factionId]", () => {
         "contraband",
         "corporations",
         "dungeons",
-        "enlistedCorporations",
         "items",
         "lostSystems",
         "missions",

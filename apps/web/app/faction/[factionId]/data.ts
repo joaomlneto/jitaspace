@@ -644,13 +644,7 @@ export function splitFactionData(
     standingRestrictions,
     ...faction
   } = sde;
-  const {
-    corporations,
-    enlistedCorporations,
-    sovereignty,
-    lostSystems,
-    ...rest
-  } = live;
+  const { corporations, sovereignty, lostSystems, ...rest } = live;
   const tables: FactionTables = {
     systems,
     items,
@@ -659,7 +653,6 @@ export function splitFactionData(
     dungeons,
     standingRestrictions,
     corporations,
-    enlistedCorporations,
     sovereignty,
     lostSystems,
   };
@@ -675,7 +668,6 @@ export function splitFactionData(
         dungeons: dungeons.length,
         standingRestrictions: standingRestrictions.length,
         corporations: corporations.length,
-        enlistedCorporations: enlistedCorporations.length,
         sovereignty: sovereignty.length,
         lostSystems: lostSystems.length,
         territory: new Set([

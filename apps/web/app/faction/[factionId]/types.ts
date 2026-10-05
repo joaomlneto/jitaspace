@@ -205,7 +205,9 @@ export interface FactionLiveData {
  * The rows behind the page's tables. They are most of the data (an empire's
  * territory alone is 700 rows) and only the tabs that list them need them, so
  * the page ships without them and fetches them from `/api/faction/[factionId]`
- * when one of those tabs opens.
+ * when one of those tabs opens. The enlisted militia list is not among them:
+ * at 250 rows it is a fraction of the rest, and it is all the Warfare tab
+ * needs, so it stays on the page rather than have that tab fetch every table.
  */
 export interface FactionTables {
   systems: FactionSolarSystemRow[];
@@ -215,7 +217,6 @@ export interface FactionTables {
   dungeons: FactionDungeonRow[];
   standingRestrictions: FactionStandingRestrictionRow[];
   corporations: FactionCorporationRow[];
-  enlistedCorporations: FactionEnlistedCorporationRow[];
   sovereignty: FactionSovereigntySystemRow[];
   lostSystems: FactionLostSystemRow[];
 }

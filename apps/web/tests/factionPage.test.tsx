@@ -250,6 +250,8 @@ function renderClient(
   faction: FactionSdeData,
   live: FactionLiveData,
   searchParams = "",
+  /** What the tables route answers; the rows themselves by default. */
+  tablesResponse?: Promise<unknown>,
 ) {
   const { splitFactionData } = require("~/app/faction/[factionId]/data") as {
     splitFactionData: (
@@ -258,10 +260,10 @@ function renderClient(
     ) => { page: object; tables: FactionTables };
   };
   const { page, tables } = splitFactionData(faction, live);
-  mockFetch.mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve(tables),
-  });
+  mockFetch.mockReturnValue(
+    tablesResponse ??
+      Promise.resolve({ ok: true, json: () => Promise.resolve(tables) }),
+  );
   globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
   const Page = require("~/app/faction/[factionId]/page.client").default;
   const queryClient = new QueryClient({
@@ -736,6 +738,75 @@ describe("faction page (client)", () => {
     expect(screen.getByText("Everywhere")).toBeInTheDocument();
     expect(screen.getByText("≥ 0.5")).toBeInTheDocument();
     expect(screen.getByText("≥ 0.8")).toBeInTheDocument();
+  });
+
+  it("ends the loading state when the tables fail to load", async () => {
+    renderClient(
+      sdeData(),
+      liveData(),
+      "?tab=territory",
+      Promise.resolve({ ok: false, status: 500 }),
+    );
+
+    expect(
+      await screen.findByText(/This tab's data could not be loaded/),
+    ).toBeInTheDocument();
+    // An empty table rather than skeleton rows that never resolve.
+    expect(
+      screen.getByText("This faction holds no solar systems."),
+    ).toBeInTheDocument();
+  });
+
+  it("stops the Standings loader when the tables fail to load", async () => {
+    const { container } = renderClient(
+      sdeData(),
+      liveData(),
+      "?tab=standings",
+      Promise.resolve({ ok: false, status: 500 }),
+    );
+
+    expect(
+      await screen.findByText(/This tab's data could not be loaded/),
+    ).toBeInTheDocument();
+    expect(container.querySelector(".mantine-Loader-root")).toBeNull();
+  });
+
+  it("shows loading states while the tables are on their way", () => {
+    const { container } = renderClient(
+      sdeData(),
+      liveData(),
+      "?tab=standings",
+      new Promise(() => undefined),
+    );
+
+    expect(container.querySelector(".mantine-Loader-root")).not.toBeNull();
+    expect(
+      screen.queryByText(/This tab's data could not be loaded/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("lists the enlisted militia without fetching every table", () => {
+    renderClient(
+      sdeData(),
+      liveData({
+        enlistedCorporations: [
+          {
+            corporationId: 98000001,
+            name: "Shield-and-Sword",
+            ticker: "SH-SW",
+            memberCount: 231,
+            allianceId: null,
+            allianceName: null,
+          },
+        ],
+        enlistedCorporationCount: 1,
+        enlistedPilots: 231,
+      }),
+      "?tab=warfare",
+    );
+
+    expect(screen.getByText("Shield-and-Sword")).toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("says one epic arc, not one epic arcs", () => {

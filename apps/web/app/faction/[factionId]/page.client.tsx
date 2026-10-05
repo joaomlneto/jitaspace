@@ -103,7 +103,6 @@ const NO_ROWS: never[] = [];
 const TABLE_TABS = new Set<string>([
   "territory",
   "corporations",
-  "warfare",
   "items",
   "contraband",
   "missions",
@@ -333,9 +332,11 @@ const territoryColumns: DataTableColumn<TerritoryRow>[] = [
 function TerritoryPanel({
   faction,
   tables,
+  isLoading,
 }: Readonly<{
   faction: PageProps["faction"];
   tables: FactionTables | undefined;
+  isLoading: boolean;
 }>) {
   const rows = useMemo(() => {
     if (!tables) return NO_ROWS;
@@ -428,7 +429,7 @@ function TerritoryPanel({
           columns={territoryColumns}
           rowId={(row) => row.solarSystemId}
           initialSort={{ columnId: "name", direction: "asc" }}
-          isLoading={!tables}
+          isLoading={isLoading}
           emptyText="This faction holds no solar systems."
           withGlobalFilter
           withColumnVisibility
@@ -680,14 +681,12 @@ function WarfareTotals({
 function WarfarePanel({
   faction,
   live,
-  tables,
   stats,
   enemies,
   allies,
   warzone,
 }: Readonly<
   Pick<PageProps, "faction" | "live"> & {
-    tables: FactionTables | undefined;
     stats: FwStats | undefined;
     enemies: number[];
     allies: number[];
@@ -787,8 +786,7 @@ function WarfarePanel({
           )}
           {live.enlistedCorporationCount > 0 && (
             <DataTable
-              data={tables?.enlistedCorporations ?? NO_ROWS}
-              isLoading={!tables}
+              data={live.enlistedCorporations}
               columns={enlistedCorporationColumns}
               rowId={(row) => row.corporationId}
               initialSort={{ columnId: "members", direction: "desc" }}
@@ -1118,9 +1116,12 @@ export default function FactionPage({
 
   const tablesQuery = useFactionTables(factionId, TABLE_TABS.has(selectedTab));
   const tables = tablesQuery.data;
+  // Pending, not merely "no data yet": a fetch that failed must stop loading.
+  const tablesLoading = tablesQuery.isPending;
 
   // Names and security for warzone systems, from the rows the server already
-  // resolved; anything else falls back to an ESI name lookup.
+  // resolved, when another tab has fetched them; anything else falls back to
+  // an ESI name lookup.
   const knownSystems = useMemo(() => {
     const known = new Map<number, FactionLocation>();
     if (faction.homeSystem) {
@@ -1352,7 +1353,11 @@ export default function FactionPage({
           {/* Territory */}
           {visibleTabs.has("territory") && (
             <Tabs.Panel value="territory" pt="lg">
-              <TerritoryPanel faction={faction} tables={tables} />
+              <TerritoryPanel
+                faction={faction}
+                tables={tables}
+                isLoading={tablesLoading}
+              />
             </Tabs.Panel>
           )}
 
@@ -1366,7 +1371,7 @@ export default function FactionPage({
                 </Text>
                 <DataTable
                   data={tables?.corporations ?? NO_ROWS}
-                  isLoading={!tables}
+                  isLoading={tablesLoading}
                   columns={corporationColumns}
                   rowId={(row) => row.corporationId}
                   initialSort={{ columnId: "name", direction: "asc" }}
@@ -1386,7 +1391,6 @@ export default function FactionPage({
               <WarfarePanel
                 faction={faction}
                 live={live}
-                tables={tables}
                 stats={fwStats}
                 enemies={enemies}
                 allies={allies}
@@ -1405,7 +1409,7 @@ export default function FactionPage({
                 </Text>
                 <DataTable
                   data={tables?.items ?? NO_ROWS}
-                  isLoading={!tables}
+                  isLoading={tablesLoading}
                   columns={itemColumns}
                   rowId={(row) => row.typeId}
                   initialSort={{ columnId: "name", direction: "asc" }}
@@ -1433,7 +1437,7 @@ export default function FactionPage({
                 </Text>
                 <DataTable
                   data={tables?.contraband ?? NO_ROWS}
-                  isLoading={!tables}
+                  isLoading={tablesLoading}
                   columns={contrabandColumns}
                   rowId={(row) => row.typeId}
                   initialSort={{ columnId: "name", direction: "asc" }}
@@ -1453,6 +1457,7 @@ export default function FactionPage({
                 faction={faction}
                 counts={counts}
                 tables={tables}
+                isLoading={tablesLoading}
               />
             </Tabs.Panel>
           )}
@@ -1468,7 +1473,7 @@ export default function FactionPage({
                   The standing with this faction a pilot needs before its
                   stations offer each service.
                 </Text>
-                {!tables && (
+                {tablesLoading && (
                   <Group justify="center" p="md">
                     <Loader size="sm" />
                   </Group>
@@ -1742,9 +1747,11 @@ function MissionsPanel({
   faction,
   counts,
   tables,
+  isLoading,
 }: Readonly<
   Pick<PageProps, "faction" | "counts"> & {
     tables: FactionTables | undefined;
+    isLoading: boolean;
   }
 >) {
   return (
@@ -1784,7 +1791,7 @@ function MissionsPanel({
           </SectionHeading>
           <DataTable
             data={tables?.missions ?? NO_ROWS}
-            isLoading={!tables}
+            isLoading={isLoading}
             columns={missionColumns}
             rowId={(row) => row.missionId}
             initialSort={{ columnId: "name", direction: "asc" }}
@@ -1806,7 +1813,7 @@ function MissionsPanel({
           </SectionHeading>
           <DataTable
             data={tables?.dungeons ?? NO_ROWS}
-            isLoading={!tables}
+            isLoading={isLoading}
             columns={dungeonColumns}
             rowId={(row) => row.dungeonId}
             initialSort={{ columnId: "name", direction: "asc" }}
