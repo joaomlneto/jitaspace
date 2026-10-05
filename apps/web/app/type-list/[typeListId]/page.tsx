@@ -17,28 +17,26 @@ export async function generateMetadata({
   const typeListId = parsePositiveEntityId(typeListIdParam);
   if (typeListId === null) return {};
 
-  try {
-    const typeList = await getTypeList(typeListId);
-    if (typeList === null) return {};
-    const title = typeList.displayName ?? typeList.name;
-    return pageMetadata({
-      title: `${title} — Type List`,
-      description: toDescription(
-        typeList.displayDescription,
-        `The ${typeList.members.length.toLocaleString("en-US")} EVE Online items in the "${typeList.name}" type list, and the rules that define it.`,
-      ),
-      path: `/type-list/${typeListId}`,
-      badge: "Type List",
-      facts: [
-        {
-          label: "Members",
-          value: typeList.members.length.toLocaleString("en-US"),
-        },
-      ],
-    });
-  } catch {
-    return {};
-  }
+  // Uncaught, like the page body: this route is cached whole, so a database
+  // failure must throw rather than store generic metadata.
+  const typeList = await getTypeList(typeListId);
+  if (typeList === null) return {};
+  const title = typeList.displayName ?? typeList.name;
+  return pageMetadata({
+    title: `${title} — Type List`,
+    description: toDescription(
+      typeList.displayDescription,
+      `The ${typeList.members.length.toLocaleString("en-US")} EVE Online items in the "${typeList.name}" type list, and the rules that define it.`,
+    ),
+    path: `/type-list/${typeListId}`,
+    badge: "Type List",
+    facts: [
+      {
+        label: "Members",
+        value: typeList.members.length.toLocaleString("en-US"),
+      },
+    ],
+  });
 }
 
 // ISR per list: without `generateStaticParams` an unlisted id re-renders on

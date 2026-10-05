@@ -93,6 +93,7 @@ const rows = {
   faction: [500001],
   race: [1],
   bloodline: [1],
+  typeList: [7],
 };
 
 const idField: Record<keyof typeof rows, string> = {
@@ -106,6 +107,7 @@ const idField: Record<keyof typeof rows, string> = {
   faction: "factionId",
   race: "raceId",
   bloodline: "bloodlineId",
+  typeList: "typeListId",
 };
 
 // The stubs forward their arguments so the suite can assert the `where` and
@@ -422,7 +424,7 @@ describe("sitemap", () => {
     // every family fails together and N fragments bury the incident.
     const { message, extra } = soleCapture();
     expect(message).toContain("Sitemap degraded");
-    expect(message).toContain("2 of 11 entity families unavailable");
+    expect(message).toContain("2 of 12 entity families unavailable");
     expect(extra.failedFamilies).toEqual(["/region", "/station"]);
     expect(extra.staticRoutesFailed).toBe(false);
   });
@@ -465,7 +467,7 @@ describe("sitemap", () => {
     const second = mockCaptureException.mock.calls[1];
     if (!second) throw new Error("no second capture");
     expect((second[0] as Error).message).toContain(
-      "11 of 11 entity families unavailable",
+      "12 of 12 entity families unavailable",
     );
   });
 
@@ -584,6 +586,7 @@ describe("sitemap", () => {
         "https://www.jita.space/faction/500001",
         "https://www.jita.space/race/1",
         "https://www.jita.space/bloodline/1",
+        "https://www.jita.space/type-list/7",
         "https://www.jita.space/lp-store/Caldari_Navy",
       ]),
     );
@@ -643,8 +646,8 @@ describe("sitemap", () => {
     expect(pages).toEqual([{ id: 0 }, { id: 1 }]);
 
     // 6 crawlable static routes (incl. the optional catch-all's parent)
-    // + 60,000 types + 10 single-row families.
-    const TOTAL = 6 + 60_000 + 10;
+    // + 60,000 types + 11 single-row families.
+    const TOTAL = 6 + 60_000 + 11;
     const first = await mod.default({ id: Promise.resolve("0") });
     const second = await mod.default({ id: Promise.resolve("1") });
 

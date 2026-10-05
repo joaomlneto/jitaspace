@@ -74,6 +74,7 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
+import { isTypeListMember } from "~/lib/typeLists";
 import { EntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
@@ -310,11 +311,11 @@ export default function TypePage({
   // The item and at least one other version of it.
   const hasVariations = variations.length > 1;
   const memberTypeLists = useMemo(
-    () => typeLists.filter((typeList) => typeList.excludedBy.length === 0),
+    () => typeLists.filter(isTypeListMember),
     [typeLists],
   );
   const excludedTypeLists = useMemo(
-    () => typeLists.filter((typeList) => typeList.excludedBy.length > 0),
+    () => typeLists.filter((typeList) => !isTypeListMember(typeList)),
     [typeLists],
   );
   // `?tab=type-lists` on an item no list matches would select a tab that is

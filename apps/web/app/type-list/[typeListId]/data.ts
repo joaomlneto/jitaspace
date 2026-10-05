@@ -205,7 +205,12 @@ export async function getTypeList(
     displayDescription: typeList.displayDescription,
     rules: rules
       .map((rule) => ({ ...rule, name: ruleName(rule.refType, rule.refId) }))
-      .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
+      // Rules whose referent no longer exists (no name) go last.
+      .sort((a, b) =>
+        a.name === null || b.name === null
+          ? Number(a.name === null) - Number(b.name === null)
+          : a.name.localeCompare(b.name),
+      ),
     members: memberRows.map(
       (member): TypeListMember => [
         member.typeId,

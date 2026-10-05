@@ -198,7 +198,10 @@ function RulePanel({
               <Spoiler maxHeight={200} showLabel="Show all" hideLabel="Hide">
                 <Stack gap={4}>
                   {ofKind.map((rule) => (
-                    <RuleRef key={rule.refId} rule={rule} />
+                    <RuleRef
+                      key={`${rule.included}:${rule.refType}:${rule.refId}`}
+                      rule={rule}
+                    />
                   ))}
                 </Stack>
               </Spoiler>
