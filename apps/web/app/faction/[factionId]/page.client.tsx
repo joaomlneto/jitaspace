@@ -1246,9 +1246,9 @@ export default function FactionPage({
             />
           }
         >
-          <Text size="sm" c="dimmed">
-            Faction
-          </Text>
+          <Anchor component={Link} href="/factions" size="sm" c="dimmed">
+            Factions
+          </Anchor>
           <Group gap="sm" align="center">
             <Title order={2}>{faction.name}</Title>
             {hasWarfare && (
