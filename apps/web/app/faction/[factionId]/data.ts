@@ -3,6 +3,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import type {
   FactionLiveData,
   FactionLocation,
+  FactionMissionRow,
   FactionPageData,
   FactionRegionRow,
   FactionSdeData,
@@ -62,6 +63,89 @@ function toLocation(system: LocationRow): FactionLocation {
 
 const byName = <T extends { name: string }>(a: T, b: T) =>
   a.name.localeCompare(b.name);
+
+/** The smaller of two optional numbers; null only when both are. */
+const minOfNullable = (a: number | null, b: number | null) => {
+  if (a === null) return b;
+  if (b === null) return a;
+  return Math.min(a, b);
+};
+
+/** What a mission asks of the pilot, as far as its SDE row says. */
+function missionKind(mission: {
+  killDungeonId: number | null;
+  courierObjectiveTypeId: number | null;
+}): FactionMissionRow["kind"] {
+  if (mission.killDungeonId !== null) return "Encounter";
+  if (mission.courierObjectiveTypeId !== null) return "Courier";
+  return "Other";
+}
+
+/**
+ * Regions: those the SDE gives to the faction outright, plus every region one
+ * of its systems sits in, with how many of its systems and constellations are
+ * the faction's.
+ */
+function buildRegionRows(
+  factionRegions: { regionId: number; name: string }[],
+  systems: FactionLocation[],
+  constellations: { regionId: number }[],
+): FactionRegionRow[] {
+  const rows = new Map<number, FactionRegionRow>();
+  for (const region of factionRegions) {
+    rows.set(region.regionId, {
+      regionId: region.regionId,
+      name: region.name,
+      isFactionRegion: true,
+      constellations: 0,
+      systems: 0,
+    });
+  }
+  for (const system of systems) {
+    if (system.regionId === null || system.regionName === null) continue;
+    const row = rows.get(system.regionId) ?? {
+      regionId: system.regionId,
+      name: system.regionName,
+      isFactionRegion: false,
+      constellations: 0,
+      systems: 0,
+    };
+    row.systems += 1;
+    rows.set(system.regionId, row);
+  }
+  for (const constellation of constellations) {
+    const row = rows.get(constellation.regionId);
+    if (row) row.constellations += 1;
+  }
+  return [...rows.values()].sort(
+    (a, b) => b.systems - a.systems || a.name.localeCompare(b.name),
+  );
+}
+
+/**
+ * A tower anchored in the faction's space burns its charter. CCP lists one row
+ * per tower type, so collapse them to one per charter, at the lowest security
+ * any tower needs it.
+ */
+function collapseCharters(
+  resources: { resourceTypeId: number; minSecurityLevel: number | null }[],
+  typeNames: Map<number, string>,
+): FactionStarbaseCharter[] {
+  const charters = new Map<number, FactionStarbaseCharter>();
+  for (const resource of resources) {
+    charters.set(resource.resourceTypeId, {
+      typeId: resource.resourceTypeId,
+      name:
+        typeNames.get(resource.resourceTypeId) ??
+        `Type ${resource.resourceTypeId}`,
+      minSecurityLevel: minOfNullable(
+        charters.get(resource.resourceTypeId)?.minSecurityLevel ?? null,
+        resource.minSecurityLevel,
+      ),
+    });
+  }
+  return [...charters.values()].sort(byName);
+}
 
 /**
  * What the faction's OpenGraph card needs. Returns null for an unknown or
@@ -286,18 +370,6 @@ export async function readFactionSdeData(
   );
   const typeNames = new Map(namedTypes.map((t) => [t.typeId, t.name]));
 
-  // Regions: those the SDE gives to the faction outright, plus every region
-  // one of its systems sits in.
-  const regionRows = new Map<number, FactionRegionRow>();
-  for (const region of regions) {
-    regionRows.set(region.regionId, {
-      regionId: region.regionId,
-      name: region.name,
-      isFactionRegion: true,
-      constellations: 0,
-      systems: 0,
-    });
-  }
   const systemRows = systems.map((system) => ({
     ...toLocation(system),
     stations: system._count.stations,
@@ -306,42 +378,6 @@ export async function readFactionSdeData(
     isFringe: system.isFringe ?? false,
     isCorridor: system.isCorridor ?? false,
   }));
-  for (const system of systemRows) {
-    if (system.regionId === null || system.regionName === null) continue;
-    const row = regionRows.get(system.regionId) ?? {
-      regionId: system.regionId,
-      name: system.regionName,
-      isFactionRegion: false,
-      constellations: 0,
-      systems: 0,
-    };
-    row.systems += 1;
-    regionRows.set(system.regionId, row);
-  }
-  for (const constellation of constellations) {
-    const row = regionRows.get(constellation.regionId);
-    if (row) row.constellations += 1;
-  }
-
-  // A tower anchored in the faction's space burns its charter. CCP lists one
-  // row per tower type, so collapse them to one per charter.
-  const charters = new Map<number, FactionStarbaseCharter>();
-  for (const resource of controlTowerResources) {
-    const existing = charters.get(resource.resourceTypeId);
-    const minSecurityLevel =
-      existing?.minSecurityLevel == null
-        ? resource.minSecurityLevel
-        : resource.minSecurityLevel == null
-          ? existing.minSecurityLevel
-          : Math.min(existing.minSecurityLevel, resource.minSecurityLevel);
-    charters.set(resource.resourceTypeId, {
-      typeId: resource.resourceTypeId,
-      name:
-        typeNames.get(resource.resourceTypeId) ??
-        `Type ${resource.resourceTypeId}`,
-      minSecurityLevel,
-    });
-  }
 
   return {
     factionId: faction.factionId,
@@ -380,11 +416,9 @@ export async function readFactionSdeData(
         isHomeRace: race.factionId === factionId,
       }))
       .sort(byName),
-    regions: [...regionRows.values()].sort(
-      (a, b) => b.systems - a.systems || a.name.localeCompare(b.name),
-    ),
+    regions: buildRegionRows(regions, systemRows, constellations),
     constellations: constellations.length,
-    systems: systemRows.sort(byName),
+    systems: systemRows.toSorted(byName),
     items: types
       .map((type) => ({
         typeId: type.typeId,
@@ -414,12 +448,7 @@ export async function readFactionSdeData(
       .map((mission) => ({
         missionId: mission.missionId,
         name: mission.name,
-        kind:
-          mission.killDungeonId !== null
-            ? ("Encounter" as const)
-            : mission.courierObjectiveTypeId !== null
-              ? ("Courier" as const)
-              : ("Other" as const),
+        kind: missionKind(mission),
         rewardTypeId: mission.rewardTypeId,
         rewardTypeName:
           mission.rewardTypeId === null
@@ -455,7 +484,7 @@ export async function readFactionSdeData(
         minimumStanding: restriction.minimumStanding,
       }))
       .sort((a, b) => a.minimumStanding - b.minimumStanding),
-    starbaseCharters: [...charters.values()].sort(byName),
+    starbaseCharters: collapseCharters(controlTowerResources, typeNames),
   };
 }
 
@@ -603,7 +632,7 @@ export async function readFactionLiveData(
       .sort((a, b) => b.memberCount - a.memberCount),
     enlistedCorporationCount: enlistedTotals._count.corporationId,
     enlistedPilots: enlistedTotals._sum.memberCount ?? 0,
-    enlistedAlliances: enlistedAlliances.sort(byName),
+    enlistedAlliances: enlistedAlliances.toSorted(byName),
     sovereignty: sovereignty
       .filter((sov) => sov.factionId === factionId)
       .map((sov) => ({

@@ -128,6 +128,9 @@ function useFactionTables(factionId: number, enabled: boolean) {
 
 const numberFormat = new Intl.NumberFormat("en-US");
 const formatCount = (value: number) => numberFormat.format(value);
+/** "1 epic arc", "2 epic arcs". */
+const formatCountOf = (value: number, one: string, many: string) =>
+  `${formatCount(value)} ${value === 1 ? one : many}`;
 const formatPercent = (value: number) =>
   `${(value * 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}%`;
 /**
@@ -1649,9 +1652,11 @@ function OverviewPanel({
             value={formatCount(counts.missions)}
             sub={
               faction.epicArcs.length > 0
-                ? `${formatCount(faction.epicArcs.length)} ${
-                    faction.epicArcs.length === 1 ? "epic arc" : "epic arcs"
-                  }`
+                ? formatCountOf(
+                    faction.epicArcs.length,
+                    "epic arc",
+                    "epic arcs",
+                  )
                 : undefined
             }
           />
