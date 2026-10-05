@@ -1455,6 +1455,36 @@ function ownFactionId(race: PageProps): number | null {
   return only && others.length === 0 ? only.factionId : null;
 }
 
+/** The tabs this race has something to show in. */
+function visibleRaceTabs(
+  race: PageProps,
+  {
+    hasDescription,
+    hasShipTree,
+  }: { hasDescription: boolean; hasShipTree: boolean },
+): Set<string> {
+  const { counts } = race;
+  const hasSkills =
+    race.startingSkills.length > 0 ||
+    race.cloneGrade !== null ||
+    race.racialSkills.length > 0;
+  const shown: Record<RacePageTab, boolean> = {
+    overview: true,
+    description: hasDescription,
+    bloodlines: race.bloodlines.length > 0,
+    schools: race.schools.length > 0,
+    skills: hasSkills,
+    ships: race.shipClasses.length > 0,
+    "ship-tree": hasShipTree,
+    items: counts.items > 0,
+    corporations: counts.corporations > 0,
+    // The station architecture alone fills the tab.
+    stations: counts.stations > 0 || race.stationTypes.length > 0,
+    history: true,
+  };
+  return new Set(RACE_PAGE_TABS.filter((tab) => shown[tab]));
+}
+
 /** The race's emblem, or the closest thing it has to one. */
 function HeroImage({
   race,
@@ -1540,25 +1570,10 @@ export default function RacePage(race: Readonly<PageProps>) {
     (entry) => entry.id === factionId,
   );
 
-  const visibleTabs = new Set<string>([
-    "overview",
-    "history",
-    ...(hasDescription ? ["description"] : []),
-    ...(race.bloodlines.length > 0 ? ["bloodlines"] : []),
-    ...(race.schools.length > 0 ? ["schools"] : []),
-    ...(race.startingSkills.length > 0 ||
-    race.cloneGrade !== null ||
-    race.racialSkills.length > 0
-      ? ["skills"]
-      : []),
-    ...(race.shipClasses.length > 0 ? ["ships"] : []),
-    ...(shipTreeFaction ? ["ship-tree"] : []),
-    ...(counts.items > 0 ? ["items"] : []),
-    ...(counts.corporations > 0 ? ["corporations"] : []),
-    ...(counts.stations > 0 || race.stationTypes.length > 0
-      ? ["stations"]
-      : []),
-  ]);
+  const visibleTabs = visibleRaceTabs(race, {
+    hasDescription,
+    hasShipTree: shipTreeFaction !== undefined,
+  });
   // A deep link to a tab this race has nothing for would select a tab that is
   // not rendered, leaving the page blank; show the overview instead.
   const selectedTab = visibleTabs.has(activeTab)
