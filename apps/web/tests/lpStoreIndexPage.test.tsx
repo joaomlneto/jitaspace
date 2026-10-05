@@ -107,7 +107,6 @@ describe("LP Store index page (client)", () => {
       hasToken: false,
       loyaltyPointsMap: {},
       isLoading: false,
-      isSuccess: false,
     });
     window.localStorage.clear();
   });
@@ -275,24 +274,49 @@ describe("LP Store index page (client)", () => {
         hasToken: true,
         loyaltyPointsMap: { 1000035: 500 },
         isLoading: false,
-        isSuccess: true,
+        data: { data: [{ corporation_id: 1000035, loyalty_points: 500 }] },
         ...overrides,
       });
     };
 
-    it("is not offered when signed out", () => {
+    it("is rendered but disabled when signed out, with a hint", async () => {
+      // Always rendered, so its row is already in the prerendered page and
+      // nothing shifts when the auth store rehydrates.
       renderPage();
+      expect(toggle()).toBeDisabled();
+      fireEvent.mouseEnter(toggle().closest("div")!.parentElement!);
       expect(
-        screen.queryByRole("switch", {
-          name: "Only corporations I have LP with",
-        }),
-      ).toBeNull();
+        await screen.findByText(/granted access to its loyalty points/),
+      ).toBeInTheDocument();
     });
 
     it("is disabled until the balances have loaded", () => {
-      signIn({ loyaltyPointsMap: {}, isLoading: true, isSuccess: false });
+      signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
       renderPage();
       expect(toggle()).toBeDisabled();
+    });
+
+    it("keeps filtering on the last balances when a refetch fails", async () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      // React Query after a failed background refetch: an error, old data kept.
+      signIn({ isSuccess: false, isError: true });
+      renderPage();
+      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(toggle()).toBeEnabled();
+      await waitFor(() =>
+        expect(screen.queryByText("Federation Navy")).toBeNull(),
+      );
+      expect(screen.getByText("Caldari Navy")).toBeInTheDocument();
+    });
+
+    it("shows everything, toggle disabled, if the first request failed", async () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      signIn({ loyaltyPointsMap: {}, isError: true, data: undefined });
+      renderPage();
+      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(toggle()).toBeDisabled();
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+      expect(screen.getByText("CONCORD")).toBeInTheDocument();
     });
 
     it("hides corporations without LP, and factions left empty", async () => {
@@ -339,13 +363,35 @@ describe("LP Store index page (client)", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows everything while the balances load, even if it was left on", async () => {
+    it("holds the list as a skeleton while the balances load, if left on", async () => {
       window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
-      signIn({ loyaltyPointsMap: {}, isLoading: true, isSuccess: false });
+      signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
       renderPage();
-      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(
+        await screen.findByLabelText("Loading your loyalty points"),
+      ).toBeInTheDocument();
+      // Not every corporation, only to remove most of them a moment later.
+      expect(screen.queryByText("Federation Navy")).toBeNull();
+      expect(screen.queryByText("CONCORD")).toBeNull();
+    });
+
+    it("shows the full list while the balances load when it is off", () => {
+      signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
+      renderPage();
+      expect(screen.queryByLabelText("Loading your loyalty points")).toBeNull();
       expect(screen.getByText("Federation Navy")).toBeInTheDocument();
-      expect(screen.getByText("CONCORD")).toBeInTheDocument();
+    });
+
+    it("does not blame the balances when the store has no corporations", async () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      signIn({ loyaltyPointsMap: {} });
+      renderPage({ groups: [] });
+      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(
+        screen.queryByText(
+          "You have no loyalty points with any of these corporations yet.",
+        ),
+      ).toBeNull();
     });
 
     it("is remembered across visits", async () => {
