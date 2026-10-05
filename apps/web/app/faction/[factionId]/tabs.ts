@@ -6,6 +6,7 @@ export const FACTION_PAGE_TABS = [
   "corporations",
   "warfare",
   "items",
+  "ship-tree",
   "contraband",
   "missions",
   "standings",
