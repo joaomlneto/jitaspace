@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Anchor,
-  Badge,
   Button,
+  Card,
   Container,
   Group,
   Stack,
@@ -22,6 +22,14 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import { AllianceAvatar, CorporationAvatar } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import {
+  corporationPaletteClasses,
+  CorporationPaletteStripe,
+  CorporationPaletteSwatches,
+  CorporationTickerPaletteBadge,
+  getCorporationPaletteColors,
+  useCorporationPaletteVars,
+} from "~/components/CorporationPalette";
 import { MailMessageViewer } from "~/components/EveMail";
 import { CorporationAllianceHistoryTimeline } from "~/components/Timeline";
 
@@ -50,6 +58,9 @@ export default function Page() {
   );
   const character = useSelectedCharacter();
   const { data: corporation } = useCorporation(corporationId);
+  const paletteColors = getCorporationPaletteColors(corporation?.data.palette);
+  const hasPalette = paletteColors.length > 0;
+  const paletteVars = useCorporationPaletteVars(paletteColors);
 
   if (!Number.isFinite(corporationId)) {
     return null;
@@ -58,23 +69,41 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group gap="xl">
-          <CorporationAvatar
-            corporationId={corporationId}
-            size="xl"
-            radius={256}
-          />
-          <Title order={3}>
-            <CorporationName span corporationId={corporationId} />
-          </Title>
-          {corporation?.data.ticker && <Badge>{corporation.data.ticker}</Badge>}
-          {character && (
-            <OpenInformationWindowActionIcon
-              characterId={character.characterId}
-              entityId={corporationId}
+        <Card withBorder radius="md" p={0} style={paletteVars}>
+          {hasPalette && <CorporationPaletteStripe colors={paletteColors} />}
+          <Group
+            gap="xl"
+            px="lg"
+            py="md"
+            wrap="nowrap"
+            className={hasPalette ? corporationPaletteClasses.wash : undefined}
+            data-testid="corporation-header"
+          >
+            <CorporationAvatar
+              corporationId={corporationId}
+              size="xl"
+              radius="md"
+              className={corporationPaletteClasses.logoBacking}
             />
-          )}
-        </Group>
+            <Group gap="md">
+              <Title order={3}>
+                <CorporationName span inherit corporationId={corporationId} />
+              </Title>
+              {corporation?.data.ticker && (
+                <CorporationTickerPaletteBadge
+                  ticker={corporation.data.ticker}
+                  colors={paletteColors}
+                />
+              )}
+              {character && (
+                <OpenInformationWindowActionIcon
+                  characterId={character.characterId}
+                  entityId={corporationId}
+                />
+              )}
+            </Group>
+          </Group>
+        </Card>
         <Group>
           <Link
             href={`https://evemaps.dotlan.net/corp/${corporationId}`}
@@ -125,6 +154,12 @@ export default function Page() {
                 <AllianceName allianceId={corporation.data.alliance_id} />
               </Anchor>
             </Group>
+          </Group>
+        )}
+        {paletteColors.length > 0 && (
+          <Group justify="space-between">
+            <Text>Colors</Text>
+            <CorporationPaletteSwatches colors={paletteColors} />
           </Group>
         )}
         <Tabs
