@@ -68,7 +68,7 @@ const ENDPOINTS: Endpoint[] = [
 const SERVICE = {
   service: "@jitaspace/icon-server",
   description:
-    "EVE Online icons, renders and blueprint images by type or icon ID — a CORS-enabled alternative to images.evetech.net.",
+    "EVE Online icons, renders and blueprint images, by type or icon ID.",
   notes:
     "Every image endpoint accepts a power-of-two ?size= between 32 and 1024; omit it for the image's native size. All responses are CORS-enabled for use from any origin.",
 };
@@ -139,9 +139,10 @@ function renderHtml(): string {
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Rajdhani:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap">
 <style>
-/* Mirrors the JitaSpace web app's "EVE v2" theme (apps/web/themes/eve-v2.ts). */
+/* Mirrors the JitaSpace web app's "EVE v2" theme (apps/web/themes/eve-v2.ts):
+   Rajdhani for all text, JetBrains Mono only for code. */
 *,*::before,*::after{box-sizing:border-box}
 :root{
   --bg:#07090f; --bg-2:#0d0f17;
@@ -167,33 +168,34 @@ a{color:inherit;text-decoration:none}
 header{border-bottom:1px solid var(--brd);background:rgba(7,9,15,.82);backdrop-filter:blur(6px)}
 .bar{max-width:960px;height:60px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:12px}
 .bar img{width:32px;height:32px;display:block}
-.bar .name{font-weight:700;font-size:1.25rem;letter-spacing:.02em;color:#f2f7fb}
-.bar .sub{font-family:var(--mono);font-size:.8rem;color:var(--muted);padding-left:12px;border-left:1px solid var(--brd)}
+.bar .name{font-weight:600;font-size:1.375rem;line-height:1.2;color:#f2f7fb}
+.bar .sub{font-weight:600;font-size:1.375rem;line-height:1.2;color:var(--muted);padding-left:12px;border-left:1px solid var(--brd)}
 .wrap{max-width:960px;margin:0 auto;padding:28px 20px 64px}
-.lead{margin:0 0 16px;font-size:1.125rem;font-weight:500;color:var(--text)}
+.lead{margin:0 0 16px;font-size:1.125rem;color:var(--text)}
 .lead a{color:var(--caldari)}
 .lead a:hover{text-decoration:underline}
 .pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
-.pill{position:relative;font-family:var(--mono);font-size:.75rem;color:var(--text);background:rgba(68,106,121,.18);
+.pill{position:relative;font-size:.875rem;font-weight:500;color:var(--text);background:rgba(68,106,121,.18);
   border:1px solid var(--brd);border-radius:var(--radius);padding:4px 10px;white-space:nowrap}
 .pill b{color:var(--gold);font-weight:600}
+.pill code{font-family:var(--mono);font-size:.85em;color:var(--gold)}
 .pill[aria-describedby]{cursor:help;border-style:dashed}
 .pill[aria-describedby]:hover,.pill[aria-describedby]:focus-visible{border-color:var(--brd-hi);border-style:solid}
 .tip{position:absolute;left:0;top:calc(100% + 8px);z-index:10;width:max-content;max-width:min(320px,80vw);
-  white-space:normal;font-family:var(--sans);font-size:.875rem;font-weight:500;line-height:1.35;color:#f2f7fb;
+  white-space:normal;font-size:.875rem;line-height:1.35;color:#f2f7fb;
   background:#21283c;border:1px solid var(--brd);border-radius:var(--radius);padding:6px 10px;
   box-shadow:0 8px 24px rgba(1,10,20,.64);opacity:0;visibility:hidden;transform:translateY(-2px);
   transition:opacity .12s,transform .12s,visibility .12s}
 .tip code{font-family:var(--mono);font-size:.8em;color:var(--gold);white-space:nowrap}
 .pill:hover .tip,.pill:focus-visible .tip{opacity:1;visibility:visible;transform:none}
-h2{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 12px}
+h2{font-size:.875rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 12px}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;margin-bottom:36px}
 .tile{display:flex;flex-direction:column;gap:8px;padding:12px;transition:border-color .15s}
 .tile:hover{border-color:var(--brd-hi)}
 .tile-img{position:relative;display:grid;place-items:center;aspect-ratio:1;border-radius:var(--radius);overflow:hidden;background:var(--bg)}
 .tile-img img{max-width:100%;max-height:100%;display:block}
-.tile-cap{font-family:var(--mono);font-size:.72rem;color:var(--muted);text-align:center}
-.fallback{display:none;align-items:center;justify-content:center;position:absolute;inset:0;font-family:var(--mono);font-size:.68rem;color:var(--faint)}
+.tile-cap{font-size:.875rem;color:var(--muted);text-align:center}
+.fallback{display:none;align-items:center;justify-content:center;position:absolute;inset:0;font-size:.8rem;color:var(--faint)}
 .cards{display:grid;gap:12px}
 .card{display:flex;gap:16px;align-items:flex-start;padding:16px;transition:border-color .15s}
 .card:hover{border-color:var(--brd-hi)}
@@ -202,7 +204,7 @@ h2{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut
 .thumb--code code{font-family:var(--mono);font-size:.66rem;color:var(--caldari);padding:0 6px;text-align:center;word-break:break-all}
 .card-body{flex:1;min-width:0}
 .sig{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
-.method{font-family:var(--mono);font-size:.68rem;font-weight:600;letter-spacing:.06em;color:#f2f7fb;background:var(--eve);border-radius:var(--radius);padding:2px 7px}
+.method{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:#f2f7fb;background:var(--eve);border-radius:var(--radius);padding:2px 7px}
 .path{font-family:var(--mono);font-size:.95rem;color:#f2f7fb;word-break:break-word}
 .path .seg{color:var(--gold)}
 .desc{margin:0 0 10px;font-size:1rem;color:var(--muted)}
@@ -229,12 +231,12 @@ footer a:hover{text-decoration:underline}
   </div>
 </header>
 <main class="wrap">
-  <p class="lead">EVE Online icons, renders and blueprint images by type or icon ID — a CORS-enabled alternative to <a href="https://images.evetech.net">images.evetech.net</a>.</p>
+  <p class="lead">EVE Online icons, renders and blueprint images, by type or icon ID.</p>
 
   <div class="pills">
     <span class="pill">Any origin · <b>CORS</b></span>
     <span class="pill">PNG &amp; JPEG</span>
-    <span class="pill" tabindex="0" aria-describedby="size-tip"><b>?size=</b> 32–1024<span class="tip" role="tooltip" id="size-tip">${SIZE_TIP_HTML}</span></span>
+    <span class="pill" tabindex="0" aria-describedby="size-tip"><code>?size=</code> 32–1024<span class="tip" role="tooltip" id="size-tip">${SIZE_TIP_HTML}</span></span>
   </div>
 
   <h2>Live preview</h2>
