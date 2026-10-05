@@ -1,8 +1,8 @@
 import { cacheLife } from "next/cache";
 
-import type { LPStorePageProps } from "./page.client";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
+import { groupCorporationsByFaction } from "./groups";
 import LPStorePage from "./page.client";
 
 export const metadata = pageMetadata({
@@ -27,19 +27,16 @@ export default async function Page() {
     })
   ).map(({ corporationId }) => corporationId);
 
-  const corporations: LPStorePageProps["corporations"] =
-    await prisma.corporation.findMany({
-      select: {
-        corporationId: true,
-        name: true,
-      },
-      where: {
-        corporationId: { in: corporationIds },
-      },
-    });
+  const corporations = await prisma.corporation.findMany({
+    select: {
+      corporationId: true,
+      name: true,
+      faction: { select: { factionId: true, name: true } },
+    },
+    where: {
+      corporationId: { in: corporationIds },
+    },
+  });
 
-  const sortedCorporations = [...corporations].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-  return <LPStorePage corporations={sortedCorporations} />;
+  return <LPStorePage groups={groupCorporationsByFaction(corporations)} />;
 }
