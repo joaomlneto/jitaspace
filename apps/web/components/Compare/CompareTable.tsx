@@ -24,10 +24,15 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 import {
+  columnOrderingFeature,
+  columnPinningFeature,
+  columnVisibilityFeature,
+  createExpandedRowModel,
   flexRender,
-  getCoreRowModel,
-  getExpandedRowModel,
-  useReactTable,
+  metaHelper,
+  rowExpandingFeature,
+  tableFeatures,
+  useTable,
 } from "@tanstack/react-table";
 
 import { DogmaAttributeAnchor, EveIconAvatar } from "@jitaspace/ui";
@@ -60,6 +65,18 @@ export interface CompareTableProps {
   /** Cap on the height; the table scrolls inside. Defaults to the viewport. */
   maxHeight?: CSSProperties["maxHeight"];
 }
+
+/** The TanStack features the table uses; the core row model is built in. */
+const features = tableFeatures({
+  columnOrderingFeature,
+  columnPinningFeature,
+  // For `row.getVisibleCells()`, though every column is always visible.
+  columnVisibilityFeature,
+  rowExpandingFeature,
+  expandedRowModel: createExpandedRowModel(),
+  tableMeta: metaHelper<CompareTableMeta>(),
+});
+type Features = typeof features;
 
 /** A section heading, or one attribute row under it. */
 type TableRow =
@@ -119,13 +136,17 @@ interface CompareTableMeta {
   addCollapsed: boolean;
 }
 
-type CompareHeaderContext = Readonly<HeaderContext<TableRow, unknown>>;
-type CompareCellContext = Readonly<CellContext<TableRow, unknown>>;
+type CompareHeaderContext = Readonly<HeaderContext<Features, TableRow>>;
+type CompareCellContext = Readonly<CellContext<Features, TableRow>>;
 
 const tableMeta = ({
   table,
-}: CompareHeaderContext | CompareCellContext): CompareTableMeta =>
-  table.options.meta as CompareTableMeta;
+}: CompareHeaderContext | CompareCellContext): CompareTableMeta => {
+  // Always set: the one table these renderers belong to passes it.
+  const { meta } = table.options;
+  if (!meta) throw new Error("CompareTable: the table has no meta");
+  return meta;
+};
 
 function LabelHeader(context: CompareHeaderContext) {
   const { addColumn, addCollapsed } = tableMeta(context);
@@ -367,10 +388,10 @@ export const CompareTable = memo(
         addCollapsed,
       ],
     );
-    const columns = useMemo<ColumnDef<TableRow>[]>(
+    const columns = useMemo<ColumnDef<Features, TableRow>[]>(
       () => [
         { id: LABEL_COLUMN_ID, header: LabelHeader, cell: LabelCell },
-        ...typeIds.map<ColumnDef<TableRow>>((typeId) => ({
+        ...typeIds.map<ColumnDef<Features, TableRow>>((typeId) => ({
           id: typeColumnId(typeId),
           header: ItemHeader,
           cell: ItemCell,
@@ -412,7 +433,8 @@ export const CompareTable = memo(
       [expanded, comparison.sections],
     );
 
-    const table = useReactTable({
+    const table = useTable({
+      features,
       data,
       columns,
       meta,
@@ -423,14 +445,12 @@ export const CompareTable = memo(
           ...typeIds.map(typeColumnId),
           ...(addCollapsed ? [] : [ADD_COLUMN_ID]),
         ],
-        columnPinning: { left: [LABEL_COLUMN_ID] },
+        columnPinning: { start: [LABEL_COLUMN_ID], end: [] },
       },
       onExpandedChange,
       getSubRows: (row) => (row.kind === "section" ? row.subRows : undefined),
       getRowId: (row) =>
         row.kind === "section" ? row.section.key : row.row.key,
-      getCoreRowModel: getCoreRowModel(),
-      getExpandedRowModel: getExpandedRowModel(),
     });
 
     const dragHandlers = (typeId: number) =>

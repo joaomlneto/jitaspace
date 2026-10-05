@@ -4,7 +4,9 @@ const config: Config = {
   testEnvironment: "jsdom",
   testMatch: ["<rootDir>/tests/**/*.test.tsx", "<rootDir>/tests/**/*.test.ts"],
   transform: {
-    "^.+\\.tsx?$": [
+    // `.js` too: TanStack Table v9 ships ESM only, so its files (let through
+    // by transformIgnorePatterns below) are compiled to CommonJS for Jest.
+    "^.+\\.[jt]sx?$": [
       "@swc/jest",
       {
         jsc: {
