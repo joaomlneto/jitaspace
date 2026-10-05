@@ -20,7 +20,8 @@ interface DungeonRecord {
 
 /**
  * dungeons.yaml defines encounter/dungeon sites. Feeds Dungeon (name,
- * descriptions, archetype, faction) and DungeonAllowedShip (`allowedShipsList`).
+ * descriptions, archetype, faction) and DungeonAllowedShip (`allowedShipsList`,
+ * whose values are typeLists.yaml ids — the lists of ships allowed in).
  */
 export const ingestSdeDungeons = defineJob<
   IngestSdeDungeonsEventPayload["data"]
@@ -57,15 +58,15 @@ export const ingestSdeDungeons = defineJob<
     for (const [key, value] of Object.entries(data)) {
       const dungeonId = Number(key);
       const record = value as DungeonRecord;
-      for (const shipTypeId of record.allowedShipsList ?? []) {
-        allowedShips.push({ dungeonId, shipTypeId, isDeleted: false });
+      for (const typeListId of record.allowedShipsList ?? []) {
+        allowedShips.push({ dungeonId, typeListId, isDeleted: false });
       }
     }
 
     const dungeonAllowedShips = await ingestSdeCompositeTable({
       delegate: prisma.dungeonAllowedShip,
       rows: allowedShips,
-      keyFields: ["dungeonId", "shipTypeId"],
+      keyFields: ["dungeonId", "typeListId"],
       scopeField: "dungeonId",
       scopeIds: Object.keys(data).map(Number),
     });

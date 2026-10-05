@@ -59,6 +59,7 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   DateHoverCard,
+  DungeonAnchor,
   FactionAvatar,
   FormattedDateText,
   ISKAmount,
@@ -562,6 +563,14 @@ export default function Page({
                               solarSystemId={character.solarSystemId}
                             />
                           </SolarSystemAnchor>
+                        </InfoRow>
+                        <InfoRow label="Dungeon">
+                          <DungeonAnchor
+                            dungeonId={character.dungeonId}
+                            target="_blank"
+                          >
+                            Dungeon {character.dungeonId}
+                          </DungeonAnchor>
                         </InfoRow>
                         <InfoRow label="Ship">
                           <Group wrap="nowrap" gap="xs" justify="flex-end">
