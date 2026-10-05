@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Alert,
@@ -16,7 +15,6 @@ import {
   Paper,
   Progress,
   SimpleGrid,
-  Skeleton,
   Stack,
   Table,
   Tabs,
@@ -89,13 +87,10 @@ import type {
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
+import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
 import { EntityHistory } from "../../history/EntityHistory";
-import {
-  ENLISTED_CORPORATIONS_SHOWN,
-  SHIP_TREE_OMEGA_PARAM,
-  SHIP_TREE_TAB_HEIGHT,
-  SHIP_TREE_TAB_MIN_HEIGHT,
-} from "./constants";
+import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
 import {
   DEFAULT_FACTION_PAGE_TAB,
   FACTION_PAGE_TABS,
@@ -103,26 +98,6 @@ import {
 } from "./tabs";
 
 export type PageProps = FactionPageData;
-
-// Browser-only and on demand: the ship tree library and its stylesheet load
-// when the tab opens, and stay out of the page's cached HTML.
-const FactionShipTree = dynamic(() => import("./FactionShipTree"), {
-  ssr: false,
-  // The panel's own shape (controls, tree, credit line), so nothing below it
-  // moves when the tree arrives.
-  loading: () => (
-    <Stack gap="md" data-testid="ship-tree-placeholder">
-      {/* Measured: the controls row with the logged-out skills prompt. */}
-      <Skeleton h={56} radius="sm" />
-      <Skeleton
-        h={SHIP_TREE_TAB_HEIGHT}
-        mih={SHIP_TREE_TAB_MIN_HEIGHT}
-        radius="md"
-      />
-      <Skeleton h={17} w="60%" radius="sm" />
-    </Stack>
-  ),
-});
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
@@ -1484,7 +1459,7 @@ export default function FactionPage({
           {/* Ship tree */}
           {shipTreeFaction && (
             <Tabs.Panel value="ship-tree" pt="lg">
-              <FactionShipTree faction={shipTreeFaction.id} />
+              <LazyShipTreeTab faction={shipTreeFaction.id} />
             </Tabs.Panel>
           )}
 

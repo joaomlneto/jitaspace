@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import {
@@ -12,7 +13,13 @@ import {
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type {
@@ -84,6 +91,14 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
 jest.mock("~/components/EveMail", () => ({
   MailMessageViewer: ({ content }: { content?: string }) => (
     <div data-testid="mail-viewer">{content}</div>
+  ),
+}));
+
+// The real tab loads the ship tree library and its stylesheet.
+jest.mock("~/components/ShipTree/ShipTreeTab", () => ({
+  __esModule: true,
+  default: ({ faction }: { faction: number }) => (
+    <div data-testid="race-ship-tree">{`ship tree of ${faction}`}</div>
   ),
 }));
 
@@ -362,6 +377,7 @@ function renderClient(
   race: RacePageData,
   searchParams = "",
   fetchImplementation = tableResponses(),
+  onUrlUpdate?: OnUrlUpdateFunction,
 ) {
   mockFetch.mockImplementation(fetchImplementation);
   globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
@@ -375,7 +391,7 @@ function renderClient(
         <Page {...race} />
       </MantineProvider>
     </QueryClientProvider>,
-    { wrapper: withNuqsTestingAdapter({ searchParams }) },
+    { wrapper: withNuqsTestingAdapter({ searchParams, onUrlUpdate }) },
   );
 }
 
@@ -888,10 +904,6 @@ describe("race page (client)", () => {
         "The Amarr Empire is the largest and oldest of the four empires.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ship tree" })).toHaveAttribute(
-      "href",
-      "/ship-tree?faction=amarr",
-    );
     for (const name of [
       /Overview/,
       /Description/,
@@ -899,6 +911,7 @@ describe("race page (client)", () => {
       /Schools/,
       /Skills/,
       /Ships/,
+      /Ship Tree/,
       /Items/,
       /Corporations/,
       /Stations/,
@@ -942,6 +955,7 @@ describe("race page (client)", () => {
       /Schools/,
       /Skills/,
       /Ships/,
+      /Ship Tree/,
       /Corporations/,
       /Stations/,
     ]) {
@@ -957,7 +971,26 @@ describe("race page (client)", () => {
     expect(screen.getAllByText("Items").length).toBeGreaterThan(1);
   });
 
-  it("links the ship tree of the one faction a race without a home belongs to", () => {
+  it("draws its faction's ship tree in a tab, loaded on demand", async () => {
+    renderClient(raceData());
+    expect(screen.queryByTestId("race-ship-tree")).not.toBeInTheDocument();
+    cleanup();
+
+    renderClient(raceData(), "?tab=ship-tree");
+
+    // Until the tab's module arrives, a placeholder in the tab's own shape.
+    expect(screen.getByTestId("ship-tree-placeholder")).toBeInTheDocument();
+    expect(await screen.findByTestId("race-ship-tree")).toHaveTextContent(
+      `ship tree of ${AMARR_EMPIRE}`,
+    );
+    // It needs none of the table rows, and the hero no longer links away.
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("link", { name: "Ship tree" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("draws the tree of the one faction a race without a home belongs to", async () => {
     renderClient(
       raceData({
         faction: null,
@@ -970,15 +1003,15 @@ describe("race page (client)", () => {
           },
         ],
       }),
+      "?tab=ship-tree",
     );
 
-    expect(screen.getByRole("link", { name: "Ship tree" })).toHaveAttribute(
-      "href",
-      "/ship-tree?faction=triglavian",
+    expect(await screen.findByTestId("race-ship-tree")).toHaveTextContent(
+      "ship tree of 500026",
     );
   });
 
-  it("offers no ship tree for a race several factions share", () => {
+  it("has no Ship Tree tab for a race several factions share", () => {
     renderClient(
       raceData({
         faction: null,
@@ -997,11 +1030,34 @@ describe("race page (client)", () => {
           },
         ],
       }),
+      "?tab=ship-tree",
     );
 
     expect(
-      screen.queryByRole("link", { name: "Ship tree" }),
+      screen.queryByRole("tab", { name: /Ship Tree/ }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Overview/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("drops the tree's clone type from the URL when another tab opens", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderClient(
+      raceData(),
+      "?tab=ship-tree&omega=true",
+      undefined,
+      onUrlUpdate,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /Bloodlines/ }));
+
+    await waitFor(() => {
+      const url = onUrlUpdate.mock.calls.at(-1)?.[0].searchParams;
+      expect(url?.get("tab")).toBe("bloodlines");
+      expect(url?.has("omega")).toBe(false);
+    });
   });
 
   it("falls back to the overview for a deep link to a hidden tab", () => {

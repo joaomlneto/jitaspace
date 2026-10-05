@@ -8,7 +8,6 @@ import {
   Anchor,
   Badge,
   Box,
-  Button,
   Container,
   Group,
   Image,
@@ -37,7 +36,7 @@ import {
   IconUserStar,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
@@ -82,6 +81,8 @@ import type {
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
+import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
 import { EntityHistory } from "../../history/EntityHistory";
 import { CHARACTER_ATTRIBUTES } from "./constants";
 import { DEFAULT_RACE_PAGE_TAB, isRacePageTab, RACE_PAGE_TABS } from "./tabs";
@@ -1505,6 +1506,11 @@ export default function RacePage(race: Readonly<PageProps>) {
       .withDefault(DEFAULT_RACE_PAGE_TAB)
       .withOptions({ history: "replace" }),
   );
+  // Written by the Ship Tree tab; the page only clears it (see the tab change).
+  const [, setShipTreeOmega] = useQueryState(
+    SHIP_TREE_OMEGA_PARAM,
+    parseAsBoolean,
+  );
 
   const description = race.description.trim();
   // Some races' description is only their name ("Rogue Drones").
@@ -1546,6 +1552,7 @@ export default function RacePage(race: Readonly<PageProps>) {
       ? ["skills"]
       : []),
     ...(race.shipClasses.length > 0 ? ["ships"] : []),
+    ...(shipTreeFaction ? ["ship-tree"] : []),
     ...(counts.items > 0 ? ["items"] : []),
     ...(counts.corporations > 0 ? ["corporations"] : []),
     ...(counts.stations > 0 || race.stationTypes.length > 0
@@ -1686,20 +1693,6 @@ export default function RacePage(race: Readonly<PageProps>) {
                   />
                 )}
               </Group>
-
-              {shipTreeFaction && (
-                <Group gap="xs">
-                  <Button
-                    component={Link}
-                    href={`/ship-tree?faction=${shipTreeFaction.slug}`}
-                    size="xs"
-                    variant="light"
-                    leftSection={<IconHierarchy3 size={14} />}
-                  >
-                    Ship tree
-                  </Button>
-                </Group>
-              )}
             </Stack>
           </Group>
         </Paper>
@@ -1713,7 +1706,11 @@ export default function RacePage(race: Readonly<PageProps>) {
         <Tabs
           value={selectedTab}
           onChange={(value) => {
-            if (isRacePageTab(value)) void setActiveTab(value);
+            if (!isRacePageTab(value)) return;
+            void setActiveTab(value);
+            // The clone type belongs to the Ship Tree tab: don't carry it into
+            // the links of the others.
+            if (value !== "ship-tree") void setShipTreeOmega(null);
           }}
           variant="outline"
           keepMounted={false}
@@ -1735,6 +1732,7 @@ export default function RacePage(race: Readonly<PageProps>) {
             )}
             {tab("skills", <IconListCheck size={16} />, "Skills")}
             {tab("ships", <IconRocket size={16} />, "Ships", publishedShips)}
+            {tab("ship-tree", <IconHierarchy3 size={16} />, "Ship Tree")}
             {tab("items", <IconPackage size={16} />, "Items", counts.items)}
             {tab(
               "corporations",
@@ -1804,6 +1802,13 @@ export default function RacePage(race: Readonly<PageProps>) {
                 starterShipId={race.starterShip?.id ?? null}
                 corvetteIds={corvetteIds}
               />
+            </Tabs.Panel>
+          )}
+
+          {/* Ship tree: the race's own faction's, drawn in the browser */}
+          {shipTreeFaction && (
+            <Tabs.Panel value="ship-tree" pt="lg">
+              <LazyShipTreeTab faction={shipTreeFaction.id} />
             </Tabs.Panel>
           )}
 

@@ -6,6 +6,7 @@ export const RACE_PAGE_TABS = [
   "schools",
   "skills",
   "ships",
+  "ship-tree",
   "items",
   "corporations",
   "stations",
