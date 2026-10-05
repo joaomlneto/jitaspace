@@ -12,6 +12,7 @@ import {
   ContactsIcon,
   CorporationIcon,
   EveMailIcon,
+  FactionalWarfareIcon,
   FittingIcon,
   ItemsIcon,
   LPStoreIcon,
@@ -303,6 +304,14 @@ export const universeApps: Record<string, JitaApp> = {
     description: "Browse every open alliance and its members.",
     url: "/alliances",
     Icon: (props) => <AlliancesIcon {...props} />,
+    scopes: {},
+  },
+  factions: {
+    name: "Factions",
+    description:
+      "Browse the empires, pirates and other powers of New Eden, with their territory and militias.",
+    url: "/factions",
+    Icon: (props) => <FactionalWarfareIcon {...props} />,
     scopes: {},
   },
   map: {

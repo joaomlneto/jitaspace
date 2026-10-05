@@ -1259,9 +1259,9 @@ export default function FactionPage({
             </Box>
 
             <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <Text size="sm" c="dimmed">
-                Faction
-              </Text>
+              <Anchor component={Link} href="/factions" size="sm" c="dimmed">
+                Factions
+              </Anchor>
               <Group gap="sm" align="center">
                 <Title order={2}>{faction.name}</Title>
                 {hasWarfare && (
