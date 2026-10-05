@@ -168,7 +168,7 @@ function AttributeBars({ values }: Readonly<{ values: RaceAttributeValues }>) {
             <Text size="xs" c="dimmed">
               {ATTRIBUTE_LABELS[attribute]}
             </Text>
-            <Text size="sm" fw={600} c="gray.0">
+            <Text size="sm" fw={600} c="bright">
               {values[attribute]}
             </Text>
           </Group>
@@ -291,7 +291,7 @@ function BloodlinesPanel({
                             size="md"
                             alt=""
                           />
-                          <Text fw={600} c="gray.0">
+                          <Text fw={600} c="bright">
                             {ancestry.name}
                           </Text>
                         </Group>
@@ -350,7 +350,7 @@ function SchoolsPanel({
                 />
                 <Stack gap={2} style={{ minWidth: 0 }}>
                   <Group gap="xs">
-                    <Text fw={700} c="gray.0">
+                    <Text fw={700} c="bright">
                       {school.name}
                     </Text>
                     {school.isStarterSpaceSchool && (
@@ -1147,7 +1147,7 @@ function CountList({
               <Text size="sm" truncate>
                 {row.label}
               </Text>
-              <Text size="sm" fw={600} c="gray.0">
+              <Text size="sm" fw={600} c="bright">
                 {formatCount(row.count)}
               </Text>
             </Group>
@@ -1386,7 +1386,7 @@ function OverviewPanel({
                     <Text size="xs" c="dimmed">
                       {formatCount(category.published)} published
                     </Text>
-                    <Text size="sm" fw={600} c="gray.0">
+                    <Text size="sm" fw={600} c="bright">
                       {formatCount(category.total)}
                     </Text>
                   </Group>
