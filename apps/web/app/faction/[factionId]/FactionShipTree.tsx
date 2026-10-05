@@ -6,6 +6,11 @@ import { parseAsBoolean, useQueryState } from "nuqs";
 import type { FactionIdentifier } from "@jitaspace/ship-tree";
 
 import { ShipTreePanel } from "~/components/ShipTree";
+import {
+  SHIP_TREE_OMEGA_PARAM,
+  SHIP_TREE_TAB_HEIGHT,
+  SHIP_TREE_TAB_MIN_HEIGHT,
+} from "./constants";
 
 /**
  * The faction page's Ship Tree tab. Its own module so the page can load it
@@ -15,9 +20,10 @@ import { ShipTreePanel } from "~/components/ShipTree";
 export default function FactionShipTree({
   faction,
 }: Readonly<{ faction: FactionIdentifier }>) {
-  // In the URL, as on /ship-tree, so a link keeps the clone state.
+  // In the URL, as on /ship-tree, so a link keeps the clone state. The page
+  // clears it when another tab opens.
   const [isOmega, setIsOmega] = useQueryState(
-    "omega",
+    SHIP_TREE_OMEGA_PARAM,
     parseAsBoolean.withDefault(false),
   );
 
@@ -34,10 +40,8 @@ export default function FactionShipTree({
           }}
         />
       }
-      // On a phone the tree fits to the width and is only ~200px tall, so a
-      // full-height viewport would be mostly empty; leave room to pan.
-      h={{ base: 360, sm: "70vh" }}
-      mih={{ base: 360, sm: 480 }}
+      h={SHIP_TREE_TAB_HEIGHT}
+      mih={SHIP_TREE_TAB_MIN_HEIGHT}
     />
   );
 }

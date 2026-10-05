@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import {
@@ -12,7 +13,13 @@ import {
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type {
@@ -265,6 +272,7 @@ function renderClient(
   searchParams = "",
   /** What the tables route answers; the rows themselves by default. */
   tablesResponse?: Promise<unknown>,
+  onUrlUpdate?: OnUrlUpdateFunction,
 ) {
   const { splitFactionData } = require("~/app/faction/[factionId]/data") as {
     splitFactionData: (
@@ -288,7 +296,7 @@ function renderClient(
         <Page {...page} />
       </MantineProvider>
     </QueryClientProvider>,
-    { wrapper: withNuqsTestingAdapter({ searchParams }) },
+    { wrapper: withNuqsTestingAdapter({ searchParams, onUrlUpdate }) },
   );
 }
 
@@ -705,11 +713,32 @@ describe("faction page (client)", () => {
 
     renderClient(sdeData(), liveData(), "?tab=ship-tree");
 
+    // Until the tab's module arrives, a placeholder in the tab's own shape.
+    expect(screen.getByTestId("ship-tree-placeholder")).toBeInTheDocument();
     expect(await screen.findByTestId("faction-ship-tree")).toHaveTextContent(
       `ship tree of ${CALDARI}`,
     );
     // It needs none of the table rows.
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("drops the tree's clone type from the URL when another tab opens", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderClient(
+      sdeData(),
+      liveData(),
+      "?tab=ship-tree&omega=true",
+      undefined,
+      onUrlUpdate,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /Description/ }));
+
+    await waitFor(() => {
+      const url = onUrlUpdate.mock.calls.at(-1)?.[0].searchParams;
+      expect(url?.get("tab")).toBe("description");
+      expect(url?.has("omega")).toBe(false);
+    });
   });
 
   it("has no Ship Tree tab for a faction the tree cannot draw", () => {

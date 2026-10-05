@@ -40,7 +40,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
@@ -90,7 +90,12 @@ import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { EntityHistory } from "../../history/EntityHistory";
-import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
+import {
+  ENLISTED_CORPORATIONS_SHOWN,
+  SHIP_TREE_OMEGA_PARAM,
+  SHIP_TREE_TAB_HEIGHT,
+  SHIP_TREE_TAB_MIN_HEIGHT,
+} from "./constants";
 import {
   DEFAULT_FACTION_PAGE_TAB,
   FACTION_PAGE_TABS,
@@ -103,7 +108,20 @@ export type PageProps = FactionPageData;
 // when the tab opens, and stay out of the page's cached HTML.
 const FactionShipTree = dynamic(() => import("./FactionShipTree"), {
   ssr: false,
-  loading: () => <Skeleton h={480} radius="md" />,
+  // The panel's own shape (controls, tree, credit line), so nothing below it
+  // moves when the tree arrives.
+  loading: () => (
+    <Stack gap="md" data-testid="ship-tree-placeholder">
+      {/* Measured: the controls row with the logged-out skills prompt. */}
+      <Skeleton h={56} radius="sm" />
+      <Skeleton
+        h={SHIP_TREE_TAB_HEIGHT}
+        mih={SHIP_TREE_TAB_MIN_HEIGHT}
+        radius="md"
+      />
+      <Skeleton h={17} w="60%" radius="sm" />
+    </Stack>
+  ),
 });
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
@@ -1054,6 +1072,11 @@ export default function FactionPage({
       .withDefault(DEFAULT_FACTION_PAGE_TAB)
       .withOptions({ history: "replace" }),
   );
+  // Written by the Ship Tree tab; the page only clears it (see the tab change).
+  const [, setShipTreeOmega] = useQueryState(
+    SHIP_TREE_OMEGA_PARAM,
+    parseAsBoolean,
+  );
 
   const { data: fwStatsResponse } = useGetFwStats();
   const { data: fwWarsResponse } = useGetFwWars();
@@ -1314,7 +1337,11 @@ export default function FactionPage({
         <Tabs
           value={selectedTab}
           onChange={(value) => {
-            if (isFactionPageTab(value)) void setActiveTab(value);
+            if (!isFactionPageTab(value)) return;
+            void setActiveTab(value);
+            // The clone type belongs to the Ship Tree tab: don't carry it into
+            // the links of the others.
+            if (value !== "ship-tree") void setShipTreeOmega(null);
           }}
           variant="outline"
           keepMounted={false}
