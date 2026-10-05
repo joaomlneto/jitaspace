@@ -247,6 +247,14 @@ function resolveIdentity(
   };
 }
 
+/** Whether the creator corporation is still in the alliance, once we know. */
+function describeCreatorMembership(rows: CorporationRow[]): string | undefined {
+  if (rows.length === 0) return undefined;
+  return rows.some((row) => row.isCreator)
+    ? "Still a member"
+    : "No longer a member";
+}
+
 export default function AlliancePage({
   allianceId,
   profile,
@@ -321,12 +329,7 @@ export default function AlliancePage({
   const warSummary = profile?.warSummary;
 
   const executorRow = corporationRows.find((row) => row.isExecutor);
-  let creatorMembership: string | undefined;
-  if (corporationRows.length > 0) {
-    creatorMembership = corporationRows.some((row) => row.isCreator)
-      ? "Still a member"
-      : "No longer a member";
-  }
+  const creatorMembership = describeCreatorMembership(corporationRows);
   const hasSovereignty = sovereigntySummary.systems > 0;
   const hasWars = (warSummary?.total ?? 0) > 0;
   const killEfficiency = iskEfficiency(
