@@ -654,6 +654,11 @@ describe("faction page (client)", () => {
     expect(
       screen.getByText("Strength through enterprise."),
     ).toBeInTheDocument();
+    // The way back to the list of every faction.
+    expect(screen.getByRole("link", { name: "Factions" })).toHaveAttribute(
+      "href",
+      "/factions",
+    );
     // The ship tree is a tab now, not a link away.
     expect(
       screen.queryByRole("link", { name: "Ship tree" }),

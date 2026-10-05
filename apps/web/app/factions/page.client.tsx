@@ -156,8 +156,9 @@ const columns: DataTableColumn<FactionRow>[] = [
     cell: headquartersCell,
   },
   {
+    // The headquarters' region: a faction can span many.
     id: "region",
-    header: "Region",
+    header: "HQ region",
     accessor: "regionName",
     sortable: true,
     filter: { type: "select" },
