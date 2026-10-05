@@ -22,19 +22,7 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import {
-  columnFilteringFeature,
-  columnVisibilityFeature,
-  createFilteredRowModel,
-  createPaginatedRowModel,
-  createSortedRowModel,
-  flexRender,
-  globalFilteringFeature,
-  rowPaginationFeature,
-  rowSortingFeature,
-  tableFeatures,
-  useTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 
 import type { DataTableColumn, DataTableProps } from "@jitaspace/datatable";
 import type { SortKey } from "@jitaspace/datatable-common";
@@ -51,21 +39,8 @@ import {
   readFilterValue,
 } from "@jitaspace/datatable-common";
 
-/**
- * The TanStack features this engine uses. v9 only exposes the APIs of the
- * features registered here; the core row model is built in.
- */
-const features = tableFeatures({
-  columnVisibilityFeature,
-  columnFilteringFeature,
-  globalFilteringFeature,
-  rowSortingFeature,
-  rowPaginationFeature,
-  filteredRowModel: createFilteredRowModel(),
-  sortedRowModel: createSortedRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
-});
-type Features = typeof features;
+import type { Features } from "./features";
+import { features } from "./features";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -86,7 +61,7 @@ function getSortIcon(sorted: "asc" | "desc" | false): string {
 }
 
 function alignToJustify(
-  align: DataTableColumn<unknown>["align"],
+  align: DataTableColumn<object>["align"],
 ): "flex-start" | "center" | "flex-end" {
   if (align === "right") return "flex-end";
   if (align === "center") return "center";

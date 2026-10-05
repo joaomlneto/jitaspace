@@ -10,18 +10,13 @@ import {
   jest,
 } from "@jest/globals";
 import {
-  columnFilteringFeature,
   constructTable,
-  createFilteredRowModel,
-  createPaginatedRowModel,
-  createSortedRowModel,
-  globalFilteringFeature,
-  rowPaginationFeature,
-  rowSortingFeature,
   sortFn_text,
   tableFeatures,
 } from "@tanstack/table-core";
 import { storeReactivityBindings } from "@tanstack/table-core/store-reactivity-bindings";
+
+import { features as engineFeatures } from "../DataTable/features";
 
 // TanStack Table v8's memo read `Date.now()` on every row-model computation
 // whenever `NODE_ENV === "development"`, even with every `debug*` option off:
@@ -38,24 +33,18 @@ interface Row {
   name: string;
 }
 
+// Exactly the engine's features, plus what `useTable` supplies in React and a
+// vanilla table needs spelled out.
 const features = tableFeatures({
-  // What `useTable` supplies in React; a vanilla table needs it spelled out.
   coreReactivityFeature: storeReactivityBindings(),
-  columnFilteringFeature,
-  globalFilteringFeature,
-  rowSortingFeature,
-  rowPaginationFeature,
-  filteredRowModel: createFilteredRowModel(),
-  sortedRowModel: createSortedRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
-  sortFns: { text: sortFn_text },
+  ...engineFeatures,
 });
 
 function computeRowModels(options: { debugAll?: boolean } = {}) {
   const table = constructTable<typeof features, Row>({
     features,
     data: [{ name: "b" }, { name: "a" }],
-    columns: [{ accessorKey: "name" }],
+    columns: [{ accessorKey: "name", sortFn: sortFn_text }],
     initialState: { sorting: [{ id: "name", desc: false }] },
     ...options,
   });

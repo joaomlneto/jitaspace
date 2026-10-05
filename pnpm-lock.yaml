@@ -996,7 +996,7 @@ importers:
         specifier: ^0.2.39
         version: 0.2.39(@swc/core@1.15.40)
       '@tanstack/table-core':
-        specifier: ^9.2.6
+        specifier: 9.2.6
         version: 9.2.6
       '@testing-library/jest-dom':
         specifier: ^6.9.1

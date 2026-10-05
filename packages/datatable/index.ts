@@ -61,7 +61,7 @@ export type DataTableSize = "xs" | "sm" | "md" | "lg" | "xl";
  * A single column definition, expressed independently of any table engine.
  * Each adapter translates this into its engine's native column shape.
  */
-export interface DataTableColumn<TData> {
+export interface DataTableColumn<TData extends object> {
   /** Stable, unique id. Used as the key for sorting and visibility state. */
   id: string;
   /** Human-readable header text. Also the label shown in the column-visibility menu. */

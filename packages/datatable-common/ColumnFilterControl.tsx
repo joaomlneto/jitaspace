@@ -47,7 +47,7 @@ const BOOLEAN_OPTIONS = [
   { label: "No", value: "false" },
 ];
 
-export interface ColumnFilterControlProps<TData> {
+export interface ColumnFilterControlProps<TData extends object> {
   /** The column being filtered. Must have a `filter`. */
   column: DataTableColumn<TData>;
   /** Every row, unfiltered — the source of faceted options and range hints. */
@@ -64,7 +64,7 @@ export interface ColumnFilterControlProps<TData> {
  * mantine-datatable in its built-in one — so filtering looks and behaves the
  * same whichever engine is selected.
  */
-export function ColumnFilterControl<TData>({
+export function ColumnFilterControl<TData extends object>({
   column,
   rows,
   value,

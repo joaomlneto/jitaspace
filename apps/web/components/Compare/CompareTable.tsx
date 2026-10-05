@@ -29,6 +29,7 @@ import {
   columnVisibilityFeature,
   createExpandedRowModel,
   flexRender,
+  metaHelper,
   rowExpandingFeature,
   tableFeatures,
   useTable,
@@ -73,6 +74,7 @@ const features = tableFeatures({
   columnVisibilityFeature,
   rowExpandingFeature,
   expandedRowModel: createExpandedRowModel(),
+  tableMeta: metaHelper<CompareTableMeta>(),
 });
 type Features = typeof features;
 
@@ -139,8 +141,12 @@ type CompareCellContext = Readonly<CellContext<Features, TableRow>>;
 
 const tableMeta = ({
   table,
-}: CompareHeaderContext | CompareCellContext): CompareTableMeta =>
-  table.options.meta as CompareTableMeta;
+}: CompareHeaderContext | CompareCellContext): CompareTableMeta => {
+  // Always set: the one table these renderers belong to passes it.
+  const { meta } = table.options;
+  if (!meta) throw new Error("CompareTable: the table has no meta");
+  return meta;
+};
 
 function LabelHeader(context: CompareHeaderContext) {
   const { addColumn, addCollapsed } = tableMeta(context);

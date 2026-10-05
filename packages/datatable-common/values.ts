@@ -7,7 +7,7 @@ import type { DataTableColumn } from "@jitaspace/datatable";
 export type SortKey = string | number | undefined;
 
 /** The column's raw value for a row — what its `cell` renderer receives. */
-export function readColumnValue<TData>(
+export function readColumnValue<TData extends object>(
   column: DataTableColumn<TData>,
   row: TData,
 ): unknown {
@@ -18,7 +18,7 @@ export function readColumnValue<TData>(
 }
 
 /** The value the column's filter tests. */
-export function readFilterValue<TData>(
+export function readFilterValue<TData extends object>(
   column: DataTableColumn<TData>,
   row: TData,
 ): unknown {
@@ -59,7 +59,7 @@ export function toSortKey(value: unknown): SortKey {
 }
 
 /** The column's sort key for a row: its `sortAccessor`, else its value. */
-export function columnSortKey<TData>(
+export function columnSortKey<TData extends object>(
   column: DataTableColumn<TData>,
   row: TData,
 ): SortKey {
@@ -91,7 +91,7 @@ export function compareSortKeys(
  * Sort rows by one column, keeping rows without a sort key last in either
  * direction. Stable: equal keys keep their input order.
  */
-export function sortRows<TData>(
+export function sortRows<TData extends object>(
   rows: readonly TData[],
   column: DataTableColumn<TData>,
   direction: "asc" | "desc",
@@ -124,7 +124,7 @@ export function matchesGlobalFilter(value: unknown, query: string): boolean {
 }
 
 /** Whether any of the row's accessor columns matches the global search. */
-export function rowMatchesGlobalFilter<TData>(
+export function rowMatchesGlobalFilter<TData extends object>(
   columns: readonly DataTableColumn<TData>[],
   row: TData,
   query: string,
