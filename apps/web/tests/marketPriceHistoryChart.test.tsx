@@ -5,7 +5,13 @@ import { cloneElement } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import type { MarketHistoryDay } from "~/components/Market/priceHistory";
 
@@ -195,8 +201,9 @@ describe("MarketPriceHistory", () => {
     const [priceChart] = container.querySelectorAll(".recharts-wrapper");
     if (!priceChart) throw new Error("price chart not rendered");
 
-    // jsdom has no layout: the chart sits at the origin, 800px wide.
-    fireEvent.mouseMove(priceChart, { clientX: 400, clientY: 150 });
+    // jsdom has no layout: the chart sits at the origin, 800px wide. Near the
+    // right edge is late in the month, where the 20-day average has a value.
+    fireEvent.mouseMove(priceChart, { clientX: 760, clientY: 150 });
 
     const readout = await waitFor(() => {
       const tooltip = container.querySelector(".recharts-tooltip-wrapper");
@@ -205,23 +212,33 @@ describe("MarketPriceHistory", () => {
     });
     expect(readout).toHaveTextContent("Max");
     expect(readout).toHaveTextContent("5d avg");
+    expect(readout).toHaveTextContent("20d avg");
+    expect(readout).toHaveTextContent("Donchian");
     expect(readout).toHaveTextContent("Volume");
-    // The channel is off by default, so it has no row.
-    expect(readout).not.toHaveTextContent("Donchian");
   });
 
-  it("starts with the Donchian channel off, and toggles series", () => {
+  it("starts with every series on, and toggles each", () => {
     renderChart();
 
-    const donchian = screen.getByRole("button", { name: /Donchian channel/ });
-    const median = screen.getByRole("button", { name: "Median day price" });
-    expect(donchian).toHaveAttribute("aria-pressed", "false");
-    expect(median).toHaveAttribute("aria-pressed", "true");
+    const toggles = within(
+      screen.getByRole("group", { name: "Series shown" }),
+    ).getAllByRole("button");
+    expect(toggles.map((toggle) => toggle.textContent)).toEqual([
+      "Median day price",
+      "Min/max",
+      "5-day average",
+      "20-day average",
+      "Donchian channel (5d)",
+    ]);
+    for (const toggle of toggles) {
+      expect(toggle).toHaveAttribute("aria-pressed", "true");
+    }
 
+    const donchian = screen.getByRole("button", { name: /Donchian channel/ });
     fireEvent.click(donchian);
-    fireEvent.click(median);
+    expect(donchian).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(donchian);
     expect(donchian).toHaveAttribute("aria-pressed", "true");
-    expect(median).toHaveAttribute("aria-pressed", "false");
   });
 
   it("lists the days, newest first, behind a toggle", () => {
