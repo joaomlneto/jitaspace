@@ -27,7 +27,7 @@ import {
   CorporationPaletteStripe,
   CorporationPaletteSwatches,
   CorporationTickerPaletteBadge,
-  getCorporationPaletteColors,
+  getCorporationPaletteSlots,
   useCorporationPaletteVars,
 } from "~/components/CorporationPalette";
 import { MailMessageViewer } from "~/components/EveMail";
@@ -58,7 +58,8 @@ export default function Page() {
   );
   const character = useSelectedCharacter();
   const { data: corporation } = useCorporation(corporationId);
-  const paletteColors = getCorporationPaletteColors(corporation?.data.palette);
+  const paletteSlots = getCorporationPaletteSlots(corporation?.data.palette);
+  const paletteColors = paletteSlots.map(({ color }) => color);
   const hasPalette = paletteColors.length > 0;
   const paletteVars = useCorporationPaletteVars(paletteColors);
 
@@ -70,7 +71,7 @@ export default function Page() {
     <Container size="sm">
       <Stack>
         <Card withBorder radius="md" p={0} style={paletteVars}>
-          {hasPalette && <CorporationPaletteStripe colors={paletteColors} />}
+          {hasPalette && <CorporationPaletteStripe slots={paletteSlots} />}
           <Group
             gap="xl"
             px="lg"
@@ -159,7 +160,7 @@ export default function Page() {
         {paletteColors.length > 0 && (
           <Group justify="space-between">
             <Text>Colors</Text>
-            <CorporationPaletteSwatches colors={paletteColors} />
+            <CorporationPaletteSwatches slots={paletteSlots} />
           </Group>
         )}
         <Tabs

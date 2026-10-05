@@ -1,26 +1,23 @@
 import { memo } from "react";
 import { ColorSwatch, Group, Tooltip } from "@mantine/core";
 
+import type { CorporationPaletteSlot } from "./corporationPalette";
+
 export interface CorporationPaletteSwatchesProps {
-  colors: readonly string[];
+  slots: readonly CorporationPaletteSlot[];
   size?: number;
 }
 
-const LABELS = ["Main", "Secondary", "Tertiary"];
-
 /** The corporation's colours as swatches, each naming its hex value on hover. */
 export const CorporationPaletteSwatches = memo(
-  ({ colors, size = 20 }: CorporationPaletteSwatchesProps) => (
+  ({ slots, size = 20 }: CorporationPaletteSwatchesProps) => (
     <Group gap={6}>
-      {colors.map((color, index) => (
-        <Tooltip
-          key={index}
-          label={`${LABELS[index] ?? "Colour"} ${color.toLowerCase()}`}
-        >
+      {slots.map(({ role, color }) => (
+        <Tooltip key={role} label={`${role} ${color.toLowerCase()}`}>
           <ColorSwatch
             color={color}
             size={size}
-            aria-label={`${LABELS[index] ?? "Colour"} colour ${color.toLowerCase()}`}
+            aria-label={`${role} colour ${color.toLowerCase()}`}
           />
         </Tooltip>
       ))}

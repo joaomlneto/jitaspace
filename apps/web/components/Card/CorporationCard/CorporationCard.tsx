@@ -26,7 +26,7 @@ import {
   corporationPaletteClasses,
   CorporationPaletteStripe,
   CorporationTickerPaletteBadge,
-  getCorporationPaletteColors,
+  getCorporationPaletteSlots,
   useCorporationPaletteVars,
 } from "~/components/CorporationPalette";
 
@@ -66,7 +66,8 @@ export const CorporationCard = memo(
   }: CorporationCardProps) => {
     const { data: corporation } = useCorporation(Number(corporationId));
     const corporationData = corporation?.data;
-    const paletteColors = getCorporationPaletteColors(corporationData?.palette);
+    const paletteSlots = getCorporationPaletteSlots(corporationData?.palette);
+    const paletteColors = paletteSlots.map(({ color }) => color);
     const hasPalette = paletteColors.length > 0;
     const paletteVars = useCorporationPaletteVars(paletteColors);
     const description = stripHtml(corporationData?.description);
@@ -92,7 +93,7 @@ export const CorporationCard = memo(
       <Card withBorder radius="md" style={paletteVars}>
         {hasPalette && (
           <Card.Section>
-            <CorporationPaletteStripe colors={paletteColors} />
+            <CorporationPaletteStripe slots={paletteSlots} />
           </Card.Section>
         )}
         <Card.Section

@@ -11,20 +11,41 @@ export interface CorporationPalette {
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
+/** One of a corporation's palette colours, with the slot it fills. */
+export interface CorporationPaletteSlot {
+  role: "Main" | "Secondary" | "Tertiary";
+  color: string;
+}
+
+const PALETTE_SLOTS = [
+  ["Main", "main_color"],
+  ["Secondary", "secondary_color"],
+  ["Tertiary", "tertiary_color"],
+] as const;
+
 /**
- * The corporation's colours in palette order (main, secondary, tertiary),
- * keeping only well-formed `#rrggbb` values. Returns an empty array when the
- * corporation has no palette, so callers can render their unbranded layout.
+ * The corporation's colours in palette order (main, secondary, tertiary), each
+ * tagged with its slot, keeping only well-formed `#rrggbb` values. Returns an
+ * empty array when the corporation has no palette, so callers can render their
+ * unbranded layout.
  *
  * Colours are passed through as the corporation chose them — black and white
  * included — rather than adjusted for the current theme.
  */
+export const getCorporationPaletteSlots = (
+  palette?: CorporationPalette | null,
+): CorporationPaletteSlot[] =>
+  PALETTE_SLOTS.flatMap(([role, field]) => {
+    const color = palette?.[field];
+    return color !== undefined && HEX_COLOR.test(color)
+      ? [{ role, color }]
+      : [];
+  });
+
+/** {@link getCorporationPaletteSlots}, colours only. */
 export const getCorporationPaletteColors = (
   palette?: CorporationPalette | null,
-): string[] =>
-  [palette?.main_color, palette?.secondary_color, palette?.tertiary_color]
-    .filter((color): color is string => color !== undefined)
-    .filter((color) => HEX_COLOR.test(color));
+): string[] => getCorporationPaletteSlots(palette).map(({ color }) => color);
 
 /** sRGB channels in 0–1. */
 type Rgb = readonly [number, number, number];
@@ -39,7 +60,9 @@ const parseHex = (color: string): Rgb | undefined => {
     ? short.slice(1).map((digit) => digit + digit)
     : long?.slice(1);
   if (!parts) return undefined;
-  const [r = 0, g = 0, b = 0] = parts.map((part) => parseInt(part, 16) / 255);
+  const [r = 0, g = 0, b = 0] = parts.map(
+    (part) => Number.parseInt(part, 16) / 255,
+  );
   return [r, g, b];
 };
 

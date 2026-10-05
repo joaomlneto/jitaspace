@@ -3,6 +3,7 @@ import { describe, expect, it } from "@jest/globals";
 import {
   contrastRatio,
   getCorporationPaletteColors,
+  getCorporationPaletteSlots,
   getCorporationPaletteWash,
   getCorporationTickerFill,
   getPaletteTint,
@@ -50,6 +51,21 @@ describe("getCorporationPaletteColors", () => {
         tertiary_color: "#ABCDEF",
       }),
     ).toEqual(["#ABCDEF"]);
+  });
+});
+
+describe("getCorporationPaletteSlots", () => {
+  it("tags each colour with the slot it fills, even with a gap", () => {
+    expect(
+      getCorporationPaletteSlots({
+        main_color: "#0a3db0",
+        secondary_color: "not-a-colour",
+        tertiary_color: "#ed1608",
+      }),
+    ).toEqual([
+      { role: "Main", color: "#0a3db0" },
+      { role: "Tertiary", color: "#ed1608" },
+    ]);
   });
 });
 

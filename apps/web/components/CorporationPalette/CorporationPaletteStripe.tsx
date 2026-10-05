@@ -2,15 +2,17 @@ import type { BoxProps } from "@mantine/core";
 import { memo } from "react";
 import { Box } from "@mantine/core";
 
+import type { CorporationPaletteSlot } from "./corporationPalette";
+
 export type CorporationPaletteStripeProps = BoxProps & {
-  colors: readonly string[];
+  slots: readonly CorporationPaletteSlot[];
   height?: number;
 };
 
 /** A thin flag of the corporation's colours, one equal band per colour. */
 export const CorporationPaletteStripe = memo(
-  ({ colors, height = 5, ...otherProps }: CorporationPaletteStripeProps) => {
-    if (colors.length === 0) return null;
+  ({ slots, height = 5, ...otherProps }: CorporationPaletteStripeProps) => {
+    if (slots.length === 0) return null;
     return (
       <Box
         display="flex"
@@ -19,8 +21,8 @@ export const CorporationPaletteStripe = memo(
         data-testid="corporation-palette-stripe"
         {...otherProps}
       >
-        {colors.map((color, index) => (
-          <Box key={index} flex={1} bg={color} />
+        {slots.map(({ role, color }) => (
+          <Box key={role} flex={1} bg={color} />
         ))}
       </Box>
     );
