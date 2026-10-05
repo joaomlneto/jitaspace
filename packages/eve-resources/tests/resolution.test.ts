@@ -108,21 +108,22 @@ describe("providers and servers", () => {
 
 describe("url helpers", () => {
   it("builds resource and binaries URLs from a hashed relative path", () => {
-    expect(resourceUrl("ab/abcd_ef")).toBe(
+    expect(resourceUrl("ab/abcd_ef", "tranquility")).toBe(
       "https://resources.eveonline.com/ab/abcd_ef",
     );
-    expect(binariesUrl("ab/abcd_ef")).toBe(
+    expect(binariesUrl("ab/abcd_ef", "tranquility")).toBe(
       "https://binaries.eveonline.com/ab/abcd_ef",
     );
   });
 
-  it("defaults to Tranquility (CCP) when no server is given", () => {
-    expect(resourceUrl("ab/abcd_ef")).toBe(
-      resourceUrl("ab/abcd_ef", "tranquility"),
-    );
-    expect(binariesUrl("ab/abcd_ef")).toBe(
-      binariesUrl("ab/abcd_ef", "tranquility"),
-    );
+  it("has no Tranquility default: the server is required", () => {
+    // A NetEase-only file 404s on CCP's hosts, so a caller that forgot the
+    // server must not silently get a CCP URL. `tsc` checks these directives:
+    // if a default came back, the unused @ts-expect-error would fail it.
+    // @ts-expect-error -- server is required
+    expect(() => resourceUrl("ab/abcd_ef")).toThrow(TypeError);
+    // @ts-expect-error -- server is required
+    expect(() => binariesUrl("ab/abcd_ef")).toThrow(TypeError);
   });
 
   it("resolves NetEase (EVE China) URLs against the ma79 hosts", () => {

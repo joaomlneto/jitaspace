@@ -21,7 +21,7 @@ export interface BuildInfo {
  * Network-bound; intended for server/CLI use (the CDN sends no CORS headers).
  */
 export async function getCurrentBuild(
-  server: EveServer = "tranquility",
+  server: EveServer,
   fetchImpl: typeof fetch = fetch,
 ): Promise<BuildInfo> {
   const url =

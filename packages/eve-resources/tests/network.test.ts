@@ -70,7 +70,7 @@ describe("app + resfile index resolution", () => {
 
   it("fetchAppIndex parses the app index for a build", async () => {
     const fetchImpl = mockFetch({ [APP_INDEX]: { body: appIndexBody } });
-    const entries = await fetchAppIndex("100", fetchImpl);
+    const entries = await fetchAppIndex("tranquility", "100", fetchImpl);
     expect(entries.map((e) => e.path)).toEqual([
       "app:/resfileindex.txt",
       "app:/start.ini",
@@ -82,7 +82,7 @@ describe("app + resfile index resolution", () => {
       [APP_INDEX]: { body: appIndexBody },
       "https://binaries.eveonline.com/rf/hash_a": { body: resfileBody },
     });
-    const entries = await fetchResfileIndex("100", fetchImpl);
+    const entries = await fetchResfileIndex("tranquility", "100", fetchImpl);
     expect(entries.map((e) => e.path)).toEqual([
       "res:/a.txt",
       "res:/staticdata/b.static",
@@ -93,9 +93,9 @@ describe("app + resfile index resolution", () => {
     const fetchImpl = mockFetch({
       [APP_INDEX]: { body: "app:/start.ini,cc/hash_b,md5,30,9,33188" },
     });
-    await expect(fetchResfileIndex("100", fetchImpl)).rejects.toThrow(
-      /does not contain app:\/resfileindex\.txt/,
-    );
+    await expect(
+      fetchResfileIndex("tranquility", "100", fetchImpl),
+    ).rejects.toThrow(/does not contain app:\/resfileindex\.txt/);
   });
 
   it("fetchResourceIndex chains build → app index → resfile index", async () => {
@@ -132,7 +132,12 @@ describe("platform-aware index resolution", () => {
 
   it("fetchAppIndex fetches the macOS app index for the macos platform", async () => {
     const fetchImpl = mockFetch({ [MACOS_APP_INDEX]: { body: macAppIndex } });
-    const entries = await fetchAppIndex("100", fetchImpl, "macos");
+    const entries = await fetchAppIndex(
+      "tranquility",
+      "100",
+      fetchImpl,
+      "macos",
+    );
     expect(entries.map((e) => e.path)).toEqual([MACOS_BASE, MACOS_OVERLAY]);
   });
 
@@ -142,7 +147,12 @@ describe("platform-aware index resolution", () => {
       "https://binaries.eveonline.com/rf/base": { body: baseBody },
       "https://binaries.eveonline.com/rf/win": { body: winOverlayBody },
     });
-    const entries = await fetchResfileIndex("100", fetchImpl, "windows");
+    const entries = await fetchResfileIndex(
+      "tranquility",
+      "100",
+      fetchImpl,
+      "windows",
+    );
     expect(entries.map((e) => e.path)).toEqual([
       "res:/shared.txt",
       "res:/graphics/effect.dx11/x.sm_hi",
@@ -155,7 +165,12 @@ describe("platform-aware index resolution", () => {
       "https://binaries.eveonline.com/mac/base": { body: baseBody },
       "https://binaries.eveonline.com/mac/overlay": { body: macOverlayBody },
     });
-    const entries = await fetchResfileIndex("100", fetchImpl, "macos");
+    const entries = await fetchResfileIndex(
+      "tranquility",
+      "100",
+      fetchImpl,
+      "macos",
+    );
     expect(entries.map((e) => e.path)).toEqual([
       "res:/shared.txt",
       "res:/graphics/effect.metal/x.sm_hi",
@@ -168,7 +183,7 @@ describe("platform-aware index resolution", () => {
       "https://binaries.eveonline.com/rf/base": { body: baseBody },
       "https://binaries.eveonline.com/rf/win": { body: winOverlayBody },
     });
-    const entries = await fetchResfileIndex("100", fetchImpl);
+    const entries = await fetchResfileIndex("tranquility", "100", fetchImpl);
     expect(entries.map((e) => e.path)).toEqual(["res:/shared.txt"]);
   });
 });
@@ -182,7 +197,9 @@ describe("entryUrl", () => {
       size: 1,
       compressedSize: 1,
     };
-    expect(entryUrl(entry)).toBe("https://resources.eveonline.com/a/1");
+    expect(entryUrl(entry, "tranquility")).toBe(
+      "https://resources.eveonline.com/a/1",
+    );
   });
 
   it("routes app:/ entries to the binaries host", () => {
@@ -193,7 +210,9 @@ describe("entryUrl", () => {
       size: 1,
       compressedSize: 1,
     };
-    expect(entryUrl(entry)).toBe("https://binaries.eveonline.com/b/2");
+    expect(entryUrl(entry, "tranquility")).toBe(
+      "https://binaries.eveonline.com/b/2",
+    );
   });
 });
 
@@ -211,6 +230,7 @@ describe("fetchResourceBytes", () => {
     const payload = new TextEncoder().encode("plain bytes");
     const bytes = await fetchResourceBytes(
       entry,
+      "tranquility",
       mockFetch({ [url]: { body: payload } }),
     );
     expect(new TextDecoder().decode(bytes)).toBe("plain bytes");
@@ -222,6 +242,7 @@ describe("fetchResourceBytes", () => {
     expect(gz[0]).toBe(0x1f); // sanity: real gzip magic
     const bytes = await fetchResourceBytes(
       entry,
+      "tranquility",
       mockFetch({ [url]: { body: gz } }),
     );
     expect(new TextDecoder().decode(bytes)).toBe("compressed payload");
@@ -229,7 +250,11 @@ describe("fetchResourceBytes", () => {
 
   it("throws on a non-OK upstream response", async () => {
     await expect(
-      fetchResourceBytes(entry, mockFetch({ [url]: { status: 500 } })),
+      fetchResourceBytes(
+        entry,
+        "tranquility",
+        mockFetch({ [url]: { status: 500 } }),
+      ),
     ).rejects.toThrow(/HTTP 500/);
   });
 });
@@ -264,10 +289,10 @@ describe("NetEase (EVE China) server resolution", () => {
   it("fetchAppIndex reads the app index from the aliyuncs host", async () => {
     const fetchImpl = mockFetch({ [SER_APP_INDEX]: { body: appIndexBody } });
     const entries = await fetchAppIndex(
+      "serenity",
       "100",
       fetchImpl,
       "windows",
-      "serenity",
     );
     expect(entries.map((e) => e.path)).toEqual([
       "app:/resfileindex.txt",
@@ -282,12 +307,7 @@ describe("NetEase (EVE China) server resolution", () => {
       // NOT the aliyuncs index host — the split this asserts.
       [`${MA79_BIN}rf/hash_a`]: { body: resfileBody },
     });
-    const entries = await fetchResfileIndex(
-      "100",
-      fetchImpl,
-      undefined,
-      "serenity",
-    );
+    const entries = await fetchResfileIndex("serenity", "100", fetchImpl);
     expect(entries.map((e) => e.path)).toEqual(["res:/a.txt"]);
   });
 
@@ -330,8 +350,8 @@ describe("NetEase (EVE China) server resolution", () => {
     const payload = new TextEncoder().encode("china bytes");
     const bytes = await fetchResourceBytes(
       res,
-      mockFetch({ [`${MA79_RES}a/1`]: { body: payload } }),
       "serenity",
+      mockFetch({ [`${MA79_RES}a/1`]: { body: payload } }),
     );
     expect(new TextDecoder().decode(bytes)).toBe("china bytes");
   });
@@ -370,14 +390,14 @@ describe("fetchResourceHead", () => {
       [4, 5, 6],
       [7, 8, 9],
     ]);
-    const head = await fetchResourceHead(entry, 4, fetchImpl);
+    const head = await fetchResourceHead(entry, "tranquility", 4, fetchImpl);
     expect([...head]).toEqual([1, 2, 3, 4]);
     expect(aborted()).toBe(true);
   });
 
   it("returns the whole body when it is shorter than maxBytes", async () => {
     const { fetchImpl } = streaming([[1, 2]]);
-    const head = await fetchResourceHead(entry, 10, fetchImpl);
+    const head = await fetchResourceHead(entry, "tranquility", 10, fetchImpl);
     expect([...head]).toEqual([1, 2]);
   });
 
@@ -389,15 +409,15 @@ describe("fetchResourceHead", () => {
         body: null,
         arrayBuffer: () => Promise.resolve(new Uint8Array([1, 2, 3, 4]).buffer),
       } as unknown as Response)) as typeof fetch;
-    const head = await fetchResourceHead(entry, 3, fetchImpl);
+    const head = await fetchResourceHead(entry, "tranquility", 3, fetchImpl);
     expect([...head]).toEqual([1, 2, 3]);
   });
 
   it("throws on a non-OK response", async () => {
     const fetchImpl = mockFetch({ [URL_]: { status: 404 } });
-    await expect(fetchResourceHead(entry, 4, fetchImpl)).rejects.toThrow(
-      /HTTP 404/,
-    );
+    await expect(
+      fetchResourceHead(entry, "tranquility", 4, fetchImpl),
+    ).rejects.toThrow(/HTTP 404/);
   });
 });
 
@@ -441,9 +461,9 @@ describe("index resolution failures", () => {
 
   it("fetchAppIndex throws on a non-OK response", async () => {
     const fetchImpl = mockFetch({ [APP_INDEX]: { status: 404 } });
-    await expect(fetchAppIndex("100", fetchImpl)).rejects.toThrow(
-      /Failed to fetch EVE app index .*HTTP 404/,
-    );
+    await expect(
+      fetchAppIndex("tranquility", "100", fetchImpl),
+    ).rejects.toThrow(/Failed to fetch EVE app index .*HTTP 404/);
   });
 
   it("fetchResfileIndex throws when the resfile index itself fails", async () => {
@@ -451,9 +471,9 @@ describe("index resolution failures", () => {
       [APP_INDEX]: { body: appIndexBody },
       "https://binaries.eveonline.com/rf/hash_a": { status: 503 },
     });
-    await expect(fetchResfileIndex("100", fetchImpl)).rejects.toThrow(
-      /Failed to fetch app:\/resfileindex\.txt .*HTTP 503/,
-    );
+    await expect(
+      fetchResfileIndex("tranquility", "100", fetchImpl),
+    ).rejects.toThrow(/Failed to fetch app:\/resfileindex\.txt .*HTTP 503/);
   });
 
   it("fetchResfileIndex returns the base set when the platform overlay is absent", async () => {
@@ -463,7 +483,12 @@ describe("index resolution failures", () => {
         body: "res:/a.txt,a/1,m,10,5",
       },
     });
-    const entries = await fetchResfileIndex("100", fetchImpl, "windows");
+    const entries = await fetchResfileIndex(
+      "tranquility",
+      "100",
+      fetchImpl,
+      "windows",
+    );
     expect(entries.map((e) => e.path)).toEqual(["res:/a.txt"]);
   });
 });
@@ -492,20 +517,22 @@ describe("network helpers default to the global fetch and Tranquility", () => {
 
   it("getCurrentBuild", async () => {
     stubGlobalFetch();
-    await expect(getCurrentBuild()).resolves.toMatchObject({ build: "100" });
+    await expect(getCurrentBuild("tranquility")).resolves.toMatchObject({
+      build: "100",
+    });
   });
 
   it("fetchAppIndex and fetchResfileIndex", async () => {
     stubGlobalFetch();
-    expect(await fetchAppIndex("100")).toHaveLength(1);
-    expect((await fetchResfileIndex("100")).map((e) => e.path)).toEqual([
-      "res:/a.txt",
-    ]);
+    expect(await fetchAppIndex("tranquility", "100")).toHaveLength(1);
+    expect(
+      (await fetchResfileIndex("tranquility", "100")).map((e) => e.path),
+    ).toEqual(["res:/a.txt"]);
   });
 
   it("fetchResourceIndex", async () => {
     stubGlobalFetch();
-    await expect(fetchResourceIndex()).resolves.toMatchObject({
+    await expect(fetchResourceIndex("tranquility")).resolves.toMatchObject({
       server: "tranquility",
       build: "100",
     });
@@ -513,12 +540,14 @@ describe("network helpers default to the global fetch and Tranquility", () => {
 
   it("fetchResourceBytes and fetchResourceHead", async () => {
     stubGlobalFetch();
-    expect(new TextDecoder().decode(await fetchResourceBytes(entry))).toBe(
-      "hi",
-    );
-    expect(new TextDecoder().decode(await fetchResourceHead(entry, 1))).toBe(
-      "h",
-    );
+    expect(
+      new TextDecoder().decode(await fetchResourceBytes(entry, "tranquility")),
+    ).toBe("hi");
+    expect(
+      new TextDecoder().decode(
+        await fetchResourceHead(entry, "tranquility", 1),
+      ),
+    ).toBe("h");
   });
 
   it("fetchBuildDate", async () => {
@@ -567,7 +596,7 @@ describe("review hardening", () => {
     const { fetchImpl, pulls } = endless(() => {
       cancelled = true;
     });
-    const head = await fetchResourceHead(entry, 4, fetchImpl);
+    const head = await fetchResourceHead(entry, "tranquility", 4, fetchImpl);
     expect([...head]).toEqual([1, 1, 1, 2]);
     expect(cancelled).toBe(true);
     const pullsAtReturn = pulls();
@@ -579,7 +608,7 @@ describe("review hardening", () => {
     const { fetchImpl } = endless(() => {
       throw new Error("cancel failed");
     });
-    const head = await fetchResourceHead(entry, 2, fetchImpl);
+    const head = await fetchResourceHead(entry, "tranquility", 2, fetchImpl);
     expect([...head]).toEqual([1, 1]);
   });
 
@@ -587,7 +616,12 @@ describe("review hardening", () => {
     "fetchResourceHead(maxBytes=%s) returns nothing without a request",
     async (maxBytes) => {
       const fetchImpl = jest.fn<typeof fetch>();
-      const head = await fetchResourceHead(entry, maxBytes, fetchImpl);
+      const head = await fetchResourceHead(
+        entry,
+        "tranquility",
+        maxBytes,
+        fetchImpl,
+      );
       expect(head).toHaveLength(0);
       expect(fetchImpl).not.toHaveBeenCalled();
     },
@@ -597,18 +631,18 @@ describe("review hardening", () => {
     const fetchImpl = mockFetch({
       [URL_]: { body: new Uint8Array([1, 2, 3]) },
     });
-    expect([...(await fetchResourceHead(entry, 2.9, fetchImpl))]).toEqual([
-      1, 2,
-    ]);
+    expect([
+      ...(await fetchResourceHead(entry, "tranquility", 2.9, fetchImpl)),
+    ]).toEqual([1, 2]);
   });
 
   it("fetchResourceBytes names the resource when a gzip-looking body is corrupt", async () => {
     const fetchImpl = mockFetch({
       [URL_]: { body: new Uint8Array([0x1f, 0x8b, 0, 1, 2, 3]) },
     });
-    await expect(fetchResourceBytes(entry, fetchImpl)).rejects.toThrow(
-      `Failed to gunzip ${URL_}`,
-    );
+    await expect(
+      fetchResourceBytes(entry, "tranquility", fetchImpl),
+    ).rejects.toThrow(`Failed to gunzip ${URL_}`);
   });
 
   it("fetchBuildDate returns null for a non-OK response even with Last-Modified", async () => {

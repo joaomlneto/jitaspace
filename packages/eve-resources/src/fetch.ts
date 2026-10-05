@@ -6,12 +6,11 @@ import { binariesUrl, resourceUrl } from "./url";
 /**
  * CDN URL for an entry's bytes. `app:/` files (game binaries, the index files)
  * live on the operating provider's binaries host; everything else
- * (`res:/`) on its resources host. `server` defaults to Tranquility (CCP).
+ * (`res:/`) on its resources host. `server` must be the server whose index the
+ * entry came from: it has no default, because a file that exists only on the
+ * NetEase clusters 404s on CCP's hosts.
  */
-export function entryUrl(
-  entry: ResourceEntry,
-  server: EveServer = "tranquility",
-): string {
+export function entryUrl(entry: ResourceEntry, server: EveServer): string {
   return entry.path.startsWith("app:/")
     ? binariesUrl(entry.relPath, server)
     : resourceUrl(entry.relPath, server);
@@ -24,8 +23,8 @@ export function entryUrl(
  */
 export async function fetchResourceBytes(
   entry: ResourceEntry,
+  server: EveServer,
   fetchImpl: typeof fetch = fetch,
-  server: EveServer = "tranquility",
 ): Promise<Uint8Array> {
   const url = entryUrl(entry, server);
   const response = await fetchImpl(url);
@@ -47,9 +46,9 @@ export async function fetchResourceBytes(
  */
 export async function fetchResourceHead(
   entry: ResourceEntry,
+  server: EveServer,
   maxBytes: number,
   fetchImpl: typeof fetch = fetch,
-  server: EveServer = "tranquility",
 ): Promise<Uint8Array> {
   const limit = maxBytes > 0 ? Math.floor(maxBytes) : 0;
   if (limit === 0) return new Uint8Array(0);

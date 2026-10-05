@@ -15,14 +15,14 @@ import { binariesUrl } from "./url";
  *
  * Each platform has its own app index (`eveonline_<build>.txt` for Windows,
  * `eveonlinemacOS_<build>.txt` for macOS); see {@link PLATFORM_LAYOUT}. The
- * `server` selects the operating provider's index host (CCP vs NetEase); it
- * defaults to Tranquility.
+ * `server` selects the operating provider's index host (CCP vs NetEase), and
+ * must be the server `build` came from: build numbers are per server.
  */
 export async function fetchAppIndex(
+  server: EveServer,
   build: string,
   fetchImpl: typeof fetch = fetch,
   platform: EvePlatform = DEFAULT_PLATFORM,
-  server: EveServer = "tranquility",
 ): Promise<ResourceEntry[]> {
   const url = `${serverEndpoints(server).indexBaseUrl}${PLATFORM_LAYOUT[platform].appIndexPrefix}${build}.txt`;
   const response = await fetchImpl(url);
@@ -47,17 +47,17 @@ export async function fetchAppIndex(
  * `app:/` file host the resfile indexes themselves are fetched from).
  */
 export async function fetchResfileIndex(
+  server: EveServer,
   build: string,
   fetchImpl: typeof fetch = fetch,
   platform?: EvePlatform,
-  server: EveServer = "tranquility",
 ): Promise<ResourceEntry[]> {
   const layout = PLATFORM_LAYOUT[platform ?? DEFAULT_PLATFORM];
   const appIndex = await fetchAppIndex(
+    server,
     build,
     fetchImpl,
     platform ?? DEFAULT_PLATFORM,
-    server,
   );
 
   const fetchIndexFile = async (
@@ -97,10 +97,10 @@ export async function fetchResfileIndex(
  * current build → app index → resfile index.
  */
 export async function fetchResourceIndex(
-  server: EveServer = "tranquility",
+  server: EveServer,
   fetchImpl: typeof fetch = fetch,
 ): Promise<ResourceIndex> {
   const { build } = await getCurrentBuild(server, fetchImpl);
-  const entries = await fetchResfileIndex(build, fetchImpl, undefined, server);
+  const entries = await fetchResfileIndex(server, build, fetchImpl);
   return { server, build, entries };
 }

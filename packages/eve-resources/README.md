@@ -20,8 +20,8 @@ EVE's CDN is content-addressed by a hashed path. Resolution is a chain:
    the ~120k `res:/` assets. CSV: `res:/path,<hashedRelPath>,<md5>,<size>,<compressedSize>`
 4. **Files** — `res:/` assets are served from `https://resources.eveonline.com/<hashedRelPath>`
    and `app:/` files from `https://binaries.eveonline.com/<hashedRelPath>`.
-   `entryUrl(entry)` / `fetchResourceBytes(entry)` pick the host from the
-   entry's scheme.
+   `entryUrl(entry, server)` / `fetchResourceBytes(entry, server)` pick the
+   host from the entry's scheme and the server's operator.
 
 > The CDN sends files gzip-compressed in transit (`Content-Encoding: gzip`,
 > so the wire size is the index's `compressedSize`), which `fetch` undoes
@@ -32,6 +32,11 @@ Each platform has its own app index (`eveonline_` for Windows,
 `eveonlinemacOS_` for macOS — see `PLATFORM_LAYOUT`), and the Chinese clusters
 (Serenity, Infinity) resolve the same way from NetEase's hosts
 (`PROVIDER_ENDPOINTS`).
+
+Every network and URL helper takes the server explicitly; none defaults to
+Tranquility. Build numbers are per server, and the Chinese clusters ship
+thousands of files that do not exist on CCP's hosts, so pass the server whose
+index an entry came from (`ResourceIndex.server`).
 
 `KNOWN_BUILDS` lists the historical Tranquility and Singularity builds, with
 dates in `BUILD_DATES` and, for builds since April 2023, timestamps in
@@ -57,7 +62,7 @@ const { build, entries } = await fetchResourceIndex("tranquility");
 const icon = entries.find(
   (e) => e.path === "res:/ui/texture/icons/7_64_15.png",
 );
-const url = icon && resourceUrl(icon.relPath);
+const url = icon && resourceUrl(icon.relPath, "tranquility");
 
 // …or navigate the tree lazily, one directory at a time.
 const tree = buildTreeIndex(entries);
@@ -65,7 +70,7 @@ const { directories, files } = listChildren(tree, "res:/ui/");
 
 // Fetch a file's bytes, with its MIME type from the extension.
 const entry = tree.byPath.get("res:/videocardcategories.yaml")!;
-const bytes = await fetchResourceBytes(entry);
+const bytes = await fetchResourceBytes(entry, "tranquility");
 const { mimeType } = classifyResourcePath(entry.path);
 ```
 
