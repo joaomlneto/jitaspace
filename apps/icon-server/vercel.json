@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm dlx turbo run build --filter=@jitaspace/icon-server",
+  "installCommand": "cd ../.. && pnpm install --filter @jitaspace/icon-server... --config.enablePrePostScripts=false",
+  "framework": null
+}
