@@ -30,6 +30,7 @@ import { DataTable } from "~/components/DataTable";
 import { StatCard } from "~/components/EntityPage";
 import { BooleanBadge, MissionKindBadge } from "~/components/Missions";
 import {
+  formatExpiration,
   formatMinutes,
   ISK_TYPE_ID,
   MISSION_KIND_LABELS,
@@ -255,9 +256,7 @@ const columns: DataTableColumn<MissionTableRow>[] = [
     cell: (row) =>
       row.expirationTime === undefined
         ? null
-        : row.expirationTime === 0
-          ? "Never"
-          : formatMinutes(row.expirationTime),
+        : formatExpiration(row.expirationTime),
   },
   {
     id: "standings",

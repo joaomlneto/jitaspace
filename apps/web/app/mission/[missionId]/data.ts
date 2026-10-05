@@ -142,6 +142,99 @@ const typeQuantity = (
   return type ? { type, quantity } : null;
 };
 
+/** `map.get(id)`, or `null` for a missing id or entry. */
+const pick = <V>(map: Map<number, V>, id: number | null | undefined) =>
+  id == null ? null : (map.get(id) ?? null);
+
+/** The item a mission asks for: the kill block's, or the courier block's. */
+function objectiveOf(
+  row: {
+    killObjectiveTypeId: number | null;
+    killObjectiveQuantity: number | null;
+    courierObjectiveTypeId: number | null;
+    courierObjectiveQuantity: number | null;
+  },
+  kind: MissionKind,
+  types: Map<number, TypeRef>,
+): TypeQuantity | null {
+  return kind === "kill"
+    ? typeQuantity(types, row.killObjectiveTypeId, row.killObjectiveQuantity)
+    : typeQuantity(
+        types,
+        row.courierObjectiveTypeId,
+        row.courierObjectiveQuantity,
+      );
+}
+
+/**
+ * What a mission's placeholders can be filled in with, as far as the SDE
+ * knows. The game resolves the rest (locations, the pilot) from the live offer.
+ */
+function missionTextValues(known: {
+  objective: TypeQuantity | null;
+  reward: TypeQuantity | null;
+  corporation: CorporationRef | null;
+  faction: FactionRef | null;
+  agent: AgentRef | null;
+}): MissionTextValues {
+  const { objective, reward, corporation, faction, agent } = known;
+  const entries: [string, string | number | null | undefined][] = [
+    ["objectiveTypeID", objective?.type.name],
+    ["objectiveQuantity", objective?.quantity],
+    ["rewardTypeID", reward?.type.name],
+    ["rewardQuantity", reward?.quantity],
+    ["agentCorpID", corporation?.name],
+    ["agentFactionID", faction?.name],
+    ["agentID", agent?.name],
+    ["agentStationID", agent?.stationName],
+    ["agentSolarSystemID", agent?.solarSystemName],
+    ["agentConstellationID", agent?.constellationName],
+    ["agentRegionID", agent?.regionName],
+  ];
+  const values: MissionTextValues = {};
+  for (const [key, value] of entries) if (value != null) values[key] = value;
+  return values;
+}
+
+/**
+ * The epic arcs a mission belongs to: each arc, every step of it, and the
+ * steps' journal chapter titles. Nothing to read for the many missions in no arc.
+ */
+async function readEpicArcs(epicArcIds: number[]) {
+  if (epicArcIds.length === 0) {
+    return { arcs: [], arcSteps: [], chapterTitles: [] };
+  }
+  const [arcs, arcSteps] = await Promise.all([
+    prisma.epicArc.findMany({
+      where: { epicArcId: { in: epicArcIds }, isDeleted: false },
+      orderBy: { epicArcId: "asc" },
+    }),
+    prisma.epicArcMission.findMany({
+      select: {
+        epicArcId: true,
+        missionId: true,
+        agentId: true,
+        failMissionId: true,
+        mission: { select: { name: true } },
+        nextMissions: {
+          select: { nextMissionId: true },
+          where: { isDeleted: false },
+        },
+      },
+      where: { epicArcId: { in: epicArcIds }, isDeleted: false },
+    }),
+  ]);
+  const chapterTitles = await prisma.missionMessage.findMany({
+    select: { missionId: true, text: true },
+    where: {
+      missionId: { in: arcSteps.map((step) => step.missionId) },
+      key: CHAPTER_TITLE_KEY,
+      isDeleted: false,
+    },
+  });
+  return { arcs, arcSteps, chapterTitles };
+}
+
 /**
  * Everything about one mission, or `null` when there is no such mission.
  *
@@ -174,73 +267,40 @@ export async function getMission(
   });
   if (mission === null || mission.isDeleted) return null;
 
-  const epicArcIds = mission.epicArcMissions.map((step) => step.epicArcId);
-  const [arcs, arcSteps, variantRows, dungeonMissionCount] = await Promise.all([
-    epicArcIds.length
-      ? prisma.epicArc.findMany({
-          where: { epicArcId: { in: epicArcIds }, isDeleted: false },
-          orderBy: { epicArcId: "asc" },
-        })
-      : Promise.resolve([]),
-    epicArcIds.length
-      ? prisma.epicArcMission.findMany({
-          select: {
-            epicArcId: true,
-            missionId: true,
-            agentId: true,
-            failMissionId: true,
-            mission: { select: { name: true } },
-            nextMissions: {
-              select: { nextMissionId: true },
-              where: { isDeleted: false },
-            },
-          },
-          where: { epicArcId: { in: epicArcIds }, isDeleted: false },
-        })
-      : Promise.resolve([]),
-    prisma.mission.findMany({
-      select: {
-        missionId: true,
-        factionId: true,
-        corporationId: true,
-        killDungeonId: true,
-        killObjectiveTypeId: true,
-        killObjectiveQuantity: true,
-        killDropItemInMissionContainerTypeId: true,
-        courierObjectiveTypeId: true,
-        courierObjectiveQuantity: true,
-        rewardTypeId: true,
-        rewardQuantity: true,
-      },
-      where: {
-        name: mission.name,
-        missionId: { not: missionId },
-        isDeleted: false,
-      },
-      orderBy: { missionId: "asc" },
-    }),
-    mission.killDungeonId === null
-      ? Promise.resolve(0)
-      : prisma.mission.count({
-          where: {
-            killDungeonId: mission.killDungeonId,
-            missionId: { not: missionId },
-            isDeleted: false,
-          },
-        }),
-  ]);
-
-  const arcMissionIds = arcSteps.map((step) => step.missionId);
-  const chapterTitles = arcMissionIds.length
-    ? await prisma.missionMessage.findMany({
-        select: { missionId: true, text: true },
+  const [{ arcs, arcSteps, chapterTitles }, variantRows, dungeonMissionCount] =
+    await Promise.all([
+      readEpicArcs(mission.epicArcMissions.map((step) => step.epicArcId)),
+      prisma.mission.findMany({
+        select: {
+          missionId: true,
+          factionId: true,
+          corporationId: true,
+          killDungeonId: true,
+          killObjectiveTypeId: true,
+          killObjectiveQuantity: true,
+          killDropItemInMissionContainerTypeId: true,
+          courierObjectiveTypeId: true,
+          courierObjectiveQuantity: true,
+          rewardTypeId: true,
+          rewardQuantity: true,
+        },
         where: {
-          missionId: { in: arcMissionIds },
-          key: CHAPTER_TITLE_KEY,
+          name: mission.name,
+          missionId: { not: missionId },
           isDeleted: false,
         },
-      })
-    : [];
+        orderBy: { missionId: "asc" },
+      }),
+      mission.killDungeonId === null
+        ? Promise.resolve(0)
+        : prisma.mission.count({
+            where: {
+              killDungeonId: mission.killDungeonId,
+              missionId: { not: missionId },
+              isDeleted: false,
+            },
+          }),
+    ]);
 
   // The offering agent: only when every arc this mission is in names the same
   // one, so the page never puts words in the wrong agent's mouth.
@@ -273,22 +333,15 @@ export async function getMission(
           where: { agentTypeId: mission.agentTypeId },
         }),
   ]);
-  const offeringAgent =
-    offeringAgentId === null ? null : (agents.get(offeringAgentId) ?? null);
+  const offeringAgent = pick(agents, offeringAgentId);
 
   const corporations = await readCorporationRefs([
     mission.corporationId,
     offeringAgent?.corporationId,
     ...variantRows.map((v) => v.corporationId),
   ]);
-  const corporation =
-    mission.corporationId === null
-      ? null
-      : (corporations.get(mission.corporationId) ?? null);
-  const agentCorporation =
-    offeringAgent?.corporationId == null
-      ? null
-      : (corporations.get(offeringAgent.corporationId) ?? null);
+  const corporation = pick(corporations, mission.corporationId);
+  const agentCorporation = pick(corporations, offeringAgent?.corporationId);
 
   const factions = await readFactionRefs([
     mission.factionId,
@@ -298,50 +351,23 @@ export async function getMission(
     ...arcs.map((arc) => arc.factionId),
     ...variantRows.map((v) => v.factionId),
   ]);
-  const factionRef = (id: number | null | undefined) =>
-    id == null ? null : (factions.get(id) ?? null);
+  const factionRef = (id: number | null | undefined) => pick(factions, id);
 
   const kind = missionKind(mission);
-  const objective =
-    kind === "kill"
-      ? typeQuantity(
-          types,
-          mission.killObjectiveTypeId,
-          mission.killObjectiveQuantity,
-        )
-      : typeQuantity(
-          types,
-          mission.courierObjectiveTypeId,
-          mission.courierObjectiveQuantity,
-        );
+  const objective = objectiveOf(mission, kind, types);
   const reward = typeQuantity(
     types,
     mission.rewardTypeId,
     mission.rewardQuantity,
   );
 
-  // What the messages' placeholders can be filled in with. The game resolves
-  // the rest (locations, the pilot) from the live offer.
+  // Who hands the mission out: its own corporation and faction, else its
+  // offering agent's, else its epic arc's.
   const issuerCorporation = corporation ?? agentCorporation;
   const issuerFaction =
     factionRef(mission.factionId) ??
     factionRef(issuerCorporation?.factionId) ??
     factionRef(arcs[0]?.factionId);
-  const textValues: MissionTextValues = {};
-  const setValue = (key: string, value: string | number | null | undefined) => {
-    if (value != null) textValues[key] = value;
-  };
-  setValue("objectiveTypeID", objective?.type.name);
-  setValue("objectiveQuantity", objective?.quantity);
-  setValue("rewardTypeID", reward?.type.name);
-  setValue("rewardQuantity", reward?.quantity);
-  setValue("agentCorpID", issuerCorporation?.name);
-  setValue("agentFactionID", issuerFaction?.name);
-  setValue("agentID", offeringAgent?.name);
-  setValue("agentStationID", offeringAgent?.stationName);
-  setValue("agentSolarSystemID", offeringAgent?.solarSystemName);
-  setValue("agentConstellationID", offeringAgent?.constellationName);
-  setValue("agentRegionID", offeringAgent?.regionName);
 
   const chapterTitleOf = new Map(
     chapterTitles.map((row) => [row.missionId, row.text]),
@@ -372,17 +398,10 @@ export async function getMission(
     kill:
       kind === "kill"
         ? {
-            dungeon:
-              mission.killDungeonId === null
-                ? null
-                : (dungeons.get(mission.killDungeonId) ?? null),
+            dungeon: pick(dungeons, mission.killDungeonId),
             objective,
             objectiveQuantity: mission.killObjectiveQuantity,
-            dropItem:
-              mission.killDropItemInMissionContainerTypeId === null
-                ? null
-                : (types.get(mission.killDropItemInMissionContainerTypeId) ??
-                  null),
+            dropItem: pick(types, mission.killDropItemInMissionContainerTypeId),
           }
         : null,
     courier:
@@ -405,7 +424,13 @@ export async function getMission(
     messages: mission.messages.toSorted(
       (a, b) => missionMessageRank(a.key) - missionMessageRank(b.key),
     ),
-    textValues,
+    textValues: missionTextValues({
+      objective,
+      reward,
+      corporation: issuerCorporation,
+      faction: issuerFaction,
+      agent: offeringAgent,
+    }),
     agent: offeringAgent,
     epicArcs: arcs.map((arc) => ({
       epicArcId: arc.epicArcId,
@@ -420,8 +445,7 @@ export async function getMission(
             missionId: step.missionId,
             name: step.mission.name,
             chapterTitle: chapterTitleOf.get(step.missionId) ?? null,
-            agent:
-              step.agentId === null ? null : (agents.get(step.agentId) ?? null),
+            agent: pick(agents, step.agentId),
             failMissionId: step.failMissionId,
             nextMissionIds: step.nextMissions
               .map((next) => next.nextMissionId)
@@ -436,23 +460,9 @@ export async function getMission(
         missionId: variant.missionId,
         kind: variantKind,
         faction: factionRef(variant.factionId),
-        corporation:
-          variant.corporationId === null
-            ? null
-            : (corporations.get(variant.corporationId) ?? null),
+        corporation: pick(corporations, variant.corporationId),
         dungeonId: variant.killDungeonId,
-        objective:
-          variantKind === "kill"
-            ? typeQuantity(
-                types,
-                variant.killObjectiveTypeId,
-                variant.killObjectiveQuantity,
-              )
-            : typeQuantity(
-                types,
-                variant.courierObjectiveTypeId,
-                variant.courierObjectiveQuantity,
-              ),
+        objective: objectiveOf(variant, variantKind, types),
         reward: typeQuantity(
           types,
           variant.rewardTypeId,

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import Link from "next/link";
 import {
   Alert,
@@ -46,8 +46,8 @@ import {
 } from "@jitaspace/ui";
 
 import type { MissionDetail, MissionEpicArc, MissionVariant } from "./data";
-import type { CorporationRef, FactionRef } from "~/lib/missionRefs";
-import type { MissionTextValues } from "~/lib/missions";
+import type { CorporationRef, FactionRef, TypeRef } from "~/lib/missionRefs";
+import type { MissionMessageSpeaker, MissionTextValues } from "~/lib/missions";
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
@@ -60,6 +60,7 @@ import {
   TypeRefLabel,
 } from "~/components/Missions";
 import {
+  formatExpiration,
   formatMinutes,
   ISK_TYPE_ID,
   MISSION_KIND_LABELS,
@@ -107,11 +108,6 @@ function DungeonLabel({
   );
 }
 
-const formatExpiration = (minutes: number | null) => {
-  if (minutes === null) return notAvailableText;
-  return minutes === 0 ? "Never" : formatMinutes(minutes);
-};
-
 /** A labelled block of mission text, framed. */
 function TextPanel({
   title,
@@ -132,6 +128,22 @@ function TextPanel({
   );
 }
 
+const SPEAKER_LABELS: Record<MissionMessageSpeaker, string | null> = {
+  agent: "Agent",
+  pilot: "You",
+  text: null,
+};
+
+/** Whose portrait a line gets; `null` draws the generic one. */
+const SPEAKER_AVATAR: Record<
+  MissionMessageSpeaker,
+  (ids: { agentId: number | null; pilotId: number | null }) => number | null
+> = {
+  agent: ({ agentId }) => agentId,
+  pilot: ({ pilotId }) => pilotId,
+  text: () => null,
+};
+
 /** One line of the agent conversation: the agent on the left, the pilot on the right. */
 function DialogueLine({
   speaker,
@@ -149,15 +161,15 @@ function DialogueLine({
   pilotId: number | null;
 }>) {
   const isPilot = speaker === "pilot";
-  const avatar = isPilot ? (
-    <CharacterAvatar characterId={pilotId} size="md" radius="xl" />
-  ) : speaker === "agent" && agentId !== null ? (
-    <CharacterAvatar characterId={agentId} size="md" radius="xl" />
-  ) : (
-    <Avatar size="md" radius="xl">
-      <IconUser size={18} />
-    </Avatar>
-  );
+  const avatarId = SPEAKER_AVATAR[speaker]({ agentId, pilotId });
+  const avatar =
+    avatarId === null ? (
+      <Avatar size="md" radius="xl">
+        <IconUser size={18} />
+      </Avatar>
+    ) : (
+      <CharacterAvatar characterId={avatarId} size="md" radius="xl" />
+    );
   return (
     <Group
       align="flex-start"
@@ -186,15 +198,26 @@ function DialogueLine({
             style={{ letterSpacing: "0.05em" }}
             ta={isPilot ? "right" : "left"}
           >
-            {[isPilot ? "You" : speaker === "agent" ? "Agent" : null, label]
-              .filter(Boolean)
-              .join(" · ")}
+            {[SPEAKER_LABELS[speaker], label].filter(Boolean).join(" · ")}
           </Text>
           <MissionText text={text} values={values} />
         </Stack>
       </Paper>
     </Group>
   );
+}
+
+/** Where a failed arc step leads: nowhere, the same step again, or another. */
+function FailureStep({
+  step,
+  link,
+}: Readonly<{
+  step: MissionEpicArc["steps"][number];
+  link: (missionId: number) => ReactNode;
+}>) {
+  if (step.failMissionId === null) return <>{notAvailableText}</>;
+  if (step.failMissionId === step.missionId) return <>Retry</>;
+  return <>{link(step.failMissionId)}</>;
 }
 
 function EpicArcPanel({
@@ -294,11 +317,7 @@ function EpicArcPanel({
                     )}
                   </Table.Td>
                   <Table.Td>
-                    {step.failMissionId === null
-                      ? notAvailableText
-                      : step.failMissionId === step.missionId
-                        ? "Retry"
-                        : missionLink(step.failMissionId)}
+                    <FailureStep step={step} link={missionLink} />
                   </Table.Td>
                 </Table.Tr>
               );
@@ -429,6 +448,452 @@ const variantColumns: DataTableColumn<MissionVariant>[] = [
   },
 ];
 
+type MessageGroups = ReturnType<typeof groupMessages>;
+
+const plural = (count: number, noun: string) =>
+  `${count} ${noun}${count === 1 ? "" : "s"}`;
+
+function MissionHeroImage({ mission }: Readonly<{ mission: MissionDetail }>) {
+  const arc = mission.epicArcs[0];
+  const { faction, corporation } = mission.issuer;
+  if (arc) return <EveIconAvatar iconId={arc.iconId} size={96} radius={0} />;
+  if (faction) {
+    return <FactionAvatar factionId={faction.factionId} size={96} radius={0} />;
+  }
+  if (corporation) {
+    return (
+      <CorporationAvatar
+        corporationId={corporation.corporationId}
+        size={96}
+        radius={0}
+      />
+    );
+  }
+  return <IconTarget size={56} stroke={1.2} />;
+}
+
+/** Faction · corporation · agent type, with separators only between parts. */
+function MissionIssuerLine({ mission }: Readonly<{ mission: MissionDetail }>) {
+  const { faction, corporation } = mission.issuer;
+  const parts: { key: string; node: ReactNode }[] = [];
+  if (faction) {
+    parts.push({ key: "faction", node: <FactionLabel faction={faction} /> });
+  }
+  if (corporation) {
+    parts.push({
+      key: "corporation",
+      node: <CorporationLabel corporation={corporation} />,
+    });
+  }
+  if (mission.agentType) {
+    parts.push({
+      key: "agentType",
+      node: (
+        <Text size="sm" c="dimmed">
+          {mission.agentType.name ??
+            `Agent type ${mission.agentType.agentTypeId}`}
+        </Text>
+      ),
+    });
+  }
+  return (
+    <Group gap="xs" align="center">
+      {parts.map((part, index) => (
+        <Fragment key={part.key}>
+          {index > 0 && <Text c="dimmed">·</Text>}
+          {part.node}
+        </Fragment>
+      ))}
+    </Group>
+  );
+}
+
+function MissionHero({ mission }: Readonly<{ mission: MissionDetail }>) {
+  const objective = mission.kill?.objective ?? mission.courier?.objective;
+  const bonusLabel =
+    mission.bonusTimeInterval === null
+      ? "Bonus"
+      : `Bonus (${formatMinutes(mission.bonusTimeInterval)})`;
+  return (
+    <Paper withBorder radius="md" p="lg">
+      <Group align="flex-start" gap="xl" wrap="wrap">
+        <HeroImage>
+          <MissionHeroImage mission={mission} />
+        </HeroImage>
+        <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
+          <Group gap="sm" align="center">
+            <Title order={2}>{mission.name}</Title>
+            <MissionKindBadge kind={mission.kind} size="md" />
+            {mission.epicArcs.length > 0 && (
+              <Badge variant="light" color="grape" size="md">
+                Epic Arc
+              </Badge>
+            )}
+            <Badge variant="light" color="gray" size="md">
+              ID {mission.missionId}
+            </Badge>
+          </Group>
+
+          <MissionIssuerLine mission={mission} />
+
+          <Group gap="xl">
+            {mission.reward && (
+              <HeroStat
+                label="Reward"
+                value={
+                  <TypeRefLabel
+                    type={mission.reward.type}
+                    quantity={mission.reward.quantity}
+                    size="xs"
+                  />
+                }
+              />
+            )}
+            {mission.bonusReward && (
+              <HeroStat
+                label={bonusLabel}
+                value={
+                  <TypeRefLabel
+                    type={mission.bonusReward.type}
+                    quantity={mission.bonusReward.quantity}
+                    size="xs"
+                  />
+                }
+              />
+            )}
+            {objective && (
+              <HeroStat
+                label={mission.kind === "courier" ? "Cargo" : "Objective"}
+                value={
+                  <TypeRefLabel
+                    type={objective.type}
+                    quantity={objective.quantity}
+                    size="xs"
+                  />
+                }
+              />
+            )}
+            {mission.kill?.dungeon && (
+              <HeroStat
+                label="Dungeon"
+                value={
+                  <DungeonLabel
+                    dungeonId={mission.kill.dungeon.dungeonId}
+                    name={mission.kill.dungeon.name}
+                  />
+                }
+              />
+            )}
+          </Group>
+        </Stack>
+      </Group>
+    </Paper>
+  );
+}
+
+/** A type and quantity, or the not-available dash. */
+function OptionalTypeRef({
+  value,
+}: Readonly<{ value: { type: TypeRef; quantity: number | null } | null }>) {
+  if (value === null) return <>{notAvailableText}</>;
+  return <TypeRefLabel type={value.type} quantity={value.quantity} />;
+}
+
+function MissionSummary({ mission }: Readonly<{ mission: MissionDetail }>) {
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<IconInfoCircle size={18} />}>
+        Mission
+      </SectionHeading>
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+        <StatCard label="Mission ID" value={mission.missionId} />
+        <StatCard
+          label="Type"
+          value={<MissionKindBadge kind={mission.kind} />}
+        />
+        <StatCard
+          label="Faction"
+          value={
+            mission.faction ? (
+              <FactionLabel faction={mission.faction} />
+            ) : (
+              notAvailableText
+            )
+          }
+        />
+        <StatCard
+          label="Corporation"
+          value={
+            mission.corporation ? (
+              <CorporationLabel corporation={mission.corporation} />
+            ) : (
+              notAvailableText
+            )
+          }
+          sub={mission.corporationFaction?.name}
+        />
+        <StatCard
+          label="Agent Type"
+          value={mission.agentType?.name ?? notAvailableText}
+          sub={
+            mission.agentType
+              ? `ID ${mission.agentType.agentTypeId}`
+              : undefined
+          }
+        />
+        <StatCard
+          label="Offer Expires After"
+          value={
+            mission.expirationTime === null
+              ? notAvailableText
+              : formatExpiration(mission.expirationTime)
+          }
+        />
+        <StatCard
+          label="Standing Rewards"
+          value={<BooleanBadge value={mission.hasStandingRewards} />}
+        />
+        {mission.agent && (
+          <StatCard
+            label="Offered By"
+            value={<AgentLabel agent={mission.agent} />}
+          />
+        )}
+      </SimpleGrid>
+    </Stack>
+  );
+}
+
+function MissionDungeonCard({ mission }: Readonly<{ mission: MissionDetail }>) {
+  const dungeon = mission.kill?.dungeon ?? null;
+  if (dungeon === null) {
+    return <StatCard label="Dungeon" value={notAvailableText} />;
+  }
+  const shared =
+    mission.dungeonMissionCount > 0
+      ? `shared with ${plural(mission.dungeonMissionCount, "other mission")}`
+      : null;
+  return (
+    <StatCard
+      label="Dungeon"
+      value={<DungeonLabel dungeonId={dungeon.dungeonId} name={dungeon.name} />}
+      sub={[dungeon.archetypeTitle, `ID ${dungeon.dungeonId}`, shared]
+        .filter(Boolean)
+        .join(" · ")}
+    />
+  );
+}
+
+function MissionObjective({ mission }: Readonly<{ mission: MissionDetail }>) {
+  const objective =
+    mission.kill?.objective ?? mission.courier?.objective ?? null;
+  // A kill block may name a quantity but no item (mission 16414).
+  const bareQuantity =
+    mission.kill && !objective && mission.kill.objectiveQuantity !== null
+      ? `Quantity ${mission.kill.objectiveQuantity}`
+      : undefined;
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<IconTarget size={18} />}>Objective</SectionHeading>
+      {mission.kind === "other" ? (
+        <Text size="sm" c="dimmed">
+          This mission has no encounter or delivery of its own — it is completed
+          by talking to the agent.
+        </Text>
+      ) : (
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+          {mission.kill && <MissionDungeonCard mission={mission} />}
+          <StatCard
+            label={
+              mission.kind === "courier"
+                ? "Cargo to Deliver"
+                : "Item to Retrieve"
+            }
+            value={<OptionalTypeRef value={objective} />}
+            sub={objective?.type.groupName ?? bareQuantity}
+          />
+          {mission.kill?.dropItem && (
+            <StatCard
+              label="Dropped in Mission Container"
+              value={<TypeRefLabel type={mission.kill.dropItem} />}
+            />
+          )}
+          {mission.courier && (
+            <StatCard
+              label="Assembled (Singleton)"
+              value={<BooleanBadge value={mission.courier.singleton} />}
+            />
+          )}
+        </SimpleGrid>
+      )}
+    </Stack>
+  );
+}
+
+function MissionRewards({ mission }: Readonly<{ mission: MissionDetail }>) {
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<IconCoin size={18} />}>Rewards</SectionHeading>
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+        <StatCard
+          label="Reward"
+          value={<OptionalTypeRef value={mission.reward} />}
+        />
+        <StatCard
+          label="Time Bonus"
+          value={<OptionalTypeRef value={mission.bonusReward} />}
+          sub={
+            mission.bonusTimeInterval === null
+              ? undefined
+              : `if completed within ${formatMinutes(mission.bonusTimeInterval)}`
+          }
+        />
+        {mission.initialAgentGift && (
+          <StatCard
+            label="Handed Over on Acceptance"
+            value={<OptionalTypeRef value={mission.initialAgentGift} />}
+          />
+        )}
+      </SimpleGrid>
+      {mission.extraStandings.length > 0 && (
+        <Paper withBorder radius="md" p="sm">
+          <Stack gap="xs">
+            <Text fw={700} size="sm">
+              Extra Standing Changes
+            </Text>
+            <Table verticalSpacing={4}>
+              <Table.Tbody>
+                {mission.extraStandings.map((standing) => (
+                  <Table.Tr key={standing.faction.factionId}>
+                    <Table.Td>
+                      <FactionLabel faction={standing.faction} />
+                    </Table.Td>
+                    <Table.Td
+                      ta="right"
+                      ff="monospace"
+                      fw={600}
+                      c={standing.value >= 0 ? "teal" : "red"}
+                    >
+                      {standing.value > 0 ? "+" : ""}
+                      {standing.value}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Stack>
+        </Paper>
+      )}
+    </Stack>
+  );
+}
+
+function MissionBriefing({
+  groups,
+  values,
+}: Readonly<{ groups: MessageGroups; values: MissionTextValues }>) {
+  const { briefing, extraInfoHeader, extraInfoBody, journal } = groups;
+  const extraInfoTitle =
+    extraInfoHeader === undefined ? (
+      "Additional Information"
+    ) : (
+      <MissionText text={extraInfoHeader} values={values} />
+    );
+  return (
+    <Stack gap="md">
+      {briefing !== undefined && (
+        <TextPanel title="Briefing" text={briefing} values={values} />
+      )}
+      {extraInfoBody !== undefined && (
+        <TextPanel
+          title={extraInfoTitle}
+          text={extraInfoBody}
+          values={values}
+        />
+      )}
+      {journal.length > 0 && (
+        <Stack gap="sm">
+          <SectionHeading icon={<IconBook size={18} />}>
+            Epic Journal
+          </SectionHeading>
+          {journal.map((entry) => (
+            <TextPanel
+              key={entry.key}
+              title={entry.slot.label}
+              text={entry.text}
+              values={values}
+            />
+          ))}
+        </Stack>
+      )}
+      <Text size="xs" c="dimmed">
+        Text in [brackets] is filled in by the game when the mission is offered.
+      </Text>
+    </Stack>
+  );
+}
+
+function MissionDialogue({
+  groups,
+  values,
+  agentId,
+  pilotId,
+}: Readonly<{
+  groups: MessageGroups;
+  values: MissionTextValues;
+  agentId: number | null;
+  pilotId: number | null;
+}>) {
+  return (
+    <Stack gap="lg">
+      {groups.dialogueStages.map(([stage, lines]) => (
+        <Stack key={stage} gap="sm">
+          <SectionHeading icon={<IconMessages size={18} />}>
+            {stage}
+          </SectionHeading>
+          {lines.map((line) => (
+            <DialogueLine
+              key={line.key}
+              speaker={line.slot.speaker}
+              label={line.slot.label}
+              text={line.text}
+              values={values}
+              // A completion line is often spoken by the agent the pilot was
+              // sent to, not the one who offered it.
+              agentId={stage === "Complete" ? null : agentId}
+              pilotId={pilotId}
+            />
+          ))}
+        </Stack>
+      ))}
+      {groups.mailPairs.length > 0 && (
+        <Stack gap="sm">
+          <SectionHeading icon={<IconMessages size={18} />}>
+            Notification Mails
+          </SectionHeading>
+          {groups.mailPairs.map(([label, mail]) => (
+            <Paper key={label} withBorder radius="md" p="md">
+              <Stack gap="xs">
+                <Group gap="xs">
+                  <Badge variant="light" color="gray">
+                    {label}
+                  </Badge>
+                  {mail.header !== undefined && (
+                    <MissionText text={mail.header} values={values} />
+                  )}
+                </Group>
+                {mail.body !== undefined && (
+                  <MissionText text={mail.body} values={values} />
+                )}
+              </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+    </Stack>
+  );
+}
+
 export default function MissionPage({
   mission,
 }: Readonly<{ mission: MissionDetail }>) {
@@ -450,48 +915,22 @@ export default function MissionPage({
     [mission.textValues, pilotName],
   );
 
-  const {
-    briefing,
-    extraInfoHeader,
-    extraInfoBody,
-    journal,
-    dialogueStages,
-    mailPairs,
-  } = useMemo(() => groupMessages(mission.messages), [mission.messages]);
-
-  const hasBriefing =
-    briefing !== undefined || extraInfoBody !== undefined || journal.length > 0;
-  const hasDialogue = dialogueStages.length > 0 || mailPairs.length > 0;
-  const hasEpicArc = mission.epicArcs.length > 0;
-  const hasVariants = mission.variants.length > 0;
+  const groups = useMemo(
+    () => groupMessages(mission.messages),
+    [mission.messages],
+  );
 
   const available: Record<string, boolean> = {
-    briefing: hasBriefing,
-    dialogue: hasDialogue,
-    "epic-arc": hasEpicArc,
-    variants: hasVariants,
+    briefing:
+      groups.briefing !== undefined ||
+      groups.extraInfoBody !== undefined ||
+      groups.journal.length > 0,
+    dialogue: groups.dialogueStages.length > 0 || groups.mailPairs.length > 0,
+    "epic-arc": mission.epicArcs.length > 0,
+    variants: mission.variants.length > 0,
   };
   const selectedTab =
     available[activeTab] === false ? DEFAULT_MISSION_PAGE_TAB : activeTab;
-
-  const { faction: issuerFaction, corporation: issuerCorporation } =
-    mission.issuer;
-  const heroImage = mission.epicArcs[0] ? (
-    <EveIconAvatar iconId={mission.epicArcs[0].iconId} size={96} radius={0} />
-  ) : issuerFaction ? (
-    <FactionAvatar factionId={issuerFaction.factionId} size={96} radius={0} />
-  ) : issuerCorporation ? (
-    <CorporationAvatar
-      corporationId={issuerCorporation.corporationId}
-      size={96}
-      radius={0}
-    />
-  ) : (
-    <IconTarget size={56} stroke={1.2} />
-  );
-
-  const objective = mission.kill?.objective ?? mission.courier?.objective;
-  const dungeon = mission.kill?.dungeon ?? null;
 
   return (
     <Container size="lg" py="md">
@@ -508,101 +947,7 @@ export default function MissionPage({
           <Text size="sm">{mission.name}</Text>
         </Breadcrumbs>
 
-        {/* Hero */}
-        <Paper withBorder radius="md" p="lg">
-          <Group align="flex-start" gap="xl" wrap="wrap">
-            <HeroImage>{heroImage}</HeroImage>
-            <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <Group gap="sm" align="center">
-                <Title order={2}>{mission.name}</Title>
-                <MissionKindBadge kind={mission.kind} size="md" />
-                {hasEpicArc && (
-                  <Badge variant="light" color="grape" size="md">
-                    Epic Arc
-                  </Badge>
-                )}
-                <Badge variant="light" color="gray" size="md">
-                  ID {mission.missionId}
-                </Badge>
-              </Group>
-
-              <Group gap="xs" align="center">
-                {issuerFaction && <FactionLabel faction={issuerFaction} />}
-                {issuerFaction && issuerCorporation && (
-                  <Text c="dimmed">·</Text>
-                )}
-                {issuerCorporation && (
-                  <CorporationLabel corporation={issuerCorporation} />
-                )}
-                {mission.agentType && (
-                  <>
-                    {(issuerFaction ?? issuerCorporation) && (
-                      <Text c="dimmed">·</Text>
-                    )}
-                    <Text size="sm" c="dimmed">
-                      {mission.agentType.name ??
-                        `Agent type ${mission.agentType.agentTypeId}`}
-                    </Text>
-                  </>
-                )}
-              </Group>
-
-              <Group gap="xl">
-                {mission.reward && (
-                  <HeroStat
-                    label="Reward"
-                    value={
-                      <TypeRefLabel
-                        type={mission.reward.type}
-                        quantity={mission.reward.quantity}
-                        size="xs"
-                      />
-                    }
-                  />
-                )}
-                {mission.bonusReward && (
-                  <HeroStat
-                    label={
-                      mission.bonusTimeInterval === null
-                        ? "Bonus"
-                        : `Bonus (${formatMinutes(mission.bonusTimeInterval)})`
-                    }
-                    value={
-                      <TypeRefLabel
-                        type={mission.bonusReward.type}
-                        quantity={mission.bonusReward.quantity}
-                        size="xs"
-                      />
-                    }
-                  />
-                )}
-                {objective && (
-                  <HeroStat
-                    label={mission.kind === "courier" ? "Cargo" : "Objective"}
-                    value={
-                      <TypeRefLabel
-                        type={objective.type}
-                        quantity={objective.quantity}
-                        size="xs"
-                      />
-                    }
-                  />
-                )}
-                {mission.kill?.dungeon && (
-                  <HeroStat
-                    label="Dungeon"
-                    value={
-                      <DungeonLabel
-                        dungeonId={mission.kill.dungeon.dungeonId}
-                        name={mission.kill.dungeon.name}
-                      />
-                    }
-                  />
-                )}
-              </Group>
-            </Stack>
-          </Group>
-        </Paper>
+        <MissionHero mission={mission} />
 
         <Tabs
           value={selectedTab}
@@ -619,12 +964,12 @@ export default function MissionPage({
             >
               Overview
             </Tabs.Tab>
-            {hasBriefing && (
+            {available.briefing && (
               <Tabs.Tab value="briefing" leftSection={<IconBook size={16} />}>
                 Briefing
               </Tabs.Tab>
             )}
-            {hasDialogue && (
+            {available.dialogue && (
               <Tabs.Tab
                 value="dialogue"
                 leftSection={<IconMessages size={16} />}
@@ -632,12 +977,12 @@ export default function MissionPage({
                 Dialogue
               </Tabs.Tab>
             )}
-            {hasEpicArc && (
+            {available["epic-arc"] && (
               <Tabs.Tab value="epic-arc" leftSection={<IconRoute size={16} />}>
                 Epic Arc
               </Tabs.Tab>
             )}
-            {hasVariants && (
+            {available.variants && (
               <Tabs.Tab
                 value="variants"
                 leftSection={<IconVersions size={16} />}
@@ -650,330 +995,32 @@ export default function MissionPage({
             </Tabs.Tab>
           </Tabs.List>
 
-          {/* Overview */}
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
-              <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
-                  Mission
-                </SectionHeading>
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-                  <StatCard label="Mission ID" value={mission.missionId} />
-                  <StatCard
-                    label="Type"
-                    value={<MissionKindBadge kind={mission.kind} />}
-                  />
-                  <StatCard
-                    label="Faction"
-                    value={
-                      mission.faction ? (
-                        <FactionLabel faction={mission.faction} />
-                      ) : (
-                        notAvailableText
-                      )
-                    }
-                  />
-                  <StatCard
-                    label="Corporation"
-                    value={
-                      mission.corporation ? (
-                        <CorporationLabel corporation={mission.corporation} />
-                      ) : (
-                        notAvailableText
-                      )
-                    }
-                    sub={mission.corporationFaction?.name}
-                  />
-                  <StatCard
-                    label="Agent Type"
-                    value={mission.agentType?.name ?? notAvailableText}
-                    sub={
-                      mission.agentType
-                        ? `ID ${mission.agentType.agentTypeId}`
-                        : undefined
-                    }
-                  />
-                  <StatCard
-                    label="Offer Expires After"
-                    value={formatExpiration(mission.expirationTime)}
-                  />
-                  <StatCard
-                    label="Standing Rewards"
-                    value={<BooleanBadge value={mission.hasStandingRewards} />}
-                  />
-                  {mission.agent && (
-                    <StatCard
-                      label="Offered By"
-                      value={<AgentLabel agent={mission.agent} />}
-                    />
-                  )}
-                </SimpleGrid>
-              </Stack>
-
-              <Stack gap="sm">
-                <SectionHeading icon={<IconTarget size={18} />}>
-                  Objective
-                </SectionHeading>
-                {mission.kind === "other" ? (
-                  <Text size="sm" c="dimmed">
-                    This mission has no encounter or delivery of its own — it is
-                    completed by talking to the agent.
-                  </Text>
-                ) : (
-                  <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-                    {mission.kill && (
-                      <StatCard
-                        label="Dungeon"
-                        value={
-                          dungeon ? (
-                            <DungeonLabel
-                              dungeonId={dungeon.dungeonId}
-                              name={dungeon.name}
-                            />
-                          ) : (
-                            notAvailableText
-                          )
-                        }
-                        sub={
-                          dungeon
-                            ? [
-                                dungeon.archetypeTitle,
-                                `ID ${dungeon.dungeonId}`,
-                                mission.dungeonMissionCount > 0
-                                  ? `shared with ${mission.dungeonMissionCount} other mission${mission.dungeonMissionCount === 1 ? "" : "s"}`
-                                  : null,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")
-                            : undefined
-                        }
-                      />
-                    )}
-                    <StatCard
-                      label={
-                        mission.kind === "courier"
-                          ? "Cargo to Deliver"
-                          : "Item to Retrieve"
-                      }
-                      value={
-                        objective ? (
-                          <TypeRefLabel
-                            type={objective.type}
-                            quantity={objective.quantity}
-                          />
-                        ) : (
-                          notAvailableText
-                        )
-                      }
-                      sub={
-                        objective?.type.groupName ??
-                        (mission.kill &&
-                        !objective &&
-                        mission.kill.objectiveQuantity !== null
-                          ? `Quantity ${mission.kill.objectiveQuantity}`
-                          : undefined)
-                      }
-                    />
-                    {mission.kill?.dropItem && (
-                      <StatCard
-                        label="Dropped in Mission Container"
-                        value={<TypeRefLabel type={mission.kill.dropItem} />}
-                      />
-                    )}
-                    {mission.courier && (
-                      <StatCard
-                        label="Assembled (Singleton)"
-                        value={
-                          <BooleanBadge value={mission.courier.singleton} />
-                        }
-                      />
-                    )}
-                  </SimpleGrid>
-                )}
-              </Stack>
-
-              <Stack gap="sm">
-                <SectionHeading icon={<IconCoin size={18} />}>
-                  Rewards
-                </SectionHeading>
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-                  <StatCard
-                    label="Reward"
-                    value={
-                      mission.reward ? (
-                        <TypeRefLabel
-                          type={mission.reward.type}
-                          quantity={mission.reward.quantity}
-                        />
-                      ) : (
-                        notAvailableText
-                      )
-                    }
-                  />
-                  <StatCard
-                    label="Time Bonus"
-                    value={
-                      mission.bonusReward ? (
-                        <TypeRefLabel
-                          type={mission.bonusReward.type}
-                          quantity={mission.bonusReward.quantity}
-                        />
-                      ) : (
-                        notAvailableText
-                      )
-                    }
-                    sub={
-                      mission.bonusTimeInterval === null
-                        ? undefined
-                        : `if completed within ${formatMinutes(mission.bonusTimeInterval)}`
-                    }
-                  />
-                  {mission.initialAgentGift && (
-                    <StatCard
-                      label="Handed Over on Acceptance"
-                      value={
-                        <TypeRefLabel
-                          type={mission.initialAgentGift.type}
-                          quantity={mission.initialAgentGift.quantity}
-                        />
-                      }
-                    />
-                  )}
-                </SimpleGrid>
-                {mission.extraStandings.length > 0 && (
-                  <Paper withBorder radius="md" p="sm">
-                    <Stack gap="xs">
-                      <Text fw={700} size="sm">
-                        Extra Standing Changes
-                      </Text>
-                      <Table verticalSpacing={4}>
-                        <Table.Tbody>
-                          {mission.extraStandings.map((standing) => (
-                            <Table.Tr key={standing.faction.factionId}>
-                              <Table.Td>
-                                <FactionLabel faction={standing.faction} />
-                              </Table.Td>
-                              <Table.Td
-                                ta="right"
-                                ff="monospace"
-                                fw={600}
-                                c={standing.value >= 0 ? "teal" : "red"}
-                              >
-                                {standing.value > 0 ? "+" : ""}
-                                {standing.value}
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    </Stack>
-                  </Paper>
-                )}
-              </Stack>
+              <MissionSummary mission={mission} />
+              <MissionObjective mission={mission} />
+              <MissionRewards mission={mission} />
             </Stack>
           </Tabs.Panel>
 
-          {/* Briefing */}
-          {hasBriefing && (
+          {available.briefing && (
             <Tabs.Panel value="briefing" pt="lg">
-              <Stack gap="md">
-                {briefing !== undefined && (
-                  <TextPanel title="Briefing" text={briefing} values={values} />
-                )}
-                {extraInfoBody !== undefined && (
-                  <TextPanel
-                    title={
-                      extraInfoHeader === undefined ? (
-                        "Additional Information"
-                      ) : (
-                        <MissionText text={extraInfoHeader} values={values} />
-                      )
-                    }
-                    text={extraInfoBody}
-                    values={values}
-                  />
-                )}
-                {journal.length > 0 && (
-                  <Stack gap="sm">
-                    <SectionHeading icon={<IconBook size={18} />}>
-                      Epic Journal
-                    </SectionHeading>
-                    {journal.map((entry) => (
-                      <TextPanel
-                        key={entry.key}
-                        title={entry.slot.label}
-                        text={entry.text}
-                        values={values}
-                      />
-                    ))}
-                  </Stack>
-                )}
-                <Text size="xs" c="dimmed">
-                  Text in [brackets] is filled in by the game when the mission
-                  is offered.
-                </Text>
-              </Stack>
+              <MissionBriefing groups={groups} values={values} />
             </Tabs.Panel>
           )}
 
-          {/* Dialogue */}
-          {hasDialogue && (
+          {available.dialogue && (
             <Tabs.Panel value="dialogue" pt="lg">
-              <Stack gap="lg">
-                {dialogueStages.map(([stage, lines]) => (
-                  <Stack key={stage} gap="sm">
-                    <SectionHeading icon={<IconMessages size={18} />}>
-                      {stage}
-                    </SectionHeading>
-                    {lines.map((line) => (
-                      <DialogueLine
-                        key={line.key}
-                        speaker={line.slot.speaker}
-                        label={line.slot.label}
-                        text={line.text}
-                        values={values}
-                        // A completion line is often spoken by the agent the
-                        // pilot was sent to, not the one who offered it.
-                        agentId={
-                          stage === "Complete"
-                            ? null
-                            : (mission.agent?.characterId ?? null)
-                        }
-                        pilotId={character?.characterId ?? null}
-                      />
-                    ))}
-                  </Stack>
-                ))}
-                {mailPairs.length > 0 && (
-                  <Stack gap="sm">
-                    <SectionHeading icon={<IconMessages size={18} />}>
-                      Notification Mails
-                    </SectionHeading>
-                    {mailPairs.map(([label, mail]) => (
-                      <Paper key={label} withBorder radius="md" p="md">
-                        <Stack gap="xs">
-                          <Group gap="xs">
-                            <Badge variant="light" color="gray">
-                              {label}
-                            </Badge>
-                            {mail.header !== undefined && (
-                              <MissionText text={mail.header} values={values} />
-                            )}
-                          </Group>
-                          {mail.body !== undefined && (
-                            <MissionText text={mail.body} values={values} />
-                          )}
-                        </Stack>
-                      </Paper>
-                    ))}
-                  </Stack>
-                )}
-              </Stack>
+              <MissionDialogue
+                groups={groups}
+                values={values}
+                agentId={mission.agent?.characterId ?? null}
+                pilotId={character?.characterId ?? null}
+              />
             </Tabs.Panel>
           )}
 
-          {/* Epic arc */}
-          {hasEpicArc && (
+          {available["epic-arc"] && (
             <Tabs.Panel value="epic-arc" pt="lg">
               <Stack gap="xl">
                 {mission.epicArcs.map((arc) => (
@@ -987,8 +1034,7 @@ export default function MissionPage({
             </Tabs.Panel>
           )}
 
-          {/* Variants */}
-          {hasVariants && (
+          {available.variants && (
             <Tabs.Panel value="variants" pt="lg">
               <Stack gap="sm">
                 <Alert variant="light" color="gray" icon={<IconVersions />}>

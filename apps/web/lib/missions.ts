@@ -84,6 +84,11 @@ export function formatMinutes(minutes: number): string {
   return parts.slice(0, 2).join(" ");
 }
 
+/** A mission's `expirationTime`: minutes the offer stays open, `0` for never. */
+export function formatExpiration(minutes: number): string {
+  return minutes === 0 ? "Never" : formatMinutes(minutes);
+}
+
 // ---------------------------------------------------------------------------
 // Messages
 // ---------------------------------------------------------------------------
@@ -394,11 +399,12 @@ function fillPlaceholders(
       const dot = path.lastIndexOf(".");
       const variable = dot === -1 ? path : path.slice(0, dot);
       const property = dot === -1 ? "" : path.slice(dot + 1);
+      // `rawArgs` is ", quantity=objectiveQuantity, …" (PLACEHOLDER already
+      // checked its shape), so splitting is enough.
       const args: Record<string, string> = {};
-      for (const [, name, argVariable] of rawArgs.matchAll(/(\w+)=(\w+)/g)) {
-        if (name !== undefined && argVariable !== undefined) {
-          args[name] = argVariable;
-        }
+      for (const pair of rawArgs.split(",")) {
+        const [name, argVariable] = pair.split("=").map((part) => part.trim());
+        if (name && argVariable) args[name] = argVariable;
       }
 
       const value = values[variable];

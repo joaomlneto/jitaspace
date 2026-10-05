@@ -3,12 +3,27 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
+import type { DungeonDetail } from "./data";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { dungeonDisplayName } from "~/lib/missions";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { getDungeon } from "./data";
 import DungeonPage from "./page.client";
+
+/** The description of a dungeon whose own text is missing. */
+function fallbackDescription(dungeon: DungeonDetail, name: string): string {
+  if (!dungeon.described) {
+    const missions = dungeon.missions.length === 1 ? "mission" : "missions";
+    return `EVE Online dungeon ${dungeon.dungeonId} — the ${missions} and agents that use it.`;
+  }
+  // Archetype titles are category names, singular or plural ("Combat Sites",
+  // "Escalation"), so they are quoted rather than declined. Archetype 43 is
+  // literally titled "None".
+  const title = dungeon.archetype?.title;
+  const archetype = title && title !== "None" ? ` (${title})` : "";
+  return `${name}${archetype}, an EVE Online site — its description, ship restrictions and the missions that use it.`;
+}
 
 export async function generateMetadata({
   params,
@@ -25,19 +40,11 @@ export async function generateMetadata({
   if (dungeon === null) return {};
   const name = dungeonDisplayName(dungeon);
   const text = dungeon.description ?? dungeon.gameplayDescription;
-  const archetype =
-    dungeon.archetype?.title && dungeon.archetype.title !== "None"
-      ? dungeon.archetype.title
-      : null;
   return pageMetadata({
     title: `${name} — Dungeon`,
     description: toDescription(
       text ?? undefined,
-      dungeon.described
-        ? // Archetype titles are category names, singular or plural ("Combat
-          // Sites", "Escalation"), so they are quoted rather than declined.
-          `${name}${archetype ? ` (${archetype})` : ""}, an EVE Online site — its description, ship restrictions and the missions that use it.`
-        : `EVE Online dungeon ${dungeonId} — the ${dungeon.missions.length === 1 ? "mission" : "missions"} and agents that use it.`,
+      fallbackDescription(dungeon, name),
     ),
     path: `/dungeon/${dungeonId}`,
     badge: "Dungeon",

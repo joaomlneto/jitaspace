@@ -54,6 +54,7 @@ import type {
   DungeonShipRestriction,
   RelatedDungeon,
 } from "./data";
+import type { FactionRef } from "~/lib/missionRefs";
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
@@ -378,6 +379,234 @@ function RestrictionPanel({
   );
 }
 
+const plural = (count: number, noun: string) =>
+  `${count.toLocaleString("en-US")} ${noun}${count === 1 ? "" : "s"}`;
+
+const allowedShipCount = (dungeon: DungeonDetail) =>
+  dungeon.restrictions.reduce(
+    (sum, restriction) => sum + restriction.memberCount,
+    0,
+  );
+
+function FactionLabel({ faction }: Readonly<{ faction: FactionRef }>) {
+  return (
+    <Group gap={6} wrap="nowrap">
+      <FactionAvatar factionId={faction.factionId} size="sm" />
+      <FactionAnchor factionId={faction.factionId}>
+        {faction.name ?? `Faction ${faction.factionId}`}
+      </FactionAnchor>
+    </Group>
+  );
+}
+
+/**
+ * The missions whose pocket this is: the first of each distinct name, a few
+ * at most. Best identifies a dungeon dungeons.yaml leaves unnamed.
+ */
+function PocketOf({ missions }: Readonly<{ missions: DungeonMission[] }>) {
+  const firstByName = useMemo(() => {
+    const byName = new Map<string, number>();
+    for (const mission of missions) {
+      if (!byName.has(mission.name)) {
+        byName.set(mission.name, mission.missionId);
+      }
+    }
+    return [...byName.entries()].slice(0, 3);
+  }, [missions]);
+  if (firstByName.length === 0) return null;
+  return (
+    <Text size="sm" c="dimmed">
+      The pocket of{" "}
+      {firstByName.map(([missionName, missionId], index) => (
+        <Fragment key={missionId}>
+          {index > 0 && ", "}
+          <MissionAnchor missionId={missionId} size="sm">
+            {missionName}
+          </MissionAnchor>
+        </Fragment>
+      ))}
+      {missions.length > firstByName.length &&
+        ` and ${missions.length - firstByName.length} more`}
+    </Text>
+  );
+}
+
+function DungeonHeroImage({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
+  if (!dungeon.faction) return <AgencyIcon width={72} />;
+  return (
+    <FactionAvatar factionId={dungeon.faction.factionId} size={96} radius={0} />
+  );
+}
+
+function DungeonHero({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
+  const archetypeTitle = dungeon.archetype?.title ?? null;
+  return (
+    <Paper withBorder radius="md" p="lg">
+      <Group align="flex-start" gap="xl" wrap="wrap">
+        <HeroImage>
+          <DungeonHeroImage dungeon={dungeon} />
+        </HeroImage>
+        <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
+          <Group gap="sm" align="center">
+            <Title order={2}>{dungeonDisplayName(dungeon)}</Title>
+            {archetypeTitle && (
+              <Badge variant="light" size="md">
+                {archetypeTitle}
+              </Badge>
+            )}
+            <Badge variant="light" color="gray" size="md">
+              ID {dungeon.dungeonId}
+            </Badge>
+          </Group>
+
+          {!dungeon.described && <PocketOf missions={dungeon.missions} />}
+
+          {dungeon.faction && <FactionLabel faction={dungeon.faction} />}
+
+          <Group gap="xl">
+            {dungeon.missions.length > 0 && (
+              <HeroStat
+                label="Missions"
+                value={dungeon.missions.length.toLocaleString("en-US")}
+              />
+            )}
+            {dungeon.agents.length > 0 && (
+              <HeroStat
+                label="Agents in Space"
+                value={dungeon.agents.length.toLocaleString("en-US")}
+              />
+            )}
+            {dungeon.restrictions.length > 0 && (
+              <HeroStat
+                label="Allowed Ships"
+                value={allowedShipCount(dungeon).toLocaleString("en-US")}
+              />
+            )}
+            {dungeon.operations.length > 0 && (
+              <HeroStat
+                label="Tactical Operations"
+                value={dungeon.operations.length}
+              />
+            )}
+          </Group>
+        </Stack>
+      </Group>
+    </Paper>
+  );
+}
+
+/** Why a dungeon dungeons.yaml does not describe has a page at all. */
+function DungeonReferencesAlert({
+  dungeon,
+}: Readonly<{ dungeon: DungeonDetail }>) {
+  const { missions, agents, operations } = dungeon;
+  const reasons = [
+    missions.length === 1 && "a mission sends pilots here",
+    missions.length > 1 && "missions send pilots here",
+    agents.length === 1 && "an agent is stationed here",
+    agents.length > 1 && "agents are stationed here",
+    operations.length > 0 && "a tactical operation runs here",
+  ].filter(Boolean);
+  return (
+    <Alert variant="light" color="gray" icon={<IconInfoCircle />}>
+      The Static Data Export does not describe this dungeon — it is known only
+      because {reasons.join(", and ")}. Its name, layout and description live
+      only in the game client.
+    </Alert>
+  );
+}
+
+function shipRestrictionsSummary(dungeon: DungeonDetail): string {
+  if (dungeon.restrictions.length > 0) {
+    return `${plural(allowedShipCount(dungeon), "ship")} allowed`;
+  }
+  // dungeons.yaml lists no restriction: open to any ship. Without an entry
+  // there, nothing is known either way.
+  return dungeon.described ? "None" : notAvailableText;
+}
+
+function DungeonOverview({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
+  const { archetype, restrictions, missions, agents, operations } = dungeon;
+  const usedBy = [
+    missions.length > 0 && plural(missions.length, "mission"),
+    agents.length > 0 && plural(agents.length, "agent"),
+    operations.length > 0 && plural(operations.length, "operation"),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const systems = [
+    ...new Set(agents.map((a) => a.solarSystemName ?? String(a.solarSystemId))),
+  ];
+  return (
+    <Stack gap="lg">
+      <Stack gap="sm">
+        <SectionHeading icon={<IconInfoCircle size={18} />}>
+          Dungeon
+        </SectionHeading>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+          <StatCard label="Dungeon ID" value={dungeon.dungeonId} />
+          <StatCard label="Name" value={dungeon.name ?? notAvailableText} />
+          <StatCard
+            label="Faction"
+            value={
+              dungeon.faction ? (
+                <FactionLabel faction={dungeon.faction} />
+              ) : (
+                notAvailableText
+              )
+            }
+          />
+          <StatCard
+            label="Archetype"
+            value={
+              archetype
+                ? (archetype.title ?? `Archetype ${archetype.archetypeId}`)
+                : notAvailableText
+            }
+            sub={
+              archetype
+                ? `ID ${archetype.archetypeId} · ${plural(dungeon.related.length + 1, "site")}`
+                : undefined
+            }
+          />
+          <StatCard
+            label="Ship Restrictions"
+            value={shipRestrictionsSummary(dungeon)}
+            sub={
+              restrictions.length > 0
+                ? plural(restrictions.length, "type list")
+                : undefined
+            }
+          />
+          <StatCard label="Used By" value={usedBy || notAvailableText} />
+        </SimpleGrid>
+      </Stack>
+
+      {archetype?.description && (
+        <Stack gap="sm">
+          <SectionHeading icon={<IconSitemap size={18} />}>
+            {archetype.title ?? "Archetype"}
+          </SectionHeading>
+          <Paper withBorder radius="md" p="md">
+            <MissionText text={archetype.description} />
+          </Paper>
+        </Stack>
+      )}
+
+      {systems.length > 0 && (
+        <Stack gap="sm">
+          <SectionHeading icon={<IconMapPin size={18} />}>
+            Locations
+          </SectionHeading>
+          <Text size="sm" c="dimmed">
+            Agents stationed in this dungeon place it in {systems.join(", ")}.
+          </Text>
+        </Stack>
+      )}
+    </Stack>
+  );
+}
+
 export default function DungeonPage({
   dungeon,
 }: Readonly<{ dungeon: DungeonDetail }>) {
@@ -402,23 +631,7 @@ export default function DungeonPage({
   const selectedTab =
     available[activeTab] === false ? DEFAULT_DUNGEON_PAGE_TAB : activeTab;
 
-  const shipCount = dungeon.restrictions.reduce(
-    (sum, restriction) => sum + restriction.memberCount,
-    0,
-  );
   const archetypeTitle = dungeon.archetype?.title ?? null;
-  // A dungeon dungeons.yaml leaves unnamed is best identified by its missions:
-  // the first of each distinct name, a few at most.
-  const pocketFor = useMemo(() => {
-    const byName = new Map<string, number>();
-    for (const mission of dungeon.missions) {
-      if (!byName.has(mission.name))
-        byName.set(mission.name, mission.missionId);
-    }
-    return [...byName.entries()]
-      .slice(0, 3)
-      .map(([missionName, missionId]) => [missionId, missionName] as const);
-  }, [dungeon.missions]);
 
   return (
     <Container size="lg" py="md">
@@ -435,108 +648,9 @@ export default function DungeonPage({
           <Text size="sm">{name}</Text>
         </Breadcrumbs>
 
-        {/* Hero */}
-        <Paper withBorder radius="md" p="lg">
-          <Group align="flex-start" gap="xl" wrap="wrap">
-            <HeroImage>
-              {dungeon.faction ? (
-                <FactionAvatar
-                  factionId={dungeon.faction.factionId}
-                  size={96}
-                  radius={0}
-                />
-              ) : (
-                <AgencyIcon width={72} />
-              )}
-            </HeroImage>
-            <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <Group gap="sm" align="center">
-                <Title order={2}>{name}</Title>
-                {archetypeTitle && (
-                  <Badge variant="light" size="md">
-                    {archetypeTitle}
-                  </Badge>
-                )}
-                <Badge variant="light" color="gray" size="md">
-                  ID {dungeon.dungeonId}
-                </Badge>
-              </Group>
+        <DungeonHero dungeon={dungeon} />
 
-              {!dungeon.described && pocketFor.length > 0 && (
-                <Text size="sm" c="dimmed">
-                  The pocket of{" "}
-                  {pocketFor.map(([missionId, missionName], index) => (
-                    <Fragment key={missionId}>
-                      {index > 0 && ", "}
-                      <MissionAnchor missionId={missionId} size="sm">
-                        {missionName}
-                      </MissionAnchor>
-                    </Fragment>
-                  ))}
-                  {dungeon.missions.length > pocketFor.length &&
-                    ` and ${dungeon.missions.length - pocketFor.length} more`}
-                </Text>
-              )}
-
-              {dungeon.faction && (
-                <Group gap={6}>
-                  <FactionAvatar
-                    factionId={dungeon.faction.factionId}
-                    size="sm"
-                  />
-                  <FactionAnchor factionId={dungeon.faction.factionId}>
-                    {dungeon.faction.name ??
-                      `Faction ${dungeon.faction.factionId}`}
-                  </FactionAnchor>
-                </Group>
-              )}
-
-              <Group gap="xl">
-                {dungeon.missions.length > 0 && (
-                  <HeroStat
-                    label="Missions"
-                    value={dungeon.missions.length.toLocaleString("en-US")}
-                  />
-                )}
-                {dungeon.agents.length > 0 && (
-                  <HeroStat
-                    label="Agents in Space"
-                    value={dungeon.agents.length.toLocaleString("en-US")}
-                  />
-                )}
-                {dungeon.restrictions.length > 0 && (
-                  <HeroStat
-                    label="Allowed Ships"
-                    value={shipCount.toLocaleString("en-US")}
-                  />
-                )}
-                {dungeon.operations.length > 0 && (
-                  <HeroStat
-                    label="Tactical Operations"
-                    value={dungeon.operations.length}
-                  />
-                )}
-              </Group>
-            </Stack>
-          </Group>
-        </Paper>
-
-        {!dungeon.described && (
-          <Alert variant="light" color="gray" icon={<IconInfoCircle />}>
-            The Static Data Export does not describe this dungeon — it is known
-            only because{" "}
-            {[
-              dungeon.missions.length === 1 && "a mission sends pilots here",
-              dungeon.missions.length > 1 && "missions send pilots here",
-              dungeon.agents.length === 1 && "an agent is stationed here",
-              dungeon.agents.length > 1 && "agents are stationed here",
-              dungeon.operations.length > 0 && "a tactical operation runs here",
-            ]
-              .filter(Boolean)
-              .join(", and ")}
-            . Its name, layout and description live only in the game client.
-          </Alert>
-        )}
+        {!dungeon.described && <DungeonReferencesAlert dungeon={dungeon} />}
 
         <Tabs
           value={selectedTab}
@@ -599,113 +713,7 @@ export default function DungeonPage({
 
           {/* Overview */}
           <Tabs.Panel value="overview" pt="lg">
-            <Stack gap="lg">
-              <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
-                  Dungeon
-                </SectionHeading>
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-                  <StatCard label="Dungeon ID" value={dungeon.dungeonId} />
-                  <StatCard
-                    label="Name"
-                    value={dungeon.name ?? notAvailableText}
-                  />
-                  <StatCard
-                    label="Faction"
-                    value={
-                      dungeon.faction ? (
-                        <Group gap={6} wrap="nowrap">
-                          <FactionAvatar
-                            factionId={dungeon.faction.factionId}
-                            size="sm"
-                          />
-                          <FactionAnchor factionId={dungeon.faction.factionId}>
-                            {dungeon.faction.name ??
-                              `Faction ${dungeon.faction.factionId}`}
-                          </FactionAnchor>
-                        </Group>
-                      ) : (
-                        notAvailableText
-                      )
-                    }
-                  />
-                  <StatCard
-                    label="Archetype"
-                    value={
-                      dungeon.archetype
-                        ? (dungeon.archetype.title ??
-                          `Archetype ${dungeon.archetype.archetypeId}`)
-                        : notAvailableText
-                    }
-                    sub={
-                      dungeon.archetype
-                        ? `ID ${dungeon.archetype.archetypeId} · ${dungeon.related.length + 1} sites`
-                        : undefined
-                    }
-                  />
-                  <StatCard
-                    label="Ship Restrictions"
-                    value={
-                      dungeon.restrictions.length === 0
-                        ? dungeon.described
-                          ? "None"
-                          : notAvailableText
-                        : `${shipCount.toLocaleString("en-US")} ships allowed`
-                    }
-                    sub={
-                      dungeon.restrictions.length > 0
-                        ? `${dungeon.restrictions.length} type list${dungeon.restrictions.length === 1 ? "" : "s"}`
-                        : undefined
-                    }
-                  />
-                  <StatCard
-                    label="Used By"
-                    value={
-                      [
-                        dungeon.missions.length > 0 &&
-                          `${dungeon.missions.length} mission${dungeon.missions.length === 1 ? "" : "s"}`,
-                        dungeon.agents.length > 0 &&
-                          `${dungeon.agents.length} agent${dungeon.agents.length === 1 ? "" : "s"}`,
-                        dungeon.operations.length > 0 &&
-                          `${dungeon.operations.length} operation${dungeon.operations.length === 1 ? "" : "s"}`,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ") || notAvailableText
-                    }
-                  />
-                </SimpleGrid>
-              </Stack>
-
-              {dungeon.archetype?.description && (
-                <Stack gap="sm">
-                  <SectionHeading icon={<IconSitemap size={18} />}>
-                    {dungeon.archetype.title ?? "Archetype"}
-                  </SectionHeading>
-                  <Paper withBorder radius="md" p="md">
-                    <MissionText text={dungeon.archetype.description} />
-                  </Paper>
-                </Stack>
-              )}
-
-              {dungeon.agents.length > 0 && (
-                <Stack gap="sm">
-                  <SectionHeading icon={<IconMapPin size={18} />}>
-                    Locations
-                  </SectionHeading>
-                  <Text size="sm" c="dimmed">
-                    Agents stationed in this dungeon place it in{" "}
-                    {[
-                      ...new Set(
-                        dungeon.agents.map(
-                          (a) => a.solarSystemName ?? String(a.solarSystemId),
-                        ),
-                      ),
-                    ].join(", ")}
-                    .
-                  </Text>
-                </Stack>
-              )}
-            </Stack>
+            <DungeonOverview dungeon={dungeon} />
           </Tabs.Panel>
 
           {/* Description */}
