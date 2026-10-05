@@ -5,6 +5,7 @@ export const TYPE_PAGE_TABS = [
   "variations",
   "market",
   "description",
+  "type-lists",
   "history",
 ] as const;
 

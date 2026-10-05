@@ -49,6 +49,7 @@ export const DogmaAttributeAnchor = anchorStub(
   "attributeId",
 );
 export const GroupAnchor = anchorStub("/group", "groupId");
+export const TypeListAnchor = anchorStub("/type-list", "typeListId");
 
 // --- Race / Bloodline (SDE reference data, not ESI-resolvable entities) ---
 export const RaceAnchor = anchorStub("/race", "raceId");
