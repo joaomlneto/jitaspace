@@ -201,12 +201,32 @@ export interface FactionLiveData {
   lostSystems: FactionLostSystemRow[];
 }
 
-export const emptyFactionLiveData: FactionLiveData = {
-  corporations: [],
-  enlistedCorporations: [],
-  enlistedCorporationCount: 0,
-  enlistedPilots: 0,
-  enlistedAlliances: [],
-  sovereignty: [],
-  lostSystems: [],
-};
+/**
+ * The rows behind the page's tables. They are most of the data (an empire's
+ * territory alone is 700 rows) and only the tabs that list them need them, so
+ * the page ships without them and fetches them from `/api/faction/[factionId]`
+ * when one of those tabs opens.
+ */
+export interface FactionTables {
+  systems: FactionSolarSystemRow[];
+  items: FactionItemRow[];
+  contraband: FactionContrabandRow[];
+  missions: FactionMissionRow[];
+  dungeons: FactionDungeonRow[];
+  standingRestrictions: FactionStandingRestrictionRow[];
+  corporations: FactionCorporationRow[];
+  enlistedCorporations: FactionEnlistedCorporationRow[];
+  sovereignty: FactionSovereigntySystemRow[];
+  lostSystems: FactionLostSystemRow[];
+}
+
+/** What the page itself carries: everything but the table rows, and their counts. */
+export interface FactionPageData {
+  faction: Omit<FactionSdeData, keyof FactionTables>;
+  live: Omit<FactionLiveData, keyof FactionTables>;
+  /** Rows per table, for the tab badges and the overview. */
+  counts: Record<keyof FactionTables, number> & {
+    /** Systems it holds by the SDE or by sovereignty today, each once. */
+    territory: number;
+  };
+}

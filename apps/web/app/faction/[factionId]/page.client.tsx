@@ -4,12 +4,14 @@ import type { ReactNode } from "react";
 import { useMemo } from "react";
 import Link from "next/link";
 import {
+  Alert,
   Anchor,
   Badge,
   Box,
   Button,
   Container,
   Group,
+  Loader,
   Paper,
   Progress,
   SimpleGrid,
@@ -35,6 +37,7 @@ import {
   IconTarget,
   IconUsersGroup,
 } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -62,6 +65,7 @@ import {
   CorporationAvatar,
   EveIconAvatar,
   FactionAvatar,
+  formatSecurityStatus,
   GroupAnchor,
   RaceAnchor,
   SolarSystemSecurityStatusBadge,
@@ -74,30 +78,68 @@ import type {
   FactionDungeonRow,
   FactionEnlistedCorporationRow,
   FactionItemRow,
-  FactionLiveData,
   FactionLocation,
   FactionMissionRow,
-  FactionSdeData,
+  FactionPageData,
+  FactionTables,
 } from "./types";
 import { DataTable } from "~/components/DataTable";
+import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { EntityHistory } from "../../history/EntityHistory";
+import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
 import {
   DEFAULT_FACTION_PAGE_TAB,
   FACTION_PAGE_TABS,
   isFactionPageTab,
 } from "./tabs";
 
-export interface PageProps {
-  faction: FactionSdeData;
-  live: FactionLiveData;
+export type PageProps = FactionPageData;
+
+/** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
+const NO_ROWS: never[] = [];
+
+/** The tabs that list rows the page does not carry; opening one fetches them. */
+const TABLE_TABS = new Set<string>([
+  "territory",
+  "corporations",
+  "warfare",
+  "items",
+  "contraband",
+  "missions",
+  "standings",
+]);
+
+/** The faction's table rows, from the CDN-cached `/api/faction/[factionId]`. */
+function useFactionTables(factionId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ["faction-tables", factionId],
+    queryFn: async (): Promise<FactionTables> => {
+      const response = await fetch(`/api/faction/${factionId}`);
+      if (!response.ok) {
+        throw new Error(`Faction ${factionId}: HTTP ${response.status}`);
+      }
+      return (await response.json()) as FactionTables;
+    },
+    enabled,
+    staleTime: Infinity,
+  });
 }
 
 const numberFormat = new Intl.NumberFormat("en-US");
 const formatCount = (value: number) => numberFormat.format(value);
 const formatPercent = (value: number) =>
   `${(value * 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}%`;
-const formatSecurity = (value: number) => value.toFixed(1);
+/**
+ * A contraband security threshold. The SDE marks "never" and "everywhere" with
+ * values outside the security range (an attack threshold of 1.1, a confiscation
+ * threshold of -1), which as numbers would read as a system that cannot exist.
+ */
+const formatSecurityThreshold = (value: number) => {
+  if (value > 1) return "Never";
+  if (value <= -1) return "Everywhere";
+  return `≥ ${formatSecurityStatus(value)}`;
+};
 
 /** FW system states, in the order a system moves through them. */
 const CONTESTED_COLORS: Record<string, string> = {
@@ -106,78 +148,6 @@ const CONTESTED_COLORS: Record<string, string> = {
   vulnerable: "orange",
   captured: "red",
 };
-
-function SectionHeading({
-  icon,
-  children,
-}: Readonly<{
-  icon: ReactNode;
-  children: ReactNode;
-}>) {
-  return (
-    <Group gap={8} align="center">
-      <Box c="eve_accent.4" style={{ display: "flex" }}>
-        {icon}
-      </Box>
-      <Title order={4}>{children}</Title>
-    </Group>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  sub,
-}: Readonly<{
-  label: string;
-  value: ReactNode;
-  sub?: ReactNode;
-}>) {
-  return (
-    <Paper withBorder radius="md" p="sm">
-      <Stack gap={2}>
-        <Text
-          size="xs"
-          c="dimmed"
-          tt="uppercase"
-          fw={700}
-          style={{ letterSpacing: "0.05em" }}
-        >
-          {label}
-        </Text>
-        <Text component="div" fw={600} c="gray.0">
-          {value}
-        </Text>
-        {sub !== undefined && (
-          <Text component="div" size="xs" c="dimmed">
-            {sub}
-          </Text>
-        )}
-      </Stack>
-    </Paper>
-  );
-}
-
-function HeroStat({
-  label,
-  value,
-}: Readonly<{ label: string; value: ReactNode }>) {
-  return (
-    <Stack gap={0}>
-      <Text
-        size="xs"
-        c="dimmed"
-        tt="uppercase"
-        style={{ letterSpacing: "0.05em" }}
-      >
-        {label}
-      </Text>
-      <Text component="div" fw={600} c="gray.0">
-        {value}
-      </Text>
-    </Stack>
-  );
-}
 
 function YesNoBadge({ value }: Readonly<{ value: boolean }>) {
   return (
@@ -360,12 +330,19 @@ const territoryColumns: DataTableColumn<TerritoryRow>[] = [
   },
 ];
 
-function TerritoryPanel({ faction, live }: Readonly<PageProps>) {
+function TerritoryPanel({
+  faction,
+  tables,
+}: Readonly<{
+  faction: PageProps["faction"];
+  tables: FactionTables | undefined;
+}>) {
   const rows = useMemo(() => {
+    if (!tables) return NO_ROWS;
     const lost = new Map(
-      live.lostSystems.map((system) => [system.solarSystemId, system]),
+      tables.lostSystems.map((system) => [system.solarSystemId, system]),
     );
-    const home: TerritoryRow[] = faction.systems.map((system) => {
+    const home: TerritoryRow[] = tables.systems.map((system) => {
       const occupier = lost.get(system.solarSystemId);
       const flags = [
         ...(system.isHub ? ["Hub"] : []),
@@ -387,7 +364,7 @@ function TerritoryPanel({ faction, live }: Readonly<PageProps>) {
         flags,
       };
     });
-    const occupied: TerritoryRow[] = live.sovereignty
+    const occupied: TerritoryRow[] = tables.sovereignty
       .filter((system) => !system.isHomeTerritory)
       .map((system) => ({
         ...system,
@@ -399,7 +376,7 @@ function TerritoryPanel({ faction, live }: Readonly<PageProps>) {
         flags: [],
       }));
     return [...home, ...occupied];
-  }, [faction.systems, live.lostSystems, live.sovereignty]);
+  }, [tables]);
 
   return (
     <Stack gap="lg">
@@ -451,6 +428,7 @@ function TerritoryPanel({ faction, live }: Readonly<PageProps>) {
           columns={territoryColumns}
           rowId={(row) => row.solarSystemId}
           initialSort={{ columnId: "name", direction: "asc" }}
+          isLoading={!tables}
           emptyText="This faction holds no solar systems."
           withGlobalFilter
           withColumnVisibility
@@ -702,12 +680,14 @@ function WarfareTotals({
 function WarfarePanel({
   faction,
   live,
+  tables,
   stats,
   enemies,
   allies,
   warzone,
 }: Readonly<
-  PageProps & {
+  Pick<PageProps, "faction" | "live"> & {
+    tables: FactionTables | undefined;
     stats: FwStats | undefined;
     enemies: number[];
     allies: number[];
@@ -798,16 +778,17 @@ function WarfarePanel({
               ))}
             </Group>
           )}
-          {live.enlistedCorporations.length > 0 && (
+          {live.enlistedCorporationCount > 0 && (
             <Text size="sm" c="dimmed">
-              {live.enlistedCorporationCount > live.enlistedCorporations.length
-                ? `The ${formatCount(live.enlistedCorporations.length)} largest of ${formatCount(live.enlistedCorporationCount)} enlisted player corporations.`
+              {live.enlistedCorporationCount > ENLISTED_CORPORATIONS_SHOWN
+                ? `The ${formatCount(ENLISTED_CORPORATIONS_SHOWN)} largest of ${formatCount(live.enlistedCorporationCount)} enlisted player corporations.`
                 : "Enlisted player corporations."}
             </Text>
           )}
-          {live.enlistedCorporations.length > 0 && (
+          {live.enlistedCorporationCount > 0 && (
             <DataTable
-              data={live.enlistedCorporations}
+              data={tables?.enlistedCorporations ?? NO_ROWS}
+              isLoading={!tables}
               columns={enlistedCorporationColumns}
               rowId={(row) => row.corporationId}
               initialSort={{ columnId: "members", direction: "desc" }}
@@ -958,7 +939,7 @@ const contrabandColumns: DataTableColumn<FactionContrabandRow>[] = [
     accessor: "confiscateMinSec",
     sortable: true,
     align: "right",
-    cell: (row) => `≥ ${formatSecurity(row.confiscateMinSec)}`,
+    cell: (row) => formatSecurityThreshold(row.confiscateMinSec),
   },
   {
     id: "attack",
@@ -966,7 +947,7 @@ const contrabandColumns: DataTableColumn<FactionContrabandRow>[] = [
     accessor: "attackMinSec",
     sortable: true,
     align: "right",
-    cell: (row) => `≥ ${formatSecurity(row.attackMinSec)}`,
+    cell: (row) => formatSecurityThreshold(row.attackMinSec),
   },
 ];
 
@@ -1050,7 +1031,11 @@ interface FwStats {
   victory_points: { yesterday: number; last_week: number; total: number };
 }
 
-export default function FactionPage({ faction, live }: Readonly<PageProps>) {
+export default function FactionPage({
+  faction,
+  live,
+  counts,
+}: Readonly<PageProps>) {
   const { factionId } = faction;
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
@@ -1089,36 +1074,13 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
     };
   }, [fwWarsResponse, factionId]);
 
-  // Names and security for warzone systems, from what the server already
-  // resolved; anything else falls back to an ESI name lookup.
-  const knownSystems = useMemo(() => {
-    const known = new Map<number, FactionLocation>();
-    for (const system of faction.systems)
-      known.set(system.solarSystemId, system);
-    for (const system of live.sovereignty)
-      known.set(system.solarSystemId, system);
-    for (const system of live.lostSystems)
-      known.set(system.solarSystemId, system);
-    return known;
-  }, [faction.systems, live.sovereignty, live.lostSystems]);
-
-  const warzone = useMemo<WarzoneSystemRow[]>(
+  // The warzone systems this faction occupies; named below, once known.
+  const occupiedWarzone = useMemo(
     () =>
-      (fwSystemsResponse?.data ?? [])
-        .filter((system) => system.occupier_faction_id === factionId)
-        .map((system) => {
-          const known = knownSystems.get(system.solar_system_id);
-          return {
-            solarSystemId: system.solar_system_id,
-            name: known?.name ?? null,
-            securityStatus: known?.securityStatus ?? null,
-            contested: system.contested,
-            victoryPoints: system.victory_points,
-            threshold: system.victory_points_threshold,
-            ownerFactionId: system.owner_faction_id,
-          };
-        }),
-    [fwSystemsResponse, factionId, knownSystems],
+      (fwSystemsResponse?.data ?? []).filter(
+        (system) => system.occupier_faction_id === factionId,
+      ),
+    [fwSystemsResponse, factionId],
   );
 
   const shipTreeFaction = SHIP_TREE_FACTIONS.find(
@@ -1128,30 +1090,25 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
   const hasWarfare =
     fwStats !== undefined ||
     enemies.length > 0 ||
-    warzone.length > 0 ||
+    occupiedWarzone.length > 0 ||
     faction.militiaCorporation !== null ||
     live.enlistedAlliances.length > 0 ||
     live.enlistedCorporationCount > 0;
-  const hasTerritory =
-    faction.systems.length > 0 ||
-    faction.regions.length > 0 ||
-    live.sovereignty.length > 0;
+  const hasTerritory = counts.territory > 0 || faction.regions.length > 0;
   const hasMissions =
-    faction.missions.length > 0 ||
-    faction.epicArcs.length > 0 ||
-    faction.dungeons.length > 0;
+    counts.missions > 0 || faction.epicArcs.length > 0 || counts.dungeons > 0;
 
   const visibleTabs = new Set<string>([
     "overview",
     "history",
     ...(faction.description.trim() ? ["description"] : []),
     ...(hasTerritory ? ["territory"] : []),
-    ...(live.corporations.length > 0 ? ["corporations"] : []),
+    ...(counts.corporations > 0 ? ["corporations"] : []),
     ...(hasWarfare ? ["warfare"] : []),
-    ...(faction.items.length > 0 ? ["items"] : []),
-    ...(faction.contraband.length > 0 ? ["contraband"] : []),
+    ...(counts.items > 0 ? ["items"] : []),
+    ...(counts.contraband > 0 ? ["contraband"] : []),
     ...(hasMissions ? ["missions"] : []),
-    ...(faction.standingRestrictions.length > 0 ? ["standings"] : []),
+    ...(counts.standingRestrictions > 0 ? ["standings"] : []),
   ]);
   // A deep link to a tab this faction has nothing for would select a tab that
   // is not rendered, leaving the page blank; show the overview instead.
@@ -1159,11 +1116,45 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
     ? activeTab
     : DEFAULT_FACTION_PAGE_TAB;
 
+  const tablesQuery = useFactionTables(factionId, TABLE_TABS.has(selectedTab));
+  const tables = tablesQuery.data;
+
+  // Names and security for warzone systems, from the rows the server already
+  // resolved; anything else falls back to an ESI name lookup.
+  const knownSystems = useMemo(() => {
+    const known = new Map<number, FactionLocation>();
+    if (faction.homeSystem) {
+      known.set(faction.homeSystem.solarSystemId, faction.homeSystem);
+    }
+    for (const system of [
+      ...(tables?.systems ?? []),
+      ...(tables?.sovereignty ?? []),
+      ...(tables?.lostSystems ?? []),
+    ]) {
+      known.set(system.solarSystemId, system);
+    }
+    return known;
+  }, [faction.homeSystem, tables]);
+
+  const warzone = useMemo<WarzoneSystemRow[]>(
+    () =>
+      occupiedWarzone.map((system) => {
+        const known = knownSystems.get(system.solar_system_id);
+        return {
+          solarSystemId: system.solar_system_id,
+          name: known?.name ?? null,
+          securityStatus: known?.securityStatus ?? null,
+          contested: system.contested,
+          victoryPoints: system.victory_points,
+          threshold: system.victory_points_threshold,
+          ownerFactionId: system.owner_faction_id,
+        };
+      }),
+    [occupiedWarzone, knownSystems],
+  );
+
   const militiaPilots = fwStats?.pilots;
-  const totalSystems = new Set([
-    ...faction.systems.map((system) => system.solarSystemId),
-    ...live.sovereignty.map((system) => system.solarSystemId),
-  ]).size;
+  const totalSystems = counts.territory;
 
   const tab = (value: string, icon: ReactNode, label: string, count?: number) =>
     visibleTabs.has(value) && (
@@ -1244,10 +1235,10 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
                   label="Stations"
                   value={formatCount(faction.stationCount)}
                 />
-                {live.corporations.length > 0 && (
+                {counts.corporations > 0 && (
                   <HeroStat
                     label="Corporations"
-                    value={formatCount(live.corporations.length)}
+                    value={formatCount(counts.corporations)}
                   />
                 )}
                 {militiaPilots !== undefined && (
@@ -1285,6 +1276,12 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
           </Group>
         </Paper>
 
+        {tablesQuery.isError && TABLE_TABS.has(selectedTab) && (
+          <Alert color="red" variant="light">
+            This tab&apos;s data could not be loaded. Try reloading the page.
+          </Alert>
+        )}
+
         <Tabs
           value={selectedTab}
           onChange={(value) => {
@@ -1306,32 +1303,27 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
               "corporations",
               <IconBuildingSkyscraper size={16} />,
               "Corporations",
-              live.corporations.length,
+              counts.corporations,
             )}
             {tab("warfare", <IconSwords size={16} />, "Warfare")}
-            {tab(
-              "items",
-              <IconPackage size={16} />,
-              "Items",
-              faction.items.length,
-            )}
+            {tab("items", <IconPackage size={16} />, "Items", counts.items)}
             {tab(
               "contraband",
               <IconShieldHalf size={16} />,
               "Contraband",
-              faction.contraband.length,
+              counts.contraband,
             )}
             {tab(
               "missions",
               <IconTarget size={16} />,
               "Missions & Sites",
-              faction.missions.length + faction.dungeons.length,
+              counts.missions + counts.dungeons,
             )}
             {tab(
               "standings",
               <IconBuildingFortress size={16} />,
               "Standings",
-              faction.standingRestrictions.length,
+              counts.standingRestrictions,
             )}
             {tab("history", <IconHistory size={16} />, "History")}
           </Tabs.List>
@@ -1340,7 +1332,7 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
           <Tabs.Panel value="overview" pt="lg">
             <OverviewPanel
               faction={faction}
-              live={live}
+              counts={counts}
               totalSystems={totalSystems}
               fwStats={fwStats}
             />
@@ -1360,7 +1352,7 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
           {/* Territory */}
           {visibleTabs.has("territory") && (
             <Tabs.Panel value="territory" pt="lg">
-              <TerritoryPanel faction={faction} live={live} />
+              <TerritoryPanel faction={faction} tables={tables} />
             </Tabs.Panel>
           )}
 
@@ -1373,7 +1365,8 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
                   with a loyalty point store link to their offers.
                 </Text>
                 <DataTable
-                  data={live.corporations}
+                  data={tables?.corporations ?? NO_ROWS}
+                  isLoading={!tables}
                   columns={corporationColumns}
                   rowId={(row) => row.corporationId}
                   initialSort={{ columnId: "name", direction: "asc" }}
@@ -1393,6 +1386,7 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
               <WarfarePanel
                 faction={faction}
                 live={live}
+                tables={tables}
                 stats={fwStats}
                 enemies={enemies}
                 allies={allies}
@@ -1410,7 +1404,8 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
                   this faction.
                 </Text>
                 <DataTable
-                  data={faction.items}
+                  data={tables?.items ?? NO_ROWS}
+                  isLoading={!tables}
                   columns={itemColumns}
                   rowId={(row) => row.typeId}
                   initialSort={{ columnId: "name", direction: "asc" }}
@@ -1432,11 +1427,13 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
               <Stack gap="sm">
                 <Text size="sm" c="dimmed">
                   Goods this faction&apos;s customs officials police in its
-                  space. Carrying them through a system at or above the listed
-                  security status gets them confiscated, or gets you shot.
+                  space. Customs confiscate them, and fine you, in systems at or
+                  above the listed security status, and open fire where an
+                  attack threshold is listed.
                 </Text>
                 <DataTable
-                  data={faction.contraband}
+                  data={tables?.contraband ?? NO_ROWS}
+                  isLoading={!tables}
                   columns={contrabandColumns}
                   rowId={(row) => row.typeId}
                   initialSort={{ columnId: "name", direction: "asc" }}
@@ -1452,7 +1449,11 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
           {/* Missions & sites */}
           {visibleTabs.has("missions") && (
             <Tabs.Panel value="missions" pt="lg">
-              <MissionsPanel faction={faction} />
+              <MissionsPanel
+                faction={faction}
+                counts={counts}
+                tables={tables}
+              />
             </Tabs.Panel>
           )}
 
@@ -1467,29 +1468,36 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
                   The standing with this faction a pilot needs before its
                   stations offer each service.
                 </Text>
-                <Paper withBorder radius="md" p="sm">
-                  <Table highlightOnHover verticalSpacing="xs">
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Service</Table.Th>
-                        <Table.Th ta="right">Minimum standing</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {faction.standingRestrictions.map((restriction) => (
-                        <Table.Tr key={restriction.stationServiceId}>
-                          <Table.Td>
-                            {restriction.serviceName ??
-                              `Service ${restriction.stationServiceId}`}
-                          </Table.Td>
-                          <Table.Td ta="right" ff="monospace">
-                            {restriction.minimumStanding.toFixed(2)}
-                          </Table.Td>
+                {!tables && (
+                  <Group justify="center" p="md">
+                    <Loader size="sm" />
+                  </Group>
+                )}
+                {tables && (
+                  <Paper withBorder radius="md" p="sm">
+                    <Table highlightOnHover verticalSpacing="xs">
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Service</Table.Th>
+                          <Table.Th ta="right">Minimum standing</Table.Th>
                         </Table.Tr>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                </Paper>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {tables.standingRestrictions.map((restriction) => (
+                          <Table.Tr key={restriction.stationServiceId}>
+                            <Table.Td>
+                              {restriction.serviceName ??
+                                `Service ${restriction.stationServiceId}`}
+                            </Table.Td>
+                            <Table.Td ta="right" ff="monospace">
+                              {restriction.minimumStanding.toFixed(2)}
+                            </Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </Paper>
+                )}
               </Stack>
             </Tabs.Panel>
           )}
@@ -1506,11 +1514,14 @@ export default function FactionPage({ faction, live }: Readonly<PageProps>) {
 
 function OverviewPanel({
   faction,
-  live,
+  counts,
   totalSystems,
   fwStats,
 }: Readonly<
-  PageProps & { totalSystems: number; fwStats: FwStats | undefined }
+  Pick<PageProps, "faction" | "counts"> & {
+    totalSystems: number;
+    fwStats: FwStats | undefined;
+  }
 >) {
   return (
     <Stack gap="lg">
@@ -1547,7 +1558,7 @@ function OverviewPanel({
               sub={
                 <Group gap={4} component="span">
                   <span>
-                    {formatSecurity(faction.homeSystem.securityStatus)} ·
+                    {formatSecurityStatus(faction.homeSystem.securityStatus)} ·
                   </span>
                   {faction.homeSystem.regionId !== null && (
                     <RegionAnchor
@@ -1587,8 +1598,8 @@ function OverviewPanel({
             label="Solar systems"
             value={formatCount(totalSystems)}
             sub={
-              live.sovereignty.length > 0
-                ? `${formatCount(live.sovereignty.length)} held today`
+              counts.sovereignty > 0
+                ? `${formatCount(counts.sovereignty)} held today`
                 : undefined
             }
           />
@@ -1599,21 +1610,23 @@ function OverviewPanel({
           />
           <StatCard
             label="NPC corporations"
-            value={formatCount(live.corporations.length)}
+            value={formatCount(counts.corporations)}
           />
-          <StatCard label="Items" value={formatCount(faction.items.length)} />
+          <StatCard label="Items" value={formatCount(counts.items)} />
           <StatCard
             label="Missions"
-            value={formatCount(faction.missions.length)}
+            value={formatCount(counts.missions)}
             sub={
               faction.epicArcs.length > 0
-                ? `${formatCount(faction.epicArcs.length)} epic arcs`
+                ? `${formatCount(faction.epicArcs.length)} ${
+                    faction.epicArcs.length === 1 ? "epic arc" : "epic arcs"
+                  }`
                 : undefined
             }
           />
           <StatCard
             label="Contraband goods"
-            value={formatCount(faction.contraband.length)}
+            value={formatCount(counts.contraband)}
           />
         </SimpleGrid>
       </Stack>
@@ -1687,7 +1700,8 @@ function OverviewPanel({
                     {charter.minSecurityLevel !== null && (
                       <Text size="xs" c="dimmed">
                         Required at security{" "}
-                        {formatSecurity(charter.minSecurityLevel)} and above
+                        {formatSecurityStatus(charter.minSecurityLevel)} and
+                        above
                       </Text>
                     )}
                   </Stack>
@@ -1709,7 +1723,12 @@ function OverviewPanel({
                 key={plan.skillPlanId}
                 label={`${formatCount(plan.skills)} skills`}
                 value={plan.name}
-                sub={plan.description}
+                sub={
+                  // The full text stays in the page; long ones are clamped.
+                  <Text size="xs" lineClamp={4} title={plan.description}>
+                    {plan.description}
+                  </Text>
+                }
               />
             ))}
           </SimpleGrid>
@@ -1719,7 +1738,15 @@ function OverviewPanel({
   );
 }
 
-function MissionsPanel({ faction }: Readonly<{ faction: FactionSdeData }>) {
+function MissionsPanel({
+  faction,
+  counts,
+  tables,
+}: Readonly<
+  Pick<PageProps, "faction" | "counts"> & {
+    tables: FactionTables | undefined;
+  }
+>) {
   return (
     <Stack gap="lg">
       {faction.epicArcs.length > 0 && (
@@ -1750,13 +1777,14 @@ function MissionsPanel({ faction }: Readonly<{ faction: FactionSdeData }>) {
         </Stack>
       )}
 
-      {faction.missions.length > 0 && (
+      {counts.missions > 0 && (
         <Stack gap="sm">
           <SectionHeading icon={<IconTarget size={18} />}>
             Missions
           </SectionHeading>
           <DataTable
-            data={faction.missions}
+            data={tables?.missions ?? NO_ROWS}
+            isLoading={!tables}
             columns={missionColumns}
             rowId={(row) => row.missionId}
             initialSort={{ columnId: "name", direction: "asc" }}
@@ -1771,13 +1799,14 @@ function MissionsPanel({ faction }: Readonly<{ faction: FactionSdeData }>) {
         </Stack>
       )}
 
-      {faction.dungeons.length > 0 && (
+      {counts.dungeons > 0 && (
         <Stack gap="sm">
           <SectionHeading icon={<IconMap2 size={18} />}>
             Dungeons &amp; sites
           </SectionHeading>
           <DataTable
-            data={faction.dungeons}
+            data={tables?.dungeons ?? NO_ROWS}
+            isLoading={!tables}
             columns={dungeonColumns}
             rowId={(row) => row.dungeonId}
             initialSort={{ columnId: "name", direction: "asc" }}

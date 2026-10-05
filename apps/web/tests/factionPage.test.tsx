@@ -11,18 +11,21 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type {
   FactionLiveData,
   FactionSdeData,
+  FactionTables,
 } from "~/app/faction/[factionId]/types";
 
 // ---------------------------------------------------------------------------
 // /faction/[factionId] reads two cached halves on the server (data.ts) — static
 // SDE data, and the hourly ESI-job data — and renders a tabbed client page that
-// adds live Faction Warfare numbers from ESI.
+// adds live Faction Warfare numbers from ESI. The page carries everything but
+// the table rows; a tab that lists rows fetches them from /api/faction/[id].
 // ---------------------------------------------------------------------------
 
 type Rows = Record<string, unknown>[];
@@ -68,17 +71,18 @@ jest.mock("@jitaspace/esi-client", () => ({
   useGetFwSystems: () => mockFwSystems(),
 }));
 
-// Every @jitaspace/ui export renders its children (or nothing).
+// Every @jitaspace/ui export renders its children (or nothing), except the
+// security formatter, which the page calls as a function.
 jest.mock(
   "@jitaspace/ui",
   () =>
     new Proxy(
       {},
       {
-        get:
-          () =>
-          ({ children }: { children?: ReactNode }) =>
-            children ?? null,
+        get: (_target, name) =>
+          name === "formatSecurityStatus"
+            ? (value: number) => value.toFixed(1)
+            : ({ children }: { children?: ReactNode }) => children ?? null,
       },
     ),
 );
@@ -236,16 +240,39 @@ function liveData(overrides: Partial<FactionLiveData> = {}): FactionLiveData {
   };
 }
 
+const mockFetch = jest.fn<(url: string) => Promise<unknown>>();
+
+/**
+ * Render the client page the way the server hands it over: split into the
+ * page's own props, with the table rows served by a mocked tables route.
+ */
 function renderClient(
   faction: FactionSdeData,
   live: FactionLiveData,
   searchParams = "",
 ) {
+  const { splitFactionData } = require("~/app/faction/[factionId]/data") as {
+    splitFactionData: (
+      sde: FactionSdeData,
+      live: FactionLiveData,
+    ) => { page: object; tables: FactionTables };
+  };
+  const { page, tables } = splitFactionData(faction, live);
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve(tables),
+  });
+  globalThis.fetch = mockFetch as unknown as typeof globalThis.fetch;
   const Page = require("~/app/faction/[factionId]/page.client").default;
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   return render(
-    <MantineProvider>
-      <Page faction={faction} live={live} />
-    </MantineProvider>,
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider>
+        <Page {...page} />
+      </MantineProvider>
+    </QueryClientProvider>,
     { wrapper: withNuqsTestingAdapter({ searchParams }) },
   );
 }
@@ -304,6 +331,38 @@ describe("faction page data", () => {
 
     expect(await readFactionSdeData(9)).toBeNull();
     expect(prismaMock.region.findMany).not.toHaveBeenCalled();
+  });
+
+  it("returns null for a faction the ingest soft-deleted", async () => {
+    prismaMock.faction.findUnique.mockResolvedValue({
+      ...factionRow,
+      isDeleted: true,
+    });
+    const { readFactionSdeData } = require("~/app/faction/[factionId]/data");
+
+    expect(await readFactionSdeData(CALDARI)).toBeNull();
+    expect(prismaMock.region.findMany).not.toHaveBeenCalled();
+  });
+
+  it("keeps skill plan descriptions whole, as plain text", async () => {
+    prismaMock.faction.findUnique.mockResolvedValue(factionRow);
+    mockSdeReads({
+      skillPlan: [
+        {
+          skillPlanId: 1,
+          name: "Caldari Enforcer",
+          description: `Fly a <a href="fitting:603">Merlin</a>.<br>${"x".repeat(300)}`,
+          _count: { skills: 60 },
+        },
+      ],
+    });
+    const { readFactionSdeData } = require("~/app/faction/[factionId]/data");
+
+    const data = (await readFactionSdeData(CALDARI)) as FactionSdeData;
+
+    expect(data.skillPlans[0]?.description).toBe(
+      `Fly a Merlin. ${"x".repeat(300)}`,
+    );
   });
 
   it("assembles regions, systems and starbase charters", async () => {
@@ -394,21 +453,17 @@ describe("faction page data", () => {
     );
   });
 
-  it("degrades the live half to empty when the database fails", async () => {
+  it("lets a live-data failure throw: the page is cached whole", async () => {
     prismaMock.corporation.findMany.mockRejectedValue(new Error("down"));
+    prismaMock.corporation.aggregate.mockResolvedValue({
+      _count: { corporationId: 0 },
+      _sum: { memberCount: null },
+    });
     prismaMock.alliance.findMany.mockResolvedValue([]);
     prismaMock.solarSystemSovereignty.findMany.mockResolvedValue([]);
-    const { getFactionLiveData } = require("~/app/faction/[factionId]/data");
+    const { readFactionLiveData } = require("~/app/faction/[factionId]/data");
 
-    expect(await getFactionLiveData(CALDARI, null)).toEqual({
-      corporations: [],
-      enlistedCorporations: [],
-      enlistedCorporationCount: 0,
-      enlistedPilots: 0,
-      enlistedAlliances: [],
-      sovereignty: [],
-      lostSystems: [],
-    });
+    await expect(readFactionLiveData(CALDARI, null)).rejects.toThrow("down");
   });
 
   it("splits sovereignty into held and lost systems", async () => {
@@ -460,13 +515,24 @@ describe("faction page data", () => {
         solarSystem: sovSystem(3, CALDARI),
       },
     ]);
-    const { getFactionLiveData } = require("~/app/faction/[factionId]/data");
+    const { readFactionLiveData } = require("~/app/faction/[factionId]/data");
 
-    const live = (await getFactionLiveData(
+    const live = (await readFactionLiveData(
       CALDARI,
       1000180,
     )) as FactionLiveData;
 
+    // A closed corporation keeps its enlistment with no members; it is not
+    // counted (half the Caldari militia's rows in production).
+    expect(prismaMock.corporation.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          enlistedFactionId: CALDARI,
+          factionId: null,
+          memberCount: { gt: 0 },
+        },
+      }),
+    );
     expect(live.enlistedCorporationCount).toBe(6850);
     expect(live.enlistedPilots).toBe(40000);
     expect(live.corporations[0]).toMatchObject({
@@ -517,6 +583,29 @@ describe("faction page (server)", () => {
   it("lets a failed read throw instead of rendering a 404", async () => {
     prismaMock.faction.findUnique.mockRejectedValue(new Error("down"));
     await expect(renderServerContent(String(CALDARI))).rejects.toThrow("down");
+  });
+
+  it("hands the client counts, not the table rows, under nuqs's React adapter", async () => {
+    prismaMock.faction.findUnique.mockResolvedValue(factionRow);
+    mockSdeReads({ solarSystem: [systemRow(1, 10000002, "The Forge")] });
+    prismaMock.corporation.aggregate.mockResolvedValue({
+      _count: { corporationId: 0 },
+      _sum: { memberCount: null },
+    });
+
+    const tree = (await renderServerContent(String(CALDARI))) as {
+      props: { children: { props: Record<string, unknown> } };
+    };
+    const props = tree.props.children.props;
+
+    expect(props.counts).toMatchObject({ systems: 1, territory: 1, items: 0 });
+    expect(props.faction).not.toHaveProperty("systems");
+    expect(props.live).not.toHaveProperty("corporations");
+  });
+
+  it("lists one placeholder param, which 404s without a query", () => {
+    const { generateStaticParams } = require("~/app/faction/[factionId]/page");
+    expect(generateStaticParams()).toEqual([{ factionId: "0" }]);
   });
 });
 
@@ -601,11 +690,58 @@ describe("faction page (client)", () => {
     );
   });
 
-  it("opens the tab named in the URL", () => {
+  it("does not fetch the table rows for the overview", () => {
+    renderClient(sdeData(), liveData());
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("opens the tab named in the URL, fetching its rows", async () => {
     renderClient(sdeData(), liveData(), "?tab=contraband");
 
-    expect(screen.getByText("Exotic Dancers, Female")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Exotic Dancers, Female"),
+    ).toBeInTheDocument();
+    expect(mockFetch).toHaveBeenCalledWith(`/api/faction/${CALDARI}`);
     expect(screen.getByText("50% of value")).toBeInTheDocument();
+  });
+
+  it("reads the SDE's out-of-range thresholds as never and everywhere", async () => {
+    renderClient(
+      sdeData({
+        contraband: [
+          {
+            typeId: 1,
+            name: "Never attacked",
+            fineByValue: 1,
+            standingLoss: 0,
+            confiscateMinSec: 0.5,
+            attackMinSec: 1.1,
+          },
+          {
+            typeId: 2,
+            name: "Taken everywhere",
+            fineByValue: 1,
+            standingLoss: 0,
+            confiscateMinSec: -1,
+            attackMinSec: 0.8,
+          },
+        ],
+      }),
+      liveData(),
+      "?tab=contraband",
+    );
+
+    expect(await screen.findByText("Never")).toBeInTheDocument();
+    expect(screen.getByText("Everywhere")).toBeInTheDocument();
+    expect(screen.getByText("≥ 0.5")).toBeInTheDocument();
+    expect(screen.getByText("≥ 0.8")).toBeInTheDocument();
+  });
+
+  it("says one epic arc, not one epic arcs", () => {
+    renderClient(sdeData(), liveData());
+
+    expect(screen.getByText("1 epic arc")).toBeInTheDocument();
   });
 
   it("shows live Faction Warfare numbers and the warzone", () => {

@@ -3,15 +3,20 @@ import { cacheLife, cacheTag } from "next/cache";
 import type {
   FactionLiveData,
   FactionLocation,
+  FactionPageData,
   FactionRegionRow,
   FactionSdeData,
   FactionStarbaseCharter,
+  FactionTables,
 } from "./types";
-import type { Prisma } from "~/lib/db";
 import { prisma } from "~/lib/db";
-import { toDescription } from "~/lib/metadata";
+import {
+  factionSolarSystemsWhere,
+  systemFactionId,
+} from "~/lib/factionTerritory";
+import { stripEveMarkup } from "~/lib/metadata";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
-import { emptyFactionLiveData } from "./types";
+import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
 
 /** The columns every location on the page needs: name, security, where. */
 const locationSelect = {
@@ -59,25 +64,26 @@ const byName = <T extends { name: string }>(a: T, b: T) =>
   a.name.localeCompare(b.name);
 
 /**
- * The solar systems a faction holds, as the SDE assigns them. `factionID` is
- * set on a region, overridden on a constellation and overridden again on a
- * system, so a system belongs to the nearest level that names a faction. Only
- * the exceptions carry it on the system itself: 17 of the Caldari State's 423.
+ * What the faction's OpenGraph card needs. Returns null for an unknown or
+ * deleted faction; a failure throws, as everywhere on this cached-whole route.
  */
-const territoryWhere = (factionId: number): Prisma.SolarSystemWhereInput => ({
-  isDeleted: false,
-  OR: [
-    { factionId },
-    { factionId: null, constellation: { factionId } },
-    {
-      factionId: null,
-      constellation: { factionId: null, region: { factionId } },
-    },
-  ],
-});
+export async function readFactionMetadata(factionId: number) {
+  "use cache";
+  cacheSdeRead();
 
-/** How many of the largest enlisted player corporations the page lists. */
-export const ENLISTED_CORPORATIONS_SHOWN = 250;
+  const faction = await prisma.faction.findUnique({
+    select: {
+      name: true,
+      description: true,
+      corporationId: true,
+      stationCount: true,
+      isDeleted: true,
+      militiaCorporation: { select: { name: true } },
+    },
+    where: { factionId },
+  });
+  return faction && !faction.isDeleted ? faction : null;
+}
 
 /**
  * Every piece of static game data about one faction: its identity, races,
@@ -107,6 +113,7 @@ export async function readFactionSdeData(
       stationCount: true,
       stationSystemCount: true,
       iconId: true,
+      isDeleted: true,
       corporationId: true,
       factionCorporation: { select: { name: true } },
       militiaCorporationId: true,
@@ -116,7 +123,8 @@ export async function readFactionSdeData(
     },
     where: { factionId },
   });
-  if (!faction) return null;
+  // A faction the SDE dropped is soft-deleted by the ingest: gone, not empty.
+  if (!faction || faction.isDeleted) return null;
 
   const [
     races,
@@ -163,7 +171,8 @@ export async function readFactionSdeData(
         isCorridor: true,
         _count: { select: { stations: { where: { isDeleted: false } } } },
       },
-      where: territoryWhere(factionId),
+      // The SDE's territory, not just the systems naming the faction.
+      where: factionSolarSystemsWhere(factionId),
     }),
     prisma.type.findMany({
       select: {
@@ -435,7 +444,7 @@ export async function readFactionSdeData(
       .map((plan) => ({
         skillPlanId: plan.skillPlanId,
         name: plan.name,
-        description: toDescription(plan.description) ?? "",
+        description: stripEveMarkup(plan.description),
         skills: plan._count.skills,
       }))
       .sort(byName),
@@ -456,10 +465,10 @@ export async function readFactionSdeData(
  * ingest. Hence its own, shorter lifetime; tagged with the SDE tag as well,
  * since the NPC corporation list itself comes from the SDE.
  *
- * A failure throws rather than degrading here, so a database blip is never
- * what gets written into the cache entry.
+ * A failure throws, as everywhere on this route: the page is cached whole, so
+ * a half degraded to empty would be stored and served for an hour.
  */
-async function readFactionLiveData(
+export async function readFactionLiveData(
   factionId: number,
   militiaCorporationId: number | null,
 ): Promise<FactionLiveData> {
@@ -468,9 +477,15 @@ async function readFactionLiveData(
   cacheTag(SDE_CACHE_TAG);
 
   // Player corporations only: NPC militias are enlisted too, and show up among
-  // the faction's own corporations. A militia can count thousands of them, so
-  // the page gets totals and the largest few.
-  const enlistedWhere = { enlistedFactionId: factionId, factionId: null };
+  // the faction's own corporations. A closed corporation keeps its enlistment
+  // with no members (ESI reports it so, and nothing marks it deleted): half of
+  // the Caldari militia's 6,851. A militia can still count thousands of live
+  // ones, so the page gets totals and the largest few.
+  const enlistedWhere = {
+    enlistedFactionId: factionId,
+    factionId: null,
+    memberCount: { gt: 0 },
+  };
   const [
     corporations,
     enlistedCorporations,
@@ -547,21 +562,18 @@ async function readFactionLiveData(
         },
       },
       where: {
-        OR: [{ factionId }, { solarSystem: territoryWhere(factionId) }],
+        OR: [
+          { factionId },
+          { solarSystem: factionSolarSystemsWhere(factionId) },
+        ],
       },
     }),
   ]);
 
-  // The systems the SDE gives this faction, resolved as `territoryWhere` does.
+  // The systems the SDE gives this faction.
   const homeSystemIds = new Set(
     sovereignty
-      .filter(({ solarSystem: system }) => {
-        const owner =
-          system.factionId ??
-          system.constellation.factionId ??
-          system.constellation.region?.factionId;
-        return owner === factionId;
-      })
+      .filter((sov) => systemFactionId(sov.solarSystem) === factionId)
       .map((sov) => sov.solarSystemId),
   );
 
@@ -616,16 +628,62 @@ async function readFactionLiveData(
 }
 
 /**
- * The page renders fine without its live half, so a database failure hides
- * those sections instead of erroring the route.
+ * Splits a faction's data into what the page carries and the table rows that
+ * `/api/faction/[factionId]` serves when a tab needs them.
  */
-export async function getFactionLiveData(
-  factionId: number,
-  militiaCorporationId: number | null,
-): Promise<FactionLiveData> {
-  try {
-    return await readFactionLiveData(factionId, militiaCorporationId);
-  } catch {
-    return emptyFactionLiveData;
-  }
+export function splitFactionData(
+  sde: FactionSdeData,
+  live: FactionLiveData,
+): { page: FactionPageData; tables: FactionTables } {
+  const {
+    systems,
+    items,
+    contraband,
+    missions,
+    dungeons,
+    standingRestrictions,
+    ...faction
+  } = sde;
+  const {
+    corporations,
+    enlistedCorporations,
+    sovereignty,
+    lostSystems,
+    ...rest
+  } = live;
+  const tables: FactionTables = {
+    systems,
+    items,
+    contraband,
+    missions,
+    dungeons,
+    standingRestrictions,
+    corporations,
+    enlistedCorporations,
+    sovereignty,
+    lostSystems,
+  };
+  return {
+    page: {
+      faction,
+      live: rest,
+      counts: {
+        systems: systems.length,
+        items: items.length,
+        contraband: contraband.length,
+        missions: missions.length,
+        dungeons: dungeons.length,
+        standingRestrictions: standingRestrictions.length,
+        corporations: corporations.length,
+        enlistedCorporations: enlistedCorporations.length,
+        sovereignty: sovereignty.length,
+        lostSystems: lostSystems.length,
+        territory: new Set([
+          ...systems.map((system) => system.solarSystemId),
+          ...sovereignty.map((system) => system.solarSystemId),
+        ]).size,
+      },
+    },
+    tables,
+  };
 }
