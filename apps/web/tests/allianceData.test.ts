@@ -99,10 +99,9 @@ describe("readAllianceProfile", () => {
     await expect(loadData().readAllianceProfile(ALLIANCE_ID)).resolves.toBe(
       null,
     );
-    expect(mockCacheTag).toHaveBeenCalledWith(
-      "alliances",
-      `alliance:${ALLIANCE_ID}`,
-    );
+    // Only its own tag: the list's `alliances` tag is marked stale on almost
+    // every hourly run.
+    expect(mockCacheTag).toHaveBeenCalledWith(`alliance:${ALLIANCE_ID}`);
     expect(mockCacheLife).toHaveBeenCalledWith("hours");
     expect(mockPrisma.corporation.findMany).not.toHaveBeenCalled();
   });

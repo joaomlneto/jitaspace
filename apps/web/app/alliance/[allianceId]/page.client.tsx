@@ -13,6 +13,7 @@ import {
   Paper,
   Progress,
   SimpleGrid,
+  Skeleton,
   Stack,
   Tabs,
   Text,
@@ -406,10 +407,18 @@ export default function AlliancePage({
                 value={formatInteger(warSummary.ongoing)}
               />
             )}
-            {killEfficiency !== null && (
+            {/* zKillboard loads in the browser: hold the slot while it does,
+                so the stat row does not shift when it arrives. */}
+            {(zkill.isLoading || killEfficiency !== null) && (
               <HeroStat
                 label="ISK efficiency"
-                value={formatPercent(killEfficiency)}
+                value={
+                  killEfficiency === null ? (
+                    <Skeleton h="1.2em" w="5ch" />
+                  ) : (
+                    formatPercent(killEfficiency)
+                  )
+                }
               />
             )}
           </Group>

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
 import type { Prisma } from "@jitaspace/db";
@@ -9,7 +10,7 @@ import type {
   AllianceWarStatus,
   AllianceWarSummary,
 } from "./types";
-import { allianceCacheTag, ALLIANCES_CACHE_TAG } from "~/lib/alliancesCache";
+import { allianceCacheTag } from "~/lib/alliancesCache";
 import { prisma } from "~/lib/db";
 
 /**
@@ -87,8 +88,10 @@ function toAllianceWar(
  * hourly job has not stored the alliance (yet).
  *
  * Cached per alliance for hours, tagged so the job's eviction route expires it
- * when the alliance changes and the `/alliances` tag marks it stale on any
- * change. Wars are not on that path; `cacheLife("hours")` bounds them.
+ * when that alliance changes. Deliberately not tagged with the `/alliances`
+ * list's tag: the job marks that stale on almost every run, which would make
+ * every alliance's ISR page regenerate hourly, not just the ones that changed.
+ * Wars are not on the job's path; `cacheLife("hours")` bounds them.
  *
  * Nothing here catches: a database failure throws, and the uncached caller in
  * `page.tsx` degrades to the ESI-only page, so a blip is never what gets
@@ -100,7 +103,7 @@ export async function readAllianceProfile(
 ): Promise<AllianceProfile | null> {
   "use cache";
   cacheLife("hours");
-  cacheTag(ALLIANCES_CACHE_TAG, allianceCacheTag(allianceId));
+  cacheTag(allianceCacheTag(allianceId));
 
   const alliance = await prisma.alliance.findUnique({
     select: {
@@ -308,12 +311,15 @@ export type AllianceProfileResult =
  * cache; `profile: null` is an alliance we have not stored, which is
  * legitimately cached.
  */
-export async function loadAllianceProfile(
-  allianceId: number,
-): Promise<AllianceProfileResult> {
-  try {
-    return { ok: true, profile: await readAllianceProfile(allianceId) };
-  } catch {
-    return { ok: false };
-  }
-}
+export const loadAllianceProfile = cache(
+  async (allianceId: number): Promise<AllianceProfileResult> => {
+    // `cache()` makes `generateMetadata` and the page share one attempt per
+    // request. A good read is deduplicated by `"use cache"` anyway; a failed
+    // one is not, and would otherwise hit a struggling database twice.
+    try {
+      return { ok: true, profile: await readAllianceProfile(allianceId) };
+    } catch {
+      return { ok: false };
+    }
+  },
+);

@@ -149,7 +149,9 @@ const columns: DataTableColumn<CorporationRow>[] = [
     accessor: "taxRate",
     sortable: true,
     align: "right",
-    filter: { type: "range", min: 0, max: 1, step: 0.01 },
+    // In percent, as the column shows it, not the stored 0–1 fraction.
+    filter: { type: "range", min: 0, max: 100, step: 0.5 },
+    filterAccessor: (row) => (row.taxRate === null ? null : row.taxRate * 100),
     cell: (row) => (row.taxRate === null ? null : formatPercent(row.taxRate)),
   },
   {

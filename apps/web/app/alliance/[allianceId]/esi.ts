@@ -42,7 +42,9 @@ export async function readEsiCorporationName(
   corporationId: number,
 ): Promise<string> {
   "use cache";
-  cacheLife("days");
+  // Hours, like the alliance read: a renamed executor should reach the card
+  // within the hour, as the rest of it does.
+  cacheLife("hours");
   const { data } = await getCorporationsCorporationId(corporationId);
   return data.name;
 }
