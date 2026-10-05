@@ -13,6 +13,18 @@ jest.mock("~/app/alliance/[allianceId]/page.client", () => ({
   default: () => null,
 }));
 
+// The alliance page's metadata reads ESI through `"use cache"` functions, which
+// Jest does not apply, and our database, which is not here; `next/server` (its
+// `connection()`) needs a global `Request`, which jsdom lacks.
+jest.mock("next/cache", () => ({
+  cacheLife: () => undefined,
+  cacheTag: () => undefined,
+}));
+jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
+jest.mock("~/app/alliance/[allianceId]/data", () => ({
+  loadAllianceProfile: () => Promise.resolve({ ok: true, profile: null }),
+}));
+
 // ---------------------------------------------------------------------------
 // ESI-client mocks
 // ---------------------------------------------------------------------------

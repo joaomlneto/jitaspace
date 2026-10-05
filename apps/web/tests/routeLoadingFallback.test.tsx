@@ -34,6 +34,9 @@ jest.mock("~/lib/db", () => ({ prisma: {} }));
 // `~/lib/kv` connects eagerly at import time (top-level await), so stub it.
 jest.mock("~/lib/kv", () => ({ redis: { get: () => null }, kv: {} }));
 
+// The alliance page calls `connection()` when its database read fails;
+// `next/server` itself needs a global `Request`, which jsdom lacks.
+jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
 jest.mock("next/cache", () => ({
   cacheLife: () => undefined,
   unstable_cacheLife: () => undefined,
