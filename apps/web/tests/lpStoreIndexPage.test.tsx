@@ -2,7 +2,13 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import { captureMock } from "../__mocks__/posthogMocks";
 
@@ -54,6 +60,10 @@ jest.mock(
     ),
 );
 
+// Pinned rather than imported (the page module must load after the mocks):
+// renaming the key would silently reset every user's saved toggle.
+const ONLY_WITH_LP_STORAGE_KEY = "jitaspace/lp-store-only-with-lp";
+
 const mockUseSelectedCharacter = jest.fn();
 const mockUseCharacterLoyaltyPoints = jest.fn();
 
@@ -97,7 +107,9 @@ describe("LP Store index page (client)", () => {
       hasToken: false,
       loyaltyPointsMap: {},
       isLoading: false,
+      isSuccess: false,
     });
+    window.localStorage.clear();
   });
 
   it("captures lp_store_corporation_selected when a corporation is clicked", () => {
@@ -250,5 +262,106 @@ describe("LP Store index page (client)", () => {
 
     expect(screen.queryByText("0 LP")).not.toBeInTheDocument();
     expect(screen.queryByText("500 LP")).not.toBeInTheDocument();
+  });
+
+  describe("only-with-LP toggle", () => {
+    const toggle = () =>
+      screen.getByRole("switch", { name: "Only corporations I have LP with" });
+
+    // Signed in with LP at Caldari Navy only.
+    const signIn = (overrides: Record<string, unknown> = {}) => {
+      mockUseSelectedCharacter.mockReturnValue({ characterId: 90000001 });
+      mockUseCharacterLoyaltyPoints.mockReturnValue({
+        hasToken: true,
+        loyaltyPointsMap: { 1000035: 500 },
+        isLoading: false,
+        isSuccess: true,
+        ...overrides,
+      });
+    };
+
+    it("is not offered when signed out", () => {
+      renderPage();
+      expect(
+        screen.queryByRole("switch", {
+          name: "Only corporations I have LP with",
+        }),
+      ).toBeNull();
+    });
+
+    it("is disabled until the balances have loaded", () => {
+      signIn({ loyaltyPointsMap: {}, isLoading: true, isSuccess: false });
+      renderPage();
+      expect(toggle()).toBeDisabled();
+    });
+
+    it("hides corporations without LP, and factions left empty", async () => {
+      signIn();
+      renderPage();
+      expect(toggle()).not.toBeChecked();
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+
+      fireEvent.click(toggle());
+
+      expect(toggle()).toBeChecked();
+      await waitFor(() =>
+        expect(screen.queryByText("Federation Navy")).toBeNull(),
+      );
+      expect(screen.getByText("Caldari Navy")).toBeInTheDocument();
+      expect(screen.queryByText("Gallente Federation")).toBeNull();
+      expect(screen.queryByText("Other corporations")).toBeNull();
+      expect(screen.queryByText("CONCORD")).toBeNull();
+    });
+
+    it("combines with the search, and says so when nothing is left", async () => {
+      signIn();
+      renderPage();
+      fireEvent.click(toggle());
+      fireEvent.change(
+        screen.getByLabelText("Filter corporations and factions"),
+        { target: { value: "gallente" } },
+      );
+      expect(
+        await screen.findByText(/No corporations or factions you have LP with/),
+      ).toHaveTextContent(
+        "No corporations or factions you have LP with match “gallente”.",
+      );
+    });
+
+    it("explains an empty list when the character has no LP at all", async () => {
+      signIn({ loyaltyPointsMap: {} });
+      renderPage();
+      fireEvent.click(toggle());
+      expect(
+        await screen.findByText(
+          "You have no loyalty points with any of these corporations yet.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it("shows everything while the balances load, even if it was left on", async () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      signIn({ loyaltyPointsMap: {}, isLoading: true, isSuccess: false });
+      renderPage();
+      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+      expect(screen.getByText("CONCORD")).toBeInTheDocument();
+    });
+
+    it("is remembered across visits", async () => {
+      signIn();
+      const { unmount } = renderPage();
+      fireEvent.click(toggle());
+      expect(window.localStorage.getItem(ONLY_WITH_LP_STORAGE_KEY)).toBe(
+        "true",
+      );
+      unmount();
+
+      renderPage();
+      await waitFor(() => expect(toggle()).toBeChecked());
+      await waitFor(() =>
+        expect(screen.queryByText("Federation Navy")).toBeNull(),
+      );
+    });
   });
 });
