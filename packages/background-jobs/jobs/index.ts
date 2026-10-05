@@ -2,7 +2,6 @@ import type { JobDefinition } from "../core";
 import { createJobRegistry } from "../core";
 import { bootstrapDatabase } from "./bootstrap";
 import {
-  backfillEveKillAllianceIds,
   backfillEveKillCharacterIds,
   backfillEveKillCorporationIds,
   backfillEveRefKillmails,
@@ -110,12 +109,11 @@ import {
   ingestSdeTypeLists,
   ingestSdeTypeMaterials,
   ingestSdeTypes,
-  processRedisAllianceIds,
   processRedisCharacterIds,
   processRedisCorporationIds,
   processRedisWars,
+  revalidateAllianceCache,
   revalidateSdeCache,
-  scrapeEsiAlliances,
   scrapeEsiAncestries,
   scrapeEsiBloodlines,
   scrapeEsiCategories,
@@ -143,6 +141,7 @@ import {
   scrapeHoboleaksDogmaUnits,
   scrapeSdeAgents,
   scrapeZkillboardRecentKills,
+  updateAlliances,
   updateWars,
   watchSde,
 } from "./scrape";
@@ -154,7 +153,6 @@ import { testPing } from "./test";
  * from this single list.
  */
 export const jobs: JobDefinition[] = [
-  backfillEveKillAllianceIds,
   backfillEveKillCharacterIds,
   backfillEveKillCorporationIds,
   backfillEveRefKillmails,
@@ -263,12 +261,11 @@ export const jobs: JobDefinition[] = [
   ingestSdeTypeLists,
   ingestSdeTypeMaterials,
   ingestSdeTypes,
-  processRedisAllianceIds,
   processRedisCharacterIds,
   processRedisCorporationIds,
   processRedisWars,
+  revalidateAllianceCache,
   revalidateSdeCache,
-  scrapeEsiAlliances,
   scrapeEsiAncestries,
   scrapeEsiBloodlines,
   scrapeEsiCategories,
@@ -297,6 +294,7 @@ export const jobs: JobDefinition[] = [
   scrapeSdeAgents,
   scrapeZkillboardRecentKills,
   testPing,
+  updateAlliances,
   updateWars,
   watchSde,
 ];

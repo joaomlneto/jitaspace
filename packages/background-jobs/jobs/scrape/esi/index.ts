@@ -1,4 +1,4 @@
-export * from "./scrapeEsiAlliances";
+export * from "./revalidateAllianceCache";
 export * from "./scrapeEsiAncestries";
 export * from "./scrapeEsiBloodlines";
 export * from "./scrapeEsiCategories";
@@ -22,3 +22,4 @@ export * from "./scrapeEsiStations";
 export * from "./scrapeEsiTypes";
 export * from "./scrapeEsiWars";
 export * from "./updateWars.ts";
+export * from "./updateAlliances.ts";

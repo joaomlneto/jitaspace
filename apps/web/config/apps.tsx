@@ -298,6 +298,13 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => <WarsIcon {...props} />,
     scopes: {},
   },
+  alliances: {
+    name: "Alliances",
+    description: "Browse every open alliance and its members.",
+    url: "/alliances",
+    Icon: (props) => <AlliancesIcon {...props} />,
+    scopes: {},
+  },
   map: {
     name: "Map",
     description: "Browse the regions, constellations and solar systems.",

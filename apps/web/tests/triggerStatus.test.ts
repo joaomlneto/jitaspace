@@ -16,7 +16,7 @@ const iso = (y: number, mo: number, d: number, h: number, mi: number) =>
 
 const run = (overrides: Partial<TriggerApiRun> = {}): TriggerApiRun => ({
   id: "run_1",
-  taskIdentifier: "scrape-esi-alliances",
+  taskIdentifier: "esi-update-alliances",
   status: "COMPLETED",
   createdAt: iso(2026, 5, 10, 6, 0),
   finishedAt: iso(2026, 5, 10, 6, 5),
@@ -26,7 +26,7 @@ const run = (overrides: Partial<TriggerApiRun> = {}): TriggerApiRun => ({
 
 describe("jobNameFromId", () => {
   it("title-cases and applies acronyms", () => {
-    expect(jobNameFromId("scrape-esi-alliances")).toBe("Scrape ESI Alliances");
+    expect(jobNameFromId("esi-update-alliances")).toBe("ESI Update Alliances");
     expect(jobNameFromId("ingest-sde-npc-corporation-divisions")).toBe(
       "Ingest SDE NPC Corporation Divisions",
     );
@@ -74,10 +74,10 @@ describe("summarizeRun", () => {
 describe("buildTriggerStatusResponse", () => {
   it("groups runs by task and computes counts/totals", () => {
     const runs: TriggerApiRun[] = [
-      run({ id: "run_a", taskIdentifier: "scrape-esi-alliances" }),
+      run({ id: "run_a", taskIdentifier: "esi-update-alliances" }),
       run({
         id: "run_b",
-        taskIdentifier: "scrape-esi-alliances",
+        taskIdentifier: "esi-update-alliances",
         status: "FAILED",
         createdAt: iso(2026, 5, 10, 7, 0),
         finishedAt: iso(2026, 5, 10, 7, 1),
@@ -100,14 +100,14 @@ describe("buildTriggerStatusResponse", () => {
     expect(response.totals.running).toBe(1);
 
     const alliances = response.jobs.find(
-      (job) => job.id === "scrape-esi-alliances",
+      (job) => job.id === "esi-update-alliances",
     );
-    expect(alliances?.name).toBe("Scrape ESI Alliances");
+    expect(alliances?.name).toBe("ESI Update Alliances");
     expect(alliances?.counts.total).toBe(2);
     expect(alliances?.counts.failed).toBe(1);
     // run_b (ended 7:01) is the latest run → the failed status sorts it first.
     expect(alliances?.lastRun?.status).toBe("Failed");
-    expect(response.jobs[0]?.id).toBe("scrape-esi-alliances");
+    expect(response.jobs[0]?.id).toBe("esi-update-alliances");
   });
 
   it("returns an error payload with no jobs", () => {

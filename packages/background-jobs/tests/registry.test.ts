@@ -77,7 +77,11 @@ describe("background-jobs registry", () => {
       .filter((job) => job.trigger.type === "cron")
       .map((job) => job.id)
       .sort((a, b) => a.localeCompare(b));
-    expect(cronJobIds).toEqual(["esi-update-wars", "watch-sde"]);
+    expect(cronJobIds).toEqual([
+      "esi-update-alliances",
+      "esi-update-wars",
+      "watch-sde",
+    ]);
   });
 
   it("resolves every job by id through the registry", () => {

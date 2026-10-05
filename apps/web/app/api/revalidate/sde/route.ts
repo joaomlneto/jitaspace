@@ -1,26 +1,7 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { revalidateTag } from "next/cache";
 
-import { env } from "~/env";
+import { isCronAuthorized } from "~/lib/cronAuth";
 import { SDE_CACHE_TAG } from "~/lib/sdeCache";
-
-/**
- * Whether the request carries `Authorization: Bearer <CRON_SECRET>`.
- *
- * Both sides are hashed before comparing so `timingSafeEqual` sees two
- * equal-length buffers and the comparison time does not reveal the secret's
- * length. An unset or short secret authorizes nothing: without that guard, a
- * deployment running with `SKIP_ENV_VALIDATION` would accept
- * `Bearer undefined`.
- */
-function isAuthorized(request: Request): boolean {
-  const secret = env.CRON_SECRET;
-  if (!secret || secret.length < 16) return false;
-  const header = request.headers.get("authorization");
-  if (header === null) return false;
-  const digest = (value: string) => createHash("sha256").update(value).digest();
-  return timingSafeEqual(digest(header), digest(`Bearer ${secret}`));
-}
 
 /**
  * Drops every cache entry tagged {@link SDE_CACHE_TAG}. Called by the
@@ -35,7 +16,7 @@ function isAuthorized(request: Request): boolean {
  * nothing up front.
  */
 export function POST(request: Request): Response {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   revalidateTag(SDE_CACHE_TAG, "max");
