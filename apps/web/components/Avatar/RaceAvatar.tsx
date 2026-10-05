@@ -12,7 +12,9 @@ export type RaceAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const RaceAvatar = memo(({ raceId, ...otherProps }: RaceAvatarProps) => {
   const { data: race } = useRace(raceId ?? 0);
-  const factionId = (race as { faction_id?: number } | undefined)?.faction_id;
-  return <UIRaceAvatar factionId={factionId?.toString()} {...otherProps} />;
+  // ESI calls the race's faction its `alliance_id`; there is no `faction_id`.
+  return (
+    <UIRaceAvatar factionId={race?.alliance_id.toString()} {...otherProps} />
+  );
 });
 RaceAvatar.displayName = "RaceAvatar";
