@@ -121,6 +121,7 @@ describe("system route server data", () => {
     positionY: 2,
     positionZ: 3,
     factionId: 500001,
+    constellation: { factionId: null, region: { factionId: null } },
     isHub: true,
     isBorder: null,
     isFringe: false,
@@ -151,6 +152,32 @@ describe("system route server data", () => {
       isInternational: true,
       isRegional: false,
     });
+  });
+
+  it("inherits the faction from the constellation, then the region", async () => {
+    // Most systems name no faction of their own: New Caldari takes the
+    // Caldari State from Kimotoro, and many systems only from their region.
+    solarSystemFindUnique.mockResolvedValueOnce({
+      ...columns,
+      factionId: null,
+      constellation: { factionId: 500001, region: { factionId: 500004 } },
+    });
+    const fromConstellation = await runRoute("~/app/system/[systemId]/page", {
+      systemId: "30000142",
+    });
+    solarSystemFindUnique.mockResolvedValueOnce({
+      ...columns,
+      factionId: null,
+      constellation: { factionId: null, region: { factionId: 500004 } },
+    });
+    const fromRegion = await runRoute("~/app/system/[systemId]/page", {
+      systemId: "30000142",
+    });
+
+    expect((fromConstellation.sde as { factionId: unknown }).factionId).toBe(
+      500001,
+    );
+    expect((fromRegion.sde as { factionId: unknown }).factionId).toBe(500004);
   });
 
   it("reports a null position when a coordinate is missing", async () => {

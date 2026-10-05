@@ -202,6 +202,25 @@ export function withArticle(name: string): string {
 }
 
 /**
+ * EVE's rich text (descriptions are stored as in-game HTML) as plain text: tags
+ * dropped, a line break kept as a space, and whitespace collapsed.
+ */
+export function stripEveMarkup(html: string): string {
+  let out = "";
+  let tag: string | null = null;
+  for (const ch of html) {
+    if (ch === "<") tag = "";
+    else if (tag !== null && ch === ">") {
+      // `a<br>b` must not run the two words together.
+      if (/^br\b/i.test(tag)) out += " ";
+      tag = null;
+    } else if (tag !== null) tag += ch;
+    else out += ch;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+/**
  * Strips EVE's HTML markup (descriptions are stored as in-game rich text) and
  * trims to a length that survives Discord/Twitter truncation intact.
  */
@@ -210,14 +229,7 @@ export function toDescription(
   fallback?: string,
 ): string | undefined {
   if (!html) return fallback;
-  let out = "";
-  let inTag = false;
-  for (const ch of html) {
-    if (ch === "<") inTag = true;
-    else if (ch === ">") inTag = false;
-    else if (!inTag) out += ch;
-  }
-  const text = out.replace(/\s+/g, " ").trim();
+  const text = stripEveMarkup(html);
   if (!text) return fallback;
   return text.length > 200 ? `${text.slice(0, 199).trimEnd()}…` : text;
 }

@@ -303,11 +303,28 @@ describe("faction/[factionId] generateMetadata", () => {
     );
   });
 
-  it("returns empty when Prisma throws", async () => {
+  it("throws when Prisma throws, so the cached page keeps its metadata", async () => {
+    // The route is cached whole (ISR): generic metadata from a failed read
+    // would be stored for an hour.
     mockFactionFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/faction/[factionId]/page");
+    await expect(
+      generateMetadata({ params: rp({ factionId: "500001" }) }),
+    ).rejects.toThrow("db");
+  });
+
+  it("returns empty for a deleted faction", async () => {
+    mockFactionFindUnique.mockResolvedValue({
+      name: "Gone",
+      description: "",
+      corporationId: null,
+      stationCount: 0,
+      isDeleted: true,
+      militiaCorporation: null,
+    });
+    const { generateMetadata } = await import("~/app/faction/[factionId]/page");
     expect(
-      await generateMetadata({ params: rp({ factionId: "500001" }) }),
+      await generateMetadata({ params: rp({ factionId: "500099" }) }),
     ).toEqual({});
   });
 });

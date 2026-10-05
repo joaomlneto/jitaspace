@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -65,6 +64,7 @@ import {
 } from "~/components/Breadcrumbs";
 import { COMPARABLE_CATEGORY_IDS } from "~/components/Compare/catalog";
 import { ItemVariations } from "~/components/Compare/ItemVariations";
+import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
   CategoryName,
@@ -143,78 +143,6 @@ const formatNumber = (value: number): string => {
   if (abs < 0.001) maximumFractionDigits = 6;
   return value.toLocaleString(undefined, { maximumFractionDigits });
 };
-
-function SectionHeading({
-  icon,
-  children,
-}: Readonly<{
-  icon: ReactNode;
-  children: ReactNode;
-}>) {
-  return (
-    <Group gap={8} align="center">
-      <Box c="eve_accent.4" style={{ display: "flex" }}>
-        {icon}
-      </Box>
-      <Title order={4}>{children}</Title>
-    </Group>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  sub,
-}: Readonly<{
-  label: string;
-  value: ReactNode;
-  sub?: ReactNode;
-}>) {
-  return (
-    <Paper withBorder radius="md" p="sm">
-      <Stack gap={2}>
-        <Text
-          size="xs"
-          c="dimmed"
-          tt="uppercase"
-          fw={700}
-          style={{ letterSpacing: "0.05em" }}
-        >
-          {label}
-        </Text>
-        <Text component="div" fw={600} c="gray.0">
-          {value}
-        </Text>
-        {sub !== undefined && (
-          <Text size="xs" c="dimmed">
-            {sub}
-          </Text>
-        )}
-      </Stack>
-    </Paper>
-  );
-}
-
-function HeroStat({
-  label,
-  value,
-}: Readonly<{ label: string; value: ReactNode }>) {
-  return (
-    <Stack gap={0}>
-      <Text
-        size="xs"
-        c="dimmed"
-        tt="uppercase"
-        style={{ letterSpacing: "0.05em" }}
-      >
-        {label}
-      </Text>
-      <Text component="div" fw={600} c="gray.0">
-        {value}
-      </Text>
-    </Stack>
-  );
-}
 
 /** Renders an attribute value, linking out for ID-reference units. */
 function AttributeValue({

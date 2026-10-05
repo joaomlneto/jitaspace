@@ -160,6 +160,7 @@ describe("System page", () => {
       positionY: null,
       positionZ: null,
       factionId: null,
+      constellation: { factionId: null, region: { factionId: null } },
       isHub: false,
       isBorder: false,
       isFringe: false,

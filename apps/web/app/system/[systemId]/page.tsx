@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { SolarSystemSdeInfo } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { systemFactionId, systemFactionSelect } from "~/lib/factionTerritory";
 import { pageMetadata, withArticle } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead } from "~/lib/sdeCache";
@@ -89,7 +90,7 @@ async function readSolarSystemPageData(
       positionX: true,
       positionY: true,
       positionZ: true,
-      factionId: true,
+      ...systemFactionSelect,
       isHub: true,
       isBorder: true,
       isFringe: true,
@@ -112,7 +113,8 @@ async function readSolarSystemPageData(
         positionX != null && positionY != null && positionZ != null
           ? { x: positionX, y: positionY, z: positionZ }
           : null,
-      factionId: system.factionId,
+      // Mostly inherited: few systems carry a faction of their own.
+      factionId: systemFactionId(system),
       isHub: system.isHub ?? false,
       isBorder: system.isBorder ?? false,
       isFringe: system.isFringe ?? false,
