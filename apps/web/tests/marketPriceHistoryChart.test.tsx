@@ -25,9 +25,11 @@ const mockUseHistory =
       options?: unknown,
     ) => HistoryResult
   >();
-const mockPostUniverseNames =
+const mockNameLookup =
   jest.fn<
-    (ids: number[]) => Promise<{ data: { id: number; name: string }[] }>
+    (
+      entries: { id: number; category?: string }[],
+    ) => Record<string, { value?: { name: string } } | undefined>
   >();
 const mockSetParams = jest.fn();
 let mockParams: { region: number; range: string } = {
@@ -45,7 +47,11 @@ jest.mock("@jitaspace/esi-client", () => ({
   useGetUniverseRegions: () => ({
     data: { data: [10000002, 10000001, 11000001] },
   }),
-  postUniverseNames: (ids: number[]) => mockPostUniverseNames(ids),
+}));
+jest.mock("@jitaspace/hooks", () => ({
+  MARKET_HUB_REGION_IDS: [10000002, 10000043, 10000032, 10000030, 10000042],
+  useEsiNameLookup: (entries: { id: number; category?: string }[]) =>
+    mockNameLookup(entries),
 }));
 jest.mock("nuqs", () => ({
   parseAsInteger: { withDefault: () => ({}) },
@@ -117,9 +123,9 @@ describe("MarketPriceHistory", () => {
       isLoading: false,
       isError: false,
     });
-    mockPostUniverseNames
+    mockNameLookup
       .mockReset()
-      .mockResolvedValue({ data: [{ id: 10000001, name: "Derelik" }] });
+      .mockReturnValue({ "10000001": { value: { name: "Derelik" } } });
   });
 
   it("asks ESI for the type's history in the region from the URL", () => {
@@ -180,6 +186,26 @@ describe("MarketPriceHistory", () => {
     expect(container.querySelectorAll(".recharts-wrapper")).toHaveLength(2);
   });
 
+  it("reads out every shown series for the hovered day", async () => {
+    const { container } = renderChart();
+    const [priceChart] = container.querySelectorAll(".recharts-wrapper");
+    if (!priceChart) throw new Error("price chart not rendered");
+
+    // jsdom has no layout: the chart sits at the origin, 800px wide.
+    fireEvent.mouseMove(priceChart, { clientX: 400, clientY: 150 });
+
+    const readout = await waitFor(() => {
+      const tooltip = container.querySelector(".recharts-tooltip-wrapper");
+      expect(tooltip).toHaveTextContent("Median");
+      return tooltip;
+    });
+    expect(readout).toHaveTextContent("Max");
+    expect(readout).toHaveTextContent("5d avg");
+    expect(readout).toHaveTextContent("Volume");
+    // The channel is off by default, so it has no row.
+    expect(readout).not.toHaveTextContent("Donchian");
+  });
+
   it("starts with the Donchian channel off, and toggles series", () => {
     renderChart();
 
@@ -211,12 +237,14 @@ describe("MarketPriceHistory", () => {
     expect(mockSetParams).toHaveBeenCalledWith({ range: "1y" });
   });
 
-  it("names every market region, leaving out wormhole space", async () => {
+  it("names every market region, leaving out wormhole space", () => {
     renderChart();
 
-    await waitFor(() =>
-      expect(mockPostUniverseNames).toHaveBeenCalledWith([10000001]),
-    );
+    expect(mockNameLookup).toHaveBeenLastCalledWith([
+      { id: 10000001, category: "region" },
+    ]);
+    fireEvent.click(screen.getByRole("combobox", { name: "Region" }));
+    expect(screen.getByRole("option", { name: "Derelik" })).toBeInTheDocument();
   });
 
   it("says so when the region has no trades", () => {

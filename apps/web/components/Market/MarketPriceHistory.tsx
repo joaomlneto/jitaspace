@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -14,7 +14,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import { parseAsInteger, parseAsStringLiteral, useQueryStates } from "nuqs";
 import {
   Area,
@@ -30,13 +30,16 @@ import {
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
-  postUniverseNames,
   useGetMarketsRegionIdHistory,
   useGetUniverseRegions,
 } from "@jitaspace/esi-client";
-import { MARKET_HUB_REGION_IDS } from "@jitaspace/hooks";
+import { MARKET_HUB_REGION_IDS, useEsiNameLookup } from "@jitaspace/hooks";
 
-import type { PriceHistoryPoint, PriceHistoryRange } from "./priceHistory";
+import type {
+  PriceHistoryPoint,
+  PriceHistoryRange,
+  PriceHistorySummary,
+} from "./priceHistory";
 import { DataTable } from "~/components/DataTable";
 import { formatIsk } from "./MarketOrdersDataTable";
 import classes from "./MarketPriceHistory.module.css";
@@ -315,6 +318,310 @@ const tableColumns: DataTableColumn<PriceHistoryPoint>[] = [
 ];
 
 /**
+ * The region to chart for the one in the URL. A hand-edited or stale URL must
+ * not reach ESI with an id that has no market, so anything that isn't a market
+ * region falls back to the default hub. `undefined` while the region list is
+ * still loading, unless the id is a hub, which needs no list to trust.
+ */
+function resolveRegionId(
+  requestedRegionId: number,
+  marketRegionIds: ReadonlySet<number> | undefined,
+): number | undefined {
+  if (MARKET_HUB_REGION_IDS.includes(requestedRegionId)) {
+    return requestedRegionId;
+  }
+  if (marketRegionIds === undefined) return undefined;
+  return marketRegionIds.has(requestedRegionId)
+    ? requestedRegionId
+    : DEFAULT_REGION_ID;
+}
+
+/** A fractional change as a signed percentage with a direction arrow. */
+function formatChange(change: number | undefined): string {
+  if (change === undefined) return "—";
+  const arrow = change >= 0 ? "▲ +" : "▼ ";
+  return `${arrow}${(change * 100).toFixed(1)}%`;
+}
+
+/**
+ * The price chart's tooltip, as Recharts renders it: it clones this element
+ * with the hovered `active` state and `payload`.
+ */
+function HistoryTooltipContent({
+  active,
+  payload,
+  visible,
+}: Readonly<{
+  active?: boolean;
+  payload?: readonly { payload?: unknown }[];
+  visible: Set<SeriesId>;
+}>) {
+  if (!active) return null;
+  return (
+    <HistoryTooltip
+      point={payload?.[0]?.payload as PriceHistoryPoint | undefined}
+      visible={visible}
+    />
+  );
+}
+
+/** The volume chart shows the cursor only; the price chart's readout covers both. */
+function NoTooltip() {
+  return null;
+}
+
+const X_AXIS_PROPS = {
+  dataKey: "time",
+  type: "number",
+  scale: "time",
+  domain: ["dataMin", "dataMax"],
+  tickFormatter: (time: number) => shortDate.format(time),
+  tickLine: false,
+  axisLine: { stroke: "var(--chart-grid)" },
+  tick: { fill: "var(--chart-axis)", fontSize: 11 },
+  minTickGap: 32,
+} as const;
+const Y_AXIS_PROPS = {
+  width: Y_AXIS_WIDTH,
+  // The ticks are ours and few (`niceTicks`): show every one. Recharts'
+  // default thinning drops the label sitting on the plot's bottom edge.
+  interval: 0,
+  tickLine: false,
+  axisLine: false,
+  tick: { fill: "var(--chart-axis)", fontSize: 11 },
+} as const;
+const CURSOR = { stroke: "var(--chart-axis)", strokeWidth: 1 };
+
+function HistoryLoading() {
+  return (
+    <Stack gap="md">
+      <SimpleGrid cols={3} spacing={{ base: 6, sm: "sm" }}>
+        <Skeleton h={78} />
+        <Skeleton h={78} />
+        <Skeleton h={78} />
+      </SimpleGrid>
+      <Skeleton h={PRICE_CHART_HEIGHT + VOLUME_CHART_HEIGHT + 48} />
+    </Stack>
+  );
+}
+
+function HistorySummary({
+  summary,
+  tradingDays,
+}: Readonly<{ summary: PriceHistorySummary; tradingDays: number }>) {
+  return (
+    <SimpleGrid cols={3} spacing={{ base: 6, sm: "sm" }}>
+      <Stat
+        label="Median"
+        value={formatIsk(summary.latest.median)}
+        hint={`latest, ${longDate.format(summary.latest.time)}`}
+      />
+      <Stat
+        label="Change"
+        value={formatChange(summary.change)}
+        hint={`median, over ${tradingDays.toLocaleString()} trading days`}
+      />
+      <Stat
+        label="Volume/day"
+        value={compactNumber.format(summary.averageDailyVolume)}
+        hint="units traded per day, on average"
+      />
+    </SimpleGrid>
+  );
+}
+
+/**
+ * The price chart above the volume chart, with the series toggles that double
+ * as its legend.
+ */
+function HistoryCharts({
+  points,
+  visible,
+  onToggle,
+}: Readonly<{
+  points: PriceHistoryPoint[];
+  visible: Set<SeriesId>;
+  onToggle: (id: SeriesId) => void;
+}>) {
+  const priceTicks = useMemo(() => {
+    const extent = visiblePriceExtent(points, visible);
+    return extent ? niceTicks(extent[0], extent[1]) : [];
+  }, [points, visible]);
+  const volumeTicks = useMemo(
+    () => niceTicks(0, Math.max(0, ...points.map((point) => point.volume)), 3),
+    [points],
+  );
+
+  return (
+    <Paper withBorder radius="md" p="sm">
+      <Group gap={6} mb="sm" role="group" aria-label="Series shown">
+        {SERIES.map((series) => (
+          <button
+            key={series.id}
+            type="button"
+            className={classes.toggle}
+            aria-pressed={visible.has(series.id)}
+            onClick={() => onToggle(series.id)}
+          >
+            <SeriesKey color={SERIES_COLOR[series.id]} shape={series.shape} />
+            {series.label}
+          </button>
+        ))}
+      </Group>
+
+      <ResponsiveContainer width="100%" height={PRICE_CHART_HEIGHT}>
+        <ComposedChart
+          data={points}
+          syncId="market-price-history"
+          // Room for the top and bottom tick labels: with its x-axis hidden,
+          // Recharts drops a label that would overflow.
+          margin={{ top: 8, right: 8, bottom: 8, left: 0 }}
+        >
+          <CartesianGrid
+            vertical={false}
+            stroke="var(--chart-grid)"
+            strokeWidth={1}
+          />
+          <XAxis {...X_AXIS_PROPS} hide />
+          <YAxis
+            {...Y_AXIS_PROPS}
+            ticks={priceTicks}
+            tickFormatter={tickFormatter(priceTicks)}
+            domain={[priceTicks[0] ?? "auto", priceTicks.at(-1) ?? "auto"]}
+          />
+          {/* The one readout for both charts: hovering the volume chart moves
+              this one's cursor too, through `syncId`. */}
+          <Tooltip
+            cursor={CURSOR}
+            isAnimationActive={false}
+            content={<HistoryTooltipContent visible={visible} />}
+          />
+          {visible.has("donchian") && (
+            <Area
+              dataKey="donchian"
+              stroke={SERIES_COLOR.donchian}
+              strokeWidth={1}
+              strokeOpacity={0.6}
+              fill={SERIES_COLOR.donchian}
+              fillOpacity={0.1}
+              isAnimationActive={false}
+              activeDot={false}
+            />
+          )}
+          {visible.has("range") && (
+            <Bar
+              dataKey="range"
+              fill={SERIES_COLOR.range}
+              fillOpacity={0.55}
+              barSize={2}
+              isAnimationActive={false}
+            />
+          )}
+          {visible.has("ma20") && (
+            <Line
+              dataKey="ma20"
+              stroke={SERIES_COLOR.ma20}
+              strokeWidth={2}
+              dot={false}
+              activeDot={false}
+              isAnimationActive={false}
+            />
+          )}
+          {visible.has("ma5") && (
+            <Line
+              dataKey="ma5"
+              stroke={SERIES_COLOR.ma5}
+              strokeWidth={2}
+              dot={false}
+              activeDot={false}
+              isAnimationActive={false}
+            />
+          )}
+          {visible.has("median") && (
+            <Line
+              dataKey="median"
+              stroke={SERIES_COLOR.median}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{
+                r: 4,
+                strokeWidth: 2,
+                stroke: "var(--mantine-color-body)",
+              }}
+              isAnimationActive={false}
+            />
+          )}
+        </ComposedChart>
+      </ResponsiveContainer>
+
+      <Text size="xs" c="dimmed" mt="xs" ml={Y_AXIS_WIDTH}>
+        Volume (units)
+      </Text>
+      <ResponsiveContainer width="100%" height={VOLUME_CHART_HEIGHT}>
+        <ComposedChart
+          data={points}
+          syncId="market-price-history"
+          margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+        >
+          <CartesianGrid
+            vertical={false}
+            stroke="var(--chart-grid)"
+            strokeWidth={1}
+          />
+          <XAxis {...X_AXIS_PROPS} />
+          <YAxis
+            {...Y_AXIS_PROPS}
+            ticks={volumeTicks}
+            tickFormatter={tickFormatter(volumeTicks)}
+            domain={[0, volumeTicks.at(-1) ?? "auto"]}
+          />
+          <Tooltip cursor={CURSOR} content={<NoTooltip />} />
+          <Bar
+            dataKey="volume"
+            fill={SERIES_COLOR.median}
+            fillOpacity={0.7}
+            radius={[2, 2, 0, 0]}
+            maxBarSize={24}
+            isAnimationActive={false}
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </Paper>
+  );
+}
+
+/** Every day in the range as a table, newest first, behind a toggle. */
+function DailyData({ points }: Readonly<{ points: PriceHistoryPoint[] }>) {
+  const [showTable, setShowTable] = useState(false);
+  const newestFirst = useMemo(() => [...points].reverse(), [points]);
+
+  return (
+    <div>
+      <Button
+        variant="subtle"
+        size="xs"
+        onClick={() => setShowTable((shown) => !shown)}
+        aria-expanded={showTable}
+      >
+        {showTable ? "Hide daily data" : "Show daily data"}
+      </Button>
+      {showTable && (
+        <DataTable
+          data={newestFirst}
+          columns={tableColumns}
+          rowId={(point) => point.time}
+          withPagination
+          defaultPageSize={20}
+          initialSort={{ columnId: "date", direction: "desc" }}
+          verticalSpacing="xs"
+          striped
+        />
+      )}
+    </div>
+  );
+}
+
+/**
  * A type's daily market history in one region, as the in-game market window
  * plots it: median day price with the day's min/max, two moving averages and a
  * Donchian channel above, and volume below.
@@ -338,17 +645,9 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
   const [visible, setVisible] = useState<Set<SeriesId>>(
     () => new Set(["median", "range", "ma5", "ma20"]),
   );
-  const [showTable, setShowTable] = useState(false);
 
   const { regionOptions, marketRegionIds } = useRegionOptions();
-  // A hand-edited or stale URL must not reach ESI with an id that has no
-  // market: fall back to the default hub. Undefined while the region list
-  // loads, unless the id is a hub, which needs no list to trust.
-  const regionId = MARKET_HUB_REGION_IDS.includes(requestedRegionId)
-    ? requestedRegionId
-    : marketRegionIds?.has(requestedRegionId) === false
-      ? DEFAULT_REGION_ID
-      : marketRegionIds && requestedRegionId;
+  const regionId = resolveRegionId(requestedRegionId, marketRegionIds);
 
   const {
     data,
@@ -363,22 +662,12 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
     // than swapping everything for skeletons and back.
     { query: { placeholderData: keepPreviousData } },
   );
-  const isLoading = regionId === undefined || isHistoryLoading;
   const allPoints = useMemo(() => buildPriceHistory(data?.data ?? []), [data]);
   const points = useMemo(
     () => sliceToRange(allPoints, range),
     [allPoints, range],
   );
   const summary = useMemo(() => summarizeRange(points), [points]);
-  const newestFirst = useMemo(() => [...points].reverse(), [points]);
-  const priceTicks = useMemo(() => {
-    const extent = visiblePriceExtent(points, visible);
-    return extent ? niceTicks(extent[0], extent[1]) : [];
-  }, [points, visible]);
-  const volumeTicks = useMemo(
-    () => niceTicks(0, Math.max(0, ...points.map((point) => point.volume)), 3),
-    [points],
-  );
 
   const regionLabel =
     regionOptions
@@ -394,27 +683,38 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
       return next;
     });
 
-  const xAxisProps = {
-    dataKey: "time",
-    type: "number",
-    scale: "time",
-    domain: ["dataMin", "dataMax"],
-    tickFormatter: (time: number) => shortDate.format(time),
-    tickLine: false,
-    axisLine: { stroke: "var(--chart-grid)" },
-    tick: { fill: "var(--chart-axis)", fontSize: 11 },
-    minTickGap: 32,
-  } as const;
-  const yAxisProps = {
-    width: Y_AXIS_WIDTH,
-    // The ticks are ours and few (`niceTicks`): show every one. Recharts'
-    // default thinning drops the label sitting on the plot's bottom edge.
-    interval: 0,
-    tickLine: false,
-    axisLine: false,
-    tick: { fill: "var(--chart-axis)", fontSize: 11 },
-  } as const;
-  const cursor = { stroke: "var(--chart-axis)", strokeWidth: 1 };
+  let body: ReactNode;
+  if (isError) {
+    body = (
+      <Alert color="red" variant="light">
+        Could not load the price history. ESI may be having a moment; try again
+        shortly.
+      </Alert>
+    );
+  } else if (regionId === undefined || isHistoryLoading) {
+    body = <HistoryLoading />;
+  } else if (summary) {
+    body = (
+      <Stack
+        gap="md"
+        aria-busy={isPlaceholderData}
+        style={{
+          opacity: isPlaceholderData ? 0.55 : 1,
+          transition: "opacity 150ms ease",
+        }}
+      >
+        <HistorySummary summary={summary} tradingDays={points.length} />
+        <HistoryCharts points={points} visible={visible} onToggle={toggle} />
+        <DailyData points={points} />
+      </Stack>
+    );
+  } else {
+    body = (
+      <Text c="dimmed" size="sm">
+        {`No trades in ${regionLabel} over the past year.`}
+      </Text>
+    );
+  }
 
   return (
     <Stack gap="md" className={classes.root}>
@@ -438,230 +738,7 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
           onChange={(value) => void setParams({ range: value })}
         />
       </Group>
-
-      {isError ? (
-        <Alert color="red" variant="light">
-          Could not load the price history. ESI may be having a moment; try
-          again shortly.
-        </Alert>
-      ) : isLoading ? (
-        <Stack gap="md">
-          <SimpleGrid cols={3} spacing={{ base: 6, sm: "sm" }}>
-            <Skeleton h={78} />
-            <Skeleton h={78} />
-            <Skeleton h={78} />
-          </SimpleGrid>
-          <Skeleton h={PRICE_CHART_HEIGHT + VOLUME_CHART_HEIGHT + 48} />
-        </Stack>
-      ) : !summary ? (
-        <Text c="dimmed" size="sm">
-          {`No trades in ${regionLabel} over the past year.`}
-        </Text>
-      ) : (
-        <Stack
-          gap="md"
-          aria-busy={isPlaceholderData}
-          style={{
-            opacity: isPlaceholderData ? 0.55 : 1,
-            transition: "opacity 150ms ease",
-          }}
-        >
-          <SimpleGrid cols={3} spacing={{ base: 6, sm: "sm" }}>
-            <Stat
-              label="Median"
-              value={formatIsk(summary.latest.median)}
-              hint={`latest, ${longDate.format(summary.latest.time)}`}
-            />
-            <Stat
-              label="Change"
-              value={
-                summary.change === undefined
-                  ? "—"
-                  : `${summary.change >= 0 ? "▲ +" : "▼ "}${(summary.change * 100).toFixed(1)}%`
-              }
-              hint={`median, over ${points.length.toLocaleString()} trading days`}
-            />
-            <Stat
-              label="Volume/day"
-              value={compactNumber.format(summary.averageDailyVolume)}
-              hint="units traded per day, on average"
-            />
-          </SimpleGrid>
-
-          <Paper withBorder radius="md" p="sm">
-            <Group gap={6} mb="sm" role="group" aria-label="Series shown">
-              {SERIES.map((series) => (
-                <button
-                  key={series.id}
-                  type="button"
-                  className={classes.toggle}
-                  aria-pressed={visible.has(series.id)}
-                  onClick={() => toggle(series.id)}
-                >
-                  <SeriesKey
-                    color={SERIES_COLOR[series.id]}
-                    shape={series.shape}
-                  />
-                  {series.label}
-                </button>
-              ))}
-            </Group>
-
-            <ResponsiveContainer width="100%" height={PRICE_CHART_HEIGHT}>
-              <ComposedChart
-                data={points}
-                syncId="market-price-history"
-                // Room for the top and bottom tick labels: with its x-axis
-                // hidden, Recharts drops a label that would overflow.
-                margin={{ top: 8, right: 8, bottom: 8, left: 0 }}
-              >
-                <CartesianGrid
-                  vertical={false}
-                  stroke="var(--chart-grid)"
-                  strokeWidth={1}
-                />
-                <XAxis {...xAxisProps} hide />
-                <YAxis
-                  {...yAxisProps}
-                  ticks={priceTicks}
-                  tickFormatter={tickFormatter(priceTicks)}
-                  domain={[
-                    priceTicks[0] ?? "auto",
-                    priceTicks.at(-1) ?? "auto",
-                  ]}
-                />
-                {/* The one readout for both charts: hovering the volume
-                      chart moves this one's cursor too, through `syncId`. */}
-                <Tooltip
-                  cursor={cursor}
-                  isAnimationActive={false}
-                  content={({ active, payload }) =>
-                    active ? (
-                      <HistoryTooltip
-                        point={
-                          payload[0]?.payload as PriceHistoryPoint | undefined
-                        }
-                        visible={visible}
-                      />
-                    ) : null
-                  }
-                />
-                {visible.has("donchian") && (
-                  <Area
-                    dataKey="donchian"
-                    stroke={SERIES_COLOR.donchian}
-                    strokeWidth={1}
-                    strokeOpacity={0.6}
-                    fill={SERIES_COLOR.donchian}
-                    fillOpacity={0.1}
-                    isAnimationActive={false}
-                    activeDot={false}
-                  />
-                )}
-                {visible.has("range") && (
-                  <Bar
-                    dataKey="range"
-                    fill={SERIES_COLOR.range}
-                    fillOpacity={0.55}
-                    barSize={2}
-                    isAnimationActive={false}
-                  />
-                )}
-                {visible.has("ma20") && (
-                  <Line
-                    dataKey="ma20"
-                    stroke={SERIES_COLOR.ma20}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                  />
-                )}
-                {visible.has("ma5") && (
-                  <Line
-                    dataKey="ma5"
-                    stroke={SERIES_COLOR.ma5}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                  />
-                )}
-                {visible.has("median") && (
-                  <Line
-                    dataKey="median"
-                    stroke={SERIES_COLOR.median}
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{
-                      r: 4,
-                      strokeWidth: 2,
-                      stroke: "var(--mantine-color-body)",
-                    }}
-                    isAnimationActive={false}
-                  />
-                )}
-              </ComposedChart>
-            </ResponsiveContainer>
-
-            <Text size="xs" c="dimmed" mt="xs" ml={Y_AXIS_WIDTH}>
-              Volume (units)
-            </Text>
-            <ResponsiveContainer width="100%" height={VOLUME_CHART_HEIGHT}>
-              <ComposedChart
-                data={points}
-                syncId="market-price-history"
-                margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
-              >
-                <CartesianGrid
-                  vertical={false}
-                  stroke="var(--chart-grid)"
-                  strokeWidth={1}
-                />
-                <XAxis {...xAxisProps} />
-                <YAxis
-                  {...yAxisProps}
-                  ticks={volumeTicks}
-                  tickFormatter={tickFormatter(volumeTicks)}
-                  domain={[0, volumeTicks.at(-1) ?? "auto"]}
-                />
-                <Tooltip cursor={cursor} content={() => null} />
-                <Bar
-                  dataKey="volume"
-                  fill={SERIES_COLOR.median}
-                  fillOpacity={0.7}
-                  radius={[2, 2, 0, 0]}
-                  maxBarSize={24}
-                  isAnimationActive={false}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </Paper>
-
-          <div>
-            <Button
-              variant="subtle"
-              size="xs"
-              onClick={() => setShowTable((shown) => !shown)}
-              aria-expanded={showTable}
-            >
-              {showTable ? "Hide daily data" : "Show daily data"}
-            </Button>
-            {showTable && (
-              <DataTable
-                data={newestFirst}
-                columns={tableColumns}
-                rowId={(point) => point.time}
-                withPagination
-                defaultPageSize={20}
-                initialSort={{ columnId: "date", direction: "desc" }}
-                verticalSpacing="xs"
-                striped
-              />
-            )}
-          </div>
-        </Stack>
-      )}
+      {body}
     </Stack>
   );
 }
@@ -673,15 +750,14 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
  */
 function useRegionOptions() {
   const { data, isError } = useGetUniverseRegions();
-  const marketRegionIds = useMemo(
-    () =>
-      data
-        ? new Set(data.data.filter((id) => id < FIRST_NON_MARKET_REGION_ID))
-        : isError
-          ? new Set<number>()
-          : undefined,
-    [data, isError],
-  );
+  const marketRegionIds = useMemo(() => {
+    if (data) {
+      return new Set(data.data.filter((id) => id < FIRST_NON_MARKET_REGION_ID));
+    }
+    // Without the list, no region outside the hubs can be trusted.
+    if (isError) return new Set<number>();
+    return undefined;
+  }, [data, isError]);
   const otherRegionIds = useMemo(
     () =>
       [...(marketRegionIds ?? [])].filter(
@@ -689,27 +765,23 @@ function useRegionOptions() {
       ),
     [marketRegionIds],
   );
-  // One request for every name. `useEsiNames` only reads names something else
-  // already resolved, so most regions would stay unnamed.
-  const unlabelledIds = useMemo(
-    () => [
-      ...MARKET_HUB_REGION_IDS.filter((id) => HUB_LABELS[id] === undefined),
-      ...otherRegionIds,
-    ],
+  // Fetched in one batched /universe/names call, in the reader's ESI language,
+  // through the shared name cache. (Bare `useEsiNames` only reads that cache.)
+  const nameEntries = useMemo(
+    () =>
+      [
+        ...MARKET_HUB_REGION_IDS.filter((id) => HUB_LABELS[id] === undefined),
+        ...otherRegionIds,
+      ].map((id) => ({ id, category: "region" as const })),
     [otherRegionIds],
   );
-  const { data: names } = useQuery({
-    queryKey: ["market-history-region-names", unlabelledIds],
-    queryFn: async () => (await postUniverseNames(unlabelledIds)).data,
-    enabled: unlabelledIds.length > 0,
-    staleTime: Infinity,
-  });
+  const names = useEsiNameLookup(nameEntries);
 
   const regionOptions = useMemo(() => {
-    const nameById = new Map(names?.map((entry) => [entry.id, entry.name]));
     const option = (id: number) => ({
       value: id.toString(),
-      label: HUB_LABELS[id] ?? nameById.get(id) ?? `Region ${id}`,
+      label:
+        HUB_LABELS[id] ?? names[id.toString()]?.value?.name ?? `Region ${id}`,
     });
     const others = otherRegionIds
       .map(option)

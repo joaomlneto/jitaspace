@@ -124,9 +124,9 @@ describe("summarizeRange", () => {
   });
 
   it("has no change from a single day, and nothing without history", () => {
-    expect(summarizeRange(buildPriceHistory([day(1, 10)]))?.change).toBe(
-      undefined,
-    );
+    expect(
+      summarizeRange(buildPriceHistory([day(1, 10)]))?.change,
+    ).toBeUndefined();
     expect(summarizeRange([])).toBeUndefined();
   });
 });
