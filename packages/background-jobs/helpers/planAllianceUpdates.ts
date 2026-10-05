@@ -53,6 +53,54 @@ const sameAlliance = (a: AllianceRow, b: AllianceRow) =>
   a.ticker === b.ticker &&
   a.isDeleted === b.isDeleted;
 
+/** Splits ESI's alliances into those the database lacks and those it has wrong. */
+const diffAlliances = (
+  esiAlliances: AllianceRow[],
+  dbAlliances: AllianceRow[],
+) => {
+  const dbAllianceById = new Map(dbAlliances.map((a) => [a.allianceId, a]));
+  const newAlliances: AllianceRow[] = [];
+  const changedAlliances: AllianceRow[] = [];
+  for (const alliance of esiAlliances) {
+    const existing = dbAllianceById.get(alliance.allianceId);
+    if (!existing) newAlliances.push(alliance);
+    else if (!sameAlliance(existing, alliance)) changedAlliances.push(alliance);
+  }
+  return { newAlliances, changedAlliances };
+};
+
+/** Where ESI says each corporation is now: corporationId → allianceId. */
+const indexMemberships = (esiMemberCorporations: Map<number, number[]>) =>
+  new Map(
+    [...esiMemberCorporations].flatMap(([allianceId, corporationIds]) =>
+      corporationIds.map(
+        (corporationId) => [corporationId, allianceId] as const,
+      ),
+    ),
+  );
+
+/**
+ * Groups known corporations whose alliance differs from ESI's by their new
+ * alliance, and records both ends of every move in `affectedAllianceIds`.
+ */
+const planCorporationMoves = (
+  dbCorporations: CorporationMembershipRow[],
+  allianceOfCorporation: Map<number, number>,
+  affectedAllianceIds: Set<number>,
+) => {
+  const corporationMoves = new Map<number | null, number[]>();
+  for (const { corporationId, allianceId } of dbCorporations) {
+    const target = allianceOfCorporation.get(corporationId) ?? null;
+    if (target === allianceId) continue;
+    if (allianceId !== null) affectedAllianceIds.add(allianceId);
+    if (target !== null) affectedAllianceIds.add(target);
+    const bucket = corporationMoves.get(target);
+    if (bucket) bucket.push(corporationId);
+    else corporationMoves.set(target, [corporationId]);
+  }
+  return corporationMoves;
+};
+
 export const planAllianceUpdates = ({
   esiAlliances,
   esiMemberCorporations,
@@ -71,28 +119,15 @@ export const planAllianceUpdates = ({
    */
   dbCorporations: CorporationMembershipRow[];
 }): AllianceUpdatePlan => {
-  const dbAllianceById = new Map(dbAlliances.map((a) => [a.allianceId, a]));
+  const { newAlliances, changedAlliances } = diffAlliances(
+    esiAlliances,
+    dbAlliances,
+  );
+
   const esiAllianceIds = new Set(esiAlliances.map((a) => a.allianceId));
-
-  const newAlliances: AllianceRow[] = [];
-  const changedAlliances: AllianceRow[] = [];
-  for (const alliance of esiAlliances) {
-    const existing = dbAllianceById.get(alliance.allianceId);
-    if (!existing) newAlliances.push(alliance);
-    else if (!sameAlliance(existing, alliance)) changedAlliances.push(alliance);
-  }
-
   const closedAllianceIds = dbAlliances
     .filter((a) => !a.isDeleted && !esiAllianceIds.has(a.allianceId))
     .map((a) => a.allianceId);
-
-  // Where ESI says each corporation is now.
-  const allianceOfCorporation = new Map<number, number>();
-  for (const [allianceId, corporationIds] of esiMemberCorporations) {
-    for (const corporationId of corporationIds) {
-      allianceOfCorporation.set(corporationId, allianceId);
-    }
-  }
 
   const affectedAllianceIds = new Set<number>([
     ...newAlliances.map((a) => a.allianceId),
@@ -100,19 +135,14 @@ export const planAllianceUpdates = ({
     ...closedAllianceIds,
   ]);
 
-  const dbCorporationIds = new Set<number>();
-  const corporationMoves = new Map<number | null, number[]>();
-  for (const { corporationId, allianceId } of dbCorporations) {
-    dbCorporationIds.add(corporationId);
-    const target = allianceOfCorporation.get(corporationId) ?? null;
-    if (target === allianceId) continue;
-    if (allianceId !== null) affectedAllianceIds.add(allianceId);
-    if (target !== null) affectedAllianceIds.add(target);
-    const bucket = corporationMoves.get(target);
-    if (bucket) bucket.push(corporationId);
-    else corporationMoves.set(target, [corporationId]);
-  }
+  const allianceOfCorporation = indexMemberships(esiMemberCorporations);
+  const corporationMoves = planCorporationMoves(
+    dbCorporations,
+    allianceOfCorporation,
+    affectedAllianceIds,
+  );
 
+  const dbCorporationIds = new Set(dbCorporations.map((c) => c.corporationId));
   const executorIds = [...newAlliances, ...changedAlliances]
     .map((a) => a.executorCorporationId)
     .filter((id): id is number => id !== null);

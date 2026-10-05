@@ -117,9 +117,13 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
     }
 
     // 2. Alliances whose details changed (executor, name, ticker, faction…).
-    for (const { allianceId, ...data } of plan.changedAlliances) {
-      await prisma.alliance.update({ where: { allianceId }, data });
-    }
+    // Independent rows, so issued together; Prisma's pool bounds how many
+    // reach the database at once.
+    await Promise.all(
+      plan.changedAlliances.map(({ allianceId, ...data }) =>
+        prisma.alliance.update({ where: { allianceId }, data }),
+      ),
+    );
 
     // 3. Alliances ESI no longer lists have closed.
     if (plan.closedAllianceIds.length > 0) {
@@ -130,14 +134,18 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
     }
 
     // 4. Corporations that joined, left or switched alliances.
-    let corporationsMoved = 0;
-    for (const [allianceId, corporationIds] of plan.corporationMoves) {
-      const { count } = await prisma.corporation.updateMany({
-        where: { corporationId: { in: corporationIds } },
-        data: { allianceId },
-      });
-      corporationsMoved += count;
-    }
+    const moveCounts = await Promise.all(
+      [...plan.corporationMoves].map(([allianceId, corporationIds]) =>
+        prisma.corporation.updateMany({
+          where: { corporationId: { in: corporationIds } },
+          data: { allianceId },
+        }),
+      ),
+    );
+    const corporationsMoved = moveCounts.reduce(
+      (sum, { count }) => sum + count,
+      0,
+    );
 
     // 5. Evict the web app's cached pages for everything that changed. Sent
     // as its own retryable job, so a failed call cannot lose the eviction.
