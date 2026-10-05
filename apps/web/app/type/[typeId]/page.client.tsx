@@ -28,6 +28,7 @@ import {
   IconFileText,
   IconHistory,
   IconInfoCircle,
+  IconListCheck,
   IconListDetails,
   IconVersions,
 } from "@tabler/icons-react";
@@ -56,6 +57,7 @@ import {
 
 import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
+import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
   TypeInventoryBreadcrumbs,
@@ -71,6 +73,8 @@ import {
   GroupName,
   MarketGroupName,
 } from "~/components/Text";
+import { TypeListMatchTable } from "~/components/TypeLists";
+import { isTypeListMember } from "~/lib/typeLists";
 import { EntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
@@ -262,8 +266,13 @@ export default function TypePage({
   typeDescription,
   dogmaMeta,
   variations = [],
+  typeLists = [],
 }: Readonly<
-  PageProps & { dogmaMeta: TypeDogmaMeta; variations?: ItemVariation[] }
+  PageProps & {
+    dogmaMeta: TypeDogmaMeta;
+    variations?: ItemVariation[];
+    typeLists?: NamedTypeListMatch[];
+  }
 >) {
   const character = useSelectedCharacter();
   // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set.
@@ -301,6 +310,20 @@ export default function TypePage({
     categoryId !== undefined && COMPARABLE_CATEGORY_IDS.includes(categoryId);
   // The item and at least one other version of it.
   const hasVariations = variations.length > 1;
+  const memberTypeLists = useMemo(
+    () => typeLists.filter(isTypeListMember),
+    [typeLists],
+  );
+  const excludedTypeLists = useMemo(
+    () => typeLists.filter((typeList) => !isTypeListMember(typeList)),
+    [typeLists],
+  );
+  // `?tab=type-lists` on an item no list matches would select a tab that is
+  // not rendered, leaving the page blank; show the overview instead.
+  const selectedTab =
+    activeTab === "type-lists" && typeLists.length === 0
+      ? DEFAULT_TYPE_PAGE_TAB
+      : activeTab;
 
   // Determine the best image variation: prefer the 3D render (ships), then a
   // blueprint, otherwise fall back to the icon.
@@ -601,7 +624,7 @@ export default function TypePage({
         </Paper>
 
         <Tabs
-          value={activeTab}
+          value={selectedTab}
           onChange={(value) => {
             if (isTypePageTab(value)) void setActiveTab(value);
           }}
@@ -642,6 +665,14 @@ export default function TypePage({
                 leftSection={<IconFileText size={16} />}
               >
                 Description
+              </Tabs.Tab>
+            )}
+            {typeLists.length > 0 && (
+              <Tabs.Tab
+                value="type-lists"
+                leftSection={<IconListCheck size={16} />}
+              >
+                Type Lists
               </Tabs.Tab>
             )}
             <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
@@ -924,6 +955,44 @@ export default function TypePage({
                   content={sanitizeFormattedEveString(description)}
                 />
               </Paper>
+            </Tabs.Panel>
+          )}
+
+          {/* Type Lists — the SDE's named item sets this type belongs to */}
+          {typeLists.length > 0 && (
+            <Tabs.Panel value="type-lists" pt="lg">
+              <Stack gap="lg">
+                <Text size="sm" c="dimmed">
+                  The game uses{" "}
+                  <Anchor component={Link} href="/type-lists" size="sm">
+                    type lists
+                  </Anchor>{" "}
+                  to decide which items a rule applies to. A list names the
+                  categories, groups and types it includes and excludes.
+                </Text>
+                {memberTypeLists.length > 0 && (
+                  <Stack gap="sm">
+                    <SectionHeading icon={<IconListCheck size={18} />}>
+                      Member of {memberTypeLists.length}{" "}
+                      {memberTypeLists.length === 1 ? "list" : "lists"}
+                    </SectionHeading>
+                    <TypeListMatchTable typeLists={memberTypeLists} />
+                  </Stack>
+                )}
+                {excludedTypeLists.length > 0 && (
+                  <Stack gap="sm">
+                    <SectionHeading icon={<IconListDetails size={18} />}>
+                      Excluded from {excludedTypeLists.length}{" "}
+                      {excludedTypeLists.length === 1 ? "list" : "lists"}
+                    </SectionHeading>
+                    <Text size="sm" c="dimmed">
+                      These lists include this item&apos;s category, group or
+                      type, then carve it back out with an exclude rule.
+                    </Text>
+                    <TypeListMatchTable typeLists={excludedTypeLists} />
+                  </Stack>
+                )}
+              </Stack>
             </Tabs.Panel>
           )}
 

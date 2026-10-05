@@ -6,11 +6,13 @@ import { HttpStatusCode } from "axios";
 import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
+import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead } from "~/lib/sdeCache";
+import { buildTypeListRuleIndex, matchTypeLists } from "~/lib/typeLists";
 import TypePage from "./page.client";
 import { emptyTypeDogmaMeta } from "./types";
 
@@ -21,6 +23,8 @@ type TypeData = PageProps & {
   categoryName?: string;
   /** The base item of this item's variations — itself when it is the base. */
   variationBaseTypeId: number;
+  groupId?: number;
+  categoryId?: number;
 };
 
 async function getTypeData(typeId: number): Promise<TypeData> {
@@ -33,8 +37,13 @@ async function getTypeData(typeId: number): Promise<TypeData> {
       name: true,
       description: true,
       variationParentTypeId: true,
+      groupId: true,
       group: {
-        select: { name: true, category: { select: { name: true } } },
+        select: {
+          name: true,
+          categoryId: true,
+          category: { select: { name: true } },
+        },
       },
     },
     where: {
@@ -77,6 +86,8 @@ async function getTypeData(typeId: number): Promise<TypeData> {
     groupName: type.group.name,
     categoryName: type.group.category.name,
     variationBaseTypeId: type.variationParentTypeId ?? typeId,
+    groupId: type.groupId,
+    categoryId: type.group.categoryId,
   };
 }
 
@@ -233,6 +244,77 @@ async function getTypeVariations(baseTypeId: number): Promise<ItemVariation[]> {
   }
 }
 
+/**
+ * The type lists whose rules match this type: those it belongs to, plus those
+ * that include it only to exclude it again. A type list names categories,
+ * groups and types, so the lookup is one query for the rules pointing at any
+ * of the three.
+ *
+ * A failure throws rather than degrading here: the caller catches it, so a
+ * database blip is never what gets written into the cache entry.
+ */
+async function readTypeTypeLists(
+  typeId: number,
+  groupId: number,
+  categoryId: number,
+): Promise<NamedTypeListMatch[]> {
+  "use cache";
+  cacheSdeRead();
+
+  const rules = await prisma.typeListEntry.findMany({
+    select: {
+      typeListId: true,
+      included: true,
+      refType: true,
+      refId: true,
+      typeList: { select: { name: true, displayName: true, isDeleted: true } },
+    },
+    where: {
+      isDeleted: false,
+      OR: [
+        { refType: "type", refId: typeId },
+        { refType: "group", refId: groupId },
+        { refType: "category", refId: categoryId },
+      ],
+    },
+  });
+  const typeLists = new Map(
+    rules.map((rule) => [rule.typeListId, rule.typeList]),
+  );
+
+  return matchTypeLists(buildTypeListRuleIndex(rules), {
+    typeId,
+    groupId,
+    categoryId,
+  }).flatMap((match) => {
+    const typeList = typeLists.get(match.typeListId);
+    // A list that only excludes this type never included it: not worth a row.
+    if (!typeList || typeList.isDeleted || match.includedBy.length === 0) {
+      return [];
+    }
+    return [
+      { ...match, name: typeList.name, displayName: typeList.displayName },
+    ];
+  });
+}
+
+/**
+ * The page renders fine without its Type Lists tab, so a database failure
+ * hides the tab instead of erroring the route.
+ */
+async function getTypeTypeLists(
+  typeId: number,
+  groupId: number | undefined,
+  categoryId: number | undefined,
+): Promise<NamedTypeListMatch[]> {
+  if (groupId === undefined || categoryId === undefined) return [];
+  try {
+    return await readTypeTypeLists(typeId, groupId, categoryId);
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -291,11 +373,19 @@ async function PageContent({
     typeName: data.typeName,
     typeDescription: data.typeDescription,
   };
-  const [dogmaMeta, variations] = await Promise.all([
+  const [dogmaMeta, variations, typeLists] = await Promise.all([
     getTypeDogmaMeta(typeId),
     getTypeVariations(data.variationBaseTypeId),
+    getTypeTypeLists(typeId, data.groupId, data.categoryId),
   ]);
-  return <TypePage {...props} dogmaMeta={dogmaMeta} variations={variations} />;
+  return (
+    <TypePage
+      {...props}
+      dogmaMeta={dogmaMeta}
+      variations={variations}
+      typeLists={typeLists}
+    />
+  );
 }
 
 export default function Page({

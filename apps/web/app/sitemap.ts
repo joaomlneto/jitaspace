@@ -235,6 +235,17 @@ const ENTITY_SOURCES: EntitySource[] = [
       ).map((row) => ({ id: row.bloodlineId, updatedAt: row.updatedAt })),
   },
   {
+    path: "/type-list",
+    rows: async () =>
+      (
+        await prisma.typeList.findMany({
+          where: { isDeleted: false },
+          select: { typeListId: true, updatedAt: true },
+          orderBy: { typeListId: "asc" },
+        })
+      ).map((row) => ({ id: row.typeListId, updatedAt: row.updatedAt })),
+  },
+  {
     // One page per NPC corporation that actually sells something, rather than
     // per corporation — a corp with no offers renders an empty store.
     //

@@ -3,11 +3,12 @@
 import type {
   ColumnDef,
   ColumnFiltersState,
+  ColumnVisibilityState,
   FilterFn,
   OnChangeFn,
   PaginationState,
+  RowData,
   SortingState,
-  VisibilityState,
 } from "@tanstack/react-table";
 import type { KeyboardEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -21,14 +22,7 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, useTable } from "@tanstack/react-table";
 
 import type { DataTableColumn, DataTableProps } from "@jitaspace/datatable";
 import type { SortKey } from "@jitaspace/datatable-common";
@@ -44,6 +38,9 @@ import {
   readColumnValue,
   readFilterValue,
 } from "@jitaspace/datatable-common";
+
+import type { Features } from "./features";
+import { features } from "./features";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -64,7 +61,7 @@ function getSortIcon(sorted: "asc" | "desc" | false): string {
 }
 
 function alignToJustify(
-  align: DataTableColumn<unknown>["align"],
+  align: DataTableColumn<object>["align"],
 ): "flex-start" | "center" | "flex-end" {
   if (align === "right") return "flex-end";
   if (align === "center") return "center";
@@ -88,12 +85,12 @@ function ariaSort(sorted: "asc" | "desc" | false) {
  * `@jitaspace/datatable-common` instead, exactly as the mantine-datatable
  * engine does.
  */
-function buildColumnDefs<TData>(
+function buildColumnDefs<TData extends RowData>(
   columns: DataTableColumn<TData>[],
-): ColumnDef<TData, SortKey>[] {
+): ColumnDef<Features, TData>[] {
   return columns.map((col) => {
     const filter = col.filter;
-    const filterFn: FilterFn<TData> | undefined = filter
+    const filterFn: FilterFn<Features, TData> | undefined = filter
       ? (row, _columnId, filterValue) =>
           matchesColumnFilter(
             filter,
@@ -104,10 +101,10 @@ function buildColumnDefs<TData>(
     return {
       id: col.id,
       header: col.header,
-      accessorFn: (row: TData) => columnSortKey(col, row),
+      accessorFn: (row: TData): SortKey => columnSortKey(col, row),
       enableSorting: col.sortable ?? false,
       sortUndefined: "last",
-      sortingFn: (a, b, columnId) =>
+      sortFn: (a, b, columnId) =>
         // Only reached when both keys are present (see `sortUndefined`).
         compareSortKeys(
           a.getValue<string | number>(columnId),
@@ -124,11 +121,11 @@ function buildColumnDefs<TData>(
           ? col.cell(ctx.row.original, value)
           : primitiveString(value);
       },
-    } satisfies ColumnDef<TData, SortKey>;
+    } satisfies ColumnDef<Features, TData>;
   });
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends object>({
   data,
   columns,
   isLoading = false,
@@ -158,13 +155,13 @@ export function DataTable<TData>({
       ? [{ id: initialSort.columnId, desc: initialSort.direction === "desc" }]
       : [],
   );
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    () =>
-      columns.reduce<VisibilityState>((acc, col) => {
+  const [columnVisibility, setColumnVisibility] =
+    useState<ColumnVisibilityState>(() =>
+      columns.reduce<ColumnVisibilityState>((acc, col) => {
         if (col.defaultVisible === false) acc[col.id] = false;
         return acc;
       }, {}),
-  );
+    );
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -188,7 +185,8 @@ export function DataTable<TData>({
       resetPage();
     };
 
-  const table = useReactTable({
+  const table = useTable({
+    features,
     data,
     columns: columnDefs,
     ...(rowId ? { getRowId: (row: TData) => String(rowId(row)) } : {}),
@@ -197,13 +195,16 @@ export function DataTable<TData>({
       globalFilter,
       columnFilters,
       columnVisibility,
-      ...(withPagination ? { pagination } : {}),
+      pagination,
     },
     onSortingChange: andResetPage(setSorting),
     onGlobalFilterChange: andResetPage(setGlobalFilter),
     onColumnFiltersChange: andResetPage(setColumnFilters),
     onColumnVisibilityChange: setColumnVisibility,
-    ...(withPagination ? { onPaginationChange: setPagination } : {}),
+    onPaginationChange: setPagination,
+    // The pagination feature is always registered (v9 features are static);
+    // without pagination, "manual" makes it pass every row through.
+    manualPagination: !withPagination,
     autoResetPageIndex: false,
     // Sort the way mantine-datatable does, so the engines agree: one column at
     // a time, ascending on the first click, then toggling between directions.
@@ -225,12 +226,6 @@ export function DataTable<TData>({
     // TanStack only searches columns whose first value is a string or number
     // by default; `enableGlobalFilter` per column already says which to search.
     getColumnCanGlobalFilter: () => true,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    ...(withPagination
-      ? { getPaginationRowModel: getPaginationRowModel() }
-      : {}),
   });
 
   // Data shrinking under the current page (a refetch, a wallet deselected)
@@ -406,7 +401,7 @@ export function DataTable<TData>({
             <Text size="sm">Rows per page:</Text>
             <Select
               aria-label="Rows per page"
-              value={String(table.getState().pagination.pageSize)}
+              value={String(pagination.pageSize)}
               onChange={(value) =>
                 table.setPageSize(Number(value ?? defaultPageSize))
               }
@@ -418,7 +413,7 @@ export function DataTable<TData>({
           </Group>
           <Pagination
             total={table.getPageCount()}
-            value={table.getState().pagination.pageIndex + 1}
+            value={pagination.pageIndex + 1}
             onChange={(page) => table.setPageIndex(page - 1)}
             size="sm"
           />

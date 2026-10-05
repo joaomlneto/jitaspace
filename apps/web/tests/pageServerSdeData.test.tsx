@@ -20,6 +20,8 @@ const typeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const metaGroupFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const typeListEntryFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -34,6 +36,7 @@ jest.mock("~/lib/db", () => ({
     },
     typeAttribute: { findMany: (a?: unknown) => typeAttributeFindMany(a) },
     metaGroup: { findMany: (a?: unknown) => metaGroupFindMany(a) },
+    typeListEntry: { findMany: (a?: unknown) => typeListEntryFindMany(a) },
   },
 }));
 
@@ -102,6 +105,7 @@ beforeEach(() => {
   typeAttributeFindMany.mockReset().mockResolvedValue([]);
   typeFindMany.mockReset().mockResolvedValue([]);
   metaGroupFindMany.mockReset().mockResolvedValue([]);
+  typeListEntryFindMany.mockReset().mockResolvedValue([]);
   globalThis.fetch = jest.fn(() =>
     Promise.resolve({ status: 200, json: () => Promise.resolve([]) }),
   ) as unknown as typeof globalThis.fetch;
@@ -500,5 +504,86 @@ describe("type route variations", () => {
 
     expect(props.variations).toEqual([]);
     expect(props.typeName).toBe("Large Shield Extender II");
+  });
+});
+
+describe("type route type lists", () => {
+  const typeRow = {
+    typeId: 670,
+    name: "Capsule",
+    description: "",
+    variationParentTypeId: null,
+    groupId: 29,
+    group: { name: "Capsule", categoryId: 6, category: { name: "Ship" } },
+  };
+  const rule = (
+    typeListId: number,
+    included: boolean,
+    refType: string,
+    refId: number,
+    name: string,
+  ) => ({
+    typeListId,
+    included,
+    refType,
+    refId,
+    typeList: { name, displayName: null, isDeleted: false },
+  });
+
+  it("looks up rules naming the type, its group or its category", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow);
+    typeListEntryFindMany.mockResolvedValue([
+      rule(10, true, "category", 6, "KillreportEligable"),
+      rule(41, true, "category", 6, "Ships only - NOT Capsules"),
+      rule(41, false, "group", 29, "Ships only - NOT Capsules"),
+      rule(99, false, "type", 670, "OnlyExcludes"),
+    ]);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "670",
+    });
+
+    expect(typeListEntryFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          isDeleted: false,
+          OR: [
+            { refType: "type", refId: 670 },
+            { refType: "group", refId: 29 },
+            { refType: "category", refId: 6 },
+          ],
+        },
+      }),
+    );
+    // A member, an included-then-excluded list, and no row for a list that
+    // only ever excluded it.
+    expect(props.typeLists).toEqual([
+      {
+        typeListId: 10,
+        name: "KillreportEligable",
+        displayName: null,
+        includedBy: ["category"],
+        excludedBy: [],
+      },
+      {
+        typeListId: 41,
+        name: "Ships only - NOT Capsules",
+        displayName: null,
+        includedBy: ["category"],
+        excludedBy: ["group"],
+      },
+    ]);
+  });
+
+  it("hides the tab rather than failing the page when the query fails", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow);
+    typeListEntryFindMany.mockRejectedValue(new Error("connection lost"));
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "670",
+    });
+
+    expect(props.typeLists).toEqual([]);
+    expect(props.typeName).toBe("Capsule");
   });
 });
