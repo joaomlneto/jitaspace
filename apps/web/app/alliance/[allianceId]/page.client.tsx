@@ -63,16 +63,22 @@ import {
   SectionHeading,
   StatCard,
 } from "~/components/EntityPage";
-import { buildCorporationRows } from "./corporations";
-import { CorporationsTab } from "./CorporationsTab";
+import { toWarRow, WarsTab } from "~/components/Wars/EntityWars";
+import {
+  iskEfficiency,
+  KillboardSummaryCards,
+  KillboardTab,
+  useZkillboardStats,
+} from "~/components/Zkillboard";
 import {
   formatAge,
   formatDate,
   formatDecimal,
   formatInteger,
   formatPercent,
-} from "./format";
-import { KillboardSummaryCards, KillboardTab } from "./KillboardTab";
+} from "~/lib/format";
+import { buildCorporationRows } from "./corporations";
+import { CorporationsTab } from "./CorporationsTab";
 import { SovereigntyTab } from "./SovereigntyTab";
 import { useAllianceTables } from "./tables";
 import {
@@ -80,8 +86,6 @@ import {
   DEFAULT_ALLIANCE_PAGE_TAB,
   isAlliancePageTab,
 } from "./tabs";
-import { toWarRow, WarsTab } from "./WarsTab";
-import { iskEfficiency, useZkillboardAllianceStats } from "./zkillboard";
 
 export interface PageProps {
   allianceId: number;
@@ -283,7 +287,11 @@ export default function AlliancePage({
   const { data: esiAlliance } = useEsiAllianceInformation(allianceId);
   const { data: esiMembers, isLoading: esiMembersLoading } =
     useEsiAllianceMemberCorporations(allianceId);
-  const zkill = useZkillboardAllianceStats(allianceId);
+  const zkillEntity = useMemo(
+    () => ({ kind: "alliance" as const, id: allianceId }),
+    [allianceId],
+  );
+  const zkill = useZkillboardStats(zkillEntity);
   // "Now" for time-relative text: the server read's own timestamp, so the
   // server render and hydration agree.
   const now = profile?.readAt;
@@ -830,6 +838,7 @@ export default function AlliancePage({
                   </Text>
                 ) : (
                   <KillboardSummaryCards
+                    entity={zkillEntity}
                     stats={zkill.data}
                     isLoading={zkill.isLoading}
                   />
@@ -871,6 +880,7 @@ export default function AlliancePage({
           {hasWars && profile && (
             <Tabs.Panel value="wars" pt="lg">
               <WarsTab
+                entityKind="alliance"
                 rows={warRows}
                 isLoading={tablesLoading}
                 listed={profile.listedWars}
@@ -881,7 +891,7 @@ export default function AlliancePage({
 
           <Tabs.Panel value="killboard" pt="lg">
             <KillboardTab
-              allianceId={allianceId}
+              entity={zkillEntity}
               stats={zkill.data}
               isLoading={zkill.isLoading}
               isError={zkill.isError}

@@ -1,4 +1,5 @@
 import type { WarStatus } from "~/components/Wars/WarRoom/types";
+import type { EntityWarStatus } from "~/lib/warRecord";
 
 /**
  * Where an unfinished war is in its lifecycle at `now`: declared but not yet
@@ -14,4 +15,18 @@ export function deriveOngoingWarStatus(
   const retracted = war.retractedDate?.getTime();
   if (retracted !== undefined && retracted <= now) return "retracting";
   return "active";
+}
+
+/** {@link deriveOngoingWarStatus}, plus `finished` once the war has ended. */
+export function deriveWarStatus(
+  war: {
+    startedDate: Date | null;
+    finishedDate: Date | null;
+    retractedDate: Date | null;
+  },
+  now: number,
+): EntityWarStatus {
+  const finished = war.finishedDate?.getTime();
+  if (finished !== undefined && finished <= now) return "finished";
+  return deriveOngoingWarStatus(war, now);
 }

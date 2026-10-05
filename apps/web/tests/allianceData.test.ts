@@ -4,6 +4,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type * as DataModule from "../app/alliance/[allianceId]/data";
+import type * as WarStatusModule from "~/lib/warStatus";
+import { WAR_LIST_LIMIT } from "~/lib/warRecord";
 
 const mockCacheLife = jest.fn();
 const mockCacheTag = jest.fn();
@@ -70,7 +72,9 @@ beforeEach(() => {
 });
 
 describe("deriveWarStatus", () => {
-  const { deriveWarStatus } = loadData();
+  // Shared with corporation pages; tested here through the alliance's wars.
+  const { deriveWarStatus } =
+    require("~/lib/warStatus") as typeof WarStatusModule;
   const at = (overrides: Record<string, Date | null>) =>
     deriveWarStatus(
       {
@@ -267,7 +271,7 @@ describe("readAllianceProfile", () => {
     expect(profile?.wars[0]?.allyCount).toBe(3);
     // The listing is capped; the summary is not.
     expect(mockPrisma.war.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ take: loadData().ALLIANCE_WAR_LIST_LIMIT }),
+      expect.objectContaining({ take: WAR_LIST_LIMIT }),
     );
   });
 });

@@ -20,7 +20,7 @@ import {
 
 import type { CorporationRow } from "./corporations";
 import { DataTable } from "~/components/DataTable";
-import { formatDate, formatInteger, formatPercent } from "./format";
+import { formatDate, formatInteger, formatPercent } from "~/lib/format";
 
 function corporationCell(row: CorporationRow) {
   return (

@@ -39,7 +39,7 @@ import {
   formatDecimal,
   formatInteger,
   formatUtcTime,
-} from "./format";
+} from "~/lib/format";
 
 const CAMPAIGN_EVENT_LABELS: Record<string, string> = {
   tcu_defense: "TCU defense",

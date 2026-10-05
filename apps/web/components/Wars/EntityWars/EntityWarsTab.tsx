@@ -7,48 +7,48 @@ import type { DataTableColumn } from "@jitaspace/datatable";
 import { ISKAmount, WarAnchor } from "@jitaspace/ui";
 
 import type {
-  AllianceWar,
-  AllianceWarRole,
-  AllianceWarStatus,
-  AllianceWarSummary,
-} from "./types";
+  EntityWar,
+  EntityWarStatus,
+  WarRole,
+  WarSummary,
+} from "~/lib/warRecord";
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import { WarEntity } from "~/components/Wars/WarRoom/parts";
-import { formatDate, formatInteger, formatPercent } from "./format";
-import { iskEfficiency } from "./zkillboard";
+import { iskEfficiency } from "~/components/Zkillboard";
+import { formatDate, formatInteger, formatPercent } from "~/lib/format";
 
-export const WAR_STATUS_LABELS: Record<AllianceWarStatus, string> = {
+export const WAR_STATUS_LABELS: Record<EntityWarStatus, string> = {
   pending: "Starting",
   active: "Active",
   retracting: "Ending",
   finished: "Finished",
 };
 
-const WAR_STATUS_COLORS: Record<AllianceWarStatus, string> = {
+const WAR_STATUS_COLORS: Record<EntityWarStatus, string> = {
   pending: "yellow",
   active: "red",
   retracting: "orange",
   finished: "gray",
 };
 
-const WAR_ROLE_LABELS: Record<AllianceWarRole, string> = {
+const WAR_ROLE_LABELS: Record<WarRole, string> = {
   aggressor: "Aggressor",
   defender: "Defender",
   ally: "Ally",
 };
 
-const WAR_ROLE_COLORS: Record<AllianceWarRole, string> = {
+const WAR_ROLE_COLORS: Record<WarRole, string> = {
   aggressor: "red",
   defender: "blue",
   ally: "teal",
 };
 
 /**
- * The war from this alliance's side. An ally fights with the defender, so it
+ * The war from this entity's side. An ally fights with the defender, so it
  * shares the defender's tally.
  */
-interface WarRow extends AllianceWar {
+interface WarRow extends EntityWar {
   statusLabel: string;
   roleLabel: string;
   kills: number;
@@ -58,7 +58,7 @@ interface WarRow extends AllianceWar {
   efficiency: number | null;
 }
 
-export function toWarRow(war: AllianceWar): WarRow {
+export function toWarRow(war: EntityWar): WarRow {
   const aggressor = war.role === "aggressor";
   const iskDestroyed = aggressor
     ? war.aggressorIskDestroyed
@@ -239,7 +239,7 @@ const columns: DataTableColumn<WarRow>[] = [
 
 export function WarSummaryCards({
   summary,
-}: Readonly<{ summary: AllianceWarSummary }>) {
+}: Readonly<{ summary: WarSummary }>) {
   const efficiency = iskEfficiency(summary.iskDestroyed, summary.iskLost);
   return (
     <SimpleGrid cols={{ base: 2, sm: 3, md: 5 }} spacing="sm">
@@ -277,17 +277,20 @@ export function WarSummaryCards({
 }
 
 export function WarsTab({
+  entityKind,
   rows,
   isLoading,
   listed,
   summary,
 }: Readonly<{
+  /** Whose wars, for the copy: "this alliance", "this corporation". */
+  entityKind: "alliance" | "corporation";
   rows: WarRow[];
-  /** The rows are still on their way from `/api/alliance/[allianceId]`. */
+  /** The rows are still on their way from the page's table API. */
   isLoading: boolean;
   /** How many wars the table lists once loaded. */
   listed: number;
-  summary: AllianceWarSummary;
+  summary: WarSummary;
 }>) {
   return (
     <Stack gap="lg">
@@ -297,8 +300,8 @@ export function WarsTab({
         </SectionHeading>
         <WarSummaryCards summary={summary} />
         <Text size="xs" c="dimmed">
-          Kills and ISK count the wars this alliance declared or defended; wars
-          it joined as an ally are tallied under the defender it helped.
+          Kills and ISK count the wars this {entityKind} declared or defended;
+          wars it joined as an ally are tallied under the defender it helped.
         </Text>
       </Stack>
       <Stack gap="sm">

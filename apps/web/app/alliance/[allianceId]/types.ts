@@ -1,5 +1,6 @@
 import type { CorporationSummary } from "./corporations";
 import type { SovereigntySummary } from "./sovereignty";
+import type { EntityWar, WarSummary } from "~/lib/warRecord";
 
 /**
  * What the alliance page reads from our own database, resolved on the server
@@ -53,56 +54,12 @@ export interface AllianceSovereigntySystem {
   strategicLevel: number | null;
 }
 
-/** The alliance's part in a war. An ally fights on the defender's side. */
-export type AllianceWarRole = "aggressor" | "defender" | "ally";
-
-/**
- * Lifecycle at the time of the read: declared but not yet shooting, shooting,
- * one side withdrew but still shooting, or over.
- */
-export type AllianceWarStatus =
-  | "pending"
-  | "active"
-  | "retracting"
-  | "finished";
-
-export interface AllianceWar {
-  warId: number;
-  role: AllianceWarRole;
-  status: AllianceWarStatus;
-  aggressorAllianceId: number | null;
-  aggressorCorporationId: number | null;
-  defenderAllianceId: number | null;
-  defenderCorporationId: number | null;
-  aggressorShipsKilled: number;
-  aggressorIskDestroyed: number;
-  defenderShipsKilled: number;
-  defenderIskDestroyed: number;
-  declaredDate: string;
-  startedDate: string | null;
-  finishedDate: string | null;
-  retractedDate: string | null;
-  isMutual: boolean;
-  isOpenForAllies: boolean;
-  /** Alliances and corporations that joined the defender. */
-  allyCount: number;
-}
-
-/** Totals over every war on record, not only those listed. */
-export interface AllianceWarSummary {
-  total: number;
-  asAggressor: number;
-  asDefender: number;
-  asAlly: number;
-  /** Not yet finished: pending, active or retracting. */
-  ongoing: number;
-  /** Ships and ISK the alliance's side destroyed, as aggressor or defender. */
-  shipsKilled: number;
-  iskDestroyed: number;
-  /** Ships and ISK the other side destroyed. */
-  shipsLost: number;
-  iskLost: number;
-}
+export type {
+  EntityWar as AllianceWar,
+  EntityWarStatus as AllianceWarStatus,
+  WarRole as AllianceWarRole,
+  WarSummary as AllianceWarSummary,
+} from "~/lib/warRecord";
 
 export interface AllianceProfile {
   allianceId: number;
@@ -120,8 +77,8 @@ export interface AllianceProfile {
   corporations: AllianceCorporation[];
   sovereignty: AllianceSovereigntySystem[];
   /** The most recently declared wars, newest first. */
-  wars: AllianceWar[];
-  warSummary: AllianceWarSummary;
+  wars: EntityWar[];
+  warSummary: WarSummary;
   /** When the read was taken: the page's "now" for anything time-relative. */
   readAt: string;
 }

@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
 /**
- * zKillboard's statistics for an alliance (`/api/stats/allianceID/{id}/`),
+ * zKillboard's statistics for an alliance or corporation
+ * (`/api/stats/{allianceID|corporationID}/{id}/`),
  * read in the browser: the API sends `Access-Control-Allow-Origin: *`. Only
  * the fields the page shows are typed, and all of them are optional: an
- * alliance zKillboard has never seen comes back nearly empty.
+ * entity zKillboard has never seen comes back nearly empty.
  */
 
 export interface ZkbMetrics {
@@ -44,14 +45,20 @@ export interface ZkbStats extends ZkbMetrics {
   };
 }
 
-export const zkillboardAllianceStatsUrl = (allianceId: number) =>
-  `https://zkillboard.com/api/stats/allianceID/${allianceId}/`;
+/** Whose statistics: the entity kind as zKillboard's URLs name it. */
+export interface ZkbEntity {
+  kind: "alliance" | "corporation";
+  id: number;
+}
 
-export function useZkillboardAllianceStats(allianceId: number) {
+export const zkillboardStatsUrl = ({ kind, id }: ZkbEntity) =>
+  `https://zkillboard.com/api/stats/${kind}ID/${id}/`;
+
+export function useZkillboardStats(entity: ZkbEntity) {
   return useQuery<ZkbStats | null>({
-    queryKey: ["zkillboard-stats", "allianceID", allianceId],
+    queryKey: ["zkillboard-stats", `${entity.kind}ID`, entity.id],
     queryFn: async ({ signal }) => {
-      const res = await fetch(zkillboardAllianceStatsUrl(allianceId), {
+      const res = await fetch(zkillboardStatsUrl(entity), {
         signal,
       });
       if (!res.ok) throw new Error(`zKillboard responded ${res.status}`);
@@ -65,7 +72,7 @@ export function useZkillboardAllianceStats(allianceId: number) {
     // for a page view, and keeps tab switches from refetching ~100 kB.
     staleTime: 60 * 60 * 1000,
     retry: 1,
-    enabled: allianceId > 0,
+    enabled: entity.id > 0,
   });
 }
 
@@ -141,11 +148,11 @@ function labelRows(
   });
 }
 
-/** Where in New Eden the alliance kills and dies. */
+/** Where in New Eden the entity kills and dies. */
 export const locationBreakdown = (labels: ZkbStats["labels"]) =>
   labelRows(labels, LOCATION_LABELS);
 
-/** When (by zKillboard's timezone buckets) the alliance kills and dies. */
+/** When (by zKillboard's timezone buckets) the entity kills and dies. */
 export const timezoneBreakdown = (labels: ZkbStats["labels"]) =>
   labelRows(labels, TIMEZONE_LABELS);
 

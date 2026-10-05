@@ -11,7 +11,6 @@ import {
   buildCorporationRows,
   summarizeCorporations,
 } from "~/app/alliance/[allianceId]/corporations";
-import { formatAge } from "~/app/alliance/[allianceId]/format";
 import { summarizeSovereignty } from "~/app/alliance/[allianceId]/sovereignty";
 import { splitAllianceProfile } from "~/app/alliance/[allianceId]/split";
 import { isAlliancePageTab } from "~/app/alliance/[allianceId]/tabs";
@@ -23,7 +22,8 @@ import {
   timezoneBreakdown,
   topAllTime,
   topGroups,
-} from "~/app/alliance/[allianceId]/zkillboard";
+} from "~/components/Zkillboard/zkillboard";
+import { formatAge } from "~/lib/format";
 
 const corporation = (
   overrides: Partial<AllianceCorporation>,

@@ -44,10 +44,15 @@ import {
   ISKAmount,
 } from "@jitaspace/ui";
 
-import type { ZkbLabelRow, ZkbStats, ZkbTopEntry } from "./zkillboard";
+import type {
+  ZkbEntity,
+  ZkbLabelRow,
+  ZkbStats,
+  ZkbTopEntry,
+} from "./zkillboard";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import { GroupName } from "~/components/Text";
-import { formatDecimal, formatInteger, formatPercent } from "./format";
+import { formatDecimal, formatInteger, formatPercent } from "~/lib/format";
 import {
   activityGrid,
   iskEfficiency,
@@ -72,9 +77,14 @@ const HOURS = Array.from({ length: 24 }, (_, hour) =>
 
 /** The headline numbers; also shown on the Overview tab. */
 export function KillboardSummaryCards({
+  entity,
   stats,
   isLoading,
-}: Readonly<{ stats: ZkbStats | null | undefined; isLoading: boolean }>) {
+}: Readonly<{
+  entity: ZkbEntity;
+  stats: ZkbStats | null | undefined;
+  isLoading: boolean;
+}>) {
   const efficiency = iskEfficiency(stats?.iskDestroyed, stats?.iskLost);
   const rank = stats?.rankings?.alltime?.all?.ranks?.overall;
 
@@ -147,7 +157,7 @@ export function KillboardSummaryCards({
       <StatCard
         label="All-time rank"
         value={value(rank === undefined ? "—" : `#${formatInteger(rank)}`)}
-        sub="Among alliances on zKillboard"
+        sub={`Among ${entity.kind === "alliance" ? "alliances" : "corporations"} on zKillboard`}
       />
     </SimpleGrid>
   );
@@ -350,12 +360,12 @@ function TopList({
 }
 
 export function KillboardTab({
-  allianceId,
+  entity,
   stats,
   isLoading,
   isError,
 }: Readonly<{
-  allianceId: number;
+  entity: ZkbEntity;
   stats: ZkbStats | null | undefined;
   isLoading: boolean;
   isError: boolean;
@@ -369,14 +379,14 @@ export function KillboardTab({
     <Text size="xs" c="dimmed">
       Statistics from{" "}
       <Anchor
-        href={`https://zkillboard.com/alliance/${allianceId}/`}
+        href={`https://zkillboard.com/${entity.kind}/${entity.id}/`}
         target="_blank"
         rel="noopener noreferrer"
         size="xs"
       >
         zKillboard
       </Anchor>
-      , covering every killmail it has received for this alliance.
+      , covering every killmail it has received for this {entity.kind}.
     </Text>
   );
 
@@ -395,7 +405,7 @@ export function KillboardTab({
     return (
       <Stack gap="sm">
         <Text c="dimmed">
-          zKillboard has no kills or losses for this alliance.
+          zKillboard has no kills or losses for this {entity.kind}.
         </Text>
         {attribution}
       </Stack>
@@ -406,7 +416,11 @@ export function KillboardTab({
     <Stack gap="lg">
       <Stack gap="sm">
         <SectionHeading icon={<IconSkull size={18} />}>All time</SectionHeading>
-        <KillboardSummaryCards stats={stats} isLoading={isLoading} />
+        <KillboardSummaryCards
+          entity={entity}
+          stats={stats}
+          isLoading={isLoading}
+        />
       </Stack>
 
       {months.length > 0 && (

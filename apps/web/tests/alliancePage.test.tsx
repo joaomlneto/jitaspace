@@ -13,7 +13,7 @@ import type {
   AllianceProfile,
   AllianceTables,
 } from "~/app/alliance/[allianceId]/types";
-import type { ZkbStats } from "~/app/alliance/[allianceId]/zkillboard";
+import type { ZkbStats } from "~/components/Zkillboard/zkillboard";
 import { splitAllianceProfile } from "~/app/alliance/[allianceId]/split";
 
 const ALLIANCE_ID = 99000001;
@@ -172,10 +172,10 @@ jest.mock("~/app/alliance/[allianceId]/tables", () => ({
     mockUseAllianceTables(id, enabled),
 }));
 
-jest.mock("~/app/alliance/[allianceId]/zkillboard", () => ({
-  ...jest.requireActual<object>("~/app/alliance/[allianceId]/zkillboard"),
-  useZkillboardAllianceStats: (id: number) =>
-    mockUseZkillboardAllianceStats(id),
+jest.mock("~/components/Zkillboard/zkillboard", () => ({
+  ...jest.requireActual<object>("~/components/Zkillboard/zkillboard"),
+  useZkillboardStats: (entity: { id: number }) =>
+    mockUseZkillboardAllianceStats(entity.id),
 }));
 
 jest.mock("~/app/alliance/[allianceId]/data", () => ({
