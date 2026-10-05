@@ -27,6 +27,8 @@ export interface CorporationRef {
   corporationId: number;
   name: string | null;
   factionId: number | null;
+  /** Null when the faction row is missing or soft-deleted. */
+  factionName: string | null;
 }
 
 export interface AgentRef {
@@ -37,6 +39,9 @@ export interface AgentRef {
   divisionName: string | null;
   corporationId: number | null;
   corporationName: string | null;
+  /** The agent's corporation's faction, read along with the agent. */
+  corporationFactionId: number | null;
+  corporationFactionName: string | null;
   stationId: number | null;
   stationName: string | null;
   solarSystemId: number | null;
@@ -56,6 +61,11 @@ export interface DungeonRef {
   archetypeTitle: string | null;
   factionId: number | null;
 }
+
+/** A related row's name, or null when it is missing or soft-deleted. */
+const liveName = (
+  row: { name: string; isDeleted: boolean } | null | undefined,
+): string | null => (row && !row.isDeleted ? row.name : null);
 
 const unique = (ids: readonly (number | null | undefined)[]): number[] => [
   ...new Set(ids.filter((id): id is number => id != null)),
@@ -117,7 +127,12 @@ export async function readCorporationRefs(
   const corporationIds = unique(ids);
   if (corporationIds.length === 0) return new Map();
   const rows = await prisma.corporation.findMany({
-    select: { corporationId: true, name: true, factionId: true },
+    select: {
+      corporationId: true,
+      name: true,
+      factionId: true,
+      faction: { select: { name: true, isDeleted: true } },
+    },
     where: { corporationId: { in: corporationIds }, isDeleted: false },
   });
   const found = new Map(rows.map((row) => [row.corporationId, row]));
@@ -130,6 +145,7 @@ export async function readCorporationRefs(
           corporationId,
           name: row?.name ?? null,
           factionId: row?.factionId ?? null,
+          factionName: liveName(row?.faction),
         },
       ];
     }),
@@ -147,7 +163,13 @@ export async function readAgentRefs(
         characterId: true,
         name: true,
         corporationId: true,
-        corporation: { select: { name: true } },
+        corporation: {
+          select: {
+            name: true,
+            factionId: true,
+            faction: { select: { name: true, isDeleted: true } },
+          },
+        },
       },
       where: { characterId: { in: characterIds } },
     }),
@@ -203,6 +225,8 @@ export async function readAgentRefs(
             null,
           corporationId: character?.corporationId ?? null,
           corporationName: character?.corporation.name ?? null,
+          corporationFactionId: character?.corporation.factionId ?? null,
+          corporationFactionName: liveName(character?.corporation.faction),
           stationId: agent?.stationId ?? null,
           stationName: agent?.station.name ?? null,
           solarSystemId: agent?.station.solarSystemId ?? null,

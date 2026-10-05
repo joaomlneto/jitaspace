@@ -1,4 +1,4 @@
-import type { MissionIndexRow, MissionsIndex } from "./page.client";
+import type { MissionIndexTuple, MissionsIndex } from "./page.client";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
 import { missionKind } from "~/lib/missions";
@@ -89,7 +89,7 @@ export default async function Page() {
   );
   const hasBriefing = new Set(briefings.map((row) => row.missionId));
 
-  const rows = missions.map((mission): MissionIndexRow => {
+  const rows = missions.map((mission): MissionIndexTuple => {
     const kind = missionKind(mission);
     const objectiveTypeId =
       kind === "kill"
@@ -99,38 +99,26 @@ export default async function Page() {
       kind === "kill"
         ? mission.killObjectiveQuantity
         : mission.courierObjectiveQuantity;
-    // Only what a row has: the list is one cache entry and RSC payload, so
-    // ~2,900 rows of explicit nulls would roughly double it.
-    const row: MissionIndexRow = {
-      missionId: mission.missionId,
-      name: mission.name,
+    return [
+      mission.missionId,
+      mission.name,
       kind,
-      hasBriefing: hasBriefing.has(mission.missionId),
-    };
-    const set = <K extends keyof MissionIndexRow>(
-      key: K,
-      value: MissionIndexRow[K] | null | undefined,
-    ) => {
-      if (value != null) row[key] = value;
-    };
-    set("factionId", mission.factionId);
-    set("corporationId", mission.corporationId);
-    set("agentTypeId", mission.agentTypeId);
-    set("dungeonId", mission.killDungeonId);
-    set("objectiveTypeId", objectiveTypeId);
-    set(
-      "objectiveQuantity",
+      hasBriefing.has(mission.missionId),
+      mission.factionId,
+      mission.corporationId,
+      mission.agentTypeId,
+      mission.killDungeonId,
+      objectiveTypeId,
       objectiveTypeId === null ? null : objectiveQuantity,
-    );
-    set("rewardTypeId", mission.rewardTypeId);
-    set("rewardQuantity", mission.rewardQuantity);
-    set("bonusRewardTypeId", mission.bonusRewardTypeId);
-    set("bonusRewardQuantity", mission.bonusRewardQuantity);
-    set("bonusTimeInterval", mission.bonusTimeInterval);
-    set("expirationTime", mission.expirationTime);
-    set("hasStandingRewards", mission.hasStandingRewards);
-    set("epicArcId", arcOf.get(mission.missionId));
-    return row;
+      mission.rewardTypeId,
+      mission.rewardQuantity,
+      mission.bonusRewardTypeId,
+      mission.bonusRewardQuantity,
+      mission.bonusTimeInterval,
+      mission.expirationTime,
+      mission.hasStandingRewards,
+      arcOf.get(mission.missionId) ?? null,
+    ];
   });
 
   const index: MissionsIndex = {

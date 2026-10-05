@@ -36,8 +36,36 @@ import {
   MISSION_KIND_LABELS,
 } from "~/lib/missions";
 
-/** One mission, ids only — names live once in the lookup tables beside it. */
-export interface MissionIndexRow {
+/**
+ * One mission as a tuple, ids only: names live once in the lookup tables
+ * beside it. A tuple rather than an object because the field names would
+ * otherwise repeat on each of ~2,900 rows, and the whole index is one
+ * `"use cache"` entry, which Next silently stops storing past 2 MB (the type
+ * list page's members make the same trade).
+ */
+export type MissionIndexTuple = [
+  missionId: number,
+  name: string,
+  kind: MissionKind,
+  hasBriefing: boolean,
+  factionId: number | null,
+  corporationId: number | null,
+  agentTypeId: number | null,
+  dungeonId: number | null,
+  objectiveTypeId: number | null,
+  objectiveQuantity: number | null,
+  rewardTypeId: number | null,
+  rewardQuantity: number | null,
+  bonusRewardTypeId: number | null,
+  bonusRewardQuantity: number | null,
+  bonusTimeInterval: number | null,
+  expirationTime: number | null,
+  hasStandingRewards: boolean | null,
+  epicArcId: number | null,
+];
+
+/** A {@link MissionIndexTuple} unpacked, with absent values left out. */
+interface MissionIndexRow {
   missionId: number;
   name: string;
   kind: MissionKind;
@@ -58,8 +86,52 @@ export interface MissionIndexRow {
   epicArcId?: number;
 }
 
+const opt = <T,>(value: T | null): T | undefined => value ?? undefined;
+
+function unpackMission([
+  missionId,
+  name,
+  kind,
+  hasBriefing,
+  factionId,
+  corporationId,
+  agentTypeId,
+  dungeonId,
+  objectiveTypeId,
+  objectiveQuantity,
+  rewardTypeId,
+  rewardQuantity,
+  bonusRewardTypeId,
+  bonusRewardQuantity,
+  bonusTimeInterval,
+  expirationTime,
+  hasStandingRewards,
+  epicArcId,
+]: MissionIndexTuple): MissionIndexRow {
+  return {
+    missionId,
+    name,
+    kind,
+    hasBriefing,
+    factionId: opt(factionId),
+    corporationId: opt(corporationId),
+    agentTypeId: opt(agentTypeId),
+    dungeonId: opt(dungeonId),
+    objectiveTypeId: opt(objectiveTypeId),
+    objectiveQuantity: opt(objectiveQuantity),
+    rewardTypeId: opt(rewardTypeId),
+    rewardQuantity: opt(rewardQuantity),
+    bonusRewardTypeId: opt(bonusRewardTypeId),
+    bonusRewardQuantity: opt(bonusRewardQuantity),
+    bonusTimeInterval: opt(bonusTimeInterval),
+    expirationTime: opt(expirationTime),
+    hasStandingRewards: opt(hasStandingRewards),
+    epicArcId: opt(epicArcId),
+  };
+}
+
 export interface MissionsIndex {
-  missions: MissionIndexRow[];
+  missions: MissionIndexTuple[];
   factions: Record<number, string>;
   corporations: Record<number, string>;
   agentTypes: Record<number, string>;
@@ -279,9 +351,13 @@ const columns: DataTableColumn<MissionTableRow>[] = [
 export default function MissionsPage({
   index,
 }: Readonly<{ index: MissionsIndex }>) {
+  const missions = useMemo(
+    () => index.missions.map(unpackMission),
+    [index.missions],
+  );
   const rows = useMemo(
     () =>
-      index.missions.map(
+      missions.map(
         (mission): MissionTableRow => ({
           ...mission,
           kindLabel: MISSION_KIND_LABELS[mission.kind],
@@ -299,21 +375,21 @@ export default function MissionsPage({
           epicArcName: lookup(index.epicArcs, mission.epicArcId),
         }),
       ),
-    [index],
+    [missions, index],
   );
 
   const stats = useMemo(() => {
     const count = (kind: MissionKind) =>
-      index.missions.filter((mission) => mission.kind === kind).length;
+      missions.filter((mission) => mission.kind === kind).length;
     return {
-      total: index.missions.length,
+      total: missions.length,
       kill: count("kill"),
       courier: count("courier"),
       other: count("other"),
-      epicArc: index.missions.filter((m) => m.epicArcId !== undefined).length,
+      epicArc: missions.filter((m) => m.epicArcId !== undefined).length,
       epicArcs: Object.keys(index.epicArcs).length,
     };
-  }, [index]);
+  }, [missions, index.epicArcs]);
 
   return (
     <Container size="xl">

@@ -185,7 +185,11 @@ describe("getMission", () => {
       missionId,
       agentId,
       failMissionId: missionId,
-      mission: { name: `Mission ${missionId}` },
+      mission: {
+        name: `Mission ${missionId}`,
+        // The chapter title rides along with the step.
+        messages: missionId === 1 ? [{ text: "Chapter One" }] : [],
+      },
       nextMissions: next.map((nextMissionId) => ({ nextMissionId })),
     });
     // Stored out of order, with a branch and a loop no start leads into.
@@ -197,22 +201,19 @@ describe("getMission", () => {
       step(8, [9]),
       step(1, [2]),
     ]);
-    db.missionMessage.findMany.mockResolvedValue([
-      { missionId: 1, text: "Chapter One" },
-    ]);
+    // The agent's corporation and its faction come back with the agent, so
+    // neither needs a lookup of its own.
     db.character.findMany.mockResolvedValue([
       {
         characterId: 3019356,
         name: "Sister Alitura",
         corporationId: 1000130,
-        corporation: { name: "Sisters of EVE" },
+        corporation: {
+          name: "Sisters of EVE",
+          factionId: 500016,
+          faction: { name: "Servant Sisters of EVE", isDeleted: false },
+        },
       },
-    ]);
-    db.corporation.findMany.mockResolvedValue([
-      { corporationId: 1000130, name: "Sisters of EVE", factionId: 500016 },
-    ]);
-    db.faction.findMany.mockResolvedValue([
-      { factionId: 500016, name: "Servant Sisters of EVE" },
     ]);
 
     const mission = await getMission(2);
@@ -233,6 +234,8 @@ describe("getMission", () => {
     expect(arc?.steps.map((s) => s.missionId)).toEqual([1, 2, 3, 4, 8, 9]);
     expect(arc?.steps[0]?.chapterTitle).toBe("Chapter One");
     expect(arc?.steps[1]?.nextMissionIds).toEqual([3, 4]);
+    expect(db.missionMessage.findMany).not.toHaveBeenCalled();
+    expect(db.corporation.findMany).not.toHaveBeenCalled();
   });
 
   it("names no offering agent when its arcs disagree", async () => {

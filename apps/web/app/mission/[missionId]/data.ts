@@ -166,6 +166,25 @@ function objectiveOf(
       );
 }
 
+/** A corporation's faction, as it came along with the corporation. */
+const corporationFaction = (
+  corporation: CorporationRef | null,
+): FactionRef | null =>
+  corporation?.factionId == null
+    ? null
+    : { factionId: corporation.factionId, name: corporation.factionName };
+
+/** The offering agent's corporation, from what the agent lookup read. */
+const agentCorporationOf = (agent: AgentRef | null): CorporationRef | null =>
+  agent?.corporationId == null
+    ? null
+    : {
+        corporationId: agent.corporationId,
+        name: agent.corporationName,
+        factionId: agent.corporationFactionId,
+        factionName: agent.corporationFactionName,
+      };
+
 /**
  * What a mission's placeholders can be filled in with, as far as the SDE
  * knows. The game resolves the rest (locations, the pilot) from the live offer.
@@ -197,13 +216,11 @@ function missionTextValues(known: {
 }
 
 /**
- * The epic arcs a mission belongs to: each arc, every step of it, and the
+ * The epic arcs a mission belongs to: each arc and every step of it, with the
  * steps' journal chapter titles. Nothing to read for the many missions in no arc.
  */
 async function readEpicArcs(epicArcIds: number[]) {
-  if (epicArcIds.length === 0) {
-    return { arcs: [], arcSteps: [], chapterTitles: [] };
-  }
+  if (epicArcIds.length === 0) return { arcs: [], arcSteps: [] };
   const [arcs, arcSteps] = await Promise.all([
     prisma.epicArc.findMany({
       where: { epicArcId: { in: epicArcIds }, isDeleted: false },
@@ -215,7 +232,17 @@ async function readEpicArcs(epicArcIds: number[]) {
         missionId: true,
         agentId: true,
         failMissionId: true,
-        mission: { select: { name: true } },
+        mission: {
+          select: {
+            name: true,
+            // The journal chapter title, in the same round trip.
+            messages: {
+              select: { text: true },
+              where: { key: CHAPTER_TITLE_KEY, isDeleted: false },
+              take: 1,
+            },
+          },
+        },
         nextMissions: {
           select: { nextMissionId: true },
           where: { isDeleted: false },
@@ -224,15 +251,7 @@ async function readEpicArcs(epicArcIds: number[]) {
       where: { epicArcId: { in: epicArcIds }, isDeleted: false },
     }),
   ]);
-  const chapterTitles = await prisma.missionMessage.findMany({
-    select: { missionId: true, text: true },
-    where: {
-      missionId: { in: arcSteps.map((step) => step.missionId) },
-      key: CHAPTER_TITLE_KEY,
-      isDeleted: false,
-    },
-  });
-  return { arcs, arcSteps, chapterTitles };
+  return { arcs, arcSteps };
 }
 
 /**
@@ -267,7 +286,7 @@ export async function getMission(
   });
   if (mission === null || mission.isDeleted) return null;
 
-  const [{ arcs, arcSteps, chapterTitles }, variantRows, dungeonMissionCount] =
+  const [{ arcs, arcSteps }, variantRows, dungeonMissionCount] =
     await Promise.all([
       readEpicArcs(mission.epicArcMissions.map((step) => step.epicArcId)),
       prisma.mission.findMany({
@@ -310,47 +329,46 @@ export async function getMission(
   const offeringAgentId =
     offeringAgentIds.length === 1 ? (offeringAgentIds[0] ?? null) : null;
 
-  const [types, agents, dungeons, agentType] = await Promise.all([
-    readTypeRefs([
-      mission.initialAgentGiftTypeId,
-      mission.killObjectiveTypeId,
-      mission.killDropItemInMissionContainerTypeId,
-      mission.courierObjectiveTypeId,
-      mission.rewardTypeId,
-      mission.bonusRewardTypeId,
-      ...variantRows.flatMap((v) => [
-        v.killObjectiveTypeId,
-        v.courierObjectiveTypeId,
-        v.rewardTypeId,
+  // One round for every lookup: none depends on another. Corporations bring
+  // their faction along, and the offering agent its corporation's.
+  const [types, agents, dungeons, agentType, corporations, factions] =
+    await Promise.all([
+      readTypeRefs([
+        mission.initialAgentGiftTypeId,
+        mission.killObjectiveTypeId,
+        mission.killDropItemInMissionContainerTypeId,
+        mission.courierObjectiveTypeId,
+        mission.rewardTypeId,
+        mission.bonusRewardTypeId,
+        ...variantRows.flatMap((v) => [
+          v.killObjectiveTypeId,
+          v.courierObjectiveTypeId,
+          v.rewardTypeId,
+        ]),
       ]),
-    ]),
-    readAgentRefs([offeringAgentId, ...arcSteps.map((step) => step.agentId)]),
-    readDungeonRefs([mission.killDungeonId]),
-    mission.agentTypeId === null
-      ? Promise.resolve(null)
-      : prisma.agentType.findUnique({
-          select: { agentTypeId: true, name: true },
-          where: { agentTypeId: mission.agentTypeId },
-        }),
-  ]);
+      readAgentRefs([offeringAgentId, ...arcSteps.map((step) => step.agentId)]),
+      readDungeonRefs([mission.killDungeonId]),
+      mission.agentTypeId === null
+        ? Promise.resolve(null)
+        : prisma.agentType.findUnique({
+            select: { agentTypeId: true, name: true },
+            where: { agentTypeId: mission.agentTypeId },
+          }),
+      readCorporationRefs([
+        mission.corporationId,
+        ...variantRows.map((v) => v.corporationId),
+      ]),
+      readFactionRefs([
+        mission.factionId,
+        ...mission.extraStandings.map((s) => s.factionId),
+        ...arcs.map((arc) => arc.factionId),
+        ...variantRows.map((v) => v.factionId),
+      ]),
+    ]);
   const offeringAgent = pick(agents, offeringAgentId);
-
-  const corporations = await readCorporationRefs([
-    mission.corporationId,
-    offeringAgent?.corporationId,
-    ...variantRows.map((v) => v.corporationId),
-  ]);
   const corporation = pick(corporations, mission.corporationId);
-  const agentCorporation = pick(corporations, offeringAgent?.corporationId);
+  const agentCorporation = agentCorporationOf(offeringAgent);
 
-  const factions = await readFactionRefs([
-    mission.factionId,
-    corporation?.factionId,
-    agentCorporation?.factionId,
-    ...mission.extraStandings.map((s) => s.factionId),
-    ...arcs.map((arc) => arc.factionId),
-    ...variantRows.map((v) => v.factionId),
-  ]);
   const factionRef = (id: number | null | undefined) => pick(factions, id);
 
   const kind = missionKind(mission);
@@ -366,12 +384,8 @@ export async function getMission(
   const issuerCorporation = corporation ?? agentCorporation;
   const issuerFaction =
     factionRef(mission.factionId) ??
-    factionRef(issuerCorporation?.factionId) ??
+    corporationFaction(issuerCorporation) ??
     factionRef(arcs[0]?.factionId);
-
-  const chapterTitleOf = new Map(
-    chapterTitles.map((row) => [row.missionId, row.text]),
-  );
 
   return {
     missionId: mission.missionId,
@@ -379,7 +393,7 @@ export async function getMission(
     kind,
     faction: factionRef(mission.factionId),
     corporation,
-    corporationFaction: factionRef(corporation?.factionId),
+    corporationFaction: corporationFaction(corporation),
     issuer: { corporation: issuerCorporation, faction: issuerFaction },
     agentType:
       mission.agentTypeId === null
@@ -444,7 +458,7 @@ export async function getMission(
           .map((step) => ({
             missionId: step.missionId,
             name: step.mission.name,
-            chapterTitle: chapterTitleOf.get(step.missionId) ?? null,
+            chapterTitle: step.mission.messages[0]?.text ?? null,
             agent: pick(agents, step.agentId),
             failMissionId: step.failMissionId,
             nextMissionIds: step.nextMissions
