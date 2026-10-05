@@ -24,15 +24,15 @@ export function parseResourceIndex(text: string): ResourceEntry[] {
     if (line.length === 0) continue;
 
     const [
-      path = "",
-      relPath = "",
+      path,
+      relPath,
       md5 = "",
       sizeText = "",
       compressedSizeText = "",
       modeText,
     ] = line.split(",");
 
-    if (path.length === 0 || relPath.length === 0) continue;
+    if (!path || !relPath) continue;
 
     const entry: ResourceEntry = {
       path,

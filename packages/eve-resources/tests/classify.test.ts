@@ -22,6 +22,10 @@ describe("getExtension", () => {
   it("treats a leading-dot filename as having no extension", () => {
     expect(getExtension("res:/.hidden")).toBe("");
   });
+
+  it("handles a bare filename with no directory", () => {
+    expect(getExtension("Readme.MD")).toBe("md");
+  });
 });
 
 describe("classifyResourcePath", () => {

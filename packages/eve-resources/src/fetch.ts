@@ -79,8 +79,9 @@ export async function fetchResourceHead(
 
   const out = new Uint8Array(Math.min(total, maxBytes));
   let offset = 0;
+  // Reading stopped at the chunk that crossed maxBytes, so only that last chunk
+  // can need truncating.
   for (const chunk of chunks) {
-    if (offset >= out.length) break;
     const take = Math.min(chunk.length, out.length - offset);
     out.set(chunk.subarray(0, take), offset);
     offset += take;

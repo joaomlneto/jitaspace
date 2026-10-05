@@ -161,7 +161,7 @@ const FALLBACK: KnownType = {
 
 /** Extract the lowercased file extension (without dot) from a path. */
 export function getExtension(path: string): string {
-  const name = path.split("/").pop() ?? "";
+  const name = path.slice(path.lastIndexOf("/") + 1);
   const dot = name.lastIndexOf(".");
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 }

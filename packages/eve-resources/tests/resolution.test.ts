@@ -11,10 +11,12 @@ import {
   listChildren,
   normalizeDirPath,
   parseResourceIndex,
+  PLATFORM_LAYOUT,
   pointerFilename,
   PROVIDER_ENDPOINTS,
   providerOf,
   RESFILE_INDEX_PATH,
+  RESFILE_INDEX_WINDOWS_PATH,
   RESOURCES_BASE_URL,
   resourceUrl,
   SERVER_CONFIG,
@@ -26,6 +28,19 @@ describe("constants", () => {
     expect(BINARIES_BASE_URL).toBe("https://binaries.eveonline.com/");
     expect(RESOURCES_BASE_URL).toBe("https://resources.eveonline.com/");
     expect(RESFILE_INDEX_PATH).toBe("app:/resfileindex.txt");
+  });
+
+  it("lays out each platform's app index and resfile indexes", () => {
+    expect(PLATFORM_LAYOUT.windows).toEqual({
+      appIndexPrefix: "eveonline_",
+      resfileIndexPath: RESFILE_INDEX_PATH,
+      resfileOverlayPath: RESFILE_INDEX_WINDOWS_PATH,
+    });
+    expect(RESFILE_INDEX_WINDOWS_PATH).toBe("app:/resfileindex_Windows.txt");
+    expect(PLATFORM_LAYOUT.macos.appIndexPrefix).toBe("eveonlinemacOS_");
+    expect(PLATFORM_LAYOUT.macos.resfileOverlayPath).toMatch(
+      /resfileindex_macOS\.txt$/,
+    );
   });
 
   it("maps each server to its build pointer", () => {
@@ -157,6 +172,26 @@ describe("parseResourceIndex", () => {
     expect(entries.map((e) => e.path)).toEqual(["res:/a.txt"]);
   });
 
+  it("defaults an unparseable file mode to 0 and omits an empty one", () => {
+    const [bad, empty] = parseResourceIndex(
+      ["app:/a,ab/cd,md5,1,1,rw-r--r--", "app:/b,ab/cd,md5,1,1,"].join("\n"),
+    );
+    expect(bad?.mode).toBe(0);
+    expect(empty).not.toHaveProperty("mode");
+  });
+
+  it("defaults the missing trailing columns of a short line", () => {
+    expect(parseResourceIndex("res:/a.txt,ab/cd")).toEqual([
+      {
+        path: "res:/a.txt",
+        relPath: "ab/cd",
+        md5: "",
+        size: 0,
+        compressedSize: 0,
+      },
+    ]);
+  });
+
   it("defaults unparseable sizes to 0 and trims trailing whitespace", () => {
     const [entry] = parseResourceIndex("res:/a.txt,ab/cd,md5,notanumber,  \r");
     expect(entry?.size).toBe(0);
@@ -227,5 +262,34 @@ describe("tree", () => {
 
   it("accepts a path without a trailing slash", () => {
     expect(listChildren(tree, "res:/staticdata").files).toHaveLength(1);
+  });
+
+  it("sorts a directory's files by path", () => {
+    const sorted = buildTreeIndex(
+      parseResourceIndex(
+        ["res:/d/c.txt,a/1", "res:/d/a.txt,a/2", "res:/d/b.txt,a/3"].join("\n"),
+      ),
+    );
+    expect(listChildren(sorted, "res:/d/").files.map((f) => f.path)).toEqual([
+      "res:/d/a.txt",
+      "res:/d/b.txt",
+      "res:/d/c.txt",
+    ]);
+  });
+
+  it("collapses empty path segments", () => {
+    const tree2 = buildTreeIndex(parseResourceIndex("res:/a//b.txt,a/1"));
+    expect(listChildren(tree2, "res:/").directories.map((d) => d.name)).toEqual(
+      ["a"],
+    );
+    expect(listChildren(tree2, "res:/a/").files.map((f) => f.path)).toEqual([
+      "res:/a//b.txt",
+    ]);
+  });
+
+  it("indexes a scheme-less path for lookup but leaves it out of the tree", () => {
+    const tree2 = buildTreeIndex(parseResourceIndex("loose.txt,a/1"));
+    expect(tree2.byPath.get("loose.txt")?.relPath).toBe("a/1");
+    expect(tree2.directories.size).toBe(0);
   });
 });

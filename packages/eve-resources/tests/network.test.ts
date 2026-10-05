@@ -1,5 +1,5 @@
 import { gzipSync } from "node:zlib";
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 
 import type { ResourceEntry } from "../src/index";
 import {
@@ -433,5 +433,100 @@ describe("fetchBuildDate", () => {
     const fetchImpl = (() =>
       Promise.reject(new Error("offline"))) as typeof fetch;
     await expect(fetchBuildDate(3360489, fetchImpl)).resolves.toBeNull();
+  });
+});
+
+describe("index resolution failures", () => {
+  const appIndexBody = "app:/resfileindex.txt,rf/hash_a,md5,20,5,33188";
+
+  it("fetchAppIndex throws on a non-OK response", async () => {
+    const fetchImpl = mockFetch({ [APP_INDEX]: { status: 404 } });
+    await expect(fetchAppIndex("100", fetchImpl)).rejects.toThrow(
+      /Failed to fetch EVE app index .*HTTP 404/,
+    );
+  });
+
+  it("fetchResfileIndex throws when the resfile index itself fails", async () => {
+    const fetchImpl = mockFetch({
+      [APP_INDEX]: { body: appIndexBody },
+      "https://binaries.eveonline.com/rf/hash_a": { status: 503 },
+    });
+    await expect(fetchResfileIndex("100", fetchImpl)).rejects.toThrow(
+      /Failed to fetch app:\/resfileindex\.txt .*HTTP 503/,
+    );
+  });
+
+  it("fetchResfileIndex returns the base set when the platform overlay is absent", async () => {
+    const fetchImpl = mockFetch({
+      [APP_INDEX]: { body: appIndexBody },
+      "https://binaries.eveonline.com/rf/hash_a": {
+        body: "res:/a.txt,a/1,m,10,5",
+      },
+    });
+    const entries = await fetchResfileIndex("100", fetchImpl, "windows");
+    expect(entries.map((e) => e.path)).toEqual(["res:/a.txt"]);
+  });
+});
+
+describe("network helpers default to the global fetch and Tranquility", () => {
+  const entry: ResourceEntry = {
+    path: "res:/a.txt",
+    relPath: "a/1",
+    md5: "m",
+    size: 2,
+    compressedSize: 2,
+  };
+  const routes = {
+    [POINTER]: { body: JSON.stringify({ build: "100" }) },
+    [APP_INDEX]: { body: "app:/resfileindex.txt,rf/hash_a,md5,20,5,33188" },
+    "https://binaries.eveonline.com/rf/hash_a": {
+      body: "res:/a.txt,a/1,m,2,2",
+    },
+    "https://resources.eveonline.com/a/1": { body: "hi" },
+  };
+
+  /** Route the global `fetch` through {@link mockFetch} for one test. */
+  function stubGlobalFetch(): void {
+    jest.spyOn(globalThis, "fetch").mockImplementation(mockFetch(routes));
+  }
+
+  it("getCurrentBuild", async () => {
+    stubGlobalFetch();
+    await expect(getCurrentBuild()).resolves.toMatchObject({ build: "100" });
+  });
+
+  it("fetchAppIndex and fetchResfileIndex", async () => {
+    stubGlobalFetch();
+    expect(await fetchAppIndex("100")).toHaveLength(1);
+    expect((await fetchResfileIndex("100")).map((e) => e.path)).toEqual([
+      "res:/a.txt",
+    ]);
+  });
+
+  it("fetchResourceIndex", async () => {
+    stubGlobalFetch();
+    await expect(fetchResourceIndex()).resolves.toMatchObject({
+      server: "tranquility",
+      build: "100",
+    });
+  });
+
+  it("fetchResourceBytes and fetchResourceHead", async () => {
+    stubGlobalFetch();
+    expect(new TextDecoder().decode(await fetchResourceBytes(entry))).toBe(
+      "hi",
+    );
+    expect(new TextDecoder().decode(await fetchResourceHead(entry, 1))).toBe(
+      "h",
+    );
+  });
+
+  it("fetchBuildDate", async () => {
+    jest.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(null, {
+        headers: { "last-modified": "Thu, 01 Oct 2026 23:30:00 GMT" },
+      }),
+    );
+    await expect(fetchBuildDate(100)).resolves.toBe("2026-10-01");
   });
 });
