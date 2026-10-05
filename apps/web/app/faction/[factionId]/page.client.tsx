@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Alert,
@@ -15,6 +16,7 @@ import {
   Paper,
   Progress,
   SimpleGrid,
+  Skeleton,
   Stack,
   Table,
   Tabs,
@@ -96,6 +98,13 @@ import {
 } from "./tabs";
 
 export type PageProps = FactionPageData;
+
+// Browser-only and on demand: the ship tree library and its stylesheet load
+// when the tab opens, and stay out of the page's cached HTML.
+const FactionShipTree = dynamic(() => import("./FactionShipTree"), {
+  ssr: false,
+  loading: () => <Skeleton h={480} radius="md" />,
+});
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
@@ -1108,6 +1117,7 @@ export default function FactionPage({
     ...(counts.corporations > 0 ? ["corporations"] : []),
     ...(hasWarfare ? ["warfare"] : []),
     ...(counts.items > 0 ? ["items"] : []),
+    ...(shipTreeFaction ? ["ship-tree"] : []),
     ...(counts.contraband > 0 ? ["contraband"] : []),
     ...(hasMissions ? ["missions"] : []),
     ...(counts.standingRestrictions > 0 ? ["standings"] : []),
@@ -1280,17 +1290,6 @@ export default function FactionPage({
               </Group>
 
               <Group gap="xs">
-                {shipTreeFaction && (
-                  <Button
-                    component={Link}
-                    href={`/ship-tree?faction=${shipTreeFaction.slug}`}
-                    size="xs"
-                    variant="light"
-                    leftSection={<IconHierarchy3 size={14} />}
-                  >
-                    Ship tree
-                  </Button>
-                )}
                 <Button
                   component={Link}
                   href={`https://zkillboard.com/faction/${factionId}/`}
@@ -1337,6 +1336,7 @@ export default function FactionPage({
             )}
             {tab("warfare", <IconSwords size={16} />, "Warfare")}
             {tab("items", <IconPackage size={16} />, "Items", counts.items)}
+            {tab("ship-tree", <IconHierarchy3 size={16} />, "Ship Tree")}
             {tab(
               "contraband",
               <IconShieldHalf size={16} />,
@@ -1451,6 +1451,13 @@ export default function FactionPage({
                   striped
                 />
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Ship tree */}
+          {shipTreeFaction && (
+            <Tabs.Panel value="ship-tree" pt="lg">
+              <FactionShipTree faction={shipTreeFaction.id} />
             </Tabs.Panel>
           )}
 
