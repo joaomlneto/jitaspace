@@ -52,6 +52,10 @@ export function PersonalFilterSwitch({
       <div>
         <Switch
           label={label}
+          // Mantine renders the description inside the label, which would
+          // make it part of the accessible name too; it is announced once,
+          // as the description, through `aria-describedby`.
+          aria-label={label}
           description={description}
           checked={checked}
           disabled={disabled}

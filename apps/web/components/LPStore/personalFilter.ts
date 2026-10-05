@@ -2,8 +2,13 @@
 
 import { useLocalStorage } from "@mantine/hooks";
 
+import type { ResourceState } from "./characterResources";
 import type { PersonalFilterSwitchProps } from "./PersonalFilterSwitch";
-import type { ResourceState } from "./usePurchasingPower";
+
+/** A filter toggle remembered in localStorage under `key` (off by default). */
+export function useStoredToggle(key: string) {
+  return useLocalStorage<boolean>({ key, defaultValue: false });
+}
 
 export interface PersonalFilter<T> {
   /** The data to filter on, when the filter is on and that data has loaded. */
@@ -18,25 +23,23 @@ export interface PersonalFilter<T> {
 
 /**
  * A remembered on/off filter over one piece of the character's data. It
- * applies only once that data has loaded, and is drawn on only where it takes
- * effect (or is about to), so a disabled switch never shows ON next to an
- * unfiltered table.
+ * applies once that data has loaded; turning it on is what requests the data
+ * (the caller fetches while `on`). It is drawn on only where it takes effect
+ * or is about to, so a disabled switch never shows ON next to unfiltered
+ * content, and it can be turned off again while loading.
  */
-export function usePersonalFilter<T>(
-  storageKey: string,
+export function personalFilter<T>(
+  on: boolean,
+  setOn: (on: boolean) => void,
   state: ResourceState<T>,
 ): PersonalFilter<T> {
-  const [on, setOn] = useLocalStorage<boolean>({
-    key: storageKey,
-    defaultValue: false,
-  });
   const awaiting = on && state.status === "loading";
   return {
     value: on && state.status === "ready" ? state.value : undefined,
     awaiting,
     switchProps: {
       checked: on && (state.status === "ready" || awaiting),
-      disabled: state.status !== "ready",
+      disabled: state.status === "unavailable" || state.status === "error",
       unavailableHint:
         state.status === "unavailable" || state.status === "error"
           ? state.hint

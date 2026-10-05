@@ -614,6 +614,7 @@ describe("LoyaltyPointsTable — only offers I have the LP / ISK / items for", (
       ),
       isLoading: false,
       hasNextPage: false,
+      hasData: true,
       error: null,
       ...assets,
     });
@@ -724,7 +725,7 @@ describe("LoyaltyPointsTable — only offers I have the LP / ISK / items for", (
     signIn({ assets: { hasNextPage: true } }); // assets still walking pages
     renderTable();
     await waitFor(() => expect(itemsSwitch()).toBeChecked());
-    expect(itemsSwitch()).toBeDisabled();
+    expect(itemsSwitch()).toBeEnabled(); // can be turned off while it loads
     expect(screen.queryByText("5,000 LP")).toBeNull();
     expect(screen.queryByText("2,500 LP")).toBeNull();
     // The others are unaffected.
@@ -750,6 +751,62 @@ describe("LoyaltyPointsTable — only offers I have the LP / ISK / items for", (
     unmount();
     renderTable(offers.map((offer) => ({ ...offer, akCost: null })));
     expect(lpSwitch()).not.toHaveAccessibleDescription(/AK/);
+  });
+
+  it("fetches each piece of data only while its toggle is on", () => {
+    signIn();
+    renderTable();
+    // Browsing with every toggle off fetches nothing: not even the asset walk.
+    for (const hook of [
+      useCharacterLoyaltyPoints,
+      useCharacterWalletBalance,
+      useCharacterAssets,
+    ]) {
+      expect(hook).toHaveBeenLastCalledWith(9, { enabled: false });
+    }
+    fireEvent.click(itemsSwitch());
+    expect(useCharacterAssets).toHaveBeenLastCalledWith(9, { enabled: true });
+    expect(useCharacterWalletBalance).toHaveBeenLastCalledWith(9, {
+      enabled: false,
+    });
+  });
+
+  it("can be turned on before its data is fetched", () => {
+    // Scope granted, nothing requested yet.
+    signIn({ assets: { hasData: false, assets: {} } });
+    renderTable();
+    expect(itemsSwitch()).toBeEnabled();
+    expect(itemsSwitch()).not.toBeChecked();
+    expect(itemsSwitch()).not.toHaveAccessibleDescription(/Couldn't|Sign in/);
+  });
+
+  it("asks for character 0, not any character, when none is selected", () => {
+    signIn();
+    (useSelectedCharacter as jest.Mock).mockReturnValue(null);
+    renderTable();
+    expect(useCharacterWalletBalance).toHaveBeenLastCalledWith(0, {
+      enabled: false,
+    });
+    expect(useCharacterAssets).toHaveBeenLastCalledWith(0, { enabled: false });
+  });
+
+  it("keeps filtering on the last full asset walk when a refetch fails", () => {
+    window.localStorage.setItem(KEYS.items, "true");
+    signIn({
+      owned: [{ type_id: 200, quantity: 1 }],
+      assets: { error: new Error("ESI 502") }, // every page still cached
+    });
+    renderTable();
+    expect(itemsSwitch()).toBeEnabled();
+    expect(screen.queryByText("5,000 LP")).toBeNull();
+    expect(screen.getByText("2,500 LP")).toBeInTheDocument();
+  });
+
+  it("names each switch by its label alone, with the caveat as its description", () => {
+    renderTable();
+    expect(
+      screen.getByRole("switch", { name: "Only offers I have the LP for" }),
+    ).toHaveAccessibleDescription(/^AK costs aren't checked/);
   });
 
   it("remembers each toggle on its own", async () => {

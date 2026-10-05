@@ -4,7 +4,14 @@ import { useGetCharactersCharacterIdWallet } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
-export const useCharacterWalletBalance = (characterId?: number) => {
+/**
+ * @param options.enabled - false holds the request while still reporting
+ *   `isAllowed`. Default true.
+ */
+export const useCharacterWalletBalance = (
+  characterId?: number,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
     scopes: ["esi-wallet.read_character_wallet.v1"],
@@ -17,7 +24,7 @@ export const useCharacterWalletBalance = (characterId?: number) => {
       { ...authHeaders },
       {
         query: {
-          enabled: characterId !== undefined && accessToken !== null,
+          enabled: enabled && characterId !== undefined && accessToken !== null,
         },
       },
     ),

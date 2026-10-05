@@ -38,6 +38,7 @@ export const useCharacterAssets = jestFn(
     assets: {},
     isLoading: false,
     hasNextPage: false,
+    hasData: false,
     error: null,
   }),
 );

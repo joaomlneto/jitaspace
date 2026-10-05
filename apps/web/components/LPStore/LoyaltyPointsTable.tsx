@@ -14,6 +14,12 @@ import {
 
 import type { AugmentedOffer } from "./pricing";
 import { DataTable } from "~/components/DataTable";
+import {
+  useIskResource,
+  useLoyaltyPointsResource,
+  useOwnedItemsResource,
+} from "./characterResources";
+import { personalFilter, useStoredToggle } from "./personalFilter";
 import { PersonalFilterSwitch } from "./PersonalFilterSwitch";
 import {
   buyIskPerLp,
@@ -29,8 +35,6 @@ import {
 } from "./pricing";
 import { hasEnoughIsk, hasEnoughLp, hasRequiredItems } from "./purchasability";
 import { useAugmentedOffers } from "./useAugmentedOffers";
-import { usePersonalFilter } from "./usePersonalFilter";
-import { usePurchasingPower } from "./usePurchasingPower";
 
 /** Where each "only offers I have the … for" toggle is remembered. */
 const STORAGE_KEYS = {
@@ -213,12 +217,22 @@ export const LoyaltyPointsTable = memo(
       offers,
     });
 
-    const power = usePurchasingPower();
-    const lpFilter = usePersonalFilter(STORAGE_KEYS.lp, power.loyaltyPoints);
-    const iskFilter = usePersonalFilter(STORAGE_KEYS.isk, power.isk);
-    const itemsFilter = usePersonalFilter(
-      STORAGE_KEYS.items,
-      power.ownedQuantities,
+    // Each piece of the character's data is fetched only while its toggle is
+    // on: the asset walk alone can be dozens of ESI pages, and most visitors
+    // just browse.
+    const [lpOn, setLpOn] = useStoredToggle(STORAGE_KEYS.lp);
+    const [iskOn, setIskOn] = useStoredToggle(STORAGE_KEYS.isk);
+    const [itemsOn, setItemsOn] = useStoredToggle(STORAGE_KEYS.items);
+    const lpFilter = personalFilter(
+      lpOn,
+      setLpOn,
+      useLoyaltyPointsResource(lpOn),
+    );
+    const iskFilter = personalFilter(iskOn, setIskOn, useIskResource(iskOn));
+    const itemsFilter = personalFilter(
+      itemsOn,
+      setItemsOn,
+      useOwnedItemsResource(itemsOn),
     );
     // With a filter on, show skeleton rows while its data loads rather than
     // every offer, most of which may be about to be filtered away.
