@@ -153,6 +153,86 @@ describe("eager page walk against the real useInfiniteQuery", () => {
     focusManager.setFocused(undefined);
   });
 
+  describe("a disabled walk does not fetch more pages", () => {
+    /** Serve `total` pages, each held until `release(page)` is called. */
+    function serveHeldPages(total: number) {
+      const held = new Map<number, () => void>();
+      mockGetAssets.mockReset();
+      mockGetAssets.mockImplementation((_id: unknown, params: unknown) => {
+        const { page } = params as { page: number };
+        return new Promise((resolve) => {
+          held.set(page, () =>
+            resolve({
+              data: [{ item_id: page, type_id: 34, quantity: 1 }],
+              headers: { "x-pages": String(total) },
+            }),
+          );
+        });
+      });
+      return {
+        requested: () =>
+          mockGetAssets.mock.calls.map(
+            ([, params]) => (params as { page: number }).page,
+          ),
+        release: async (page: number) => {
+          await waitFor(() => expect(held.has(page)).toBe(true));
+          act(() => held.get(page)?.());
+        },
+      };
+    }
+
+    function sharedClient() {
+      const client = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      return ({ children }: { children: ReactNode }) =>
+        createElement(QueryClientProvider, { client }, children);
+    }
+
+    it("stops when the query is disabled mid-walk", async () => {
+      setUp(1);
+      const pages = serveHeldPages(5);
+      const { rerender } = renderHook(
+        ({ enabled }: { enabled: boolean }) =>
+          useCharacterAssets(CHARACTER_ID, { enabled }),
+        { wrapper, initialProps: { enabled: true } },
+      );
+      await pages.release(1);
+      await waitFor(() => expect(pages.requested()).toEqual([1, 2]));
+
+      rerender({ enabled: false });
+      await pages.release(2);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(pages.requested()).toEqual([1, 2]);
+    });
+
+    it("does not resume a partly walked cache when mounted disabled", async () => {
+      setUp(1);
+      const pages = serveHeldPages(5);
+      const sharedWrapper = sharedClient();
+
+      // Walk two pages, then leave (e.g. the user navigated away).
+      const first = renderHook(() => useCharacterAssets(CHARACTER_ID), {
+        wrapper: sharedWrapper,
+      });
+      await pages.release(1);
+      await pages.release(2);
+      await waitFor(() => expect(pages.requested()).toEqual([1, 2, 3]));
+      first.unmount();
+      await pages.release(3);
+
+      // Back with the feature off: the cached query still has more pages.
+      const requestedBefore = pages.requested().length;
+      renderHook(() => useCharacterAssets(CHARACTER_ID, { enabled: false }), {
+        wrapper: sharedWrapper,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(pages.requested()).toHaveLength(requestedBefore);
+    });
+  });
+
   it("useCharacterCurrentFit stops loading and shows modules from every page", async () => {
     // The user-visible regression: with more than two pages the walk stalled,
     // hasNextPage stayed true, and isLoading — which waits for the walk — never

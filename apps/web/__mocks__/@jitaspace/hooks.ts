@@ -7,11 +7,41 @@
  * real source is never loaded during tests.
  */
 
-// jest is a global injected by the test runner — use it directly.
+import type { jest as JestGlobal } from "@jest/globals";
 
-export const useFuzzworkRegionalMarketAggregates = (
-  jest as (typeof import("@jest/globals"))["jest"]
-).fn(() => ({ data: {} }));
+// jest is a global injected by the test runner — use it directly.
+const jestFn = (jest as typeof JestGlobal).fn;
+
+export const useFuzzworkRegionalMarketAggregates = jestFn(() => ({ data: {} }));
+
+// Signed out by default: the LP store table asks for the selected character's
+// LP, wallet and assets. Tests configure these the same way as above.
+export const useSelectedCharacter = jestFn(
+  (): { characterId: number } | null => null,
+);
+export const useCharacterLoyaltyPoints = jestFn(
+  (_characterId: number): Record<string, unknown> => ({
+    hasToken: false,
+    loyaltyPointsMap: {},
+    isLoading: false,
+  }),
+);
+export const useCharacterWalletBalance = jestFn(
+  (_characterId?: number): Record<string, unknown> => ({
+    isAllowed: false,
+    isLoading: false,
+  }),
+);
+export const useCharacterAssets = jestFn(
+  (_characterId?: number): Record<string, unknown> => ({
+    hasToken: false,
+    assets: {},
+    isLoading: false,
+    hasNextPage: false,
+    hasData: false,
+    error: null,
+  }),
+);
 
 export interface FuzzworkTypeMarketAggregate {
   buy: { percentile: number; volume: number };

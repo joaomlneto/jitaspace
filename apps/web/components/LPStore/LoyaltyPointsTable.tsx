@@ -15,6 +15,13 @@ import {
 import type { AugmentedOffer } from "./pricing";
 import { DataTable } from "~/components/DataTable";
 import {
+  useIskResource,
+  useLoyaltyPointsResource,
+  useOwnedItemsResource,
+} from "./characterResources";
+import { personalFilter, useStoredToggle } from "./personalFilter";
+import { PersonalFilterSwitch } from "./PersonalFilterSwitch";
+import {
   buyIskPerLp,
   buyProfit,
   requiredItemsBuyCost,
@@ -26,7 +33,15 @@ import {
   sellIskPerLp,
   sellProfit,
 } from "./pricing";
+import { hasEnoughIsk, hasEnoughLp, hasRequiredItems } from "./purchasability";
 import { useAugmentedOffers } from "./useAugmentedOffers";
+
+/** Where each "only offers I have the … for" toggle is remembered. */
+const STORAGE_KEYS = {
+  lp: "jitaspace/lp-store-only-enough-lp",
+  isk: "jitaspace/lp-store-only-enough-isk",
+  items: "jitaspace/lp-store-only-required-items",
+} as const;
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -201,6 +216,49 @@ export const LoyaltyPointsTable = memo(
       types,
       offers,
     });
+
+    // Each piece of the character's data is fetched only while its toggle is
+    // on: the asset walk alone can be dozens of ESI pages, and most visitors
+    // just browse.
+    const [lpOn, setLpOn] = useStoredToggle(STORAGE_KEYS.lp);
+    const [iskOn, setIskOn] = useStoredToggle(STORAGE_KEYS.isk);
+    const [itemsOn, setItemsOn] = useStoredToggle(STORAGE_KEYS.items);
+    const lpFilter = personalFilter(
+      lpOn,
+      setLpOn,
+      useLoyaltyPointsResource(lpOn),
+    );
+    const iskFilter = personalFilter(iskOn, setIskOn, useIskResource(iskOn));
+    const itemsFilter = personalFilter(
+      itemsOn,
+      setItemsOn,
+      useOwnedItemsResource(itemsOn),
+    );
+    // With a filter on, show skeleton rows while its data loads rather than
+    // every offer, most of which may be about to be filtered away.
+    const awaitingFilterData =
+      lpFilter.awaiting || iskFilter.awaiting || itemsFilter.awaiting;
+    const loyaltyPoints = lpFilter.value;
+    const isk = iskFilter.value;
+    const ownedQuantities = itemsFilter.value;
+    const anyFilterActive =
+      loyaltyPoints !== undefined ||
+      isk !== undefined ||
+      ownedQuantities !== undefined;
+    const rows = useMemo(
+      () =>
+        anyFilterActive
+          ? augmentedOffers.filter(
+              (offer) =>
+                (loyaltyPoints === undefined ||
+                  hasEnoughLp(offer, loyaltyPoints)) &&
+                (isk === undefined || hasEnoughIsk(offer, isk)) &&
+                (ownedQuantities === undefined ||
+                  hasRequiredItems(offer, ownedQuantities)),
+            )
+          : augmentedOffers,
+      [augmentedOffers, anyFilterActive, loyaltyPoints, isk, ownedQuantities],
+    );
 
     const showCorporation = corporations.length > 1;
     const showAkCost = offers.some((offer) => !!offer.akCost);
@@ -411,22 +469,48 @@ export const LoyaltyPointsTable = memo(
     );
 
     return (
-      <DataTable
-        data={augmentedOffers}
-        columns={columns}
-        withPagination
-        defaultPageSize={25}
-        withGlobalFilter
-        withColumnVisibility
-        initialSort={{ columnId: "id", direction: "desc" }}
-        // An offer id is only unique within one corporation's store: most
-        // offers appear in several, and /lp-store/all lists every store.
-        rowId={(row) => `${row.corporationId}:${row.offerId}`}
-        verticalSpacing="xs"
-        withTableBorder
-        highlightOnHover
-        striped
-      />
+      <Stack gap="sm">
+        <Group align="flex-start" gap="lg">
+          <PersonalFilterSwitch
+            label="Only offers I have the LP for"
+            description={
+              showAkCost
+                ? "AK costs aren't checked: ESI doesn't report AK balances"
+                : undefined
+            }
+            {...lpFilter.switchProps}
+          />
+          <PersonalFilterSwitch
+            label="Only offers I have the ISK for"
+            {...iskFilter.switchProps}
+          />
+          <PersonalFilterSwitch
+            label="Only offers I have the items for"
+            description="Counted anywhere in your assets"
+            {...itemsFilter.switchProps}
+          />
+        </Group>
+        <DataTable
+          data={rows}
+          isLoading={awaitingFilterData}
+          emptyText={
+            anyFilterActive ? "No offers pass the filters above." : undefined
+          }
+          columns={columns}
+          withPagination
+          defaultPageSize={25}
+          withGlobalFilter
+          withColumnVisibility
+          initialSort={{ columnId: "id", direction: "desc" }}
+          // An offer id is only unique within one corporation's store: most
+          // offers appear in several, and /lp-store/all lists every store.
+          rowId={(row) => `${row.corporationId}:${row.offerId}`}
+          verticalSpacing="xs"
+          withTableBorder
+          highlightOnHover
+          striped
+        />
+      </Stack>
     );
   },
 );

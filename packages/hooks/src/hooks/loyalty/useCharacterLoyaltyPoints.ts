@@ -10,7 +10,14 @@ import { useAccessToken } from "../auth";
 export type CharacterLoyaltyPoints =
   GetCharactersCharacterIdLoyaltyPointsQueryResponse[number];
 
-export const useCharacterLoyaltyPoints = (characterId: number) => {
+/**
+ * @param options.enabled - false holds the request while still reporting
+ *   `hasToken`. Default true.
+ */
+export const useCharacterLoyaltyPoints = (
+  characterId: number,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
     scopes: ["esi-characters.read_loyalty.v1"],
@@ -21,7 +28,7 @@ export const useCharacterLoyaltyPoints = (characterId: number) => {
     { ...authHeaders },
     {
       query: {
-        enabled: !!characterId && accessToken !== null,
+        enabled: enabled && !!characterId && accessToken !== null,
       },
     },
   );

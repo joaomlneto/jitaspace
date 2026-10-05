@@ -19,11 +19,22 @@ import {
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];
 
-export const useCharacterAssets = (characterId?: number) => {
+/**
+ * @param options.enabled - false holds the (eager, every-page) asset walk
+ *   while still reporting `hasToken`, so a caller can offer a feature before
+ *   fetching what it needs. Default true.
+ */
+export const useCharacterAssets = (
+  characterId?: number,
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
     scopes: ["esi-assets.read_assets.v1"],
   });
+
+  const queryEnabled =
+    enabled && characterId !== undefined && accessToken !== null;
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCharactersCharacterIdAssetsInfinite(
@@ -37,7 +48,7 @@ export const useCharacterAssets = (characterId?: number) => {
           queryKey: esiInfiniteQueryKey(
             getCharactersCharacterIdAssetsInfiniteQueryKey(characterId ?? 0),
           ),
-          enabled: characterId !== undefined && accessToken !== null,
+          enabled: queryEnabled,
           initialPageParam: 1,
           staleTime: EAGER_WALK_STALE_TIME_MS,
           queryFn: ({ pageParam }) =>
@@ -59,7 +70,13 @@ export const useCharacterAssets = (characterId?: number) => {
       },
     );
 
-  useEagerlyFetchAllPages({ data, error, hasNextPage, fetchNextPage });
+  useEagerlyFetchAllPages({
+    data,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    enabled: queryEnabled,
+  });
 
   const assets: Record<
     string,
@@ -116,6 +133,12 @@ export const useCharacterAssets = (characterId?: number) => {
     locations,
     error,
     isLoading,
+    /**
+     * Whether any page has loaded. Empty `assets` alone cannot tell a character
+     * with no assets from a walk that has not started (or is held by
+     * `enabled: false`).
+     */
+    hasData: data !== undefined,
     /**
      * Whether pages are still outstanding.
      *

@@ -17,6 +17,26 @@ describe("useEagerlyFetchAllPages", () => {
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 
+  it("walks only while the query is enabled", () => {
+    // fetchNextPage is imperative and ignores the query's `enabled`.
+    const fetchNextPage = jest.fn(() => Promise.resolve());
+
+    const { rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) =>
+        useEagerlyFetchAllPages({
+          data: { pages: [{}] },
+          hasNextPage: true,
+          fetchNextPage,
+          enabled,
+        }),
+      { initialProps: { enabled: false } },
+    );
+    expect(fetchNextPage).not.toHaveBeenCalled();
+
+    rerender({ enabled: true });
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
   it("requests one more page each time a page lands, not just once", () => {
     // hasNextPage is true from the first page to the second-to-last, and
     // fetchNextPage keeps its identity, so an effect keyed on those two alone
