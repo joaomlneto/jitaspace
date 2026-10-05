@@ -150,6 +150,49 @@ describe("corporation page", () => {
     expect(screen.queryByText("Alliance")).not.toBeInTheDocument();
   });
 
+  it("shows the palette stripe and colours when the corporation has one", () => {
+    mockUseSelectedCharacter.mockReturnValue(null);
+    mockUseCorporation.mockReturnValue({
+      data: {
+        data: {
+          ticker: "ASRO",
+          palette: {
+            main_color: "#0a3db0",
+            secondary_color: "#f6ed0a",
+            tertiary_color: "#ed1608",
+          },
+        },
+      },
+    });
+
+    renderPage();
+
+    expect(
+      screen.getByTestId("corporation-palette-stripe").children,
+    ).toHaveLength(3);
+    expect(screen.getByText("Colors")).toBeInTheDocument();
+    expect(screen.getByLabelText("Main colour #0a3db0")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Tertiary colour #ed1608"),
+    ).toBeInTheDocument();
+  });
+
+  it("omits the palette stripe and colours when the corporation has none", () => {
+    mockUseSelectedCharacter.mockReturnValue(null);
+    mockUseCorporation.mockReturnValue({
+      data: { data: { ticker: "CONCO" } },
+    });
+
+    renderPage();
+
+    expect(
+      screen.queryByTestId("corporation-palette-stripe"),
+    ).not.toBeInTheDocument();
+    // The header keeps the same panel layout, just without the palette.
+    expect(screen.getByTestId("corporation-header")).toBeInTheDocument();
+    expect(screen.queryByText("Colors")).not.toBeInTheDocument();
+  });
+
   it("returns null when the corporation id is not finite", () => {
     corporationId = "nope";
     mockUseSelectedCharacter.mockReturnValue(null);
