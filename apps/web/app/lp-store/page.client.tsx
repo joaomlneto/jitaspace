@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Anchor,
@@ -11,11 +11,15 @@ import {
   SimpleGrid,
   Skeleton,
   Stack,
+  Switch,
   Text,
   TextInput,
   Title,
+  Tooltip,
   useMantineTheme,
+  VisuallyHidden,
 } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import posthog from "posthog-js";
 
@@ -30,6 +34,22 @@ import type { LPStoreGroup } from "./groups";
 import { lpStorePath } from "~/lib/lpStorePath";
 import { filterLPStoreGroups } from "./groups";
 
+/** Where the "only corporations I have LP with" toggle is remembered. */
+const ONLY_WITH_LP_STORAGE_KEY = "jitaspace/lp-store-only-with-lp";
+
+/** Why the switch is disabled, when it is for a reason other than loading. */
+function getUnavailableHint(
+  hasToken: boolean,
+  balancesLoaded: boolean,
+  isLoading: boolean,
+): string | null {
+  if (!hasToken) {
+    return "Sign in with a character that has granted access to its loyalty points";
+  }
+  if (!balancesLoaded && !isLoading) return "Couldn't load your loyalty points";
+  return null;
+}
+
 export interface LPStorePageProps {
   /** Corporations grouped by faction, in display order. */
   groups: LPStoreGroup[];
@@ -38,15 +58,51 @@ export interface LPStorePageProps {
 export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
   const theme = useMantineTheme();
   const character = useSelectedCharacter();
-  const { hasToken, loyaltyPointsMap, isLoading } = useCharacterLoyaltyPoints(
-    character?.characterId ?? 0,
-  );
+  const {
+    hasToken,
+    loyaltyPointsMap,
+    isLoading,
+    data: loyaltyPointsResponse,
+  } = useCharacterLoyaltyPoints(character?.characterId ?? 0);
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const visibleGroups = useMemo(
-    () => filterLPStoreGroups(groups, deferredQuery),
-    [groups, deferredQuery],
+  const [onlyWithLp, setOnlyWithLp] = useLocalStorage<boolean>({
+    key: ONLY_WITH_LP_STORAGE_KEY,
+    defaultValue: false,
+  });
+  // Only once the balances have loaded: filtering on an empty map while they
+  // load (or after the first request failed) would hide every corporation. A
+  // failed *re*fetch keeps the last balances, so it keeps the filter too.
+  const balancesLoaded = hasToken && loyaltyPointsResponse !== undefined;
+  const lpFilterActive = onlyWithLp && balancesLoaded;
+  // With the toggle on, hold the list while the balances load rather than
+  // showing every corporation only to remove most of them a moment later.
+  const awaitingBalances = onlyWithLp && hasToken && isLoading;
+  const unavailableHint = getUnavailableHint(
+    hasToken,
+    balancesLoaded,
+    isLoading,
   );
+  const unavailableHintId = useId();
+  const corporationIdsWithLp = useMemo(
+    () =>
+      new Set(
+        Object.entries(loyaltyPointsMap)
+          .filter(([, loyaltyPoints]) => loyaltyPoints > 0)
+          .map(([corporationId]) => Number(corporationId)),
+      ),
+    [loyaltyPointsMap],
+  );
+  const visibleGroups = useMemo(
+    () =>
+      filterLPStoreGroups(
+        groups,
+        deferredQuery,
+        lpFilterActive ? { onlyCorporationIds: corporationIdsWithLp } : {},
+      ),
+    [groups, deferredQuery, lpFilterActive, corporationIdsWithLp],
+  );
+  const trimmedQuery = deferredQuery.trim();
 
   return (
     <Container size="xl">
@@ -61,107 +117,167 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
             show all offers
           </Anchor>
         </Title>
-        <TextInput
-          aria-label="Filter corporations and factions"
-          placeholder="Filter by corporation or faction name"
-          leftSection={<IconSearch size={16} />}
-          // Mantine makes input sections ignore the pointer by default, which
-          // would let a click on the clear button fall through to the input.
-          rightSectionPointerEvents="all"
-          rightSection={
-            query !== "" && (
-              <CloseButton
-                aria-label="Clear filter"
-                onClick={() => setQuery("")}
-              />
-            )
-          }
-          value={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
-        {visibleGroups.length === 0 && deferredQuery.trim() !== "" && (
-          <Text c="dimmed">
-            No corporations or factions match &ldquo;{deferredQuery.trim()}
-            &rdquo;.
-          </Text>
-        )}
-        {visibleGroups.map((group) => (
-          <Stack
-            component="section"
-            gap="sm"
-            key={group.faction?.factionId ?? "other"}
+        <Group align="center" gap="md">
+          <TextInput
+            style={{ flex: 1, minWidth: 220 }}
+            aria-label="Filter corporations and factions"
+            placeholder="Filter by corporation or faction name"
+            leftSection={<IconSearch size={16} />}
+            // Mantine makes input sections ignore the pointer by default, which
+            // would let a click on the clear button fall through to the input.
+            rightSectionPointerEvents="all"
+            rightSection={
+              query !== "" && (
+                <CloseButton
+                  aria-label="Clear filter"
+                  onClick={() => setQuery("")}
+                />
+              )
+            }
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+          />
+          {/* Always rendered, so its row exists in the prerendered page too:
+              the auth store rehydrates only on the client, and a switch that
+              appeared then would wrap onto its own row on a phone and push the
+              whole list down. */}
+          <Tooltip
+            label={unavailableHint}
+            disabled={unavailableHint === null}
+            events={{ hover: true, focus: true, touch: true }}
+            multiline
+            w={260}
           >
-            <Group gap="sm">
-              {group.faction ? (
-                <>
-                  <FactionAvatar
-                    factionId={group.faction.factionId}
-                    size="md"
-                  />
-                  <Title order={4}>
-                    <Anchor
-                      inherit
-                      component={Link}
-                      href={`/faction/${group.faction.factionId}`}
-                    >
-                      {group.faction.name}
-                    </Anchor>
-                  </Title>
-                </>
-              ) : (
-                <Title order={4}>Other corporations</Title>
+            <div>
+              <Switch
+                label="Only corporations I have LP with"
+                // The saved preference shows only where it takes effect, so a
+                // disabled switch is never drawn ON next to an unfiltered list.
+                checked={onlyWithLp && (balancesLoaded || awaitingBalances)}
+                disabled={!balancesLoaded}
+                // The tooltip cannot be reached by keyboard (a disabled input
+                // takes no focus), so the reason is also exposed this way.
+                aria-describedby={
+                  unavailableHint === null ? undefined : unavailableHintId
+                }
+                onChange={(event) => setOnlyWithLp(event.currentTarget.checked)}
+              />
+              {unavailableHint !== null && (
+                <VisuallyHidden id={unavailableHintId}>
+                  {unavailableHint}
+                </VisuallyHidden>
               )}
-              <Badge variant="light" color="gray">
-                {group.corporations.length}
-              </Badge>
-            </Group>
-            <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 4 }}>
-              {group.corporations.map((corporation) => {
-                const loyaltyPoints =
-                  loyaltyPointsMap[corporation.corporationId] ?? 0;
-                return (
-                  <Anchor
-                    component={Link}
-                    href={lpStorePath(corporation.name)}
-                    key={corporation.corporationId}
-                    onClick={() =>
-                      posthog.capture("lp_store_corporation_selected", {
-                        corporation_id: corporation.corporationId,
-                        corporation_name: corporation.name,
-                      })
-                    }
-                  >
-                    <Group wrap="nowrap">
-                      <CorporationAvatar
-                        corporationId={corporation.corporationId}
-                        size="sm"
-                      />
-                      <Stack gap={0}>
-                        <Text>{corporation.name}</Text>
-                        {hasToken &&
-                          (isLoading ? (
-                            <Skeleton height={12} mt={4} width={70} />
-                          ) : (
-                            <Text
-                              c={
-                                loyaltyPoints > 0
-                                  ? theme.primaryColor
-                                  : "dimmed"
-                              }
-                              fw={loyaltyPoints > 0 ? 600 : undefined}
-                              size="xs"
-                            >
-                              {loyaltyPoints.toLocaleString()} LP
-                            </Text>
-                          ))}
-                      </Stack>
-                    </Group>
-                  </Anchor>
-                );
-              })}
-            </SimpleGrid>
+            </div>
+          </Tooltip>
+        </Group>
+        {!awaitingBalances &&
+          visibleGroups.length === 0 &&
+          trimmedQuery !== "" && (
+            <Text c="dimmed">
+              {lpFilterActive
+                ? "No corporations or factions you have LP with match"
+                : "No corporations or factions match"}{" "}
+              &ldquo;{trimmedQuery}&rdquo;.
+            </Text>
+          )}
+        {visibleGroups.length === 0 &&
+          trimmedQuery === "" &&
+          lpFilterActive &&
+          groups.length > 0 && (
+            <Text c="dimmed">
+              You have no loyalty points with any of these corporations yet.
+            </Text>
+          )}
+        {awaitingBalances && (
+          <Stack
+            gap="sm"
+            role="status"
+            aria-busy="true"
+            aria-label="Loading your loyalty points"
+          >
+            <Skeleton height={28} width={220} />
+            <Skeleton height={36} />
+            <Skeleton height={36} />
           </Stack>
-        ))}
+        )}
+        {!awaitingBalances &&
+          visibleGroups.map((group) => (
+            <Stack
+              component="section"
+              gap="sm"
+              key={group.faction?.factionId ?? "other"}
+            >
+              <Group gap="sm">
+                {group.faction ? (
+                  <>
+                    <FactionAvatar
+                      factionId={group.faction.factionId}
+                      size="md"
+                    />
+                    <Title order={4}>
+                      <Anchor
+                        inherit
+                        component={Link}
+                        href={`/faction/${group.faction.factionId}`}
+                      >
+                        {group.faction.name}
+                      </Anchor>
+                    </Title>
+                  </>
+                ) : (
+                  <Title order={4}>Other corporations</Title>
+                )}
+                <Badge variant="light" color="gray">
+                  {group.corporations.length}
+                </Badge>
+              </Group>
+              <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 4 }}>
+                {group.corporations.map((corporation) => {
+                  const loyaltyPoints =
+                    loyaltyPointsMap[corporation.corporationId] ?? 0;
+                  return (
+                    <Anchor
+                      component={Link}
+                      href={lpStorePath(corporation.name)}
+                      key={corporation.corporationId}
+                      onClick={() =>
+                        posthog.capture("lp_store_corporation_selected", {
+                          corporation_id: corporation.corporationId,
+                          corporation_name: corporation.name,
+                        })
+                      }
+                    >
+                      <Group wrap="nowrap">
+                        <CorporationAvatar
+                          corporationId={corporation.corporationId}
+                          size="sm"
+                        />
+                        <Stack gap={0}>
+                          <Text>{corporation.name}</Text>
+                          {hasToken &&
+                            (isLoading ? (
+                              <Skeleton height={12} mt={4} width={70} />
+                            ) : (
+                              <Text
+                                c={
+                                  loyaltyPoints > 0
+                                    ? theme.primaryColor
+                                    : "dimmed"
+                                }
+                                fw={loyaltyPoints > 0 ? 600 : undefined}
+                                size="xs"
+                              >
+                                {loyaltyPoints.toLocaleString()} LP
+                              </Text>
+                            ))}
+                        </Stack>
+                      </Group>
+                    </Anchor>
+                  );
+                })}
+              </SimpleGrid>
+            </Stack>
+          ))}
       </Stack>
     </Container>
   );

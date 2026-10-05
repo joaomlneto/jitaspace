@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import {
@@ -12,7 +13,13 @@ import {
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type {
@@ -99,6 +106,14 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
 jest.mock("~/components/EveMail", () => ({
   MailMessageViewer: ({ content }: { content?: string }) => (
     <div data-testid="mail-viewer">{content}</div>
+  ),
+}));
+
+// The real tab loads the ship tree library and its stylesheet.
+jest.mock("~/app/faction/[factionId]/FactionShipTree", () => ({
+  __esModule: true,
+  default: ({ faction }: { faction: number }) => (
+    <div data-testid="faction-ship-tree">{`ship tree of ${faction}`}</div>
   ),
 }));
 
@@ -257,6 +272,7 @@ function renderClient(
   searchParams = "",
   /** What the tables route answers; the rows themselves by default. */
   tablesResponse?: Promise<unknown>,
+  onUrlUpdate?: OnUrlUpdateFunction,
 ) {
   const { splitFactionData } = require("~/app/faction/[factionId]/data") as {
     splitFactionData: (
@@ -280,7 +296,7 @@ function renderClient(
         <Page {...page} />
       </MantineProvider>
     </QueryClientProvider>,
-    { wrapper: withNuqsTestingAdapter({ searchParams }) },
+    { wrapper: withNuqsTestingAdapter({ searchParams, onUrlUpdate }) },
   );
 }
 
@@ -638,10 +654,10 @@ describe("faction page (client)", () => {
     expect(
       screen.getByText("Strength through enterprise."),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ship tree" })).toHaveAttribute(
-      "href",
-      "/ship-tree?faction=caldari",
-    );
+    // The ship tree is a tab now, not a link away.
+    expect(
+      screen.queryByRole("link", { name: "Ship tree" }),
+    ).not.toBeInTheDocument();
     for (const name of [
       /Overview/,
       /Description/,
@@ -649,6 +665,7 @@ describe("faction page (client)", () => {
       /Corporations/,
       /Warfare/,
       /Items/,
+      /Ship Tree/,
       /Contraband/,
       /Missions & Sites/,
       /Standings/,
@@ -687,6 +704,50 @@ describe("faction page (client)", () => {
     ]) {
       expect(screen.queryByRole("tab", { name })).not.toBeInTheDocument();
     }
+  });
+
+  it("draws the faction's ship tree in its tab, loaded on demand", async () => {
+    renderClient(sdeData(), liveData());
+    expect(screen.queryByTestId("faction-ship-tree")).not.toBeInTheDocument();
+    cleanup();
+
+    renderClient(sdeData(), liveData(), "?tab=ship-tree");
+
+    // Until the tab's module arrives, a placeholder in the tab's own shape.
+    expect(screen.getByTestId("ship-tree-placeholder")).toBeInTheDocument();
+    expect(await screen.findByTestId("faction-ship-tree")).toHaveTextContent(
+      `ship tree of ${CALDARI}`,
+    );
+    // It needs none of the table rows.
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("drops the tree's clone type from the URL when another tab opens", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderClient(
+      sdeData(),
+      liveData(),
+      "?tab=ship-tree&omega=true",
+      undefined,
+      onUrlUpdate,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /Description/ }));
+
+    await waitFor(() => {
+      const url = onUrlUpdate.mock.calls.at(-1)?.[0].searchParams;
+      expect(url?.get("tab")).toBe("description");
+      expect(url?.has("omega")).toBe(false);
+    });
+  });
+
+  it("has no Ship Tree tab for a faction the tree cannot draw", () => {
+    // EverMore: a faction with stations but no ships of its own.
+    renderClient(sdeData({ factionId: 500013, name: "EverMore" }), liveData());
+
+    expect(
+      screen.queryByRole("tab", { name: /Ship Tree/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("falls back to the overview for a deep link to a hidden tab", () => {
