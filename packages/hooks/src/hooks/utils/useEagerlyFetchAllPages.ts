@@ -30,18 +30,25 @@ export const EAGER_WALK_STALE_TIME_MS = 5 * 60 * 1000;
  * A failed page stops the walk rather than retrying it on every render, and
  * the error is part of the key so the walk resumes if a later refetch clears
  * it.
+ *
+ * Pass the query's own `enabled`: `fetchNextPage` is imperative and ignores
+ * it, so without this a walk would carry on after its query was disabled, and
+ * a partly walked query left in the cache would resume on mount even while
+ * disabled.
  */
 export function useEagerlyFetchAllPages(query: {
   data?: { pages: readonly unknown[] };
   error?: unknown;
   hasNextPage: boolean;
   fetchNextPage: () => Promise<unknown>;
+  /** Whether the query is enabled. Default true. */
+  enabled?: boolean;
 }) {
-  const { hasNextPage, fetchNextPage } = query;
+  const { hasNextPage, fetchNextPage, enabled = true } = query;
   const loadedPages = query.data?.pages.length ?? 0;
   const failed = query.error != null;
 
   useEffect(() => {
-    if (hasNextPage && !failed) void fetchNextPage();
-  }, [hasNextPage, failed, loadedPages, fetchNextPage]);
+    if (enabled && hasNextPage && !failed) void fetchNextPage();
+  }, [enabled, hasNextPage, failed, loadedPages, fetchNextPage]);
 }

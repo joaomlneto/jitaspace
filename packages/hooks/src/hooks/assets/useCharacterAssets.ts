@@ -33,6 +33,9 @@ export const useCharacterAssets = (
     scopes: ["esi-assets.read_assets.v1"],
   });
 
+  const queryEnabled =
+    enabled && characterId !== undefined && accessToken !== null;
+
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCharactersCharacterIdAssetsInfinite(
       characterId ?? 0,
@@ -45,7 +48,7 @@ export const useCharacterAssets = (
           queryKey: esiInfiniteQueryKey(
             getCharactersCharacterIdAssetsInfiniteQueryKey(characterId ?? 0),
           ),
-          enabled: enabled && characterId !== undefined && accessToken !== null,
+          enabled: queryEnabled,
           initialPageParam: 1,
           staleTime: EAGER_WALK_STALE_TIME_MS,
           queryFn: ({ pageParam }) =>
@@ -67,7 +70,13 @@ export const useCharacterAssets = (
       },
     );
 
-  useEagerlyFetchAllPages({ data, error, hasNextPage, fetchNextPage });
+  useEagerlyFetchAllPages({
+    data,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    enabled: queryEnabled,
+  });
 
   const assets: Record<
     string,
