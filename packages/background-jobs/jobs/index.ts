@@ -143,6 +143,7 @@ import {
   scrapeHoboleaksDogmaUnits,
   scrapeSdeAgents,
   scrapeZkillboardRecentKills,
+  updateAlliances,
   updateWars,
   watchSde,
 } from "./scrape";
@@ -297,6 +298,7 @@ export const jobs: JobDefinition[] = [
   scrapeSdeAgents,
   scrapeZkillboardRecentKills,
   testPing,
+  updateAlliances,
   updateWars,
   watchSde,
 ];
