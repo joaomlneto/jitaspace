@@ -79,6 +79,15 @@ const UNIVERSE_NAMES_CATEGORIES = new Set<ResolvableEntityCategory>([
 const UNIVERSE_NAMES_MAX_IDS = 1000;
 
 /**
+ * POST /universe/names only takes int32 ids. Anything larger (an Upwell
+ * structure, or an item in a hangar or container; the two share one id space)
+ * makes ESI reject the whole batch with a 400 ("failed to coerce value … into
+ * type integer"). Bisecting then still spends a request and an error-limit hit
+ * on the id itself, so it is never sent.
+ */
+export const UNIVERSE_NAMES_MAX_ID = 2_147_483_647;
+
+/**
  * Statuses on which a batch is split rather than failed. ESI rejects the whole
  * request when any one id is unresolvable, so bisecting isolates the bad id and
  * lets the rest resolve. Not on 5xx, 420 or 429: splitting a request that
@@ -260,6 +269,12 @@ const fetchCache = createCache(
         category: ownEndpointCategory,
         name: await resolveNameViaOwnEndpoint(numericId, ownEndpointCategory),
       };
+    }
+
+    if (numericId > UNIVERSE_NAMES_MAX_ID) {
+      throw new Error(
+        `${id} is beyond /universe/names' int32 ids; a structure needs useStructure`,
+      );
     }
 
     const resolved = await resolveViaUniverseNames(numericId);
