@@ -46,20 +46,34 @@ export function groupCorporationsByFaction(
  * Keep the groups that match `query`, case-insensitively: a group whose faction
  * name matches keeps all its corporations, any other keeps only the
  * corporations whose name matches, and a group left empty is dropped.
+ *
+ * With `onlyCorporationIds`, corporations outside that set are dropped first,
+ * so a faction match keeps only the faction's corporations in the set.
  */
 export function filterLPStoreGroups(
   groups: readonly LPStoreGroup[],
   query: string,
+  { onlyCorporationIds }: { onlyCorporationIds?: ReadonlySet<number> } = {},
 ): readonly LPStoreGroup[] {
   // `toLowerCase`, not `toLocaleLowerCase`: in a Turkish locale the latter
   // lowercases "I" to a dotless "ı", so "imperial" would not match
   // "Imperial Navy".
   const needle = query.trim().toLowerCase();
-  if (needle === "") return groups;
+  if (needle === "" && !onlyCorporationIds) return groups;
   const matches = (name: string) => name.toLowerCase().includes(needle);
   return groups.flatMap((group) => {
-    if (group.faction && matches(group.faction.name)) return [group];
-    const corporations = group.corporations.filter(({ name }) => matches(name));
-    return corporations.length > 0 ? [{ ...group, corporations }] : [];
+    const eligible = onlyCorporationIds
+      ? group.corporations.filter(({ corporationId }) =>
+          onlyCorporationIds.has(corporationId),
+        )
+      : group.corporations;
+    const corporations =
+      needle === "" || (group.faction && matches(group.faction.name))
+        ? eligible
+        : eligible.filter(({ name }) => matches(name));
+    if (corporations.length === 0) return [];
+    return corporations === group.corporations
+      ? [group]
+      : [{ ...group, corporations }];
   });
 }

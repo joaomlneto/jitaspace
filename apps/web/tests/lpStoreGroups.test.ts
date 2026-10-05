@@ -77,6 +77,41 @@ describe("filterLPStoreGroups", () => {
     expect(names("amarr")).toEqual([]);
   });
 
+  describe("onlyCorporationIds", () => {
+    const only = (ids: number[], query = "") =>
+      filterLPStoreGroups(groups, query, {
+        onlyCorporationIds: new Set(ids),
+      }).map((group) => [
+        group.faction?.name ?? null,
+        group.corporations.map(({ name }) => name),
+      ]);
+
+    it("drops corporations outside the set, and the groups it empties", () => {
+      expect(only([1, 4])).toEqual([
+        ["Caldari State", ["CBD Corporation"]],
+        [null, ["Mystery Corp"]],
+      ]);
+    });
+
+    it("applies before a faction match, which keeps only the set's corporations", () => {
+      expect(only([3], "caldari")).toEqual([
+        ["Caldari State", ["Lai Dai Corporation"]],
+      ]);
+    });
+
+    it("combines with a corporation-name match", () => {
+      expect(only([1, 3, 4], "corp")).toEqual([
+        ["Caldari State", ["CBD Corporation", "Lai Dai Corporation"]],
+        [null, ["Mystery Corp"]],
+      ]);
+      expect(only([2], "corp")).toEqual([]);
+    });
+
+    it("returns nothing for an empty set", () => {
+      expect(only([])).toEqual([]);
+    });
+  });
+
   it("matches regardless of the browser locale (Turkish dotless ı)", () => {
     const imperial = groupCorporationsByFaction([
       { corporationId: 6, name: "Imperial Navy", faction: null },

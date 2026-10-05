@@ -2,7 +2,13 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import { captureMock } from "../__mocks__/posthogMocks";
 
@@ -54,6 +60,10 @@ jest.mock(
     ),
 );
 
+// Pinned rather than imported (the page module must load after the mocks):
+// renaming the key would silently reset every user's saved toggle.
+const ONLY_WITH_LP_STORAGE_KEY = "jitaspace/lp-store-only-with-lp";
+
 const mockUseSelectedCharacter = jest.fn();
 const mockUseCharacterLoyaltyPoints = jest.fn();
 
@@ -98,6 +108,7 @@ describe("LP Store index page (client)", () => {
       loyaltyPointsMap: {},
       isLoading: false,
     });
+    window.localStorage.clear();
   });
 
   it("captures lp_store_corporation_selected when a corporation is clicked", () => {
@@ -250,5 +261,181 @@ describe("LP Store index page (client)", () => {
 
     expect(screen.queryByText("0 LP")).not.toBeInTheDocument();
     expect(screen.queryByText("500 LP")).not.toBeInTheDocument();
+  });
+
+  describe("only-with-LP toggle", () => {
+    const toggle = () =>
+      screen.getByRole("switch", { name: "Only corporations I have LP with" });
+
+    // Signed in with LP at Caldari Navy only.
+    const signIn = (overrides: Record<string, unknown> = {}) => {
+      mockUseSelectedCharacter.mockReturnValue({ characterId: 90000001 });
+      mockUseCharacterLoyaltyPoints.mockReturnValue({
+        hasToken: true,
+        loyaltyPointsMap: { 1000035: 500 },
+        isLoading: false,
+        data: { data: [{ corporation_id: 1000035, loyalty_points: 500 }] },
+        ...overrides,
+      });
+    };
+
+    it("is rendered but disabled when signed out, with a hint", async () => {
+      // Always rendered, so its row is already in the prerendered page and
+      // nothing shifts when the auth store rehydrates.
+      renderPage();
+      expect(toggle()).toBeDisabled();
+      // Exposed to assistive tech, since a disabled input takes no focus...
+      expect(toggle()).toHaveAccessibleDescription(
+        "Sign in with a character that has granted access to its loyalty points",
+      );
+      // ...and as a tooltip for pointer and touch users.
+      fireEvent.mouseEnter(toggle().closest("div")!.parentElement!);
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        /granted access to its loyalty points/,
+      );
+    });
+
+    it("is drawn off where it cannot take effect, but keeps the preference", () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      renderPage(); // signed out: the full list, so the switch must not say ON
+      expect(toggle()).not.toBeChecked();
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+      expect(window.localStorage.getItem(ONLY_WITH_LP_STORAGE_KEY)).toBe(
+        "true",
+      );
+    });
+
+    it("is disabled until the balances have loaded", () => {
+      signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
+      renderPage();
+      expect(toggle()).toBeDisabled();
+    });
+
+    it("keeps filtering on the last balances when a refetch fails", async () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      // React Query after a failed background refetch: an error, old data kept.
+      signIn({ isSuccess: false, isError: true });
+      renderPage();
+      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(toggle()).toBeEnabled();
+      await waitFor(() =>
+        expect(screen.queryByText("Federation Navy")).toBeNull(),
+      );
+      expect(screen.getByText("Caldari Navy")).toBeInTheDocument();
+    });
+
+    it("shows everything, toggle off and disabled, if the first request failed", () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      signIn({ loyaltyPointsMap: {}, isError: true, data: undefined });
+      renderPage();
+      expect(toggle()).toBeDisabled();
+      expect(toggle()).not.toBeChecked();
+      expect(toggle()).toHaveAccessibleDescription(
+        "Couldn't load your loyalty points",
+      );
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+      expect(screen.getByText("CONCORD")).toBeInTheDocument();
+    });
+
+    it("gives no unavailable hint once the balances have loaded", () => {
+      signIn();
+      renderPage();
+      expect(toggle()).toBeEnabled();
+      expect(toggle()).not.toHaveAttribute("aria-describedby");
+    });
+
+    it("hides corporations without LP, and factions left empty", async () => {
+      signIn();
+      renderPage();
+      expect(toggle()).not.toBeChecked();
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+
+      fireEvent.click(toggle());
+
+      expect(toggle()).toBeChecked();
+      await waitFor(() =>
+        expect(screen.queryByText("Federation Navy")).toBeNull(),
+      );
+      expect(screen.getByText("Caldari Navy")).toBeInTheDocument();
+      expect(screen.queryByText("Gallente Federation")).toBeNull();
+      expect(screen.queryByText("Other corporations")).toBeNull();
+      expect(screen.queryByText("CONCORD")).toBeNull();
+    });
+
+    it("combines with the search, and says so when nothing is left", async () => {
+      signIn();
+      renderPage();
+      fireEvent.click(toggle());
+      fireEvent.change(
+        screen.getByLabelText("Filter corporations and factions"),
+        { target: { value: "gallente" } },
+      );
+      expect(
+        await screen.findByText(/No corporations or factions you have LP with/),
+      ).toHaveTextContent(
+        "No corporations or factions you have LP with match “gallente”.",
+      );
+    });
+
+    it("explains an empty list when the character has no LP at all", async () => {
+      signIn({ loyaltyPointsMap: {} });
+      renderPage();
+      fireEvent.click(toggle());
+      expect(
+        await screen.findByText(
+          "You have no loyalty points with any of these corporations yet.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it("holds the list as a skeleton while the balances load, if left on", async () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
+      renderPage();
+      // A named status region, which assistive tech announces.
+      expect(
+        await screen.findByRole("status", {
+          name: "Loading your loyalty points",
+        }),
+      ).toHaveAttribute("aria-busy", "true");
+      // Not every corporation, only to remove most of them a moment later.
+      expect(screen.queryByText("Federation Navy")).toBeNull();
+      expect(screen.queryByText("CONCORD")).toBeNull();
+    });
+
+    it("shows the full list while the balances load when it is off", () => {
+      signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
+      renderPage();
+      expect(screen.queryByLabelText("Loading your loyalty points")).toBeNull();
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+    });
+
+    it("does not blame the balances when the store has no corporations", async () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      signIn({ loyaltyPointsMap: {} });
+      renderPage({ groups: [] });
+      await waitFor(() => expect(toggle()).toBeChecked());
+      expect(
+        screen.queryByText(
+          "You have no loyalty points with any of these corporations yet.",
+        ),
+      ).toBeNull();
+    });
+
+    it("is remembered across visits", async () => {
+      signIn();
+      const { unmount } = renderPage();
+      fireEvent.click(toggle());
+      expect(window.localStorage.getItem(ONLY_WITH_LP_STORAGE_KEY)).toBe(
+        "true",
+      );
+      unmount();
+
+      renderPage();
+      await waitFor(() => expect(toggle()).toBeChecked());
+      await waitFor(() =>
+        expect(screen.queryByText("Federation Navy")).toBeNull(),
+      );
+    });
   });
 });
