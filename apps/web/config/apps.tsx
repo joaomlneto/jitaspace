@@ -313,6 +313,14 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => <ItemsIcon {...props} />,
     scopes: {},
   },
+  typeLists: {
+    name: "Type Lists",
+    description:
+      "Browse the named item lists the game uses to decide what its rules apply to.",
+    url: "/type-lists",
+    Icon: (props) => <ItemsIcon {...props} />,
+    scopes: {},
+  },
   shipTree: {
     name: "Ship Tree",
     description:

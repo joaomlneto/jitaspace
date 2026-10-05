@@ -10,4 +10,5 @@ export * from "./MarketGroupAnchor";
 export * from "./OpenInformationWindowAnchor";
 export * from "./RaceAnchor";
 export * from "./StarAnchor";
+export * from "./TypeListAnchor";
 export * from "./WarAnchor";
