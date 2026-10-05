@@ -35,7 +35,7 @@ import {
   MissionAnchor,
 } from "@jitaspace/ui";
 
-import type { EpicArc, EpicArcStep } from "~/lib/epicArcs";
+import type { EpicArc, EpicArcStep, EpicArcSummary } from "~/lib/epicArcs";
 import type { MissionKind } from "~/lib/missions";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
@@ -44,7 +44,12 @@ import {
   HeroImage,
   notAvailableText,
 } from "~/components/Missions";
-import { epicArcAgents, epicArcShape, isRepeatable } from "~/lib/epicArcs";
+import {
+  epicArcAgents,
+  epicArcShape,
+  epicArcSummary,
+  isRepeatable,
+} from "~/lib/epicArcs";
 import { formatMinutes } from "~/lib/missions";
 import { EntityHistory } from "../../history/EntityHistory";
 import {
@@ -89,10 +94,10 @@ function FactionLabel({ arc }: Readonly<{ arc: EpicArc }>) {
   );
 }
 
-function EpicArcHero({ arc }: Readonly<{ arc: EpicArc }>) {
-  const agents = epicArcAgents(arc.steps).length;
-  const { endings } = epicArcShape(arc.steps);
-  const chapters = arc.steps.filter((step) => step.chapterTitle).length;
+function EpicArcHero({
+  arc,
+  summary,
+}: Readonly<{ arc: EpicArc; summary: EpicArcSummary }>) {
   return (
     <Paper withBorder radius="md" p="lg">
       <Group align="flex-start" gap="xl" wrap="wrap">
@@ -116,10 +121,12 @@ function EpicArcHero({ arc }: Readonly<{ arc: EpicArc }>) {
           </Group>
           {arc.faction && <FactionLabel arc={arc} />}
           <Group gap="xl">
-            <HeroStat label="Missions" value={arc.steps.length} />
-            <HeroStat label="Agents" value={agents} />
-            {chapters > 0 && <HeroStat label="Chapters" value={chapters} />}
-            <HeroStat label="Endings" value={endings.length} />
+            <HeroStat label="Missions" value={summary.missionCount} />
+            <HeroStat label="Agents" value={summary.agentCount} />
+            {summary.chapterCount > 0 && (
+              <HeroStat label="Chapters" value={summary.chapterCount} />
+            )}
+            <HeroStat label="Endings" value={summary.endingCount} />
           </Group>
         </Stack>
       </Group>
@@ -152,7 +159,10 @@ function StepWithAgent({
   );
 }
 
-function EpicArcOverview({ arc }: Readonly<{ arc: EpicArc }>) {
+function EpicArcOverview({
+  arc,
+  summary,
+}: Readonly<{ arc: EpicArc; summary: EpicArcSummary }>) {
   const byId = useMemo(
     () => new Map(arc.steps.map((step) => [step.missionId, step])),
     [arc.steps],
@@ -163,11 +173,6 @@ function EpicArcOverview({ arc }: Readonly<{ arc: EpicArc }>) {
       const step = byId.get(id);
       return step ? [step] : [];
     });
-  const totalIsk = arc.steps.reduce(
-    (sum, step) => sum + (step.rewardIsk ?? 0),
-    0,
-  );
-  const chapters = arc.steps.filter((step) => step.chapterTitle).length;
 
   return (
     <Stack gap="lg">
@@ -180,25 +185,29 @@ function EpicArcOverview({ arc }: Readonly<{ arc: EpicArc }>) {
           <StatCard label="Faction" value={<FactionLabel arc={arc} />} />
           <StatCard
             label="Missions"
-            value={arc.steps.length}
+            value={summary.missionCount}
             sub={kindBreakdown(arc.steps)}
           />
-          <StatCard label="Agents" value={epicArcAgents(arc.steps).length} />
+          <StatCard label="Agents" value={summary.agentCount} />
           <StatCard
             label="Chapters"
-            value={chapters === 0 ? notAvailableText : chapters}
+            value={
+              summary.chapterCount === 0
+                ? notAvailableText
+                : summary.chapterCount
+            }
           />
           <StatCard label="Repeatable" value={restartText(arc)} />
           <StatCard
             label="Choices"
-            value={shape.branchPoints.length}
+            value={summary.choiceCount}
             sub="steps that lead to more than one next mission"
           />
-          <StatCard label="Endings" value={shape.endings.length} />
+          <StatCard label="Endings" value={summary.endingCount} />
           <StatCard
             label="ISK Across All Steps"
-            value={<ISKAmount amount={totalIsk} span />}
-            sub="every branch counted; one run plays only some"
+            value={<ISKAmount amount={summary.totalIsk} span />}
+            sub="rewards and time bonuses, every branch counted; one run plays only some"
           />
         </SimpleGrid>
       </Stack>
@@ -208,7 +217,7 @@ function EpicArcOverview({ arc }: Readonly<{ arc: EpicArc }>) {
           Where It Starts
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-          {stepsOf(shape.starts).map((step) => (
+          {summary.starts.map((step) => (
             <StepWithAgent key={step.missionId} step={step} />
           ))}
         </SimpleGrid>
@@ -293,6 +302,7 @@ function EpicArcAgentsTable({ arc }: Readonly<{ arc: EpicArc }>) {
 }
 
 export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
+  const summary = useMemo(() => epicArcSummary(arc), [arc]);
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
     parseAsStringLiteral(EPIC_ARC_PAGE_TABS)
@@ -310,7 +320,7 @@ export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
           <Text size="sm">{arc.name}</Text>
         </Breadcrumbs>
 
-        <EpicArcHero arc={arc} />
+        <EpicArcHero arc={arc} summary={summary} />
 
         <Tabs
           value={activeTab}
@@ -339,7 +349,7 @@ export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
           </Tabs.List>
 
           <Tabs.Panel value="overview" pt="lg">
-            <EpicArcOverview arc={arc} />
+            <EpicArcOverview arc={arc} summary={summary} />
           </Tabs.Panel>
 
           <Tabs.Panel value="missions" pt="lg">

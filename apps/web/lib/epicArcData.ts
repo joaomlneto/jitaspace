@@ -44,6 +44,9 @@ export async function readEpicArcRows(epicArcIds?: number[]) {
             courierObjectiveQuantity: true,
             rewardTypeId: true,
             rewardQuantity: true,
+            bonusRewardTypeId: true,
+            bonusRewardQuantity: true,
+            isDeleted: true,
             messages: {
               select: { text: true },
               where: { key: CHAPTER_TITLE_KEY, isDeleted: false },
@@ -61,6 +64,10 @@ export async function readEpicArcRows(epicArcIds?: number[]) {
   ]);
   return { arcs, arcSteps };
 }
+
+/** An amount of the "Credits" type is ISK; any other reward is an item. */
+const iskOf = (typeId: number | null, quantity: number | null) =>
+  typeId === ISK_TYPE_ID ? quantity : null;
 
 export type EpicArcRows = Awaited<ReturnType<typeof readEpicArcRows>>;
 
@@ -91,15 +98,20 @@ export function buildEpicArcs(
     arcRestartInterval: arc.arcRestartInterval,
     steps: orderArcSteps(
       arcSteps
-        .filter((step) => step.epicArcId === arc.epicArcId)
+        // A step whose mission was soft-deleted reads as gone, like any other
+        // deleted row the pages look up.
+        .filter(
+          (step) => step.epicArcId === arc.epicArcId && !step.mission.isDeleted,
+        )
         .map(({ mission, ...step }) => ({
           missionId: step.missionId,
           name: mission.name,
           kind: missionKind(mission),
-          rewardIsk:
-            mission.rewardTypeId === ISK_TYPE_ID
-              ? mission.rewardQuantity
-              : null,
+          rewardIsk: iskOf(mission.rewardTypeId, mission.rewardQuantity),
+          bonusIsk: iskOf(
+            mission.bonusRewardTypeId,
+            mission.bonusRewardQuantity,
+          ),
           chapterTitle: mission.messages[0]?.text ?? null,
           agent:
             step.agentId === null ? null : (agents.get(step.agentId) ?? null),

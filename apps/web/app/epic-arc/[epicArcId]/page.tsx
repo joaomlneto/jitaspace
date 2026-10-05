@@ -5,7 +5,7 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 
 import type { EpicArc } from "~/lib/epicArcs";
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { epicArcAgents, epicArcShape } from "~/lib/epicArcs";
+import { epicArcSummary } from "~/lib/epicArcs";
 import { eveImage, pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { getEpicArc } from "./data";
@@ -13,9 +13,8 @@ import EpicArcPage from "./page.client";
 
 /** "X, an EVE Online epic arc for Y: N missions across M agents, with …". */
 function describeArc(arc: EpicArc): string {
-  const agentCount = epicArcAgents(arc.steps).length;
+  const { agentCount, endingCount } = epicArcSummary(arc);
   const agents = agentCount === 1 ? "one agent" : `${agentCount} agents`;
-  const endingCount = epicArcShape(arc.steps).endings.length;
   const endings = endingCount === 1 ? "one ending" : `${endingCount} endings`;
   const issuer = arc.faction?.name ? ` for ${arc.faction.name}` : "";
   return `${arc.name}, an EVE Online epic arc${issuer}: ${arc.steps.length} missions across ${agents}, with ${endings}.`;

@@ -5,7 +5,7 @@ import {
   epicArcFactionIds,
   readEpicArcRows,
 } from "~/lib/epicArcData";
-import { epicArcAgents, epicArcShape } from "~/lib/epicArcs";
+import { epicArcSummary } from "~/lib/epicArcs";
 import { pageMetadata } from "~/lib/metadata";
 import { readAgentRefs, readFactionRefs } from "~/lib/missionRefs";
 import { cacheSdeRead } from "~/lib/sdeCache";
@@ -34,8 +34,15 @@ export default async function Page() {
 
   // Summaries only: the steps themselves stay on each arc's own page.
   const arcs = buildEpicArcs(rows, agents, factions).map((arc): EpicArcRow => {
-    const shape = epicArcShape(arc.steps);
-    const start = arc.steps.find((step) => step.missionId === shape.starts[0]);
+    const { starts, ...summary } = epicArcSummary(arc);
+    // Every agent an arc can begin with: two arcs offer four starts.
+    const startAgents = [
+      ...new Map(
+        starts.flatMap((step) =>
+          step.agent ? [[step.agent.characterId, step.agent] as const] : [],
+        ),
+      ).values(),
+    ];
     return {
       epicArcId: arc.epicArcId,
       name: arc.name,
@@ -43,13 +50,8 @@ export default async function Page() {
       factionId: arc.faction?.factionId ?? null,
       factionName: arc.faction?.name ?? null,
       arcRestartInterval: arc.arcRestartInterval,
-      missionCount: arc.steps.length,
-      agentCount: epicArcAgents(arc.steps).length,
-      chapterCount: arc.steps.filter((step) => step.chapterTitle).length,
-      choiceCount: shape.branchPoints.length,
-      endingCount: shape.endings.length,
-      totalIsk: arc.steps.reduce((sum, step) => sum + (step.rewardIsk ?? 0), 0),
-      startAgent: start?.agent ?? null,
+      ...summary,
+      startAgents,
     };
   });
 

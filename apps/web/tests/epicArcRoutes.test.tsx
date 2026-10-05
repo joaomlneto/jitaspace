@@ -74,6 +74,9 @@ const step = (
     courierObjectiveQuantity: null,
     rewardTypeId: 29,
     rewardQuantity: 100000,
+    bonusRewardTypeId: null,
+    bonusRewardQuantity: null,
+    isDeleted: false,
     messages: [],
     ...overrides,
   },
@@ -206,11 +209,38 @@ describe("/epic-arcs index", () => {
         choiceCount: 1,
         endingCount: 2,
         totalIsk: 300000,
-        startAgent: expect.objectContaining({ name: "Sister Alitura" }),
+        startAgents: [expect.objectContaining({ name: "Sister Alitura" })],
       }),
     ]);
+    expect(element.props.arcs[0]).not.toHaveProperty("steps");
     expect(db.epicArc.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { isDeleted: false } }),
     );
+  });
+
+  it("lists every start, counts time bonuses and drops deleted missions", async () => {
+    db.epicArc.findMany.mockResolvedValue([ARC]);
+    // Two starts (1 and 2) with different agents; step 2 pays a time bonus;
+    // step 5's mission was deleted, so it is no step at all.
+    db.epicArcMission.findMany.mockResolvedValue([
+      step(1, [3], 3019356),
+      step(2, [3], 3019358, {
+        bonusRewardTypeId: 29,
+        bonusRewardQuantity: 5000,
+      }),
+      step(3, [], 3019356),
+      step(5, [], 3019356, { isDeleted: true }),
+    ]);
+
+    const element = (await index.default()) as ReactElement<{
+      arcs: { startAgents: { name: string }[]; totalIsk: number }[];
+    }>;
+    const [row] = element.props.arcs;
+
+    expect(row?.startAgents.map((a) => a.name)).toEqual([
+      "Sister Alitura",
+      "Tevis Jak",
+    ]);
+    expect(row).toMatchObject({ missionCount: 3, totalIsk: 305000 });
   });
 });

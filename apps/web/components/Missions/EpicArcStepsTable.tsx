@@ -38,6 +38,25 @@ function NextSteps({
   return <Stack gap={2}>{step.nextMissionIds.map(link)}</Stack>;
 }
 
+/** A step's ISK reward, with its time bonus underneath when it pays one. */
+function IskReward({ step }: Readonly<{ step: EpicArcStep }>) {
+  if (step.rewardIsk === null && step.bonusIsk === null) {
+    return <>{notAvailableText}</>;
+  }
+  return (
+    <Stack gap={0} align="flex-end">
+      {step.rewardIsk !== null && (
+        <ISKAmount amount={step.rewardIsk} span size="sm" />
+      )}
+      {step.bonusIsk !== null && (
+        <Text span size="xs" c="dimmed">
+          + <ISKAmount amount={step.bonusIsk} span size="xs" inherit /> bonus
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
 /**
  * Every step of an epic arc in play order: chapter, mission, agent, reward,
  * and where success and failure lead. `currentMissionId` highlights one step
@@ -107,11 +126,7 @@ export function EpicArcStepsTable({
                   )}
                 </Table.Td>
                 <Table.Td ta="right">
-                  {step.rewardIsk === null ? (
-                    notAvailableText
-                  ) : (
-                    <ISKAmount amount={step.rewardIsk} span size="sm" />
-                  )}
+                  <IskReward step={step} />
                 </Table.Td>
                 <Table.Td>
                   <NextSteps step={step} link={missionLink} />

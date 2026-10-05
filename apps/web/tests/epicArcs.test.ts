@@ -5,6 +5,7 @@ import type { AgentRef } from "~/lib/missionRefs";
 import {
   epicArcAgents,
   epicArcShape,
+  epicArcSummary,
   isRepeatable,
   orderArcSteps,
 } from "~/lib/epicArcs";
@@ -43,6 +44,7 @@ const step = (
   name: `Mission ${missionId}`,
   kind: "other",
   rewardIsk: null,
+  bonusIsk: null,
   chapterTitle: null,
   agent: stepAgent,
   failMissionId: null,
@@ -101,5 +103,37 @@ describe("isRepeatable", () => {
     expect(isRepeatable(129600)).toBe(true);
     expect(isRepeatable(1)).toBe(false);
     expect(isRepeatable(null)).toBe(false);
+  });
+});
+
+describe("epicArcSummary", () => {
+  it("counts rewards and time bonuses, and keeps every start", () => {
+    const alitura = agent(3019356, "Sister Alitura");
+    const steps: EpicArcStep[] = [
+      { ...step(1, [3], alitura), rewardIsk: 100, chapterTitle: "One" },
+      { ...step(2, [3], null), bonusIsk: 50 },
+      { ...step(3, [4, 5], alitura), rewardIsk: 10, bonusIsk: 5 },
+      step(4, [], alitura),
+      step(5, [], null),
+    ];
+
+    const { starts, ...summary } = epicArcSummary({
+      epicArcId: 1,
+      name: "Arc",
+      faction: null,
+      iconId: null,
+      arcRestartInterval: 1,
+      steps,
+    });
+
+    expect(summary).toEqual({
+      missionCount: 5,
+      agentCount: 1,
+      chapterCount: 1,
+      choiceCount: 1,
+      endingCount: 2,
+      totalIsk: 165,
+    });
+    expect(starts.map((s) => s.missionId)).toEqual([1, 2]);
   });
 });

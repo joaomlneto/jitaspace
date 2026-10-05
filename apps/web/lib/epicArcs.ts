@@ -16,6 +16,8 @@ export interface EpicArcStep {
   kind: MissionKind;
   /** The step's ISK reward, when it pays one. */
   rewardIsk: number | null;
+  /** The ISK time bonus for finishing the step quickly, when it pays one. */
+  bonusIsk: number | null;
   /** The epic journal's chapter heading for this step, when it has one. */
   chapterTitle: string | null;
   agent: AgentRef | null;
@@ -121,4 +123,35 @@ export function epicArcAgents(
     }
   }
   return [...byAgent.values()];
+}
+
+export interface EpicArcSummary {
+  missionCount: number;
+  agentCount: number;
+  chapterCount: number;
+  /** Steps that lead to more than one next mission. */
+  choiceCount: number;
+  endingCount: number;
+  /** Rewards and time bonuses of every step, every branch counted. */
+  totalIsk: number;
+  /** The steps an arc can begin with; some arcs offer several. */
+  starts: EpicArcStep[];
+}
+
+/** The figures the arc index, header, overview and metadata all show. */
+export function epicArcSummary(arc: EpicArc): EpicArcSummary {
+  const shape = epicArcShape(arc.steps);
+  const startIds = new Set(shape.starts);
+  return {
+    missionCount: arc.steps.length,
+    agentCount: epicArcAgents(arc.steps).length,
+    chapterCount: arc.steps.filter((step) => step.chapterTitle).length,
+    choiceCount: shape.branchPoints.length,
+    endingCount: shape.endings.length,
+    totalIsk: arc.steps.reduce(
+      (sum, step) => sum + (step.rewardIsk ?? 0) + (step.bonusIsk ?? 0),
+      0,
+    ),
+    starts: arc.steps.filter((step) => startIds.has(step.missionId)),
+  };
 }

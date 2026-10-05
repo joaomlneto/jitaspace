@@ -23,29 +23,40 @@ import {
   ISKAmount,
 } from "@jitaspace/ui";
 
+import type { EpicArcSummary } from "~/lib/epicArcs";
 import type { AgentRef } from "~/lib/missionRefs";
 import { DataTable } from "~/components/DataTable";
 import { StatCard } from "~/components/EntityPage";
 import { isRepeatable } from "~/lib/epicArcs";
 import { formatMinutes } from "~/lib/missions";
 
-export interface EpicArcRow {
+export interface EpicArcRow extends Omit<EpicArcSummary, "starts"> {
   epicArcId: number;
   name: string;
   iconId: number | null;
   factionId: number | null;
   factionName: string | null;
   arcRestartInterval: number | null;
-  missionCount: number;
-  agentCount: number;
-  chapterCount: number;
-  /** Steps that lead to more than one next mission. */
-  choiceCount: number;
-  endingCount: number;
-  /** ISK across every step, every branch counted. */
-  totalIsk: number;
-  /** The agent who hands out the arc's first mission. */
-  startAgent: AgentRef | null;
+  /** Every agent who hands out one of the arc's first missions. */
+  startAgents: AgentRef[];
+}
+
+function StartAgent({ agent }: Readonly<{ agent: AgentRef }>) {
+  return (
+    <Stack gap={0}>
+      <CharacterAnchor characterId={agent.characterId} size="sm">
+        {agent.name ?? agent.characterId}
+      </CharacterAnchor>
+      {agent.solarSystemId !== null && (
+        <Text size="xs" c="dimmed">
+          <SolarSystemAnchor solarSystemId={agent.solarSystemId} size="xs">
+            {agent.solarSystemName}
+          </SolarSystemAnchor>
+          {agent.regionName && ` (${agent.regionName})`}
+        </Text>
+      )}
+    </Stack>
+  );
 }
 
 const columns: DataTableColumn<EpicArcRow>[] = [
@@ -88,33 +99,28 @@ const columns: DataTableColumn<EpicArcRow>[] = [
   {
     id: "startAgent",
     header: "Starts With",
-    accessor: (row) => row.startAgent?.name ?? null,
+    accessor: (row) => row.startAgents.map((agent) => agent.name ?? ""),
+    sortAccessor: (row) => row.startAgents[0]?.name ?? null,
     sortable: true,
-    cell: (row) =>
-      row.startAgent === null ? null : (
-        <Stack gap={0}>
-          <CharacterAnchor characterId={row.startAgent.characterId} size="sm">
-            {row.startAgent.name ?? row.startAgent.characterId}
-          </CharacterAnchor>
-          {row.startAgent.solarSystemId !== null && (
-            <Text size="xs" c="dimmed">
-              <SolarSystemAnchor
-                solarSystemId={row.startAgent.solarSystemId}
-                size="xs"
-              >
-                {row.startAgent.solarSystemName}
-              </SolarSystemAnchor>
-              {row.startAgent.regionName && ` (${row.startAgent.regionName})`}
-            </Text>
-          )}
-        </Stack>
-      ),
+    cell: (row) => (
+      <Stack gap={4}>
+        {row.startAgents.map((agent) => (
+          <StartAgent key={agent.characterId} agent={agent} />
+        ))}
+      </Stack>
+    ),
   },
   {
     id: "startRegion",
     header: "Starting Region",
-    accessor: (row) => row.startAgent?.regionName ?? null,
-    sortable: true,
+    // An array: a filter matches when any start is in the chosen region.
+    accessor: (row) => [
+      ...new Set(
+        row.startAgents.flatMap((agent) =>
+          agent.regionName ? [agent.regionName] : [],
+        ),
+      ),
+    ],
     filter: { type: "multi-select" },
     defaultVisible: false,
   },
