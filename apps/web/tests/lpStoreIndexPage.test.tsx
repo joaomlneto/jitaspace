@@ -188,6 +188,20 @@ describe("LP Store index page (client)", () => {
       expect(screen.queryByText("Federation Navy")).toBeNull();
     });
 
+    it("lets the pointer reach the clear button", async () => {
+      renderPage();
+      fireEvent.change(filter(), { target: { value: "x" } });
+      await screen.findByLabelText("Clear filter");
+      // Mantine defaults input sections to `pointer-events: none`, which would
+      // make a real click fall through to the input (fireEvent cannot see that).
+      const wrapper = filter().closest<HTMLElement>(
+        "[style*='--input-right-section-pointer-events']",
+      );
+      expect(
+        wrapper?.style.getPropertyValue("--input-right-section-pointer-events"),
+      ).toBe("all");
+    });
+
     it("says so when nothing matches, and the clear button restores the list", async () => {
       renderPage();
       fireEvent.change(filter(), { target: { value: "amarr" } });

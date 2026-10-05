@@ -21,21 +21,14 @@ export default async function Page() {
   // for the whole `cacheLife` window. Throwing writes nothing to the cache, so
   // the route recovers as soon as the database does. See CLAUDE.md → "Never
   // catch a database error inside a `"use cache"` scope".
-  const corporationIds = (
-    await prisma.loyaltyStoreOffer.groupBy({
-      by: ["corporationId"],
-    })
-  ).map(({ corporationId }) => corporationId);
-
   const corporations = await prisma.corporation.findMany({
     select: {
       corporationId: true,
       name: true,
       faction: { select: { factionId: true, name: true } },
     },
-    where: {
-      corporationId: { in: corporationIds },
-    },
+    // The corporations that have at least one LP store offer.
+    where: { LoyaltyStoreOffer: { some: {} } },
   });
 
   return <LPStorePage groups={groupCorporationsByFaction(corporations)} />;

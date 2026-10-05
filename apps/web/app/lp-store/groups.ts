@@ -51,9 +51,12 @@ export function filterLPStoreGroups(
   groups: readonly LPStoreGroup[],
   query: string,
 ): readonly LPStoreGroup[] {
-  const needle = query.trim().toLocaleLowerCase();
+  // `toLowerCase`, not `toLocaleLowerCase`: in a Turkish locale the latter
+  // lowercases "I" to a dotless "ı", so "imperial" would not match
+  // "Imperial Navy".
+  const needle = query.trim().toLowerCase();
   if (needle === "") return groups;
-  const matches = (name: string) => name.toLocaleLowerCase().includes(needle);
+  const matches = (name: string) => name.toLowerCase().includes(needle);
   return groups.flatMap((group) => {
     if (group.faction && matches(group.faction.name)) return [group];
     const corporations = group.corporations.filter(({ name }) => matches(name));

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 
 import {
   filterLPStoreGroups,
@@ -75,5 +75,24 @@ describe("filterLPStoreGroups", () => {
 
   it("returns nothing when nothing matches", () => {
     expect(names("amarr")).toEqual([]);
+  });
+
+  it("matches regardless of the browser locale (Turkish dotless ı)", () => {
+    const imperial = groupCorporationsByFaction([
+      { corporationId: 6, name: "Imperial Navy", faction: null },
+    ]);
+    // Make default-locale lowercasing behave as in a Turkish browser, where
+    // "I" lowercases to "ı" and "Imperial Navy" would no longer contain "imperial".
+    const spy = jest
+      .spyOn(String.prototype, "toLocaleLowerCase")
+      .mockImplementation(function (this: string) {
+        return this.replace(/I/g, "ı").replace(/İ/g, "i").toLowerCase();
+      });
+    try {
+      expect("Imperial".toLocaleLowerCase()).toBe("ımperial"); // the simulation holds
+      expect(filterLPStoreGroups(imperial, "imperial")).toHaveLength(1);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });

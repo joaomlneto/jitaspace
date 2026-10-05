@@ -65,6 +65,9 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
           aria-label="Filter corporations and factions"
           placeholder="Filter by corporation or faction name"
           leftSection={<IconSearch size={16} />}
+          // Mantine makes input sections ignore the pointer by default, which
+          // would let a click on the clear button fall through to the input.
+          rightSectionPointerEvents="all"
           rightSection={
             query !== "" && (
               <CloseButton
