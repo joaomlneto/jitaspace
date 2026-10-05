@@ -24,6 +24,9 @@ jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
 jest.mock("~/app/alliance/[allianceId]/data", () => ({
   loadAllianceProfile: () => Promise.resolve({ ok: true, profile: null }),
 }));
+jest.mock("~/app/corporation/[corporationId]/data", () => ({
+  loadCorporationProfile: () => Promise.resolve({ ok: true, profile: null }),
+}));
 
 // ---------------------------------------------------------------------------
 // ESI-client mocks
