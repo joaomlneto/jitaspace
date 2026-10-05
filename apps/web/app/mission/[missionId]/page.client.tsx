@@ -40,12 +40,14 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   DungeonAnchor,
+  EpicArcAnchor,
   EveIconAvatar,
   FactionAvatar,
   MissionAnchor,
 } from "@jitaspace/ui";
 
-import type { MissionDetail, MissionEpicArc, MissionVariant } from "./data";
+import type { MissionDetail, MissionVariant } from "./data";
+import type { EpicArc } from "~/lib/epicArcs";
 import type { CorporationRef, FactionRef, TypeRef } from "~/lib/missionRefs";
 import type { MissionMessageSpeaker, MissionTextValues } from "~/lib/missions";
 import { DataTable } from "~/components/DataTable";
@@ -53,12 +55,14 @@ import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
   AgentLabel,
   BooleanBadge,
+  EpicArcStepsTable,
   HeroImage,
   MissionKindBadge,
   MissionText,
   notAvailableText,
   TypeRefLabel,
 } from "~/components/Missions";
+import { isRepeatable } from "~/lib/epicArcs";
 import {
   formatExpiration,
   formatMinutes,
@@ -207,37 +211,20 @@ function DialogueLine({
   );
 }
 
-/** Where a failed arc step leads: nowhere, the same step again, or another. */
-function FailureStep({
-  step,
-  link,
-}: Readonly<{
-  step: MissionEpicArc["steps"][number];
-  link: (missionId: number) => ReactNode;
-}>) {
-  if (step.failMissionId === null) return <>{notAvailableText}</>;
-  if (step.failMissionId === step.missionId) return <>Retry</>;
-  return <>{link(step.failMissionId)}</>;
-}
-
 function EpicArcPanel({
   arc,
   missionId,
-}: Readonly<{ arc: MissionEpicArc; missionId: number }>) {
+}: Readonly<{ arc: EpicArc; missionId: number }>) {
   const position = arc.steps.findIndex((step) => step.missionId === missionId);
-  const names = new Map(arc.steps.map((step) => [step.missionId, step.name]));
-  const missionLink = (id: number) => (
-    <MissionAnchor key={id} missionId={id} size="sm">
-      {names.get(id) ?? `Mission ${id}`}
-    </MissionAnchor>
-  );
   return (
     <Stack gap="md">
       <Paper withBorder radius="md" p="md">
         <Group gap="md" align="center">
           <EveIconAvatar iconId={arc.iconId} size="lg" radius="sm" />
           <Stack gap={2}>
-            <Title order={3}>{arc.name}</Title>
+            <EpicArcAnchor epicArcId={arc.epicArcId}>
+              <Title order={3}>{arc.name}</Title>
+            </EpicArcAnchor>
             <Group gap="xs">
               {arc.faction && <FactionLabel faction={arc.faction} />}
               <Badge variant="light" color="gray">
@@ -248,83 +235,16 @@ function EpicArcPanel({
                   This is step {position + 1} of {arc.steps.length}
                 </Badge>
               )}
-              {arc.arcRestartInterval !== null &&
-                arc.arcRestartInterval > 1 && (
-                  <Badge variant="light" color="grape">
-                    Repeatable every {formatMinutes(arc.arcRestartInterval)}
-                  </Badge>
-                )}
+              {isRepeatable(arc.arcRestartInterval) && (
+                <Badge variant="light" color="grape">
+                  Repeatable every {formatMinutes(arc.arcRestartInterval ?? 0)}
+                </Badge>
+              )}
             </Group>
           </Stack>
         </Group>
       </Paper>
-      <Paper withBorder radius="md" p="sm" style={{ overflowX: "auto" }}>
-        <Table highlightOnHover verticalSpacing="xs">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>#</Table.Th>
-              <Table.Th>Mission</Table.Th>
-              <Table.Th>Agent</Table.Th>
-              <Table.Th>Leads to</Table.Th>
-              <Table.Th>On failure</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {arc.steps.map((step, index) => {
-              const isCurrent = step.missionId === missionId;
-              return (
-                <Table.Tr
-                  key={step.missionId}
-                  bg={
-                    isCurrent
-                      ? "light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5))"
-                      : undefined
-                  }
-                >
-                  <Table.Td ff="monospace">{index + 1}</Table.Td>
-                  <Table.Td>
-                    <Stack gap={0}>
-                      {step.chapterTitle && (
-                        <Text size="xs" c="dimmed">
-                          {step.chapterTitle}
-                        </Text>
-                      )}
-                      {isCurrent ? (
-                        <Text fw={700} size="sm">
-                          {step.name ?? `Mission ${step.missionId}`}
-                        </Text>
-                      ) : (
-                        missionLink(step.missionId)
-                      )}
-                    </Stack>
-                  </Table.Td>
-                  <Table.Td>
-                    {step.agent ? (
-                      <AgentLabel agent={step.agent} withLocation={false} />
-                    ) : (
-                      notAvailableText
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    {step.nextMissionIds.length === 0 ? (
-                      <Text size="sm" c="dimmed">
-                        End of arc
-                      </Text>
-                    ) : (
-                      <Stack gap={2}>
-                        {step.nextMissionIds.map(missionLink)}
-                      </Stack>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <FailureStep step={step} link={missionLink} />
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
-      </Paper>
+      <EpicArcStepsTable steps={arc.steps} currentMissionId={missionId} />
     </Stack>
   );
 }
@@ -940,9 +860,9 @@ export default function MissionPage({
             Missions
           </Anchor>
           {mission.epicArcs[0] && (
-            <Text size="sm" c="dimmed">
+            <EpicArcAnchor epicArcId={mission.epicArcs[0].epicArcId} size="sm">
               {mission.epicArcs[0].name}
-            </Text>
+            </EpicArcAnchor>
           )}
           <Text size="sm">{mission.name}</Text>
         </Breadcrumbs>

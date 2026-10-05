@@ -1,3 +1,4 @@
+import type { EpicArc } from "~/lib/epicArcs";
 import type {
   AgentRef,
   CorporationRef,
@@ -7,6 +8,12 @@ import type {
 } from "~/lib/missionRefs";
 import type { MissionKind, MissionTextValues } from "~/lib/missions";
 import { prisma } from "~/lib/db";
+import {
+  buildEpicArcs,
+  epicArcAgentIds,
+  epicArcFactionIds,
+  readEpicArcRows,
+} from "~/lib/epicArcData";
 import {
   readAgentRefs,
   readCorporationRefs,
@@ -20,28 +27,6 @@ import { cacheSdeRead } from "~/lib/sdeCache";
 export interface TypeQuantity {
   type: TypeRef;
   quantity: number | null;
-}
-
-/** One step of an epic arc, as the arc's table lists it. */
-export interface EpicArcStep {
-  missionId: number;
-  name: string | null;
-  /** The epic journal's chapter heading for this step, when it has one. */
-  chapterTitle: string | null;
-  agent: AgentRef | null;
-  failMissionId: number | null;
-  nextMissionIds: number[];
-}
-
-export interface MissionEpicArc {
-  epicArcId: number;
-  name: string;
-  faction: FactionRef | null;
-  iconId: number | null;
-  /** Minutes before the arc can be run again. */
-  arcRestartInterval: number | null;
-  /** Every step of the arc, in the order the arc is played. */
-  steps: EpicArcStep[];
 }
 
 /** Another mission sharing this one's name — usually the same mission for another faction or level. */
@@ -99,37 +84,10 @@ export interface MissionDetail {
   textValues: MissionTextValues;
   /** The agent who offers this mission, when the SDE names exactly one. */
   agent: AgentRef | null;
-  epicArcs: MissionEpicArc[];
+  epicArcs: EpicArc[];
   variants: MissionVariant[];
   /** Other missions that send the pilot into the same dungeon. */
   dungeonMissionCount: number;
-}
-
-const CHAPTER_TITLE_KEY = "messages.epicMission.journalText.chapterTitle";
-
-/**
- * Arc steps in play order: breadth-first from the steps nothing leads to,
- * following `nextMissions`; anything unreachable (a dangling step) goes last.
- */
-function orderArcSteps<
-  T extends { missionId: number; nextMissionIds: number[] },
->(steps: T[]): T[] {
-  const byId = new Map(steps.map((step) => [step.missionId, step]));
-  const targets = new Set(steps.flatMap((step) => step.nextMissionIds));
-  const queue = steps.filter((step) => !targets.has(step.missionId));
-  const seen = new Set<number>();
-  const ordered: T[] = [];
-  // `queue` grows while it is walked, so this visits every queued step.
-  for (const step of queue) {
-    if (seen.has(step.missionId)) continue;
-    seen.add(step.missionId);
-    ordered.push(step);
-    for (const nextId of step.nextMissionIds) {
-      const next = byId.get(nextId);
-      if (next && !seen.has(nextId)) queue.push(next);
-    }
-  }
-  return [...ordered, ...steps.filter((step) => !seen.has(step.missionId))];
 }
 
 const typeQuantity = (
@@ -216,45 +174,6 @@ function missionTextValues(known: {
 }
 
 /**
- * The epic arcs a mission belongs to: each arc and every step of it, with the
- * steps' journal chapter titles. Nothing to read for the many missions in no arc.
- */
-async function readEpicArcs(epicArcIds: number[]) {
-  if (epicArcIds.length === 0) return { arcs: [], arcSteps: [] };
-  const [arcs, arcSteps] = await Promise.all([
-    prisma.epicArc.findMany({
-      where: { epicArcId: { in: epicArcIds }, isDeleted: false },
-      orderBy: { epicArcId: "asc" },
-    }),
-    prisma.epicArcMission.findMany({
-      select: {
-        epicArcId: true,
-        missionId: true,
-        agentId: true,
-        failMissionId: true,
-        mission: {
-          select: {
-            name: true,
-            // The journal chapter title, in the same round trip.
-            messages: {
-              select: { text: true },
-              where: { key: CHAPTER_TITLE_KEY, isDeleted: false },
-              take: 1,
-            },
-          },
-        },
-        nextMissions: {
-          select: { nextMissionId: true },
-          where: { isDeleted: false },
-        },
-      },
-      where: { epicArcId: { in: epicArcIds }, isDeleted: false },
-    }),
-  ]);
-  return { arcs, arcSteps };
-}
-
-/**
  * Everything about one mission, or `null` when there is no such mission.
  *
  * Throws on a database failure rather than returning `null`: a `null` here is
@@ -286,40 +205,39 @@ export async function getMission(
   });
   if (mission === null || mission.isDeleted) return null;
 
-  const [{ arcs, arcSteps }, variantRows, dungeonMissionCount] =
-    await Promise.all([
-      readEpicArcs(mission.epicArcMissions.map((step) => step.epicArcId)),
-      prisma.mission.findMany({
-        select: {
-          missionId: true,
-          factionId: true,
-          corporationId: true,
-          killDungeonId: true,
-          killObjectiveTypeId: true,
-          killObjectiveQuantity: true,
-          killDropItemInMissionContainerTypeId: true,
-          courierObjectiveTypeId: true,
-          courierObjectiveQuantity: true,
-          rewardTypeId: true,
-          rewardQuantity: true,
-        },
-        where: {
-          name: mission.name,
-          missionId: { not: missionId },
-          isDeleted: false,
-        },
-        orderBy: { missionId: "asc" },
-      }),
-      mission.killDungeonId === null
-        ? Promise.resolve(0)
-        : prisma.mission.count({
-            where: {
-              killDungeonId: mission.killDungeonId,
-              missionId: { not: missionId },
-              isDeleted: false,
-            },
-          }),
-    ]);
+  const [arcRows, variantRows, dungeonMissionCount] = await Promise.all([
+    readEpicArcRows(mission.epicArcMissions.map((step) => step.epicArcId)),
+    prisma.mission.findMany({
+      select: {
+        missionId: true,
+        factionId: true,
+        corporationId: true,
+        killDungeonId: true,
+        killObjectiveTypeId: true,
+        killObjectiveQuantity: true,
+        killDropItemInMissionContainerTypeId: true,
+        courierObjectiveTypeId: true,
+        courierObjectiveQuantity: true,
+        rewardTypeId: true,
+        rewardQuantity: true,
+      },
+      where: {
+        name: mission.name,
+        missionId: { not: missionId },
+        isDeleted: false,
+      },
+      orderBy: { missionId: "asc" },
+    }),
+    mission.killDungeonId === null
+      ? Promise.resolve(0)
+      : prisma.mission.count({
+          where: {
+            killDungeonId: mission.killDungeonId,
+            missionId: { not: missionId },
+            isDeleted: false,
+          },
+        }),
+  ]);
 
   // The offering agent: only when every arc this mission is in names the same
   // one, so the page never puts words in the wrong agent's mouth.
@@ -346,7 +264,7 @@ export async function getMission(
           v.rewardTypeId,
         ]),
       ]),
-      readAgentRefs([offeringAgentId, ...arcSteps.map((step) => step.agentId)]),
+      readAgentRefs([offeringAgentId, ...epicArcAgentIds(arcRows)]),
       readDungeonRefs([mission.killDungeonId]),
       mission.agentTypeId === null
         ? Promise.resolve(null)
@@ -361,7 +279,7 @@ export async function getMission(
       readFactionRefs([
         mission.factionId,
         ...mission.extraStandings.map((s) => s.factionId),
-        ...arcs.map((arc) => arc.factionId),
+        ...epicArcFactionIds(arcRows),
         ...variantRows.map((v) => v.factionId),
       ]),
     ]);
@@ -385,7 +303,7 @@ export async function getMission(
   const issuerFaction =
     factionRef(mission.factionId) ??
     corporationFaction(issuerCorporation) ??
-    factionRef(arcs[0]?.factionId);
+    factionRef(arcRows.arcs[0]?.factionId);
 
   return {
     missionId: mission.missionId,
@@ -446,28 +364,7 @@ export async function getMission(
       agent: offeringAgent,
     }),
     agent: offeringAgent,
-    epicArcs: arcs.map((arc) => ({
-      epicArcId: arc.epicArcId,
-      name: arc.name,
-      faction: factionRef(arc.factionId),
-      iconId: arc.iconId,
-      arcRestartInterval: arc.arcRestartInterval,
-      steps: orderArcSteps(
-        arcSteps
-          .filter((step) => step.epicArcId === arc.epicArcId)
-          .map((step) => ({
-            missionId: step.missionId,
-            name: step.mission.name,
-            chapterTitle: step.mission.messages[0]?.text ?? null,
-            agent: pick(agents, step.agentId),
-            failMissionId: step.failMissionId,
-            nextMissionIds: step.nextMissions
-              .map((next) => next.nextMissionId)
-              .sort((a, b) => a - b),
-          }))
-          .sort((a, b) => a.missionId - b.missionId),
-      ),
-    })),
+    epicArcs: buildEpicArcs(arcRows, agents, factions),
     variants: variantRows.map((variant) => {
       const variantKind = missionKind(variant);
       return {

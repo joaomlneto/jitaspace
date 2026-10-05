@@ -5,6 +5,7 @@ export * from "./CorporationAnchor";
 export * from "./DogmaAttributeAnchor";
 export * from "./DogmaEffectAnchor";
 export * from "./DungeonAnchor";
+export * from "./EpicArcAnchor";
 export * from "./EveEntityAnchorDisplay";
 export * from "./GroupAnchor";
 export * from "./MarketGroupAnchor";

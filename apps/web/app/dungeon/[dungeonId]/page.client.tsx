@@ -40,6 +40,7 @@ import { AgencyIcon } from "@jitaspace/eve-icons";
 import {
   CorporationAnchor,
   DungeonAnchor,
+  EpicArcAnchor,
   FactionAvatar,
   GroupAnchor,
   ISKAmount,
@@ -137,6 +138,12 @@ const missionColumns: DataTableColumn<DungeonMission>[] = [
     accessor: "epicArcName",
     sortable: true,
     filter: { type: "multi-select" },
+    cell: (row) =>
+      row.epicArcId === null ? null : (
+        <EpicArcAnchor epicArcId={row.epicArcId} size="sm">
+          {row.epicArcName ?? row.epicArcId}
+        </EpicArcAnchor>
+      ),
   },
   {
     id: "objective",

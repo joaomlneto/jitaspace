@@ -187,6 +187,14 @@ describe("getMission", () => {
       failMissionId: missionId,
       mission: {
         name: `Mission ${missionId}`,
+        killDungeonId: missionId === 3 ? 500 : null,
+        killObjectiveTypeId: null,
+        killObjectiveQuantity: null,
+        killDropItemInMissionContainerTypeId: null,
+        courierObjectiveTypeId: null,
+        courierObjectiveQuantity: null,
+        rewardTypeId: missionId === 3 ? 29 : null,
+        rewardQuantity: missionId === 3 ? 250000 : null,
         // The chapter title rides along with the step.
         messages: missionId === 1 ? [{ text: "Chapter One" }] : [],
       },
@@ -234,6 +242,12 @@ describe("getMission", () => {
     expect(arc?.steps.map((s) => s.missionId)).toEqual([1, 2, 3, 4, 8, 9]);
     expect(arc?.steps[0]?.chapterTitle).toBe("Chapter One");
     expect(arc?.steps[1]?.nextMissionIds).toEqual([3, 4]);
+    expect(arc?.steps[2]).toMatchObject({
+      missionId: 3,
+      kind: "kill",
+      rewardIsk: 250000,
+    });
+    expect(arc?.steps[0]).toMatchObject({ kind: "other", rewardIsk: null });
     expect(db.missionMessage.findMany).not.toHaveBeenCalled();
     expect(db.corporation.findMany).not.toHaveBeenCalled();
   });

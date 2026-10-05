@@ -40,6 +40,7 @@ export interface DungeonMission {
   corporation: CorporationRef | null;
   objective: { type: TypeRef; quantity: number | null } | null;
   rewardIsk: number | null;
+  epicArcId: number | null;
   epicArcName: string | null;
 }
 
@@ -132,7 +133,7 @@ export async function getDungeon(
         rewardTypeId: true,
         rewardQuantity: true,
         epicArcMissions: {
-          select: { epicArc: { select: { name: true } } },
+          select: { epicArc: { select: { epicArcId: true, name: true } } },
           where: { isDeleted: false },
           take: 1,
         },
@@ -290,6 +291,7 @@ export async function getDungeon(
           : null,
         rewardIsk:
           mission.rewardTypeId === ISK_TYPE_ID ? mission.rewardQuantity : null,
+        epicArcId: mission.epicArcMissions[0]?.epicArc.epicArcId ?? null,
         epicArcName: mission.epicArcMissions[0]?.epicArc.name ?? null,
       };
     }),

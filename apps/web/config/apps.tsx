@@ -353,6 +353,14 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => <JournalIcon {...props} />,
     scopes: {},
   },
+  epicArcs: {
+    name: "Epic Arcs",
+    description:
+      "Browse the branching mission chains of the epic arcs, their agents, choices and endings.",
+    url: "/epic-arcs",
+    Icon: (props) => <JournalIcon {...props} />,
+    scopes: {},
+  },
   dungeons: {
     name: "Dungeons",
     description:
