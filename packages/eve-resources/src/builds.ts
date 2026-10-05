@@ -335,7 +335,9 @@ export const KNOWN_BUILDS: Record<CcpServer, number[]> = {
  * Release dates (YYYY-MM-DD, UTC) for known EVE client builds, derived from
  * the commit history of https://github.com/Inomares/hoboleaks.
  * Each date reflects when hoboleaks processed the new client, usually shortly
- * after CCP published it. Not every build in {@link KNOWN_BUILDS} has a date.
+ * after CCP published it; the newest entries are dated from the CDN's
+ * `Last-Modified` header instead (see {@link BUILD_TIMESTAMPS}). Not every
+ * build in {@link KNOWN_BUILDS} has a date.
  * Last updated: 2026-06-10.
  */
 export const BUILD_DATES: Readonly<Partial<Record<number, string>>> = {
@@ -2464,7 +2466,7 @@ export const BUILD_DATES: Readonly<Partial<Record<number, string>>> = {
 };
 
 /**
- * Publication timestamps for EVE client builds since April 2023, captured on
+ * Publication timestamps for most EVE client builds since April 2023, captured on
  * 2026-06-10 from the HTTP `Last-Modified` header of each build's app index
  * file (`binaries.eveonline.com/eveonline_{build}.txt`).
  * Format: ISO 8601 UTC (`YYYY-MM-DDTHH:MM:SSZ`).

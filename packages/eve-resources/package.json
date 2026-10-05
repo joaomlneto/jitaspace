@@ -1,6 +1,6 @@
 {
   "name": "@jitaspace/eve-resources",
-  "description": "Resolve, browse and fetch EVE Online client resource files from CCP's content CDN — no game install required",
+  "description": "Resolve, browse and fetch EVE Online client resource files from EVE's content CDNs — no game install required",
   "version": "0.0.0",
   "type": "module",
   "sideEffects": false,

@@ -124,8 +124,7 @@ export const BINARIES_BASE_URL = PROVIDER_ENDPOINTS.ccp.appBaseUrl;
  *
  * Note: the CDN sends files gzip-compressed in transit (`Content-Encoding:
  * gzip`), which `fetch` undoes transparently. Its `Content-Type` says nothing
- * about the file's format — trust the `res:/`
- * file extension instead).
+ * about the file's format — trust the `res:/` file extension instead.
  */
 export const RESOURCES_BASE_URL = PROVIDER_ENDPOINTS.ccp.resBaseUrl;
 
