@@ -1,10 +1,12 @@
 import { memo } from "react";
-import { Box, Group, Text } from "@mantine/core";
+import Link from "next/link";
+import { Anchor, Box, Group, Text } from "@mantine/core";
 import { addDays } from "date-fns";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { RegionalMarketOrder } from "@jitaspace/hooks";
 import { EveEntityAnchor, EveEntityName } from "@jitaspace/eve-components";
+import { UNIVERSE_NAMES_MAX_ID } from "@jitaspace/hooks";
 import { DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
@@ -88,21 +90,20 @@ function nowrap(content: string) {
  * Market orders sit in an NPC station or an Upwell structure, and a location
  * id beyond int32 is a structure. Structure names are private: resolving one
  * takes a character on its access list, so a lookup per row would mostly earn
- * 403s, each against ESI's error limit. The system it is in is public.
+ * 403s, each against ESI's error limit. The system it is in is public, and
+ * the link needs no lookup at all: its destination follows from the id.
  */
-const MAX_STATION_ID = 2_147_483_647;
-
 function LocationName({
   order,
 }: Readonly<{
   order: Pick<RegionalMarketOrder, "location_id" | "system_id">;
 }>) {
-  if (order.location_id > MAX_STATION_ID) {
+  if (order.location_id > UNIVERSE_NAMES_MAX_ID) {
     return (
-      <EveEntityAnchor
+      <Anchor
+        component={Link}
+        href={`/structure/${order.location_id}`}
         inherit
-        entityId={order.location_id}
-        category="structure"
         target="_blank"
       >
         <Text inherit>
@@ -114,7 +115,7 @@ function LocationName({
             category="solar_system"
           />
         </Text>
-      </EveEntityAnchor>
+      </Anchor>
     );
   }
   return (

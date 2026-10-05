@@ -25,6 +25,7 @@ export * from "./wars";
 
 export * from "./useCorporation";
 export * from "./useEsiAcceptLanguage";
+export * from "./universeNamesLimits";
 export * from "./useEsiName";
 export * from "./useEsiSearch";
 export * from "./useMarketPrices";
