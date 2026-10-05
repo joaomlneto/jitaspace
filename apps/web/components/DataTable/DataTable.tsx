@@ -13,7 +13,9 @@ import { usePreferencesStore } from "~/lib/preferences";
  * share their sort and filter semantics through `@jitaspace/datatable-common`,
  * so a table is written once and works the same under either.
  */
-export function DataTable<TData>(props: Readonly<DataTableProps<TData>>) {
+export function DataTable<TData extends object>(
+  props: Readonly<DataTableProps<TData>>,
+) {
   const engine = usePreferencesStore((state) => state.dataTableEngine);
 
   return engine === "mantine-datatable" ? (

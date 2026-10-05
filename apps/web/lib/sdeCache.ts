@@ -18,10 +18,11 @@ export const SDE_CACHE_TAG = "sde";
  * timer only asked CockroachDB the same questions again: this data changes on
  * patch day.
  *
- * Only for tables `ingest-sde-all` writes. Tagging data it does not write (LP
- * store offers, wars, prices, the build-history database) keeps that data
- * stale for up to a month, and nothing reports it. Those keep their own
- * `cacheLife`.
+ * Only for tables `ingest-sde-all` writes. Using it for data the ingest does not
+ * write (LP store offers, wars, prices, the build-history database) keeps that
+ * data stale for up to a month, and nothing reports it. Those keep their own
+ * `cacheLife`; a scope that reads both kinds adds just `cacheTag(SDE_CACHE_TAG)`
+ * on top of it, as `app/lp-store/page.tsx` does.
  */
 export function cacheSdeRead(): void {
   cacheTag(SDE_CACHE_TAG);

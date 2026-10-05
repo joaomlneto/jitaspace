@@ -46,6 +46,18 @@ describe("DataTable — basic rendering", () => {
     expect(screen.getByText("Bob")).toBeInTheDocument();
     expect(screen.getByText("Charlie")).toBeInTheDocument();
   });
+
+  // The pagination feature is always registered; without `withPagination`
+  // it must pass every row through, not cut them to a default page of 10.
+  it("renders every row without pagination, beyond one page's worth", () => {
+    const many = Array.from({ length: 25 }, (_, i) => ({
+      name: `Row ${i}`,
+      score: i,
+    }));
+    renderWithMantine(<DataTable columns={columns} data={many} />);
+    expect(screen.getByText("Row 0")).toBeInTheDocument();
+    expect(screen.getByText("Row 24")).toBeInTheDocument();
+  });
 });
 
 describe("DataTable — empty state", () => {
