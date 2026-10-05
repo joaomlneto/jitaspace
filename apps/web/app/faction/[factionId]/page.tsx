@@ -6,6 +6,7 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { eveImage, pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
+import { getFactionLiveData, readFactionSdeData } from "./data";
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -62,8 +63,16 @@ async function PageContent({
   params: Promise<{ factionId: string }>;
 }>) {
   const { factionId } = await params;
-  if (parsePositiveEntityId(factionId) === null) notFound();
-  return <PageClient />;
+  const id = parsePositiveEntityId(factionId);
+  if (id === null) notFound();
+  // Deliberately uncaught: a failed read is a transient error, not a 404.
+  const faction = await readFactionSdeData(id);
+  if (!faction) notFound();
+  const live = await getFactionLiveData(
+    id,
+    faction.militiaCorporation?.id ?? null,
+  );
+  return <PageClient faction={faction} live={live} />;
 }
 
 export default function Page({
