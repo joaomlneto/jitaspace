@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { ReactNode } from "react";
+import { Activity } from "react";
 import Link from "next/link";
 import { afterEach, describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
@@ -15,6 +17,7 @@ import {
 import {
   BrowseMarketButton,
   MarketLayoutShell,
+  ShowMarketTreeInline,
 } from "~/layouts/MarketLayout/MarketLayoutShell";
 
 const narrowMatchMedia = window.matchMedia;
@@ -110,6 +113,20 @@ describe("MarketLayoutShell", () => {
     );
   });
 
+  it("keeps the drawer open for an item opened in a new tab", async () => {
+    renderShell();
+    const drawer = await openDrawer();
+
+    fireEvent.click(within(drawer).getByRole("link", { name: "Tritanium" }), {
+      metaKey: true,
+    });
+    fireEvent.click(within(drawer).getByRole("link", { name: "Tritanium" }), {
+      ctrlKey: true,
+    });
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
   it("closes the drawer when the viewport widens enough for the sidebar", async () => {
     const widen = emulateResizableViewport();
     renderShell();
@@ -122,6 +139,60 @@ describe("MarketLayoutShell", () => {
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
     );
+  });
+});
+
+describe("ShowMarketTreeInline", () => {
+  function renderIndex(page: ReactNode) {
+    return render(
+      <MantineProvider>
+        <MarketLayoutShell sidebar={<Tree />}>{page}</MarketLayoutShell>
+      </MantineProvider>,
+    );
+  }
+  const shellRoot = () =>
+    screen.getByRole("complementary", { name: "Market groups" }).parentElement;
+
+  it("shows the sidebar tree inline while the page that asks is mounted", () => {
+    const { rerender } = renderIndex(<ShowMarketTreeInline />);
+    expect(shellRoot()).toHaveAttribute("data-tree-inline");
+
+    rerender(
+      <MantineProvider>
+        <MarketLayoutShell sidebar={<Tree />}>
+          <h1>Tritanium</h1>
+        </MarketLayoutShell>
+      </MantineProvider>,
+    );
+    expect(shellRoot()).not.toHaveAttribute("data-tree-inline");
+  });
+
+  it("lets go once Next hides the page it navigated away from", () => {
+    // Next keeps the previous route mounted in a hidden Activity; a marker in
+    // its DOM used to keep the tree inline under the next item page.
+    const { rerender } = renderIndex(
+      <Activity mode="visible">
+        <ShowMarketTreeInline />
+      </Activity>,
+    );
+    expect(shellRoot()).toHaveAttribute("data-tree-inline");
+
+    rerender(
+      <MantineProvider>
+        <MarketLayoutShell sidebar={<Tree />}>
+          <Activity mode="hidden">
+            <ShowMarketTreeInline />
+          </Activity>
+          <h1>Tritanium</h1>
+        </MarketLayoutShell>
+      </MantineProvider>,
+    );
+    expect(shellRoot()).not.toHaveAttribute("data-tree-inline");
+  });
+
+  it("does nothing outside the market layout", () => {
+    const { container } = render(<ShowMarketTreeInline />);
+    expect(container).toBeEmptyDOMElement();
   });
 });
 

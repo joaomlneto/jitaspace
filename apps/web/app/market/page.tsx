@@ -2,6 +2,7 @@ import { Group, Stack, Text, Title } from "@mantine/core";
 
 import { MarketIcon } from "@jitaspace/eve-icons";
 
+import { ShowMarketTreeInline } from "~/layouts";
 import { pageMetadata } from "~/lib/metadata";
 
 export const metadata = pageMetadata({
@@ -14,9 +15,9 @@ export const metadata = pageMetadata({
 
 export default function Page() {
   return (
-    // Marks the page for the market layout, which lists its own sidebar tree
-    // inline below md here instead of hiding it (see MarketLayout.module.css).
-    <Stack gap="md" data-market-index>
+    <Stack gap="md">
+      {/* The layout's sidebar tree is this page's content on small screens. */}
+      <ShowMarketTreeInline />
       <Group wrap="nowrap">
         <MarketIcon width={48} />
         <Title order={1}>Market</Title>

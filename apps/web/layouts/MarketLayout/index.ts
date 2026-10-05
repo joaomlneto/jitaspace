@@ -1,2 +1,2 @@
 export * from "./MarketLayout";
-export { BrowseMarketButton } from "./MarketLayoutShell";
+export { BrowseMarketButton, ShowMarketTreeInline } from "./MarketLayoutShell";

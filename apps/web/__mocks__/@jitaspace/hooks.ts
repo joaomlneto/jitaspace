@@ -18,7 +18,6 @@ export interface FuzzworkTypeMarketAggregate {
   sell: { percentile: number; volume: number };
 }
 
-/** Mirrors the real list in `src/hooks/useTypeMarketOrders.ts`. */
-export const MARKET_HUB_REGION_IDS = [
-  10000002, 10000043, 10000032, 10000030, 10000042,
-];
+// The real list, not a copy: its module imports nothing, so loading it costs
+// none of what the rest of the package would.
+export { MARKET_HUB_REGION_IDS } from "../../../../packages/hooks/src/hooks/marketHubRegions";

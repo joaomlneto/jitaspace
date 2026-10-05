@@ -45,9 +45,10 @@
 
 /* The /market index has no item to show, so on small screens the sidebar
    itself is shown inline after the page's intro, rather than the page
-   mounting a second copy of the tree. */
+   mounting a second copy of the tree. The page turns this on with
+   `ShowMarketTreeInline`. */
 @media (max-width: calc($mantine-breakpoint-md - 0.0625em)) {
-  .root:has([data-market-index]) .sidebar {
+  .root[data-tree-inline] .sidebar {
     display: block;
     order: 1;
   }

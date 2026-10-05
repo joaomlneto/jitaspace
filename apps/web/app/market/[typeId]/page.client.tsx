@@ -16,7 +16,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsStringLiteral, useQueryState, useQueryStates } from "nuqs";
 import posthog from "posthog-js";
 
 import type { RegionalMarketOrder } from "@jitaspace/hooks";
@@ -28,6 +28,11 @@ import {
   MarketOrdersDataTable,
   OrderLocation,
 } from "~/components/Market";
+import { MarketPriceHistorySkeleton } from "~/components/Market/MarketPriceHistorySkeleton";
+import {
+  priceHistoryParsers,
+  priceHistoryUrlKeys,
+} from "~/components/Market/priceHistoryParams";
 import { BrowseMarketButton } from "~/layouts";
 
 const MARKET_TABS = ["sell", "buy", "history"] as const;
@@ -41,7 +46,7 @@ const MarketPriceHistory = dynamic(
     import("~/components/Market/MarketPriceHistory").then(
       (module) => module.MarketPriceHistory,
     ),
-  { ssr: false, loading: () => <Skeleton h={560} /> },
+  { ssr: false, loading: () => <MarketPriceHistorySkeleton /> },
 );
 
 /** A tab label that drops its second word where three tabs would not fit. */
@@ -117,6 +122,11 @@ export default function MarketTypePage({
     "tab",
     parseAsStringLiteral(MARKET_TABS).withDefault("sell"),
   );
+  // The history tab's region and range mean nothing on the order tabs: drop
+  // them on the way out, so a shared Sell link doesn't carry them.
+  const [, setHistoryParams] = useQueryStates(priceHistoryParsers, {
+    urlKeys: priceHistoryUrlKeys,
+  });
 
   useEffect(() => {
     posthog.capture("market_item_viewed", { type_id: typeId });
@@ -167,7 +177,9 @@ export default function MarketTypePage({
         value={tab}
         onChange={(value) => {
           const next = MARKET_TABS.find((candidate) => candidate === value);
-          if (next) void setTab(next);
+          if (!next) return;
+          void setTab(next);
+          if (next !== "history") void setHistoryParams(null);
         }}
       >
         <Tabs.List grow>

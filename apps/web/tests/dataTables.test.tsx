@@ -262,6 +262,25 @@ describe("MarketOrdersDataTable", () => {
     expect(dataRows()).toHaveLength(2);
   });
 
+  it("sorts a range ESI adds later after every known one, either way", () => {
+    renderOrders([
+      { ...SAMPLE_ORDER, order_id: 1, range: "constellation" },
+      { ...SAMPLE_ORDER, order_id: 2, range: "region" },
+      { ...SAMPLE_ORDER, order_id: 3, range: "2" },
+    ]);
+    const ranges = () =>
+      dataRows().map((row) =>
+        ["constellation", "Region", "2 jumps"].find((label) =>
+          row.textContent.includes(label),
+        ),
+      );
+
+    fireEvent.click(screen.getByText("Range"));
+    expect(ranges()).toEqual(["2 jumps", "Region", "constellation"]);
+    fireEvent.click(screen.getByText("Range"));
+    expect(ranges()).toEqual(["Region", "2 jumps", "constellation"]);
+  });
+
   it("expires an order after its own duration, not a fixed 30 days", () => {
     renderOrders([{ ...SAMPLE_ORDER, duration: 3 }]);
     const [issued, expires] = screen

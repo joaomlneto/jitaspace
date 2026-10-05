@@ -37,6 +37,7 @@ const mockUseTypeMarketOrders = jest.fn<
 const mockCapture = jest.fn();
 let mockTab = "sell";
 const mockSetTab = jest.fn();
+const mockSetHistoryParams = jest.fn();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -67,6 +68,7 @@ jest.mock("~/lib/metadata", () => ({
   resolveTypeImage: () => Promise.resolve(undefined),
 }));
 jest.mock("@jitaspace/hooks", () => ({
+  ...jest.requireActual<Record<string, unknown>>("@jitaspace/hooks"),
   useTypeMarketOrders: (typeId: number) => mockUseTypeMarketOrders(typeId),
 }));
 jest.mock("@jitaspace/eve-components", () => ({
@@ -82,8 +84,10 @@ jest.mock("posthog-js", () => ({
   default: { capture: (...args: unknown[]) => mockCapture(...args) },
 }));
 jest.mock("nuqs", () => ({
+  parseAsInteger: { withDefault: () => ({}) },
   parseAsStringLiteral: () => ({ withDefault: () => ({}) }),
   useQueryState: () => [mockTab, mockSetTab],
+  useQueryStates: () => [{}, mockSetHistoryParams],
 }));
 // The history tab's chart is loaded on demand; stand in for it.
 jest.mock("next/dynamic", () => () => ({ typeId }: { typeId: number }) => (
@@ -91,6 +95,7 @@ jest.mock("next/dynamic", () => () => ({ typeId }: { typeId: number }) => (
 ));
 jest.mock("~/layouts", () => ({
   BrowseMarketButton: () => <button type="button">Browse market</button>,
+  ShowMarketTreeInline: () => <span>tree inline</span>,
 }));
 jest.mock("~/components/Market/MarketGroupsNavigation", () => ({
   MarketGroupsNavigation: () => <nav>market tree</nav>,
@@ -147,6 +152,7 @@ describe("market item route", () => {
     mockCapture.mockClear();
     mockTab = "sell";
     mockSetTab.mockClear();
+    mockSetHistoryParams.mockClear();
     mockUseTypeMarketOrders.mockReset().mockReturnValue({
       data: {},
       isLoading: false,
@@ -242,6 +248,16 @@ describe("market item route", () => {
     expect(mockSetTab).toHaveBeenCalledWith("history");
   });
 
+  it("drops the history tab's region and range when leaving it", async () => {
+    mockTab = "history";
+    await renderTypePage();
+
+    screen.getByRole("tab", { name: /Buy orders/ }).click();
+
+    expect(mockSetTab).toHaveBeenCalledWith("buy");
+    expect(mockSetHistoryParams).toHaveBeenCalledWith(null);
+  });
+
   it("mounts the price history only while its tab is open", async () => {
     const { unmount } = await renderTypePage();
     expect(screen.queryByText("price history 587")).not.toBeInTheDocument();
@@ -322,7 +338,7 @@ describe("market item route", () => {
 });
 
 describe("market landing page", () => {
-  it("invites the user to choose an item, and marks itself for the layout", () => {
+  it("invites the user to choose an item, and asks for the tree inline", () => {
     const IndexPage = require("~/app/market/page").default;
 
     render(
@@ -333,13 +349,9 @@ describe("market landing page", () => {
 
     expect(screen.getByRole("heading", { name: "Market" })).toBeInTheDocument();
     expect(screen.getByText(/Browse the market groups/)).toBeInTheDocument();
-    // The layout's sidebar tree is shown inline on phones for this marker
-    // (MarketLayout.module.css), so the page mounts no tree of its own.
-    expect(
-      screen
-        .getByRole("heading", { name: "Market" })
-        .closest("[data-market-index]"),
-    ).not.toBeNull();
+    // The layout's own sidebar tree is shown inline on phones, so the page
+    // mounts no tree of its own.
+    expect(screen.getByText("tree inline")).toBeInTheDocument();
     expect(screen.queryByText("market tree")).not.toBeInTheDocument();
   });
 });

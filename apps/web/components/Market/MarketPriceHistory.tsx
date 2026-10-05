@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -10,12 +10,11 @@ import {
   SegmentedControl,
   Select,
   SimpleGrid,
-  Skeleton,
   Stack,
   Text,
 } from "@mantine/core";
 import { keepPreviousData } from "@tanstack/react-query";
-import { parseAsInteger, parseAsStringLiteral, useQueryStates } from "nuqs";
+import { useQueryStates } from "nuqs";
 import {
   Area,
   Bar,
@@ -44,17 +43,26 @@ import { DataTable } from "~/components/DataTable";
 import { formatIsk } from "./MarketOrdersDataTable";
 import classes from "./MarketPriceHistory.module.css";
 import {
+  PRICE_CHART_HEIGHT,
+  PriceHistoryBodySkeleton,
+  VOLUME_CHART_HEIGHT,
+} from "./MarketPriceHistorySkeleton";
+import {
   buildPriceHistory,
   DONCHIAN_DAYS,
   LONG_MOVING_AVERAGE_DAYS,
   niceTicks,
-  PRICE_HISTORY_RANGES,
   SHORT_MOVING_AVERAGE_DAYS,
   sliceToRange,
   summarizeRange,
   tickFormatter,
   visiblePriceExtent,
 } from "./priceHistory";
+import {
+  DEFAULT_HISTORY_REGION_ID,
+  priceHistoryParsers,
+  priceHistoryUrlKeys,
+} from "./priceHistoryParams";
 
 /**
  * Labels for the trade hubs' regions, which are offered first: almost all
@@ -69,7 +77,6 @@ const HUB_LABELS: Partial<Record<number, string>> = {
   10000030: "Heimatar (Rens)",
   10000042: "Metropolis (Hek)",
 };
-const DEFAULT_REGION_ID = MARKET_HUB_REGION_IDS[0] ?? 10000002;
 /** Wormhole and Abyssal regions start here, and have no market. */
 const FIRST_NON_MARKET_REGION_ID = 11000000;
 
@@ -110,8 +117,6 @@ const SERIES_COLOR: Record<SeriesId, string> = {
   donchian: "var(--series-donchian)",
 };
 
-const PRICE_CHART_HEIGHT = 300;
-const VOLUME_CHART_HEIGHT = 120;
 /** Keeps the two charts' plot areas aligned, whatever their tick labels. */
 const Y_AXIS_WIDTH = 64;
 
@@ -333,7 +338,7 @@ function resolveRegionId(
   if (marketRegionIds === undefined) return undefined;
   return marketRegionIds.has(requestedRegionId)
     ? requestedRegionId
-    : DEFAULT_REGION_ID;
+    : DEFAULT_HISTORY_REGION_ID;
 }
 
 /** A fractional change as a signed percentage with a direction arrow. */
@@ -391,19 +396,6 @@ const Y_AXIS_PROPS = {
   tick: { fill: "var(--chart-axis)", fontSize: 11 },
 } as const;
 const CURSOR = { stroke: "var(--chart-axis)", strokeWidth: 1 };
-
-function HistoryLoading() {
-  return (
-    <Stack gap="md">
-      <SimpleGrid cols={3} spacing={{ base: 6, sm: "sm" }}>
-        <Skeleton h={78} />
-        <Skeleton h={78} />
-        <Skeleton h={78} />
-      </SimpleGrid>
-      <Skeleton h={PRICE_CHART_HEIGHT + VOLUME_CHART_HEIGHT + 48} />
-    </Stack>
-  );
-}
 
 function HistorySummary({
   summary,
@@ -631,14 +623,9 @@ function DailyData({ points }: Readonly<{ points: PriceHistoryPoint[] }>) {
  * to line up. The charts share a hover, so the readout covers both.
  */
 export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
-  // Namespaced: this component lives in ~/components, and a host page may
-  // own a `region` or `range` of its own.
   const [{ region: requestedRegionId, range }, setParams] = useQueryStates(
-    {
-      region: parseAsInteger.withDefault(DEFAULT_REGION_ID),
-      range: parseAsStringLiteral(PRICE_HISTORY_RANGES).withDefault("6m"),
-    },
-    { urlKeys: { region: "historyRegion", range: "historyRange" } },
+    priceHistoryParsers,
+    { urlKeys: priceHistoryUrlKeys },
   );
   // The channel is one click away rather than on: with the min/max bars and
   // both averages it buried the median line.
@@ -648,6 +635,15 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
 
   const { regionOptions, marketRegionIds } = useRegionOptions();
   const regionId = resolveRegionId(requestedRegionId, marketRegionIds);
+
+  // Don't leave a region the chart refused in the URL, where it would be
+  // shared under Jita's data. The fallback is the default, so clearing the
+  // parameter is what selects it.
+  useEffect(() => {
+    if (regionId !== undefined && regionId !== requestedRegionId) {
+      void setParams({ region: null });
+    }
+  }, [regionId, requestedRegionId, setParams]);
 
   const {
     data,
@@ -692,7 +688,7 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
       </Alert>
     );
   } else if (regionId === undefined || isHistoryLoading) {
-    body = <HistoryLoading />;
+    body = <PriceHistoryBodySkeleton />;
   } else if (summary) {
     body = (
       <Stack

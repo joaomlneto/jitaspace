@@ -57,13 +57,18 @@ function rangeLabel(order: RegionalMarketOrder): string {
   );
 }
 
-/** How far a buy order reaches: a station, its system, N jumps, the region. */
-function rangeReach(order: RegionalMarketOrder): number {
+/**
+ * How far a buy order reaches: a station, its system, N jumps, the region.
+ * `undefined` for a range ESI adds later, which the table then sorts last
+ * rather than comparing as NaN.
+ */
+function rangeReach(order: RegionalMarketOrder): number | undefined {
   if (order.range === "station") return -1;
   if (order.range === "solarsystem") return 0;
   // Past any jump count ESI offers (40).
   if (order.range === "region") return 1000;
-  return Number(order.range);
+  const jumps = Number(order.range);
+  return Number.isFinite(jumps) ? jumps : undefined;
 }
 
 /**

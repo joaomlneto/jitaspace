@@ -48,8 +48,9 @@ jest.mock("@jitaspace/esi-client", () => ({
     data: { data: [10000002, 10000001, 11000001] },
   }),
 }));
+// Over the shared stub, which carries the real hub list.
 jest.mock("@jitaspace/hooks", () => ({
-  MARKET_HUB_REGION_IDS: [10000002, 10000043, 10000032, 10000030, 10000042],
+  ...jest.requireActual<Record<string, unknown>>("@jitaspace/hooks"),
   useEsiNameLookup: (entries: { id: number; category?: string }[]) =>
     mockNameLookup(entries),
 }));
@@ -142,6 +143,7 @@ describe("MarketPriceHistory", () => {
   it("asks ESI for a known non-hub region", () => {
     mockParams = { region: 10000001, range: "6m" };
     renderChart();
+    expect(mockSetParams).not.toHaveBeenCalled();
     expect(mockUseHistory).toHaveBeenCalledWith(
       10000001,
       { type_id: 34 },
@@ -171,6 +173,8 @@ describe("MarketPriceHistory", () => {
       expect(screen.getByRole("combobox", { name: "Region" })).toHaveValue(
         "The Forge (Jita)",
       );
+      // …and the refused id leaves the URL rather than being shared on.
+      expect(mockSetParams).toHaveBeenCalledWith({ region: null });
     },
   );
 
