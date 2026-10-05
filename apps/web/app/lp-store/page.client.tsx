@@ -37,6 +37,19 @@ import { filterLPStoreGroups } from "./groups";
 /** Where the "only corporations I have LP with" toggle is remembered. */
 const ONLY_WITH_LP_STORAGE_KEY = "jitaspace/lp-store-only-with-lp";
 
+/** Why the switch is disabled, when it is for a reason other than loading. */
+function getUnavailableHint(
+  hasToken: boolean,
+  balancesLoaded: boolean,
+  isLoading: boolean,
+): string | null {
+  if (!hasToken) {
+    return "Sign in with a character that has granted access to its loyalty points";
+  }
+  if (!balancesLoaded && !isLoading) return "Couldn't load your loyalty points";
+  return null;
+}
+
 export interface LPStorePageProps {
   /** Corporations grouped by faction, in display order. */
   groups: LPStoreGroup[];
@@ -65,12 +78,11 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
   // With the toggle on, hold the list while the balances load rather than
   // showing every corporation only to remove most of them a moment later.
   const awaitingBalances = onlyWithLp && hasToken && isLoading;
-  // Why the switch is disabled, when it is for a reason other than loading.
-  const unavailableHint = !hasToken
-    ? "Sign in with a character that has granted access to its loyalty points"
-    : !balancesLoaded && !isLoading
-      ? "Couldn't load your loyalty points"
-      : null;
+  const unavailableHint = getUnavailableHint(
+    hasToken,
+    balancesLoaded,
+    isLoading,
+  );
   const unavailableHintId = useId();
   const corporationIdsWithLp = useMemo(
     () =>
