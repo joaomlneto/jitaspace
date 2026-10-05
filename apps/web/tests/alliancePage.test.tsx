@@ -596,6 +596,15 @@ describe("alliance page — tabs", () => {
     expect(mockUseAllianceTables).toHaveBeenLastCalledWith(ALLIANCE_ID, true);
   });
 
+  it("does not fetch rows for a table tab the alliance does not have", () => {
+    mockEsi();
+    // `?tab=sovereignty` on an alliance with none falls back to the overview,
+    // so nothing would render the rows.
+    renderPage({ ...profile, sovereignty: [] }, "?tab=sovereignty");
+    expect(selectedTab()).toHaveTextContent("Overview");
+    expect(mockUseAllianceTables).toHaveBeenLastCalledWith(ALLIANCE_ID, false);
+  });
+
   it("shows loading rows while the tables arrive, and says so if they fail", () => {
     mockEsi();
     const { unmount } = renderPage(profile, "?tab=corporations", "loading");

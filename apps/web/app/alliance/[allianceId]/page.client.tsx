@@ -53,6 +53,7 @@ import {
   FactionAvatar,
 } from "@jitaspace/ui";
 
+import type { CorporationRow } from "./corporations";
 import type { AlliancePageTab } from "./tabs";
 import type { AlliancePageData, CompositionEntry } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
@@ -252,10 +253,18 @@ const TABLE_TABS = new Set<AlliancePageTab>([
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
 
-/** Whether the creator corporation is still in the alliance, once we know. */
+/**
+ * Whether the creator corporation is still in the alliance: from our database
+ * when we have the alliance, else from ESI's member list once it loads.
+ */
 function describeCreatorMembership(
-  stillMember: boolean | undefined,
+  profile: AlliancePageData | null,
+  esiRows: CorporationRow[],
 ): string | undefined {
+  let stillMember: boolean | undefined = profile?.creatorStillMember;
+  if (profile === null && esiRows.length > 0) {
+    stillMember = esiRows.some((row) => row.isCreator);
+  }
   if (stillMember === undefined) return undefined;
   return stillMember ? "Still a member" : "No longer a member";
 }
@@ -293,11 +302,31 @@ export default function AlliancePage({
     [profile, esiAlliance?.data],
   );
 
+  const corporationSummary = profile?.corporationSummary;
+  const sovereigntySummary = profile?.sovereigntySummary;
+  const warSummary = profile?.warSummary;
+  const sovereigntySystems = sovereigntySummary?.systems ?? 0;
+  const hasSovereignty = sovereigntySystems > 0;
+  const hasWars = (warSummary?.total ?? 0) > 0;
+  const visibleTabs: Record<AlliancePageTab, boolean> = {
+    overview: true,
+    corporations: true,
+    sovereignty: hasSovereignty,
+    wars: hasWars,
+    killboard: true,
+  };
+  // `?tab=wars` on an alliance with none would select a tab that is not
+  // rendered, leaving the page blank; show the overview instead.
+  const selectedTab = visibleTabs[activeTab]
+    ? activeTab
+    : DEFAULT_ALLIANCE_PAGE_TAB;
+
   // Without a database row, ESI's member list is all we have, and it is cheap:
-  // ids only. With one, the rows come from `/api/alliance/[allianceId]`.
+  // ids only. With one, the rows come from `/api/alliance/[allianceId]`, and
+  // only for a table tab that is actually shown.
   const tablesQuery = useAllianceTables(
     allianceId,
-    profile !== null && TABLE_TABS.has(activeTab),
+    profile !== null && TABLE_TABS.has(selectedTab),
   );
   const tables = tablesQuery.data;
   const tablesLoading = profile !== null && tablesQuery.isPending;
@@ -333,42 +362,17 @@ export default function AlliancePage({
     () => (tables?.wars ?? NO_ROWS).map(toWarRow),
     [tables?.wars],
   );
-  const corporationSummary = profile?.corporationSummary;
-  const sovereigntySummary = profile?.sovereigntySummary;
-  const warSummary = profile?.warSummary;
   const composition = profile?.composition ?? NO_ROWS;
   const executorCeo = profile?.executorCeo ?? null;
-  const sovereigntySystems = sovereigntySummary?.systems ?? 0;
   const corporationCount = profile
     ? profile.corporationSummary.corporations
     : (esiMembers?.data.length ?? 0);
-  const creatorMembership = describeCreatorMembership(
-    profile
-      ? profile.creatorStillMember
-      : corporationRows.length > 0
-        ? corporationRows.some((row) => row.isCreator)
-        : undefined,
-  );
+  const creatorMembership = describeCreatorMembership(profile, corporationRows);
 
-  const hasSovereignty = sovereigntySystems > 0;
-  const hasWars = (warSummary?.total ?? 0) > 0;
   const killEfficiency = iskEfficiency(
     zkill.data?.iskDestroyed,
     zkill.data?.iskLost,
   );
-
-  const visibleTabs: Record<AlliancePageTab, boolean> = {
-    overview: true,
-    corporations: true,
-    sovereignty: hasSovereignty,
-    wars: hasWars,
-    killboard: true,
-  };
-  // `?tab=wars` on an alliance with none would select a tab that is not
-  // rendered, leaving the page blank; show the overview instead.
-  const selectedTab = visibleTabs[activeTab]
-    ? activeTab
-    : DEFAULT_ALLIANCE_PAGE_TAB;
 
   return (
     <Container size="lg" py="md">
