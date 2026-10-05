@@ -237,11 +237,6 @@ describe("a database failure never becomes a cached 404", () => {
     },
     {
       route: "/lp-store",
-      read: "loyaltyStoreOffer.groupBy",
-      fail: () => loyaltyStoreOfferGroupBy.mockRejectedValue(new Error(BLIP)),
-    },
-    {
-      route: "/lp-store",
       read: "corporation.findMany",
       fail: () => corporationFindMany.mockRejectedValue(new Error(BLIP)),
     },
@@ -320,7 +315,7 @@ describe("a database failure never becomes a cached 404", () => {
   it("enumerates every Prisma read on the nine routes", () => {
     // Guards the guard: if a route gains a read, this count fails and whoever
     // added it has to decide whether it needs a case here.
-    expect(cases).toHaveLength(19);
+    expect(cases).toHaveLength(18);
   });
 
   it.each(cases)(
@@ -478,21 +473,35 @@ describe("skills route server data", () => {
 });
 
 describe("lp-store route server data", () => {
-  it("sorts the corporations that have offers by name", async () => {
-    loyaltyStoreOfferGroupBy.mockResolvedValue([
-      { corporationId: 1000002 },
-      { corporationId: 1000001 },
-    ]);
+  it("groups the corporations that have offers by faction, sorted by name", async () => {
+    const gallente = { factionId: 500004, name: "Gallente Federation" };
     corporationFindMany.mockResolvedValue([
-      { corporationId: 1000002, name: "Zainou" },
-      { corporationId: 1000001, name: "Aliastra" },
+      { corporationId: 1000125, name: "CONCORD", faction: null },
+      { corporationId: 1000002, name: "Zainou", faction: gallente },
+      { corporationId: 1000001, name: "Aliastra", faction: gallente },
     ]);
     expect(await propsOf("~/app/lp-store/page")).toEqual({
-      corporations: [
-        { corporationId: 1000001, name: "Aliastra" },
-        { corporationId: 1000002, name: "Zainou" },
+      groups: [
+        {
+          faction: gallente,
+          corporations: [
+            { corporationId: 1000001, name: "Aliastra" },
+            { corporationId: 1000002, name: "Zainou" },
+          ],
+        },
+        {
+          faction: null,
+          corporations: [{ corporationId: 1000125, name: "CONCORD" }],
+        },
       ],
     });
+    // One query: only corporations with at least one offer, no separate groupBy.
+    expect(corporationFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { LoyaltyStoreOffer: { some: {} } },
+      }),
+    );
+    expect(loyaltyStoreOfferGroupBy).not.toHaveBeenCalled();
   });
 });
 

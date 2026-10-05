@@ -8,6 +8,7 @@ import {
   loadSdeFiles,
   optionalBoolean,
   optionalNumber,
+  present,
 } from "../../../helpers";
 
 export interface IngestSdeMarketGroupsEventPayload {
@@ -37,13 +38,13 @@ export const ingestSdeMarketGroups = defineJob<
       idField: "marketGroupId",
       delegate: prisma.marketGroup,
       toRow: (record, id): Prisma.MarketGroupCreateManyInput => {
-        const iconId = optionalNumber(record.iconID);
+        const iconId = present(iconIds, optionalNumber(record.iconID));
         return {
           marketGroupId: id,
           name: enString(record.name) ?? "",
           description: enString(record.description) ?? "",
           parentMarketGroupId: optionalNumber(record.parentGroupID),
-          iconId: iconId != null && iconIds.has(iconId) ? iconId : null,
+          iconId,
           hasTypes: optionalBoolean(record.hasTypes),
           isDeleted: false,
         };

@@ -592,6 +592,7 @@ model Faction {
   militiaCorporationId Int?
   alliances            Alliance[]
   corporations         Corporation[]            @relation("CorporationFaction")
+  enlistedCorporations Corporation[]            @relation("CorporationEnlistedFaction")
   factionCorporation   Corporation?             @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   corporationId        Int?
   sizeFactor           Float
@@ -641,9 +642,15 @@ model Corporation {
   creatorId                  Int?
   dateFounded                DateTime?
   description                String?
-  // This cannot be null, but is a workaround for inserting mutually referencing entries
+  /// The faction an NPC corporation belongs to (npcCorporations.yaml `factionID`,
+  /// written by ingestSdeNpcCorporations). Player corporations have none.
   faction                    Faction?                     @relation("CorporationFaction", fields: [factionId], references: [factionId])
   factionId                  Int?
+  /// The faction this corporation is enlisted with in Faction Warfare (ESI
+  /// `enlisted_faction_id`). Set for enlisted player corporations and the NPC
+  /// militia corporations; null for almost every other NPC corporation.
+  enlistedFaction            Faction?                     @relation("CorporationEnlistedFaction", fields: [enlistedFactionId], references: [factionId])
+  enlistedFactionId          Int?
   // This cannot be null, but is a workaround for inserting mutually referencing entries
   homeStation                Station?                     @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
   homeStationId              Int?
@@ -712,6 +719,7 @@ model Corporation {
 
   @@index([creatorId])
   @@index([factionId])
+  @@index([enlistedFactionId])
   @@index([homeStationId])
   @@index([allianceId])
   @@index([ceoId])
