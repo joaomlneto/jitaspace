@@ -273,11 +273,19 @@ describe("readAllianceProfile", () => {
   });
 });
 
-describe("getAllianceProfile", () => {
-  it("degrades to null when the database fails", async () => {
+describe("loadAllianceProfile", () => {
+  it("reports a database failure instead of throwing", async () => {
     mockPrisma.alliance.findUnique.mockRejectedValue(new Error("down"));
-    await expect(loadData().getAllianceProfile(ALLIANCE_ID)).resolves.toBe(
-      null,
-    );
+    await expect(loadData().loadAllianceProfile(ALLIANCE_ID)).resolves.toEqual({
+      ok: false,
+    });
+  });
+
+  it("passes an unstored alliance through as a good read", async () => {
+    mockPrisma.alliance.findUnique.mockResolvedValue(null);
+    await expect(loadData().loadAllianceProfile(ALLIANCE_ID)).resolves.toEqual({
+      ok: true,
+      profile: null,
+    });
   });
 });

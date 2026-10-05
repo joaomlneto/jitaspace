@@ -296,16 +296,24 @@ export async function readAllianceProfile(
   };
 }
 
+/** What the page gets from {@link loadAllianceProfile}. */
+export type AllianceProfileResult =
+  | { ok: true; profile: AllianceProfile | null }
+  | { ok: false };
+
 /**
  * The page renders from ESI without this half, so a database failure degrades
- * to the ESI-only page instead of erroring the route.
+ * to the ESI-only page instead of erroring the route. `ok: false` tells the
+ * caller the read failed, so it can keep that degraded render out of the ISR
+ * cache; `profile: null` is an alliance we have not stored, which is
+ * legitimately cached.
  */
-export async function getAllianceProfile(
+export async function loadAllianceProfile(
   allianceId: number,
-): Promise<AllianceProfile | null> {
+): Promise<AllianceProfileResult> {
   try {
-    return await readAllianceProfile(allianceId);
+    return { ok: true, profile: await readAllianceProfile(allianceId) };
   } catch {
-    return null;
+    return { ok: false };
   }
 }

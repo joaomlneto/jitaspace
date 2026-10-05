@@ -7,6 +7,7 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen, within } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
+import type { AllianceProfileResult } from "~/app/alliance/[allianceId]/data";
 import type * as PageModule from "~/app/alliance/[allianceId]/page";
 import type { AllianceProfile } from "~/app/alliance/[allianceId]/types";
 import type { ZkbStats } from "~/app/alliance/[allianceId]/zkillboard";
@@ -22,8 +23,13 @@ const mockGetAlliancesAllianceId =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockGetCorporationsCorporationId =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockGetAllianceProfile =
-  jest.fn<(id: number) => Promise<AllianceProfile | null>>();
+const mockLoadAllianceProfile =
+  jest.fn<(id: number) => Promise<AllianceProfileResult>>();
+const mockConnection = jest.fn<() => Promise<void>>();
+
+// The page's ESI reads run inside `"use cache"`, which Jest does not apply.
+jest.mock("next/cache", () => ({ cacheLife: jest.fn(), cacheTag: jest.fn() }));
+jest.mock("next/server", () => ({ connection: () => mockConnection() }));
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({}),
@@ -154,7 +160,7 @@ jest.mock("~/app/alliance/[allianceId]/zkillboard", () => ({
 }));
 
 jest.mock("~/app/alliance/[allianceId]/data", () => ({
-  getAllianceProfile: (id: number) => mockGetAllianceProfile(id),
+  loadAllianceProfile: (id: number) => mockLoadAllianceProfile(id),
 }));
 
 jest.mock("next/link", () => ({
@@ -587,17 +593,52 @@ describe("alliance page server wrapper", () => {
     const tree = Page({ params: Promise.resolve({ allianceId: id }) });
     expect(tree.type).toBe(Suspense);
     const child = tree.props.children;
-    return child.type(child.props) as Promise<{
-      props: { allianceId: number; profile: AllianceProfile | null };
-    }>;
+    // PageContent wraps the client page in nuqs's React adapter.
+    return (
+      child.type(child.props) as Promise<{
+        props: {
+          children: {
+            props: { allianceId: number; profile: AllianceProfile | null };
+          };
+        };
+      }>
+    ).then((adapter) => adapter.props.children);
   }
 
   it("hands the client page the parsed id and the database profile", async () => {
-    mockGetAllianceProfile.mockResolvedValue(profile);
+    mockLoadAllianceProfile.mockResolvedValue({ ok: true, profile });
     const element = await runWrapper("99005338");
     expect(element.props.allianceId).toBe(99005338);
     expect(element.props.profile).toBe(profile);
-    expect(mockGetAllianceProfile).toHaveBeenCalledWith(99005338);
+    expect(mockLoadAllianceProfile).toHaveBeenCalledWith(99005338);
+    // A good read is cacheable: nothing opts the render out of ISR.
+    expect(mockConnection).not.toHaveBeenCalled();
+  });
+
+  it("caches an alliance we have not stored, rendered from ESI", async () => {
+    mockLoadAllianceProfile.mockResolvedValue({ ok: true, profile: null });
+    const element = await runWrapper("99005338");
+    expect(element.props.profile).toBeNull();
+    expect(mockConnection).not.toHaveBeenCalled();
+  });
+
+  it("keeps a render degraded by a database failure out of the ISR cache", async () => {
+    mockLoadAllianceProfile.mockResolvedValue({ ok: false });
+    mockConnection.mockResolvedValue(undefined);
+    const element = await runWrapper("99005338");
+    expect(element.props.profile).toBeNull();
+    expect(mockConnection).toHaveBeenCalled();
+  });
+
+  it("lists only a placeholder id the page 404s without a query", async () => {
+    const { generateStaticParams } =
+      require("~/app/alliance/[allianceId]/page") as typeof PageModule;
+    const params = generateStaticParams();
+    expect(params).toEqual([{ allianceId: "0" }]);
+    await expect(runWrapper(params[0]!.allianceId)).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(mockLoadAllianceProfile).not.toHaveBeenCalled();
   });
 
   it("404s an id that isn't the canonical spelling", async () => {
@@ -617,7 +658,7 @@ describe("alliance page server wrapper", () => {
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Exec Corp" },
     });
-    mockGetAllianceProfile.mockResolvedValue(profile);
+    mockLoadAllianceProfile.mockResolvedValue({ ok: true, profile });
     const { generateMetadata } =
       require("~/app/alliance/[allianceId]/page") as typeof PageModule;
 
@@ -629,5 +670,17 @@ describe("alliance page server wrapper", () => {
     expect(metadata.description).toContain(
       "400 pilots in 2 corporations and holds sovereignty over 2 systems",
     );
+    expect(metadata.title).toBe("Pandemic Horde");
+  });
+
+  it("leaves metadata empty when ESI does not know the alliance", async () => {
+    mockGetAlliancesAllianceId.mockRejectedValue(new Error("404"));
+    mockLoadAllianceProfile.mockResolvedValue({ ok: false });
+    const { generateMetadata } =
+      require("~/app/alliance/[allianceId]/page") as typeof PageModule;
+
+    await expect(
+      generateMetadata({ params: Promise.resolve({ allianceId: "99005338" }) }),
+    ).resolves.toEqual({});
   });
 });
