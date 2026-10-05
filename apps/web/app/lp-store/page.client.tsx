@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Anchor,
@@ -17,6 +17,7 @@ import {
   Title,
   Tooltip,
   useMantineTheme,
+  VisuallyHidden,
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
@@ -64,6 +65,13 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
   // With the toggle on, hold the list while the balances load rather than
   // showing every corporation only to remove most of them a moment later.
   const awaitingBalances = onlyWithLp && hasToken && isLoading;
+  // Why the switch is disabled, when it is for a reason other than loading.
+  const unavailableHint = !hasToken
+    ? "Sign in with a character that has granted access to its loyalty points"
+    : !balancesLoaded && !isLoading
+      ? "Couldn't load your loyalty points"
+      : null;
+  const unavailableHintId = useId();
   const corporationIdsWithLp = useMemo(
     () =>
       new Set(
@@ -122,8 +130,8 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
               appeared then would wrap onto its own row on a phone and push the
               whole list down. */}
           <Tooltip
-            label="Sign in with a character that has granted access to its loyalty points"
-            disabled={hasToken}
+            label={unavailableHint}
+            disabled={unavailableHint === null}
             events={{ hover: true, focus: true, touch: true }}
             multiline
             w={260}
@@ -131,10 +139,22 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
             <div>
               <Switch
                 label="Only corporations I have LP with"
-                checked={onlyWithLp}
+                // The saved preference shows only where it takes effect, so a
+                // disabled switch is never drawn ON next to an unfiltered list.
+                checked={onlyWithLp && (balancesLoaded || awaitingBalances)}
                 disabled={!balancesLoaded}
+                // The tooltip cannot be reached by keyboard (a disabled input
+                // takes no focus), so the reason is also exposed this way.
+                aria-describedby={
+                  unavailableHint === null ? undefined : unavailableHintId
+                }
                 onChange={(event) => setOnlyWithLp(event.currentTarget.checked)}
               />
+              {unavailableHint !== null && (
+                <VisuallyHidden id={unavailableHintId}>
+                  {unavailableHint}
+                </VisuallyHidden>
+              )}
             </div>
           </Tooltip>
         </Group>
@@ -159,6 +179,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
         {awaitingBalances && (
           <Stack
             gap="sm"
+            role="status"
             aria-busy="true"
             aria-label="Loading your loyalty points"
           >

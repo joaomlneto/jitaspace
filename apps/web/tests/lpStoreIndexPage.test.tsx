@@ -284,10 +284,25 @@ describe("LP Store index page (client)", () => {
       // nothing shifts when the auth store rehydrates.
       renderPage();
       expect(toggle()).toBeDisabled();
+      // Exposed to assistive tech, since a disabled input takes no focus...
+      expect(toggle()).toHaveAccessibleDescription(
+        "Sign in with a character that has granted access to its loyalty points",
+      );
+      // ...and as a tooltip for pointer and touch users.
       fireEvent.mouseEnter(toggle().closest("div")!.parentElement!);
-      expect(
-        await screen.findByText(/granted access to its loyalty points/),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        /granted access to its loyalty points/,
+      );
+    });
+
+    it("is drawn off where it cannot take effect, but keeps the preference", () => {
+      window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
+      renderPage(); // signed out: the full list, so the switch must not say ON
+      expect(toggle()).not.toBeChecked();
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+      expect(window.localStorage.getItem(ONLY_WITH_LP_STORAGE_KEY)).toBe(
+        "true",
+      );
     });
 
     it("is disabled until the balances have loaded", () => {
@@ -309,14 +324,24 @@ describe("LP Store index page (client)", () => {
       expect(screen.getByText("Caldari Navy")).toBeInTheDocument();
     });
 
-    it("shows everything, toggle disabled, if the first request failed", async () => {
+    it("shows everything, toggle off and disabled, if the first request failed", () => {
       window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
       signIn({ loyaltyPointsMap: {}, isError: true, data: undefined });
       renderPage();
-      await waitFor(() => expect(toggle()).toBeChecked());
       expect(toggle()).toBeDisabled();
+      expect(toggle()).not.toBeChecked();
+      expect(toggle()).toHaveAccessibleDescription(
+        "Couldn't load your loyalty points",
+      );
       expect(screen.getByText("Federation Navy")).toBeInTheDocument();
       expect(screen.getByText("CONCORD")).toBeInTheDocument();
+    });
+
+    it("gives no unavailable hint once the balances have loaded", () => {
+      signIn();
+      renderPage();
+      expect(toggle()).toBeEnabled();
+      expect(toggle()).not.toHaveAttribute("aria-describedby");
     });
 
     it("hides corporations without LP, and factions left empty", async () => {
@@ -367,9 +392,12 @@ describe("LP Store index page (client)", () => {
       window.localStorage.setItem(ONLY_WITH_LP_STORAGE_KEY, "true");
       signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
       renderPage();
+      // A named status region, which assistive tech announces.
       expect(
-        await screen.findByLabelText("Loading your loyalty points"),
-      ).toBeInTheDocument();
+        await screen.findByRole("status", {
+          name: "Loading your loyalty points",
+        }),
+      ).toHaveAttribute("aria-busy", "true");
       // Not every corporation, only to remove most of them a moment later.
       expect(screen.queryByText("Federation Navy")).toBeNull();
       expect(screen.queryByText("CONCORD")).toBeNull();
