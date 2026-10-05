@@ -47,7 +47,7 @@ export function StatCard({
         >
           {label}
         </Text>
-        <Text component="div" fw={600} c="gray.0">
+        <Text component="div" fw={600} c="bright">
           {value}
         </Text>
         {sub !== undefined && (
@@ -74,7 +74,7 @@ export function HeroStat({
       >
         {label}
       </Text>
-      <Text component="div" fw={600} c="gray.0">
+      <Text component="div" fw={600} c="bright">
         {value}
       </Text>
     </Stack>
