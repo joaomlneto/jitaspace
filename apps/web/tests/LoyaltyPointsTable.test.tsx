@@ -11,11 +11,23 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
-import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
+import {
+  useCharacterAssets,
+  useCharacterLoyaltyPoints,
+  useCharacterWalletBalance,
+  useFuzzworkRegionalMarketAggregates,
+  useSelectedCharacter,
+} from "@jitaspace/hooks";
 
 import {
   DEFAULT_DATA_TABLE_ENGINE,
@@ -536,4 +548,223 @@ describe("LoyaltyPointsTable — zero-LP offers (divide-by-zero guard)", () => {
       expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
     },
   );
+});
+
+describe("LoyaltyPointsTable — only offers I have the LP / ISK / items for", () => {
+  // Pinned, not imported: renaming one would silently reset everyone's toggle.
+  const KEYS = {
+    lp: "jitaspace/lp-store-only-enough-lp",
+    isk: "jitaspace/lp-store-only-enough-isk",
+    items: "jitaspace/lp-store-only-required-items",
+  };
+  const lpSwitch = () =>
+    screen.getByRole("switch", { name: /^Only offers I have the LP for/ });
+  const iskSwitch = () =>
+    screen.getByRole("switch", { name: /^Only offers I have the ISK for/ });
+  const itemsSwitch = () =>
+    screen.getByRole("switch", { name: /^Only offers I have the items for/ });
+  const renderTable = (tableOffers = offers) =>
+    wrap(
+      React.createElement(LoyaltyPointsTable, {
+        corporations,
+        types,
+        offers: tableOffers,
+      }),
+    );
+
+  // Offer 1001: Corp A, 5,000 LP + 100,000 ISK + 2 × type 200.
+  // Offer 1002: Corp B, 2,500 LP + 50,000 ISK + 100 AK, no items.
+  const signIn = ({
+    loyaltyPoints = {},
+    isk = 0,
+    owned = [],
+    lp = {},
+    wallet = {},
+    assets = {},
+  }: {
+    loyaltyPoints?: Record<number, number>;
+    isk?: number;
+    owned?: { type_id: number; quantity: number }[];
+    lp?: Record<string, unknown>;
+    wallet?: Record<string, unknown>;
+    assets?: Record<string, unknown>;
+  } = {}) => {
+    (useSelectedCharacter as jest.Mock).mockReturnValue({ characterId: 9 });
+    (useCharacterLoyaltyPoints as jest.Mock).mockReturnValue({
+      hasToken: true,
+      loyaltyPointsMap: loyaltyPoints,
+      isLoading: false,
+      data: { data: [] },
+      ...lp,
+    });
+    (useCharacterWalletBalance as jest.Mock).mockReturnValue({
+      isAllowed: true,
+      isLoading: false,
+      data: { data: isk },
+      ...wallet,
+    });
+    (useCharacterAssets as jest.Mock).mockReturnValue({
+      hasToken: true,
+      // Split across two stacks, as assets in different hangars would be.
+      assets: Object.fromEntries(
+        owned.flatMap(({ type_id, quantity }, i) => [
+          [`${i}a`, { item_id: i * 2, type_id, quantity: quantity - 1 }],
+          [`${i}b`, { item_id: i * 2 + 1, type_id, quantity: 1 }],
+        ]),
+      ),
+      isLoading: false,
+      hasNextPage: false,
+      error: null,
+      ...assets,
+    });
+  };
+
+  beforeEach(() => {
+    window.localStorage.clear();
+    (useFuzzworkRegionalMarketAggregates as jest.Mock).mockReturnValue({
+      data: {},
+    });
+    (useSelectedCharacter as jest.Mock).mockReturnValue(null);
+    (useCharacterLoyaltyPoints as jest.Mock).mockReturnValue({
+      hasToken: false,
+      loyaltyPointsMap: {},
+      isLoading: false,
+    });
+    (useCharacterWalletBalance as jest.Mock).mockReturnValue({
+      isAllowed: false,
+      isLoading: false,
+    });
+    (useCharacterAssets as jest.Mock).mockReturnValue({
+      hasToken: false,
+      assets: {},
+      isLoading: false,
+      hasNextPage: false,
+      error: null,
+    });
+  });
+
+  it("renders all three, disabled when signed out, each saying what it needs", () => {
+    renderTable();
+    for (const [toggle, scope] of [
+      [lpSwitch, "loyalty points"],
+      [iskSwitch, "wallet"],
+      [itemsSwitch, "assets"],
+    ] as const) {
+      expect(toggle()).toBeDisabled();
+      expect(toggle()).not.toBeChecked();
+      expect(toggle()).toHaveAccessibleDescription(
+        new RegExp(`granted access to its ${scope}$`),
+      );
+    }
+    expect(screen.getByText("5,000 LP")).toBeInTheDocument();
+    expect(screen.getByText("2,500 LP")).toBeInTheDocument();
+  });
+
+  it("LP: hides only offers you lack the LP for", () => {
+    // No ISK and no items: the LP toggle must not care.
+    signIn({ loyaltyPoints: { 1: 5000 } });
+    renderTable();
+    fireEvent.click(lpSwitch());
+    expect(lpSwitch()).toBeChecked();
+    expect(screen.getByText("5,000 LP")).toBeInTheDocument();
+    expect(screen.queryByText("2,500 LP")).toBeNull();
+  });
+
+  it("ISK: hides only offers you lack the ISK for", () => {
+    signIn({ isk: 60_000 });
+    renderTable();
+    fireEvent.click(iskSwitch());
+    expect(screen.queryByText("5,000 LP")).toBeNull(); // 100,000 ISK
+    expect(screen.getByText("2,500 LP")).toBeInTheDocument(); // 50,000 ISK
+  });
+
+  it("items: hides only offers whose required items you don't own enough of", () => {
+    signIn({ owned: [{ type_id: 200, quantity: 1 }] });
+    renderTable();
+    fireEvent.click(itemsSwitch());
+    expect(screen.queryByText("5,000 LP")).toBeNull(); // needs 2 × type 200
+    expect(screen.getByText("2,500 LP")).toBeInTheDocument(); // needs none
+  });
+
+  it("combines the filters that are on", () => {
+    signIn({ loyaltyPoints: { 1: 5000, 2: 2500 }, isk: 60_000 });
+    renderTable();
+    fireEvent.click(lpSwitch());
+    expect(screen.getByText("5,000 LP")).toBeInTheDocument();
+    fireEvent.click(iskSwitch());
+    expect(screen.queryByText("5,000 LP")).toBeNull();
+    expect(screen.getByText("2,500 LP")).toBeInTheDocument();
+  });
+
+  it("says so when no offer passes", () => {
+    signIn();
+    renderTable();
+    fireEvent.click(lpSwitch());
+    expect(
+      screen.getByText("No offers pass the filters above."),
+    ).toBeInTheDocument();
+  });
+
+  it("needs only its own scope: without wallet access only ISK is disabled", () => {
+    signIn({
+      loyaltyPoints: { 1: 5000 },
+      wallet: { isAllowed: false, data: undefined },
+    });
+    renderTable();
+    expect(iskSwitch()).toBeDisabled();
+    expect(iskSwitch()).toHaveAccessibleDescription(
+      /granted access to its wallet$/,
+    );
+    expect(lpSwitch()).toBeEnabled();
+    expect(itemsSwitch()).toBeEnabled();
+  });
+
+  it("shows skeleton rows while a filter that is on loads its data", async () => {
+    window.localStorage.setItem(KEYS.items, "true");
+    signIn({ assets: { hasNextPage: true } }); // assets still walking pages
+    renderTable();
+    await waitFor(() => expect(itemsSwitch()).toBeChecked());
+    expect(itemsSwitch()).toBeDisabled();
+    expect(screen.queryByText("5,000 LP")).toBeNull();
+    expect(screen.queryByText("2,500 LP")).toBeNull();
+    // The others are unaffected.
+    expect(lpSwitch()).toBeEnabled();
+  });
+
+  it("shows the reason, switch off, when its request failed", () => {
+    window.localStorage.setItem(KEYS.items, "true");
+    signIn({ assets: { error: new Error("ESI 502"), hasNextPage: true } });
+    renderTable();
+    expect(itemsSwitch()).toBeDisabled();
+    expect(itemsSwitch()).not.toBeChecked();
+    expect(itemsSwitch()).toHaveAccessibleDescription(
+      /Couldn't load your assets$/,
+    );
+    expect(screen.getByText("5,000 LP")).toBeInTheDocument();
+    expect(screen.getByText("2,500 LP")).toBeInTheDocument();
+  });
+
+  it("notes AK isn't checked, only where offers cost AK", () => {
+    const { unmount } = renderTable();
+    expect(lpSwitch()).toHaveAccessibleDescription(/AK costs aren't checked/);
+    unmount();
+    renderTable(offers.map((offer) => ({ ...offer, akCost: null })));
+    expect(lpSwitch()).not.toHaveAccessibleDescription(/AK/);
+  });
+
+  it("remembers each toggle on its own", async () => {
+    signIn({ loyaltyPoints: { 1: 5000 } });
+    const { unmount } = renderTable();
+    fireEvent.click(lpSwitch());
+    expect(window.localStorage.getItem(KEYS.lp)).toBe("true");
+    // Mantine stores the default on mount, so "not on" rather than absent.
+    expect(window.localStorage.getItem(KEYS.isk)).not.toBe("true");
+    expect(window.localStorage.getItem(KEYS.items)).not.toBe("true");
+    unmount();
+
+    renderTable();
+    await waitFor(() => expect(lpSwitch()).toBeChecked());
+    expect(iskSwitch()).not.toBeChecked();
+    expect(screen.queryByText("2,500 LP")).toBeNull();
+  });
 });

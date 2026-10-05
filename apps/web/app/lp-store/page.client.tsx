@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useId, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Anchor,
@@ -11,13 +11,10 @@ import {
   SimpleGrid,
   Skeleton,
   Stack,
-  Switch,
   Text,
   TextInput,
   Title,
-  Tooltip,
   useMantineTheme,
-  VisuallyHidden,
 } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
@@ -31,6 +28,9 @@ import {
 import { CorporationAvatar, FactionAvatar } from "@jitaspace/ui";
 
 import type { LPStoreGroup } from "./groups";
+// The module itself, not the `~/components/LPStore` barrel, which would pull the
+// offers table and its data-table engines into this page.
+import { PersonalFilterSwitch } from "~/components/LPStore/PersonalFilterSwitch";
 import { lpStorePath } from "~/lib/lpStorePath";
 import { filterLPStoreGroups } from "./groups";
 
@@ -83,7 +83,6 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
     balancesLoaded,
     isLoading,
   );
-  const unavailableHintId = useId();
   const corporationIdsWithLp = useMemo(
     () =>
       new Set(
@@ -137,38 +136,13 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
           />
-          {/* Always rendered, so its row exists in the prerendered page too:
-              the auth store rehydrates only on the client, and a switch that
-              appeared then would wrap onto its own row on a phone and push the
-              whole list down. */}
-          <Tooltip
-            label={unavailableHint}
-            disabled={unavailableHint === null}
-            events={{ hover: true, focus: true, touch: true }}
-            multiline
-            w={260}
-          >
-            <div>
-              <Switch
-                label="Only corporations I have LP with"
-                // The saved preference shows only where it takes effect, so a
-                // disabled switch is never drawn ON next to an unfiltered list.
-                checked={onlyWithLp && (balancesLoaded || awaitingBalances)}
-                disabled={!balancesLoaded}
-                // The tooltip cannot be reached by keyboard (a disabled input
-                // takes no focus), so the reason is also exposed this way.
-                aria-describedby={
-                  unavailableHint === null ? undefined : unavailableHintId
-                }
-                onChange={(event) => setOnlyWithLp(event.currentTarget.checked)}
-              />
-              {unavailableHint !== null && (
-                <VisuallyHidden id={unavailableHintId}>
-                  {unavailableHint}
-                </VisuallyHidden>
-              )}
-            </div>
-          </Tooltip>
+          <PersonalFilterSwitch
+            label="Only corporations I have LP with"
+            checked={onlyWithLp && (balancesLoaded || awaitingBalances)}
+            disabled={!balancesLoaded}
+            unavailableHint={unavailableHint}
+            onChange={setOnlyWithLp}
+          />
         </Group>
         {!awaitingBalances &&
           visibleGroups.length === 0 &&
