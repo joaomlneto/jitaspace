@@ -9,7 +9,7 @@ import AlliancesPage from "./page.client";
 export const metadata = pageMetadata({
   title: "Alliances",
   description:
-    "Every open alliance in EVE Online — member corporations, pilot counts, executors and founding dates, refreshed hourly.",
+    "Every open alliance in EVE Online — member corporations, pilot counts, sovereignty, executors and founding dates, refreshed hourly.",
   path: "/alliances",
   badge: "Alliances",
 });
@@ -24,7 +24,7 @@ export default async function Page() {
   // would make `notFound()` a *successful* render that Next stores and serves
   // for the whole `cacheLife` window. See CLAUDE.md → "Never catch a database
   // error inside a `"use cache"` scope".
-  const [alliances, membership] = await Promise.all([
+  const [alliances, membership, sovereignty] = await Promise.all([
     prisma.alliance.findMany({
       select: {
         allianceId: true,
@@ -43,10 +43,19 @@ export default async function Page() {
       _count: { corporationId: true },
       _sum: { memberCount: true },
     }),
+    prisma.solarSystemSovereignty.groupBy({
+      by: ["allianceId"],
+      where: { allianceId: { not: null } },
+      _count: { solarSystemId: true },
+    }),
   ]);
 
   const membershipByAlliance = new Map(
     membership.map((entry) => [entry.allianceId, entry]),
+  );
+
+  const sovSystemsByAlliance = new Map(
+    sovereignty.map((entry) => [entry.allianceId, entry._count.solarSystemId]),
   );
 
   const rows: AllianceRow[] = alliances.map((alliance) => {
@@ -61,6 +70,7 @@ export default async function Page() {
       factionName: alliance.faction?.name ?? null,
       corporations: members?._count.corporationId ?? 0,
       pilots: members?._sum.memberCount ?? 0,
+      sovSystems: sovSystemsByAlliance.get(alliance.allianceId) ?? 0,
     };
   });
 

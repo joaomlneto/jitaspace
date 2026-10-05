@@ -24,6 +24,8 @@ export interface AllianceRow {
   factionName: string | null;
   corporations: number;
   pilots: number;
+  /** Solar systems the alliance holds sovereignty over. */
+  sovSystems: number;
 }
 
 export interface PageProps {
@@ -87,6 +89,15 @@ const columns: DataTableColumn<AllianceRow>[] = [
     cell: (alliance) => numberFormat.format(alliance.corporations),
   },
   {
+    id: "sovSystems",
+    header: "Sov systems",
+    accessor: "sovSystems",
+    sortable: true,
+    filter: { type: "range", min: 0 },
+    align: "right",
+    cell: (alliance) => numberFormat.format(alliance.sovSystems),
+  },
+  {
     id: "executor",
     header: "Executor",
     accessor: "executorName",
@@ -94,12 +105,13 @@ const columns: DataTableColumn<AllianceRow>[] = [
     cell: executorCell,
   },
   {
-    id: "faction",
-    header: "Faction",
+    // ESI's alliance `faction_id`: the faction it is enlisted with in
+    // Factional Warfare, if any.
+    id: "militia",
+    header: "Militia",
     accessor: "factionName",
     sortable: true,
     filter: { type: "select" },
-    defaultVisible: false,
   },
   {
     id: "founded",
