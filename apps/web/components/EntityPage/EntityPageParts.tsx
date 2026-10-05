@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
 
 /**
@@ -10,14 +10,40 @@ import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
  * under the hero title.
  */
 
-/** A page's hero card: framed artwork on the left, title and stats beside it. */
+/**
+ * A page's hero card: framed artwork on the left, title and stats beside it.
+ * `banner` runs edge to edge above the content (a corporation's palette
+ * stripe); `style` and `contentClassName` let a page tint the card (its
+ * palette wash).
+ */
 export function HeroCard({
   artwork,
+  banner,
+  style,
+  contentClassName,
   children,
-}: Readonly<{ artwork: ReactNode; children: ReactNode }>) {
+}: Readonly<{
+  artwork: ReactNode;
+  banner?: ReactNode;
+  style?: CSSProperties;
+  contentClassName?: string;
+  children: ReactNode;
+}>) {
   return (
-    <Paper withBorder radius="md" p="lg">
-      <Group align="flex-start" gap="xl" wrap="wrap">
+    <Paper
+      withBorder
+      radius="md"
+      p={0}
+      style={{ overflow: "hidden", ...style }}
+    >
+      {banner}
+      <Group
+        align="flex-start"
+        gap="xl"
+        wrap="wrap"
+        p="lg"
+        className={contentClassName}
+      >
         <Box
           style={{
             width: 170,
@@ -81,7 +107,7 @@ export function StatCard({
         >
           {label}
         </Text>
-        <Text component="div" fw={600} c="gray.0">
+        <Text component="div" fw={600} c="bright">
           {value}
         </Text>
         {sub !== undefined && (
@@ -108,7 +134,7 @@ export function HeroStat({
       >
         {label}
       </Text>
-      <Text component="div" fw={600} c="gray.0">
+      <Text component="div" fw={600} c="bright">
         {value}
       </Text>
     </Stack>

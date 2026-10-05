@@ -94,6 +94,8 @@ const rows = {
   race: [1],
   bloodline: [1],
   typeList: [7],
+  mission: [875],
+  dungeon: [43],
 };
 
 const idField: Record<keyof typeof rows, string> = {
@@ -108,10 +110,12 @@ const idField: Record<keyof typeof rows, string> = {
   race: "raceId",
   bloodline: "bloodlineId",
   typeList: "typeListId",
+  mission: "missionId",
+  dungeon: "dungeonId",
 };
 
 // The stubs forward their arguments so the suite can assert the `where` and
-// `orderBy` clauses — without that, deleting either from all 13 sources is a
+// `orderBy` clauses — without that, deleting either from any source is a
 // mutation no test can see.
 type QueryMock = jest.Mock<(args?: unknown) => Promise<unknown[]>>;
 
@@ -424,7 +428,7 @@ describe("sitemap", () => {
     // every family fails together and N fragments bury the incident.
     const { message, extra } = soleCapture();
     expect(message).toContain("Sitemap degraded");
-    expect(message).toContain("2 of 12 entity families unavailable");
+    expect(message).toContain("2 of 14 entity families unavailable");
     expect(extra.failedFamilies).toEqual(["/region", "/station"]);
     expect(extra.staticRoutesFailed).toBe(false);
   });
@@ -467,7 +471,7 @@ describe("sitemap", () => {
     const second = mockCaptureException.mock.calls[1];
     if (!second) throw new Error("no second capture");
     expect((second[0] as Error).message).toContain(
-      "12 of 12 entity families unavailable",
+      "14 of 14 entity families unavailable",
     );
   });
 
@@ -587,6 +591,8 @@ describe("sitemap", () => {
         "https://www.jita.space/race/1",
         "https://www.jita.space/bloodline/1",
         "https://www.jita.space/type-list/7",
+        "https://www.jita.space/mission/875",
+        "https://www.jita.space/dungeon/43",
         "https://www.jita.space/lp-store/Caldari_Navy",
       ]),
     );
@@ -646,8 +652,8 @@ describe("sitemap", () => {
     expect(pages).toEqual([{ id: 0 }, { id: 1 }]);
 
     // 6 crawlable static routes (incl. the optional catch-all's parent)
-    // + 60,000 types + 11 single-row families.
-    const TOTAL = 6 + 60_000 + 11;
+    // + 60,000 types + 13 single-row families.
+    const TOTAL = 6 + 60_000 + 13;
     const first = await mod.default({ id: Promise.resolve("0") });
     const second = await mod.default({ id: Promise.resolve("1") });
 

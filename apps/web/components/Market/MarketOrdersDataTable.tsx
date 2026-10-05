@@ -84,6 +84,46 @@ function nowrap(content: string) {
   );
 }
 
+/**
+ * Market orders sit in an NPC station or an Upwell structure, and a location
+ * id beyond int32 is a structure. Structure names are private: resolving one
+ * takes a character on its access list, so a lookup per row would mostly earn
+ * 403s, each against ESI's error limit. The system it is in is public.
+ */
+const MAX_STATION_ID = 2_147_483_647;
+
+function LocationName({
+  order,
+}: Readonly<{
+  order: Pick<RegionalMarketOrder, "location_id" | "system_id">;
+}>) {
+  if (order.location_id > MAX_STATION_ID) {
+    return (
+      <EveEntityAnchor
+        inherit
+        entityId={order.location_id}
+        category="structure"
+        target="_blank"
+      >
+        <Text inherit>
+          Structure in{" "}
+          <EveEntityName
+            span
+            inherit
+            entityId={order.system_id}
+            category="solar_system"
+          />
+        </Text>
+      </EveEntityAnchor>
+    );
+  }
+  return (
+    <EveEntityAnchor inherit entityId={order.location_id} target="_blank">
+      <EveEntityName inherit entityId={order.location_id} />
+    </EveEntityAnchor>
+  );
+}
+
 /** An order's station or structure, with its system's security status. */
 export function OrderLocation({
   order,
@@ -99,9 +139,7 @@ export function OrderLocation({
         <SolarSystemSecurityStatusBadge solarSystemId={order.system_id} />
       </Box>
       <Box className={classes.truncate} maw={maw}>
-        <EveEntityAnchor inherit entityId={order.location_id} target="_blank">
-          <EveEntityName inherit entityId={order.location_id} />
-        </EveEntityAnchor>
+        <LocationName order={order} />
       </Box>
     </Group>
   );

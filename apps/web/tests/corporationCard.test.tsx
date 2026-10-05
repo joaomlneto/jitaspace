@@ -183,6 +183,43 @@ describe("CorporationCard", () => {
     expect(screen.queryByText(/%$/)).not.toBeInTheDocument();
   });
 
+  it("shows a palette stripe only when the corporation has a palette", () => {
+    const {
+      CorporationCard,
+    } = require("../components/Card/CorporationCard/CorporationCard");
+
+    mockUseCorporation.mockReturnValue({
+      data: {
+        data: {
+          ticker: "GEWNS",
+          palette: { main_color: "#000000", secondary_color: "#b3fb04" },
+        },
+      },
+    });
+    const { unmount } = render(
+      <MantineProvider>
+        <CorporationCard corporationId={667531913} />
+      </MantineProvider>,
+    );
+    const stripe = screen.getByTestId("corporation-palette-stripe");
+    expect(stripe.children).toHaveLength(2);
+    expect(screen.getByText("GEWNS")).toBeInTheDocument();
+    unmount();
+
+    mockUseCorporation.mockReturnValue({
+      data: { data: { ticker: "CONCO" } },
+    });
+    render(
+      <MantineProvider>
+        <CorporationCard corporationId={1000125} />
+      </MantineProvider>,
+    );
+    expect(
+      screen.queryByTestId("corporation-palette-stripe"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("CONCO")).toBeInTheDocument();
+  });
+
   it("renders a header right section when provided", () => {
     mockUseCorporation.mockReturnValue({
       data: {

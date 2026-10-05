@@ -65,6 +65,14 @@ import type { CorporationPageData, NamedRef } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
 import {
+  corporationPaletteClasses,
+  CorporationPaletteStripe,
+  CorporationPaletteSwatches,
+  CorporationTickerPaletteBadge,
+  getCorporationPaletteSlots,
+  useCorporationPaletteVars,
+} from "~/components/CorporationPalette";
+import {
   HeroCard,
   HeroStat,
   SectionHeading,
@@ -457,6 +465,12 @@ export default function CorporationPage({
   );
   const npc = profile?.npc ?? null;
   const warSummary = profile?.warSummary;
+  // ESI's palette is not stored, so the stripe, wash and coloured ticker
+  // arrive with ESI, after hydration. Most NPC corporations have none.
+  const paletteSlots = getCorporationPaletteSlots(esiCorporation?.data.palette);
+  const paletteColors = paletteSlots.map(({ color }) => color);
+  const paletteVars = useCorporationPaletteVars(paletteColors);
+  const hasPalette = paletteColors.length > 0;
 
   return (
     <Container size="lg" py="md">
@@ -467,7 +481,17 @@ export default function CorporationPage({
               corporationId={corporationId}
               size={128}
               radius="sm"
+              className={corporationPaletteClasses.logoBacking}
             />
+          }
+          banner={
+            hasPalette ? (
+              <CorporationPaletteStripe slots={paletteSlots} />
+            ) : undefined
+          }
+          style={paletteVars}
+          contentClassName={
+            hasPalette ? corporationPaletteClasses.wash : undefined
           }
         >
           <Breadcrumbs fz="sm">
@@ -490,9 +514,12 @@ export default function CorporationPage({
               {identity.name ?? `Corporation ${corporationId}`}
             </Title>
             {identity.ticker && (
-              <Badge variant="light" size="lg">
-                {`[${identity.ticker}]`}
-              </Badge>
+              <CorporationTickerPaletteBadge
+                ticker={`[${identity.ticker}]`}
+                colors={paletteColors}
+                variant="light"
+                size="lg"
+              />
             )}
             {isNpc && (
               <Badge color="grape" variant="light">
@@ -786,6 +813,14 @@ export default function CorporationPage({
                         >
                           {identity.warEligible ? "Yes" : "No"}
                         </Badge>
+                      }
+                    />
+                  )}
+                  {hasPalette && (
+                    <StatCard
+                      label="Colors"
+                      value={
+                        <CorporationPaletteSwatches slots={paletteSlots} />
                       }
                     />
                   )}

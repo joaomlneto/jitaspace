@@ -627,10 +627,10 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
     priceHistoryParsers,
     { urlKeys: priceHistoryUrlKeys },
   );
-  // The channel is one click away rather than on: with the min/max bars and
-  // both averages it buried the median line.
+  // Every series starts on, as in the game's market window; the legend
+  // toggles hide what the reader doesn't want.
   const [visible, setVisible] = useState<Set<SeriesId>>(
-    () => new Set(["median", "range", "ma5", "ma20"]),
+    () => new Set(SERIES.map((series) => series.id)),
   );
 
   const { regionOptions, marketRegionIds } = useRegionOptions();

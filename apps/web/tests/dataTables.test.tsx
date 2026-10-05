@@ -296,6 +296,16 @@ describe("MarketOrdersDataTable", () => {
     expect(screen.getByText("entity-60003760")).toBeInTheDocument();
   });
 
+  it("names a structure by its system, without looking its id up", () => {
+    // ESI's /universe/names 400s on an id beyond int32, and structure names
+    // need an authorised character, so the cell never asks for one.
+    renderOrders([{ ...SAMPLE_ORDER, location_id: 1_044_752_365_771 }]);
+
+    expect(screen.getByText(/Structure in/)).toBeInTheDocument();
+    expect(screen.getByText("entity-30000142")).toBeInTheDocument();
+    expect(screen.queryByText("entity-1044752365771")).not.toBeInTheDocument();
+  });
+
   it("renders the issued time", () => {
     renderOrders();
     expect(screen.getAllByTestId("time-ago").length).toBeGreaterThanOrEqual(1);

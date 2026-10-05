@@ -465,6 +465,46 @@ describe("corporation page — player corporation", () => {
     expect(screen.queryByRole("tab", { name: /Description/ })).toBeNull();
   });
 
+  it("shows the palette stripe and colours when the corporation has one", () => {
+    mockEsi({
+      name: "Astral",
+      ticker: "ASRO",
+      member_count: 10,
+      tax_rates: { isk: 10, loyalty_point: 0 },
+      home_station_id: 60003760,
+      shares: 1,
+      war_eligible: false,
+      state: "active",
+      friendly_fire: "legal",
+      description: "",
+      palette: {
+        main_color: "#0a3db0",
+        secondary_color: "#f6ed0a",
+        tertiary_color: "#ed1608",
+      },
+    });
+    renderPage(PLAYER_ID, player);
+
+    expect(
+      screen.getByTestId("corporation-palette-stripe").children,
+    ).toHaveLength(3);
+    expect(screen.getByText("Colors")).toBeInTheDocument();
+    expect(screen.getByLabelText("Main colour #0a3db0")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Tertiary colour #ed1608"),
+    ).toBeInTheDocument();
+  });
+
+  it("omits the palette stripe and colours when the corporation has none", () => {
+    mockEsi(undefined);
+    renderPage(PLAYER_ID, player);
+
+    expect(
+      screen.queryByTestId("corporation-palette-stripe"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Colors")).not.toBeInTheDocument();
+  });
+
   it("shows the description, alliance history and wars tabs", () => {
     mockEsi(undefined);
     const { unmount } = renderPage(PLAYER_ID, player, "?tab=description");
