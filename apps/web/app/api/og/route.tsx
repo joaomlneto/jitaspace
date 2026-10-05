@@ -194,7 +194,6 @@ function Card({
               borderRadius: 16,
               border: `1px solid ${PANEL_EDGE}`,
               background: "rgba(8, 11, 17, 0.9)",
-              boxShadow: "0 18px 50px rgba(0, 0, 0, 0.55)",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- Satori renders raw <img>; next/image has no meaning here. */}
