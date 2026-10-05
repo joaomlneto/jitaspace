@@ -5,7 +5,7 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { pageMetadata, toDescription } from "~/lib/metadata";
-import { MISSION_KIND_LABELS, renderMissionText } from "~/lib/missions";
+import { MISSION_KIND_LABELS, missionPlainText } from "~/lib/missions";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { getMission } from "./data";
 import MissionPage from "./page.client";
@@ -31,10 +31,9 @@ export async function generateMetadata({
   return pageMetadata({
     title: `${mission.name} — Mission`,
     description: toDescription(
-      // Placeholders read as their labels ("[Mission Location]") once the
-      // markup is stripped.
+      // Placeholders read as their values, or labels ("[Mission Location]").
       briefing
-        ? renderMissionText(briefing.text, mission.textValues)
+        ? missionPlainText(briefing.text, mission.textValues)
         : undefined,
       `${mission.name}, an EVE Online agent mission — objective, rewards, briefing and dialogue.`,
     ),

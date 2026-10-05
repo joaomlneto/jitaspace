@@ -25,12 +25,18 @@ export async function generateMetadata({
   if (dungeon === null) return {};
   const name = dungeonDisplayName(dungeon);
   const text = dungeon.description ?? dungeon.gameplayDescription;
+  const archetype =
+    dungeon.archetype?.title && dungeon.archetype.title !== "None"
+      ? dungeon.archetype.title
+      : null;
   return pageMetadata({
     title: `${name} — Dungeon`,
     description: toDescription(
       text ?? undefined,
       dungeon.described
-        ? `${name}, an EVE Online ${dungeon.archetype?.title?.toLowerCase() ?? "site"} — description, ship restrictions and the missions that use it.`
+        ? // Archetype titles are category names, singular or plural ("Combat
+          // Sites", "Escalation"), so they are quoted rather than declined.
+          `${name}${archetype ? ` (${archetype})` : ""}, an EVE Online site — its description, ship restrictions and the missions that use it.`
         : `EVE Online dungeon ${dungeonId} — the ${dungeon.missions.length === 1 ? "mission" : "missions"} and agents that use it.`,
     ),
     path: `/dungeon/${dungeonId}`,

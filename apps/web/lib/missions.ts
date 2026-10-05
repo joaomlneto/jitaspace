@@ -379,6 +379,47 @@ const formatValue = (value: string | number) =>
 const PLACEHOLDER = /\{\[(\w+)\]([\w.]+)((?:\s*,\s*\w+=\w+)*)\}/g;
 
 /**
+ * Replace each placeholder in `text` with `known(value)` when `values` has it,
+ * else with `unknown(label)`.
+ */
+function fillPlaceholders(
+  text: string,
+  values: MissionTextValues,
+  known: (value: string) => string,
+  unknown: (label: string) => string,
+): string {
+  return text.replaceAll(
+    PLACEHOLDER,
+    (_match, kind: string, path: string, rawArgs: string) => {
+      const dot = path.lastIndexOf(".");
+      const variable = dot === -1 ? path : path.slice(0, dot);
+      const property = dot === -1 ? "" : path.slice(dot + 1);
+      const args: Record<string, string> = {};
+      for (const [, name, argVariable] of rawArgs.matchAll(/(\w+)=(\w+)/g)) {
+        if (name !== undefined && argVariable !== undefined) {
+          args[name] = argVariable;
+        }
+      }
+
+      const value = values[variable];
+      if (value === undefined) return unknown(missionVariableLabel(variable));
+
+      let rendered = formatValue(value);
+      if (kind === "item" && property === "quantityName") {
+        const quantity =
+          args.quantity === undefined ? undefined : values[args.quantity];
+        if (quantity !== undefined) {
+          rendered = `${formatValue(quantity)} x ${rendered}`;
+        }
+      } else if (property === "nameWithArticle") {
+        rendered = `the ${rendered}`;
+      }
+      return known(rendered);
+    },
+  );
+}
+
+/**
  * Mission text as HTML for the EVE rich-text viewer: newlines become `<br>`,
  * and each placeholder becomes its value in bold when `values` knows it, or its
  * label in brackets, in italics, when it does not ("[Mission Location]") — the
@@ -388,37 +429,27 @@ export function renderMissionText(
   text: string,
   values: MissionTextValues = {},
 ): string {
-  return text
-    .replaceAll(/\r?\n/g, "<br>")
-    .replaceAll(
-      PLACEHOLDER,
-      (_match, kind: string, path: string, rawArgs: string) => {
-        const dot = path.lastIndexOf(".");
-        const variable = dot === -1 ? path : path.slice(0, dot);
-        const property = dot === -1 ? "" : path.slice(dot + 1);
-        const args: Record<string, string> = {};
-        for (const [, name, argVariable] of rawArgs.matchAll(/(\w+)=(\w+)/g)) {
-          if (name !== undefined && argVariable !== undefined) {
-            args[name] = argVariable;
-          }
-        }
+  return fillPlaceholders(
+    text.replaceAll(/\r?\n/g, "<br>"),
+    values,
+    (value) => `<b>${escapeHtml(value)}</b>`,
+    (label) => `<i>[${escapeHtml(label)}]</i>`,
+  );
+}
 
-        const value = values[variable];
-        if (value === undefined) {
-          return `<i>[${escapeHtml(missionVariableLabel(variable))}]</i>`;
-        }
-
-        let rendered = formatValue(value);
-        if (kind === "item" && property === "quantityName") {
-          const quantity =
-            args.quantity === undefined ? undefined : values[args.quantity];
-          if (quantity !== undefined) {
-            rendered = `${formatValue(quantity)} x ${rendered}`;
-          }
-        } else if (property === "nameWithArticle") {
-          rendered = `the ${rendered}`;
-        }
-        return `<b>${escapeHtml(rendered)}</b>`;
-      },
-    );
+/**
+ * The same fill as {@link renderMissionText}, as text: values verbatim and
+ * labels in brackets, with no markup added and nothing escaped. For contexts
+ * that strip markup but never decode entities, such as a meta description.
+ */
+export function missionPlainText(
+  text: string,
+  values: MissionTextValues = {},
+): string {
+  return fillPlaceholders(
+    text,
+    values,
+    (value) => value,
+    (label) => `[${label}]`,
+  );
 }

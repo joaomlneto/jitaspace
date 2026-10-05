@@ -5,7 +5,8 @@ import { prisma } from "~/lib/db";
  *
  * The mission tables hold plain integer ids rather than relations (see the
  * comment above `Mission` in schema.prisma), so each page resolves what they
- * point at in one query per entity kind. Call these from inside a
+ * point at in one query per entity kind. A soft-deleted row reads as missing,
+ * so the page shows its bare id. Call these from inside a
  * `"use cache"` scope, and let them throw: a caught failure there would be
  * stored as an empty page.
  */
@@ -72,7 +73,7 @@ export async function readTypeRefs(
       groupId: true,
       group: { select: { name: true } },
     },
-    where: { typeId: { in: typeIds } },
+    where: { typeId: { in: typeIds }, isDeleted: false },
   });
   const found = new Map(rows.map((row) => [row.typeId, row]));
   // An id with no row still gets an entry, so the page can show the bare id.
@@ -99,7 +100,7 @@ export async function readFactionRefs(
   if (factionIds.length === 0) return new Map();
   const rows = await prisma.faction.findMany({
     select: { factionId: true, name: true },
-    where: { factionId: { in: factionIds } },
+    where: { factionId: { in: factionIds }, isDeleted: false },
   });
   const names = new Map(rows.map((row) => [row.factionId, row.name]));
   return new Map(
@@ -117,7 +118,7 @@ export async function readCorporationRefs(
   if (corporationIds.length === 0) return new Map();
   const rows = await prisma.corporation.findMany({
     select: { corporationId: true, name: true, factionId: true },
-    where: { corporationId: { in: corporationIds } },
+    where: { corporationId: { in: corporationIds }, isDeleted: false },
   });
   const found = new Map(rows.map((row) => [row.corporationId, row]));
   return new Map(

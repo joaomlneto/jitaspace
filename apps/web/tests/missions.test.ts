@@ -7,6 +7,7 @@ import {
   missionKind,
   missionMessageRank,
   missionMessageSlot,
+  missionPlainText,
   missionVariableLabel,
   renderMissionText,
 } from "~/lib/missions";
@@ -168,6 +169,17 @@ describe("renderMissionText", () => {
     expect(renderMissionText("<b>Hi</b> {not a placeholder}")).toBe(
       "<b>Hi</b> {not a placeholder}",
     );
+  });
+});
+
+describe("missionPlainText", () => {
+  it("fills values verbatim and labels in brackets, with no markup", () => {
+    expect(
+      missionPlainText(
+        "{[npcOrganization]agentCorpID.name} needs you in {[location]dungeonLocationID.name}.",
+        { agentCorpID: "Hypothetical A&B <Co>" },
+      ),
+    ).toBe("Hypothetical A&B <Co> needs you in [Mission Location].");
   });
 });
 

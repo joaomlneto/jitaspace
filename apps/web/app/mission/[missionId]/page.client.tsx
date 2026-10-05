@@ -186,7 +186,9 @@ function DialogueLine({
             style={{ letterSpacing: "0.05em" }}
             ta={isPilot ? "right" : "left"}
           >
-            {isPilot ? "You" : speaker === "agent" ? "Agent" : ""} · {label}
+            {[isPilot ? "You" : speaker === "agent" ? "Agent" : null, label]
+              .filter(Boolean)
+              .join(" · ")}
           </Text>
           <MissionText text={text} values={values} />
         </Stack>

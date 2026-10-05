@@ -84,6 +84,23 @@ describe("mission route", () => {
     expect(meta.alternates?.canonical).toContain("/mission/875");
   });
 
+  it("keeps an ampersand in a filled-in name as written", async () => {
+    getMission.mockResolvedValue({
+      ...missionDetail,
+      textValues: { agentCorpID: "Ishukone & Partners" },
+      messages: [
+        {
+          key: "messages.mission.briefing",
+          text: "{[npcOrganization]agentCorpID.name} needs you.",
+        },
+      ],
+    });
+
+    const meta = await mission.generateMetadata(params("missionId", "875"));
+
+    expect(meta.description).toBe("Ishukone & Partners needs you.");
+  });
+
   it("falls back to a generic description without a briefing", async () => {
     getMission.mockResolvedValue({ ...missionDetail, messages: [] });
 
@@ -153,6 +170,16 @@ describe("dungeon route", () => {
 
     expect(meta.title).toBe("Pith Merchant Depot — Dungeon");
     expect(meta.description).toBe("A supply depot.");
+  });
+
+  it("quotes the archetype in the fallback description", async () => {
+    getDungeon.mockResolvedValue({ ...described, description: null });
+
+    const meta = await dungeon.generateMetadata(params("dungeonId", "43"));
+
+    expect(meta.description).toBe(
+      "Pith Merchant Depot (Combat Sites), an EVE Online site — its description, ship restrictions and the missions that use it.",
+    );
   });
 
   it("names an undescribed dungeon by its id", async () => {
