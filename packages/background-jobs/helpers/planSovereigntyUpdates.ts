@@ -32,7 +32,7 @@ export interface SovereigntyUpdatePlan {
   removedSolarSystemIds: number[];
   /**
    * Listed by ESI but not writable: the solar system is not in our SDE tables
-   * yet, or the holding alliance is not in the Alliance table.
+   * yet, or the holding alliance or faction is not in its table.
    */
   skipped: SovereigntyRow[];
   /**
@@ -101,6 +101,7 @@ export const planSovereigntyUpdates = ({
   dbSystems,
   knownSolarSystemIds,
   knownAllianceIds,
+  knownFactionIds,
 }: {
   /** Every system ESI lists, as rows. */
   esiSystems: SovereigntyRow[];
@@ -110,6 +111,8 @@ export const planSovereigntyUpdates = ({
   knownSolarSystemIds: Set<number>;
   /** Alliances present in the Alliance table. */
   knownAllianceIds: Set<number>;
+  /** Factions present in the Faction table. */
+  knownFactionIds: Set<number>;
 }): SovereigntyUpdatePlan => {
   const dbBySystem = new Map(dbSystems.map((row) => [row.solarSystemId, row]));
   const created: SovereigntyRow[] = [];
@@ -120,7 +123,8 @@ export const planSovereigntyUpdates = ({
   for (const row of esiSystems) {
     const writable =
       knownSolarSystemIds.has(row.solarSystemId) &&
-      (row.allianceId === null || knownAllianceIds.has(row.allianceId));
+      (row.allianceId === null || knownAllianceIds.has(row.allianceId)) &&
+      (row.factionId === null || knownFactionIds.has(row.factionId));
     const existing = dbBySystem.get(row.solarSystemId);
     if (!writable) {
       skipped.push(row);

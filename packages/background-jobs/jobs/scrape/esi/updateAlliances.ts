@@ -154,10 +154,23 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
     );
 
     // 5. Sovereignty. After step 1, so every alliance a claim names exists.
-    const sovereignty = await syncSovereignty({
-      knownAllianceIds: new Set(allianceIds),
-      logger: ctx.logger,
-    });
+    // A failure here must not lose the evictions for steps 1-4, which are
+    // already written: the next run would find nothing left to change. So it
+    // is caught, the evictions still go out, and it is rethrown at the end.
+    let sovereignty: Awaited<ReturnType<typeof syncSovereignty>> | undefined;
+    let sovereigntyError: Error | undefined;
+    try {
+      sovereignty = await syncSovereignty({
+        knownAllianceIds: new Set(allianceIds),
+        logger: ctx.logger,
+      });
+    } catch (error) {
+      sovereigntyError = new Error(
+        `Sovereignty sync failed: ${String(error)}`,
+        { cause: error },
+      );
+      ctx.logger.error(`${sovereigntyError.message}; still evicting alliances`);
+    }
 
     // 6. Evict the web app's cached pages for everything that changed. Sent
     // as its own retryable job, so a failed call cannot lose the eviction.
@@ -171,7 +184,7 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
     const allianceIdsToRevalidate = [
       ...new Set([
         ...plan.affectedAllianceIds,
-        ...sovereignty.affectedAllianceIds,
+        ...(sovereignty?.affectedAllianceIds ?? []),
         ...corporationsToCreate.flatMap((id) => memberOf.get(id) ?? []),
       ]),
     ];
@@ -208,12 +221,13 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
           plan.missingCorporationIds.length - corporationsToCreate.length,
         moved: corporationsMoved,
       },
-      sovereignty: sovereignty.stats,
+      sovereignty: sovereignty?.stats ?? null,
       elapsedMs: {
         esi: Math.round(esiElapsedMs),
         total: Math.round(performance.now() - startedAt),
       },
     };
+    if (sovereigntyError) throw sovereigntyError;
     ctx.logger.info("Alliance update finished", stats);
     return { stats };
   },

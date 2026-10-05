@@ -26,7 +26,7 @@ export async function syncSovereignty({
     toSovereigntyRow,
   );
 
-  const [dbSystems, knownSolarSystems] = await Promise.all([
+  const [dbSystems, knownSolarSystems, knownFactions] = await Promise.all([
     prisma.solarSystemSovereignty.findMany({
       omit: { createdAt: true, updatedAt: true },
     }),
@@ -36,6 +36,7 @@ export async function syncSovereignty({
         solarSystemId: { in: esiSystems.map((row) => row.solarSystemId) },
       },
     }),
+    prisma.faction.findMany({ select: { factionId: true } }),
   ]);
 
   const plan = planSovereigntyUpdates({
@@ -45,6 +46,7 @@ export async function syncSovereignty({
       knownSolarSystems.map((system) => system.solarSystemId),
     ),
     knownAllianceIds,
+    knownFactionIds: new Set(knownFactions.map((f) => f.factionId)),
   });
 
   if (plan.skipped.length > 0) {

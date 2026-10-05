@@ -105,6 +105,7 @@ describe("planSovereigntyUpdates", () => {
       dbSystems: [row(allianceClaim(1, 10))],
       knownSolarSystemIds: known(1),
       knownAllianceIds: known(10),
+      knownFactionIds: known(),
     });
 
     expect(plan).toEqual({
@@ -125,6 +126,7 @@ describe("planSovereigntyUpdates", () => {
       dbSystems: [row(allianceClaim(1, 10)), row(allianceClaim(2, 10))],
       knownSolarSystemIds: known(1, 2),
       knownAllianceIds: known(10),
+      knownFactionIds: known(),
     });
 
     expect(plan.changed.map((r) => r.solarSystemId)).toEqual([1, 2]);
@@ -145,6 +147,7 @@ describe("planSovereigntyUpdates", () => {
       ],
       knownSolarSystemIds: known(1, 2, 3),
       knownAllianceIds: known(20, 30),
+      knownFactionIds: known(),
     });
 
     expect(plan.created.map((r) => r.solarSystemId)).toEqual([2]);
@@ -153,6 +156,24 @@ describe("planSovereigntyUpdates", () => {
     expect(plan.affectedAllianceIds.sort((a, b) => a - b)).toEqual([
       10, 20, 30, 40, 50,
     ]);
+  });
+
+  it("skips claims by a faction that is not in the Faction table", () => {
+    const factionClaim = (solarSystemId: number, factionId: number) =>
+      row({
+        solar_system_id: solarSystemId,
+        claim: { faction: { faction_id: factionId } },
+      });
+    const plan = planSovereigntyUpdates({
+      esiSystems: [factionClaim(1, 500007), factionClaim(2, 500099)],
+      dbSystems: [],
+      knownSolarSystemIds: known(1, 2),
+      knownAllianceIds: known(),
+      knownFactionIds: known(500007),
+    });
+
+    expect(plan.created.map((r) => r.solarSystemId)).toEqual([1]);
+    expect(plan.skipped.map((r) => r.solarSystemId)).toEqual([2]);
   });
 
   it("skips claims on unknown systems or by unknown alliances, and keeps their rows", () => {
@@ -164,6 +185,7 @@ describe("planSovereigntyUpdates", () => {
       dbSystems: [row(allianceClaim(2, 10))],
       knownSolarSystemIds: known(2),
       knownAllianceIds: known(10),
+      knownFactionIds: known(),
     });
 
     expect(plan.skipped.map((r) => r.solarSystemId)).toEqual([1, 2]);

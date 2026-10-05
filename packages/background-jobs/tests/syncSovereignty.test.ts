@@ -29,6 +29,7 @@ const sovCreateMany = jest.fn((_a: unknown) => Promise.resolve({ count: 0 }));
 const sovUpdate = jest.fn((_a: unknown) => Promise.resolve({}));
 const sovDeleteMany = jest.fn((_a: unknown) => Promise.resolve({ count: 0 }));
 const solarSystemFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
+const factionFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 
 jest.mock("../db", () => ({
   prisma: {
@@ -39,6 +40,7 @@ jest.mock("../db", () => ({
       deleteMany: (a: unknown) => sovDeleteMany(a),
     },
     solarSystem: { findMany: (a?: unknown) => solarSystemFindMany(a) },
+    faction: { findMany: (a?: unknown) => factionFindMany(a) },
   },
 }));
 
@@ -81,6 +83,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   esiSystems = [];
   sovFindMany.mockResolvedValue([]);
+  factionFindMany.mockResolvedValue([{ factionId: 500007 }]);
   solarSystemFindMany.mockImplementation((a) =>
     Promise.resolve(
       (
@@ -154,9 +157,17 @@ describe("syncSovereignty", () => {
   });
 
   it("warns about and skips claims it cannot store", async () => {
-    esiSystems = [held(1, 10), held(2, 99)];
+    esiSystems = [
+      held(1, 10),
+      held(2, 99),
+      // a faction missing from the Faction table
+      { solar_system_id: 3, claim: { faction: { faction_id: 500099 } } },
+    ];
     // system 1 is not in our SDE tables yet
-    solarSystemFindMany.mockResolvedValue([{ solarSystemId: 2 }]);
+    solarSystemFindMany.mockResolvedValue([
+      { solarSystemId: 2 },
+      { solarSystemId: 3 },
+    ]);
 
     const result = await syncSovereignty({
       knownAllianceIds: new Set([10]),
@@ -164,10 +175,10 @@ describe("syncSovereignty", () => {
     });
 
     expect(sovCreateMany).not.toHaveBeenCalled();
-    expect(result.stats.skipped).toBe(2);
+    expect(result.stats.skipped).toBe(3);
     expect(logger.warn).toHaveBeenCalledWith(
       "Skipped sovereignty claims we cannot store yet",
-      { solarSystemIds: [1, 2] },
+      { solarSystemIds: [1, 2, 3] },
     );
   });
 });

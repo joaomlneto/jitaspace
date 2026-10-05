@@ -319,4 +319,24 @@ describe("esi-update-alliances", () => {
     });
     expect(stats.sovereignty).toEqual({ systems: 5485 });
   });
+
+  it("still evicts the alliances it changed when the sovereignty sync fails, then fails the run", async () => {
+    // Alliance 1's executor changed (written in step 2) — its eviction must go
+    // out even though the sync after it throws.
+    esiAlliances.set(1, esiAlliance({ executor_corporation_id: 1001 }));
+    esiMembers.set(1, [1000, 1001]);
+    allianceFindMany.mockResolvedValue([dbAlliance(1)]);
+    corporationFindMany.mockResolvedValue([
+      { corporationId: 1000, allianceId: 1 },
+      { corporationId: 1001, allianceId: 1 },
+    ]);
+    syncSovereignty.mockRejectedValueOnce(new Error("ESI 503"));
+
+    await expect(run()).rejects.toThrow("ESI 503");
+
+    expect(allianceUpdate).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith("revalidate-alliance-cache", {
+      allianceIds: [1],
+    });
+  });
 });
