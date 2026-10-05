@@ -85,7 +85,16 @@
       // redirects) — so a commit touching only those produced an identical hash,
       // hit the remote cache, and restored a `.next` that predated the change.
       // Vercel builds through this task, so that shipped to production.
-      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", "dist/**"]
+      // `.output` / `.vercel/output` are apps/icon-server's Nitro bundles (node
+      // and Vercel presets); without them a cache hit restores no server.
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "next-env.d.ts",
+        "dist/**",
+        ".output/**",
+        ".vercel/output/**"
+      ]
     },
     "format": {
       // No `outputs`: no format script passes --cache/--cache-location, so the

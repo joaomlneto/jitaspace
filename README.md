@@ -51,8 +51,9 @@
 
 ```
 apps/
-  ├─ web/    Next.js web app — the main product
-  └─ cli/    Developer CLI utilities
+  ├─ web/           Next.js web app — the main product
+  ├─ icon-server/   Nitro service for EVE icons, renders and blueprints (icons.jita.space)
+  └─ cli/           Developer CLI utilities
 
 packages/
   ├─ auth/                    ├─ esi-metadata/

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turborepo.org/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      // Runtime tuning knobs read by lib/resfile.ts, lib/serve.ts and
+      // lib/imageserver.ts. Declared here rather than in the root globalEnv so
+      // they only enter this package's task hashes.
+      "env": [
+        "RESFILE_TTL_MS",
+        "IMAGE_CACHE_CONTROL",
+        "NOT_FOUND_CACHE_CONTROL",
+        "IMAGE_SERVER_BASE"
+      ]
+    }
+  }
+}

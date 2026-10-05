@@ -1,0 +1,16 @@
+{
+  "extends": "@jitaspace/tsconfig/base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+  },
+  "include": ["."],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "coverage",
+    ".nitro",
+    ".output",
+    ".vercel"
+  ]
+}
