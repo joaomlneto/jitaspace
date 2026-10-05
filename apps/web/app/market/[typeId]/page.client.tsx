@@ -4,6 +4,7 @@ import { useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
+  ActionIcon,
   Anchor,
   Badge,
   Box,
@@ -15,7 +16,9 @@ import {
   Tabs,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
+import { IconStar, IconStarFilled } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState, useQueryStates } from "nuqs";
 import posthog from "posthog-js";
 
@@ -34,6 +37,7 @@ import {
   priceHistoryUrlKeys,
 } from "~/components/Market/priceHistoryParams";
 import { BrowseMarketButton } from "~/layouts";
+import { useQuickbarHydrated, useQuickbarStore } from "~/lib/quickbar";
 
 const MARKET_TABS = ["sell", "buy", "history"] as const;
 
@@ -65,6 +69,38 @@ export interface MarketTypePageProps {
   typeId: number;
   /** Resolved server-side so crawlers and the first render see the item name. */
   typeName: string;
+}
+
+/** Adds the item to the market quickbar, or takes it off. */
+function QuickbarStar({
+  typeId,
+  typeName,
+}: Readonly<{ typeId: number; typeName: string }>) {
+  const hydrated = useQuickbarHydrated();
+  const inQuickbar = useQuickbarStore((state) => typeId in state.items);
+  const label = inQuickbar
+    ? `Remove ${typeName} from your quickbar`
+    : `Add ${typeName} to your quickbar`;
+
+  return (
+    <Tooltip label={inQuickbar ? "On your quickbar" : "Add to quickbar"}>
+      <ActionIcon
+        variant="subtle"
+        color={inQuickbar ? "yellow" : "gray"}
+        aria-label={label}
+        aria-pressed={inQuickbar}
+        // Until the stored quickbar is read, the star cannot say which it is.
+        disabled={!hydrated}
+        onClick={() => {
+          const store = useQuickbarStore.getState();
+          if (inQuickbar) store.removeItem(typeId);
+          else store.addItem(typeId);
+        }}
+      >
+        {inQuickbar ? <IconStarFilled size={20} /> : <IconStar size={20} />}
+      </ActionIcon>
+    </Tooltip>
+  );
 }
 
 /** The cheapest sell order, or the highest-paying buy order. */
@@ -163,9 +199,12 @@ export default function MarketTypePage({
             {typeName}
           </Title>
         </Group>
-        <Anchor component={Link} href={`/type/${typeId}`} size="sm">
-          Item info
-        </Anchor>
+        <Group gap="xs" wrap="nowrap">
+          <QuickbarStar typeId={typeId} typeName={typeName} />
+          <Anchor component={Link} href={`/type/${typeId}`} size="sm">
+            Item info
+          </Anchor>
+        </Group>
       </Group>
 
       <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">

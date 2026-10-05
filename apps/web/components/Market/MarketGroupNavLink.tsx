@@ -2,13 +2,15 @@
 
 import { memo, useMemo } from "react";
 import Link from "next/link";
-import { NavLink } from "@mantine/core";
+import { Menu, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconStar, IconStarFilled } from "@tabler/icons-react";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
 import { EveIconAvatar } from "@jitaspace/ui";
 
 import type { MarketTreeFilter } from "./filterMarketTree";
+import { useQuickbarStore } from "~/lib/quickbar";
 
 /**
  * The whole market tree, served in one document by `/api/market-tree` (see
@@ -35,6 +37,58 @@ interface MarketGroupNavLinkProps {
   /** Open the groups the search lists in `expandedGroupIds`. */
   autoExpand?: boolean;
 }
+
+/**
+ * An item in the tree. Right-click it to add it to (or take it off) the
+ * quickbar, as in the game client; a star marks one that is already there.
+ */
+const MarketTypeNavLink = memo(
+  ({ typeId, name }: { typeId: number; name: string }) => {
+    const inQuickbar = useQuickbarStore((state) => typeId in state.items);
+
+    return (
+      <Menu position="bottom-start" withinPortal>
+        <Menu.ContextMenu>
+          <NavLink
+            component={Link}
+            href={`/market/${typeId}`}
+            leftSection={
+              <TypeAvatar size={24} typeId={typeId} variation="icon" />
+            }
+            label={name}
+            rightSection={
+              inQuickbar ? (
+                <IconStarFilled
+                  size={14}
+                  color="var(--mantine-color-yellow-5)"
+                  aria-label="On your quickbar"
+                />
+              ) : null
+            }
+          />
+        </Menu.ContextMenu>
+        <Menu.Dropdown>
+          {inQuickbar ? (
+            <Menu.Item
+              leftSection={<IconStar size={16} />}
+              onClick={() => useQuickbarStore.getState().removeItem(typeId)}
+            >
+              Remove from quickbar
+            </Menu.Item>
+          ) : (
+            <Menu.Item
+              leftSection={<IconStarFilled size={16} />}
+              onClick={() => useQuickbarStore.getState().addItem(typeId)}
+            >
+              Add to quickbar
+            </Menu.Item>
+          )}
+        </Menu.Dropdown>
+      </Menu>
+    );
+  },
+);
+MarketTypeNavLink.displayName = "MarketTypeNavLink";
 
 export const MarketGroupNavLink = memo(
   ({
@@ -114,13 +168,9 @@ export const MarketGroupNavLink = memo(
           ))}
         {opened &&
           sortedChildrenTypes.map((type) => (
-            <NavLink
-              component={Link}
-              href={`/market/${type.typeId}`}
-              leftSection={
-                <TypeAvatar size={24} typeId={type.typeId} variation="icon" />
-              }
-              label={type.name}
+            <MarketTypeNavLink
+              typeId={type.typeId}
+              name={type.name}
               key={type.typeId}
             />
           ))}
