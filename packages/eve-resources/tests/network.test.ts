@@ -574,7 +574,7 @@ describe("review hardening", () => {
    * An endless body (one 3-byte chunk per pull) served by a `fetch` that
    * ignores the abort signal, so only cancelling the reader can stop it.
    */
-  function endless(onCancel: () => void) {
+  function endless(onCancel: () => void | Promise<void>) {
     let pulls = 0;
     const fetchImpl = (() =>
       Promise.resolve(
@@ -602,6 +602,12 @@ describe("review hardening", () => {
     const pullsAtReturn = pulls();
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(pulls()).toBe(pullsAtReturn); // nothing read after cancelling
+  });
+
+  it("fetchResourceHead doesn't wait for a cancel that never settles", async () => {
+    const { fetchImpl } = endless(() => new Promise<void>(() => undefined));
+    const head = await fetchResourceHead(entry, 2, fetchImpl);
+    expect([...head]).toEqual([1, 1]);
   });
 
   it("fetchResourceHead still returns its bytes when cancelling fails", async () => {

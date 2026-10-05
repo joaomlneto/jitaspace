@@ -1,7 +1,7 @@
 # @jitaspace/eve-resources
 
 Resolve, browse and fetch the EVE Online client's resource files as served from
-CCP's content CDN.
+EVE's content CDNs (CCP's, and NetEase's for the Chinese servers).
 
 These functions are **isomorphic and dependency-free**. The pure helpers
 (index parsing, tree navigation, classification) run anywhere; the network
@@ -39,7 +39,7 @@ thousands of files that do not exist on CCP's hosts, so pass the server whose
 index an entry came from (`ResourceIndex.server`).
 
 `KNOWN_BUILDS` lists the historical Tranquility and Singularity builds, with
-dates in `BUILD_DATES` and, for builds since April 2023, timestamps in
+dates in `BUILD_DATES` and, for most builds since April 2023, timestamps in
 `BUILD_TIMESTAMPS`. These are snapshots: CCP no longer serves every listed
 build, and `fetchBuildDate` reads a build's date live from the CDN.
 

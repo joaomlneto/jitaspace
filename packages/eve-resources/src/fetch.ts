@@ -79,9 +79,10 @@ export async function fetchResourceHead(
     }
   } finally {
     // Stop the rest of the (potentially huge) transfer. Cancelling the reader
-    // works even when `fetchImpl` ignores the abort signal; a failed cancel
-    // doesn't matter once we have our bytes.
-    await reader.cancel().catch(() => undefined);
+    // works even when `fetchImpl` ignores the abort signal. It takes effect
+    // immediately, so don't wait for it to settle (a custom stream's cancel
+    // might never), and a failed cancel doesn't matter once we have our bytes.
+    void reader.cancel().catch(() => undefined);
     controller.abort();
   }
 
