@@ -606,7 +606,7 @@ describe("review hardening", () => {
 
   it("fetchResourceHead doesn't wait for a cancel that never settles", async () => {
     const { fetchImpl } = endless(() => new Promise<void>(() => undefined));
-    const head = await fetchResourceHead(entry, 2, fetchImpl);
+    const head = await fetchResourceHead(entry, "tranquility", 2, fetchImpl);
     expect([...head]).toEqual([1, 1]);
   });
 
