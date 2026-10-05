@@ -22,6 +22,11 @@ const ESI_CONCURRENCY = 20;
 // Whatever is left over is picked up by the next hourly run.
 const MAX_NEW_CORPORATIONS_PER_RUN = 250;
 
+// `/api/revalidate/alliances` refuses more than 5,000 IDs per call. A first run
+// against a database full of long-closed alliances can affect more than that,
+// so evictions go out in batches, each its own retryable run.
+const REVALIDATION_BATCH_SIZE = 1000;
+
 export interface UpdateAlliancesEventPayload {
   data: Record<string, never>;
 }
@@ -162,11 +167,23 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
         ...corporationsToCreate.flatMap((id) => memberOf.get(id) ?? []),
       ]),
     ];
-    if (allianceIdsToRevalidate.length > 0) {
-      await ctx.send("revalidate-alliance-cache", {
-        allianceIds: allianceIdsToRevalidate,
-      });
-    }
+    const revalidationBatches = Array.from(
+      {
+        length: Math.ceil(
+          allianceIdsToRevalidate.length / REVALIDATION_BATCH_SIZE,
+        ),
+      },
+      (_, i) =>
+        allianceIdsToRevalidate.slice(
+          i * REVALIDATION_BATCH_SIZE,
+          (i + 1) * REVALIDATION_BATCH_SIZE,
+        ),
+    );
+    await Promise.all(
+      revalidationBatches.map((allianceIds) =>
+        ctx.send("revalidate-alliance-cache", { allianceIds }),
+      ),
+    );
 
     const stats = {
       alliances: {

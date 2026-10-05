@@ -271,4 +271,20 @@ describe("esi-update-alliances", () => {
       allianceIds: [1],
     });
   });
+
+  it("sends evictions in batches the web app accepts", async () => {
+    // 2,500 alliances in the database that ESI no longer lists: all closed.
+    allianceFindMany.mockResolvedValue(
+      Array.from({ length: 2500 }, (_, i) => dbAlliance(100_000 + i)),
+    );
+
+    const { stats } = await run();
+
+    expect(stats.alliances.closed).toBe(2500);
+    const batches = send.mock.calls.map(
+      ([, payload]) => (payload as { allianceIds: number[] }).allianceIds,
+    );
+    expect(batches.map((ids) => ids.length)).toEqual([1000, 1000, 500]);
+    expect(new Set(batches.flat()).size).toBe(2500);
+  });
 });
