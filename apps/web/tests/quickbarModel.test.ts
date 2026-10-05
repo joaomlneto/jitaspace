@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 
 import type { QuickbarData } from "~/lib/quickbar";
+import type * as QuickbarLib from "~/lib/quickbar";
 import { filterMarketTree } from "~/components/Market/filterMarketTree";
 import {
   addItem,
@@ -263,5 +264,37 @@ describe("readQuickbarDrag", () => {
     expect(
       readQuickbarDrag(transfer({ [QUICKBAR_DRAG_TYPE]: "{not json" })),
     ).toBeNull();
+  });
+});
+
+describe("folder ids", () => {
+  it("are unique, from the platform's CSPRNG with or without randomUUID", () => {
+    const { useQuickbarStore } =
+      require("~/lib/quickbar") as typeof QuickbarLib;
+    const make = () => useQuickbarStore.getState().createFolder("F");
+
+    const secure = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "isSecureContext",
+    );
+    try {
+      // Off a secure context (a LAN address over http) randomUUID is missing.
+      Object.defineProperty(globalThis, "isSecureContext", {
+        value: false,
+        configurable: true,
+      });
+      const plain = [make(), make()];
+      expect(plain[0]).toMatch(/^[0-9a-f]{32}$/);
+      expect(plain[0]).not.toBe(plain[1]);
+
+      Object.defineProperty(globalThis, "isSecureContext", {
+        value: true,
+        configurable: true,
+      });
+      expect(make()).toMatch(/^[0-9a-f-]{36}$/);
+    } finally {
+      if (secure) Object.defineProperty(globalThis, "isSecureContext", secure);
+      else Reflect.deleteProperty(globalThis, "isSecureContext");
+    }
   });
 });

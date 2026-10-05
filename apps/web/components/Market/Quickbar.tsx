@@ -175,7 +175,10 @@ function openMoveDialog(
   });
 }
 
-function RowMenu({ label, children }: { label: string; children: ReactNode }) {
+function RowMenu({
+  label,
+  children,
+}: Readonly<{ label: string; children: ReactNode }>) {
   return (
     <Menu position="bottom-end" withinPortal>
       <Menu.Target>
@@ -197,10 +200,10 @@ function RowMenu({ label, children }: { label: string; children: ReactNode }) {
 function FolderNameInput({
   folderId,
   name,
-}: {
+}: Readonly<{
   folderId: string;
   name: string;
-}) {
+}>) {
   const { setEditingId } = useQuickbarContext();
   const commit = (value: string) => {
     useQuickbarStore.getState().renameFolder(folderId, value);
@@ -223,7 +226,7 @@ function FolderNameInput({
   );
 }
 
-function FolderRow({ folderKey }: { folderKey: number }) {
+function FolderRow({ folderKey }: Readonly<{ folderKey: number }>) {
   const context = useQuickbarContext();
   const { data, quickbar, isOpen, toggle, open, editingId } = context;
   const folderId = quickbar.folderIdByKey.get(folderKey);
@@ -329,7 +332,7 @@ function FolderRow({ folderKey }: { folderKey: number }) {
   );
 }
 
-function ItemRow({ typeId, name }: { typeId: number; name: string }) {
+function ItemRow({ typeId, name }: Readonly<{ typeId: number; name: string }>) {
   const { data } = useQuickbarContext();
   return (
     <div
@@ -366,7 +369,7 @@ function ItemRow({ typeId, name }: { typeId: number; name: string }) {
 }
 
 /** A folder's (or the top level's) subfolders, then its items. */
-function FolderContents({ folderKey }: { folderKey: number }) {
+function FolderContents({ folderKey }: Readonly<{ folderKey: number }>) {
   const { quickbar, filter } = useQuickbarContext();
   const group = quickbar.tree.marketGroups[folderKey];
   if (!group) return null;
@@ -436,24 +439,39 @@ export function Quickbar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const rootDrop = useDropTarget(null);
 
-  const isOpen = (folderId: string) => {
-    const set = manual.get(folderId);
-    if (set !== undefined) return set;
-    if (!autoExpand) return false;
-    const key = quickbar.keyByFolderId.get(folderId);
-    return key !== undefined && filter.expandedGroupIds.has(key);
-  };
-  const open = (folderId: string) =>
-    setManual((current) => new Map(current).set(folderId, true));
-  const toggle = (folderId: string) =>
-    setManual((current) => new Map(current).set(folderId, !isOpen(folderId)));
-  const newFolder = (parentId: string | null) => {
-    const id = useQuickbarStore
-      .getState()
-      .createFolder(NEW_FOLDER_NAME, parentId);
-    if (parentId !== null) open(parentId);
-    setEditingId(id);
-  };
+  // One value per change of what the rows read, so they don't all re-render
+  // on every render of this component.
+  const context = useMemo<QuickbarContextValue>(() => {
+    const isOpen = (folderId: string) => {
+      const set = manual.get(folderId);
+      if (set !== undefined) return set;
+      if (!autoExpand) return false;
+      const key = quickbar.keyByFolderId.get(folderId);
+      return key !== undefined && filter.expandedGroupIds.has(key);
+    };
+    const open = (folderId: string) =>
+      setManual((current) => new Map(current).set(folderId, true));
+    return {
+      data,
+      quickbar,
+      filter,
+      isOpen,
+      open,
+      toggle: (folderId) =>
+        setManual((current) =>
+          new Map(current).set(folderId, !isOpen(folderId)),
+        ),
+      editingId,
+      setEditingId,
+      newFolder: (parentId) => {
+        const id = useQuickbarStore
+          .getState()
+          .createFolder(NEW_FOLDER_NAME, parentId);
+        if (parentId !== null) open(parentId);
+        setEditingId(id);
+      },
+    };
+  }, [data, quickbar, filter, autoExpand, manual, editingId]);
 
   if (!hydrated) return <Loader size="sm" />;
 
@@ -462,26 +480,14 @@ export function Quickbar({
   const hasMatches = !filter || filter.visibleGroupIds.has(QUICKBAR_ROOT_KEY);
 
   return (
-    <QuickbarContext
-      value={{
-        data,
-        quickbar,
-        filter,
-        isOpen,
-        toggle,
-        open,
-        editingId,
-        setEditingId,
-        newFolder,
-      }}
-    >
+    <QuickbarContext value={context}>
       <Stack gap="xs">
         <Group justify="space-between" gap="xs">
           <Button
             variant="subtle"
             size="compact-sm"
             leftSection={<IconFolderPlus size={16} />}
-            onClick={() => newFolder(null)}
+            onClick={() => context.newFolder(null)}
           >
             New folder
           </Button>

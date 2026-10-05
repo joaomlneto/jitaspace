@@ -170,57 +170,82 @@ export function countItems(data: QuickbarData, folderId: string): number {
   ).length;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+/** Folders with a usable name; parents are checked afterwards. */
+function readFolders(raw: unknown): Record<string, QuickbarFolder> {
+  const folders: Record<string, QuickbarFolder> = {};
+  if (!isRecord(raw)) return folders;
+  for (const [id, folder] of Object.entries(raw)) {
+    const candidate = folder as Partial<QuickbarFolder> | null;
+    const name =
+      typeof candidate?.name === "string" ? candidate.name.trim() : "";
+    if (name === "") continue;
+    const parentId =
+      typeof candidate?.parentId === "string" ? candidate.parentId : null;
+    folders[id] = { id, name, parentId };
+  }
+  return folders;
+}
+
+/** Whether following `folder`'s parents leads back to it. */
+function closesCycle(
+  folders: Record<string, QuickbarFolder>,
+  folder: QuickbarFolder,
+): boolean {
+  const seen = new Set<string>([folder.id]);
+  for (
+    let id = folder.parentId;
+    id !== null;
+    id = folders[id]?.parentId ?? null
+  ) {
+    if (seen.has(id)) return true;
+    seen.add(id);
+  }
+  return false;
+}
+
+/**
+ * Lift to the top level every folder whose parent is gone, and the folder
+ * that closes any cycle, so no folder is lost.
+ */
+function reparentStrays(folders: Record<string, QuickbarFolder>) {
+  for (const folder of Object.values(folders)) {
+    if (folder.parentId !== null && !folders[folder.parentId]) {
+      folder.parentId = null;
+    }
+  }
+  for (const folder of Object.values(folders)) {
+    if (closesCycle(folders, folder)) folder.parentId = null;
+  }
+}
+
+/** Items with a positive integer type id, in a folder that exists or none. */
+function readItems(
+  raw: unknown,
+  folders: Record<string, QuickbarFolder>,
+): Record<string, string | null> {
+  const items: Record<string, string | null> = {};
+  if (!isRecord(raw)) return items;
+  for (const [typeId, folder] of Object.entries(raw)) {
+    const id = Number(typeId);
+    if (!Number.isInteger(id) || id <= 0) continue;
+    items[id] = typeof folder === "string" && folders[folder] ? folder : null;
+  }
+  return items;
+}
+
 /**
  * Make stored data safe to use, whatever is in storage: drop malformed
  * entries, lift folders whose parent is gone (or that loop back on
  * themselves) to the top level, and items whose folder is gone with them.
  */
 export function sanitizeQuickbar(value: unknown): QuickbarData {
-  if (typeof value !== "object" || value === null) return EMPTY_QUICKBAR;
-  const raw = value as { folders?: unknown; items?: unknown };
-
-  const folders: Record<string, QuickbarFolder> = {};
-  if (typeof raw.folders === "object" && raw.folders !== null) {
-    for (const [id, folder] of Object.entries(raw.folders)) {
-      const candidate = folder as Partial<QuickbarFolder> | null;
-      if (typeof candidate?.name !== "string" || candidate.name.trim() === "") {
-        continue;
-      }
-      folders[id] = {
-        id,
-        name: candidate.name.trim(),
-        parentId:
-          typeof candidate.parentId === "string" ? candidate.parentId : null,
-      };
-    }
-  }
-  for (const folder of Object.values(folders)) {
-    if (folder.parentId !== null && !folders[folder.parentId]) {
-      folder.parentId = null;
-    }
-  }
-  // Break any cycle by lifting the folder that closes it to the top level.
-  for (const folder of Object.values(folders)) {
-    const seen = new Set<string>([folder.id]);
-    for (let id = folder.parentId; id !== null; ) {
-      if (seen.has(id)) {
-        folder.parentId = null;
-        break;
-      }
-      seen.add(id);
-      id = folders[id]?.parentId ?? null;
-    }
-  }
-
-  const items: Record<string, string | null> = {};
-  if (typeof raw.items === "object" && raw.items !== null) {
-    for (const [typeId, folder] of Object.entries(raw.items)) {
-      const id = Number(typeId);
-      if (!Number.isInteger(id) || id <= 0) continue;
-      items[id] = typeof folder === "string" && folders[folder] ? folder : null;
-    }
-  }
-  return { folders, items };
+  if (!isRecord(value)) return EMPTY_QUICKBAR;
+  const folders = readFolders(value.folders);
+  reparentStrays(folders);
+  return { folders, items: readItems(value.items, folders) };
 }
 
 // --- as a tree ----------------------------------------------------------------
@@ -314,10 +339,17 @@ interface QuickbarState extends QuickbarData {
   deleteFolder: (folderId: string) => void;
 }
 
-const newFolderId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+/**
+ * A folder id. `randomUUID` exists only in secure contexts (not on a LAN
+ * address over http), so fall back to the same CSPRNG's raw bytes.
+ */
+function newFolderId(): string {
+  if (globalThis.isSecureContext) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
+}
 
 const dataOf = (state: QuickbarData): QuickbarData => ({
   folders: state.folders,
@@ -440,7 +472,7 @@ export function readQuickbarDrag(
   const url =
     dataTransfer.getData("text/uri-list") || dataTransfer.getData("text/plain");
   const match = /\/market\/(\d+)(?:[/?#]|$)/.exec(url.trim());
-  const typeId = match?.[1] ? Number(match[1]) : NaN;
+  const typeId = match?.[1] ? Number(match[1]) : Number.NaN;
   return Number.isInteger(typeId) && typeId > 0
     ? { kind: "item", typeId }
     : null;
@@ -448,10 +480,10 @@ export function readQuickbarDrag(
 
 /** Whether a drag may be something the quickbar accepts, before the drop. */
 export function mayBeQuickbarDrag(dataTransfer: DataTransfer): boolean {
-  const types = [...dataTransfer.types];
+  const types = new Set(dataTransfer.types);
   return (
-    types.includes(QUICKBAR_DRAG_TYPE) ||
-    types.includes("text/uri-list") ||
-    types.includes("text/plain")
+    types.has(QUICKBAR_DRAG_TYPE) ||
+    types.has("text/uri-list") ||
+    types.has("text/plain")
   );
 }
