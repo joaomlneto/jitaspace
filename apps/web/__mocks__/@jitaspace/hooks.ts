@@ -17,3 +17,7 @@ export interface FuzzworkTypeMarketAggregate {
   buy: { percentile: number; volume: number };
   sell: { percentile: number; volume: number };
 }
+
+// The real list, not a copy: its module imports nothing, so loading it costs
+// none of what the rest of the package would.
+export { MARKET_HUB_REGION_IDS } from "../../../../packages/hooks/src/hooks/marketHubRegions";
