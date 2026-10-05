@@ -65,6 +65,10 @@ const BarChart = dynamic(
 
 const TOP_LIST_SIZE = 10;
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** `00`…`23`: the heatmap's columns, and their keys. */
+const HOURS = Array.from({ length: 24 }, (_, hour) =>
+  String(hour).padStart(2, "0"),
+);
 
 /** The headline numbers; also shown on the Overview tab. */
 export function KillboardSummaryCards({
@@ -211,32 +215,35 @@ function ActivityHeatmap({
         }}
       >
         <span />
-        {Array.from({ length: 24 }, (_, hour) => (
+        {HOURS.map((hour) => (
           <Text key={hour} size="10px" c="dimmed" ta="center">
-            {hour % 3 === 0 ? String(hour).padStart(2, "0") : ""}
+            {Number(hour) % 3 === 0 ? hour : ""}
           </Text>
         ))}
-        {grid.cells.map((hours, day) => [
-          <Text key={`label-${day}`} size="xs" c="dimmed">
-            {WEEKDAYS[day]}
+        {WEEKDAYS.flatMap((weekday, day) => [
+          <Text key={weekday} size="xs" c="dimmed">
+            {weekday}
           </Text>,
-          ...hours.map((kills, hour) => (
-            <Tooltip
-              key={`${day}-${hour}`}
-              label={`${WEEKDAYS[day]} ${String(hour).padStart(2, "0")}:00 EVE time — ${formatInteger(kills)} kills`}
-            >
-              <Box
-                style={{
-                  height: 14,
-                  borderRadius: 2,
-                  background:
-                    kills === 0
-                      ? "var(--mantine-color-dark-6)"
-                      : `rgba(18, 184, 134, ${0.15 + 0.85 * (kills / grid.max)})`,
-                }}
-              />
-            </Tooltip>
-          )),
+          ...HOURS.map((hour, column) => {
+            const kills = grid.cells[day]?.[column] ?? 0;
+            return (
+              <Tooltip
+                key={`${weekday}-${hour}`}
+                label={`${weekday} ${hour}:00 EVE time — ${formatInteger(kills)} kills`}
+              >
+                <Box
+                  style={{
+                    height: 14,
+                    borderRadius: 2,
+                    background:
+                      kills === 0
+                        ? "var(--mantine-color-dark-6)"
+                        : `rgba(18, 184, 134, ${0.15 + 0.85 * (kills / grid.max)})`,
+                  }}
+                />
+              </Tooltip>
+            );
+          }),
         ])}
       </Box>
     </Box>
@@ -244,6 +251,15 @@ function ActivityHeatmap({
 }
 
 type TopListKind = "character" | "corporation" | "ship" | "system";
+
+/** The id a top-list row is about; each list holds one kind of entity. */
+const topEntryId = (entry: ZkbTopEntry) =>
+  entry.characterID ??
+  entry.corporationID ??
+  entry.shipTypeID ??
+  entry.solarSystemID ??
+  entry.allianceID ??
+  entry.factionID;
 
 function TopEntity({
   kind,
@@ -310,7 +326,7 @@ function TopList({
         <Table highlightOnHover verticalSpacing={4}>
           <Table.Tbody>
             {entries.slice(0, TOP_LIST_SIZE).map((entry, index) => (
-              <Table.Tr key={index}>
+              <Table.Tr key={topEntryId(entry)}>
                 <Table.Td w={28}>
                   <Text size="xs" c="dimmed">
                     {index + 1}

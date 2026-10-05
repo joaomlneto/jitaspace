@@ -31,6 +31,7 @@ import {
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
+import type { GetAlliancesAllianceIdQueryResponse } from "@jitaspace/esi-client";
 import {
   CharacterAnchor,
   CharacterName,
@@ -211,6 +212,41 @@ function CompositionBar({
   );
 }
 
+/**
+ * Who the alliance is: our row first, since it is what the server rendered
+ * and so what hydration expects; ESI fills in what we do not store (the
+ * creator), and everything when we have no row.
+ */
+function resolveIdentity(
+  profile: AllianceProfile | null,
+  esi: GetAlliancesAllianceIdQueryResponse | undefined,
+) {
+  if (profile) {
+    // Null in our row is a fact (no executor, no militia), not a gap for ESI.
+    return {
+      name: profile.name,
+      ticker: profile.ticker,
+      dateFounded: profile.dateFounded,
+      executorCorporationId: profile.executorCorporationId,
+      creatorCorporationId: profile.creatorCorporationId,
+      factionId: profile.factionId,
+      creatorId: esi?.creator_id,
+      isClosed: profile.isClosed,
+    };
+  }
+  return {
+    name: esi?.name,
+    ticker: esi?.ticker,
+    dateFounded: esi?.date_founded,
+    executorCorporationId: esi?.executor_corporation_id ?? null,
+    creatorCorporationId: esi?.creator_corporation_id ?? null,
+    factionId: esi?.faction_id ?? null,
+    creatorId: esi?.creator_id,
+    // A closed alliance has no executor; ESI still answers for it.
+    isClosed: esi !== undefined && !esi.executor_corporation_id,
+  };
+}
+
 export default function AlliancePage({
   allianceId,
   profile,
@@ -230,23 +266,19 @@ export default function AlliancePage({
   // server render and hydration agree.
   const now = profile?.readAt;
 
-  const esi = esiAlliance?.data;
-  // Our row first: it is what the server rendered, so hydration agrees. ESI
-  // fills in what we do not store, and the whole page when we have no row.
-  const name = profile?.name ?? esi?.name;
-  const ticker = profile?.ticker ?? esi?.ticker;
-  const dateFounded = profile?.dateFounded ?? esi?.date_founded;
-  // Null in our row is a fact (no executor, no militia), not a gap for ESI.
-  const executorCorporationId = profile
-    ? profile.executorCorporationId
-    : (esi?.executor_corporation_id ?? null);
-  const creatorCorporationId =
-    profile?.creatorCorporationId ?? esi?.creator_corporation_id ?? null;
-  const factionId = profile ? profile.factionId : (esi?.faction_id ?? null);
-  const creatorId = esi?.creator_id;
-  // A closed alliance has no executor; ESI still answers for it.
-  const isClosed =
-    profile?.isClosed ?? (esi !== undefined && !esi.executor_corporation_id);
+  const {
+    name,
+    ticker,
+    dateFounded,
+    executorCorporationId,
+    creatorCorporationId,
+    factionId,
+    creatorId,
+    isClosed,
+  } = useMemo(
+    () => resolveIdentity(profile, esiAlliance?.data),
+    [profile, esiAlliance?.data],
+  );
 
   const corporationRows = useMemo(
     () =>
@@ -289,7 +321,12 @@ export default function AlliancePage({
   const warSummary = profile?.warSummary;
 
   const executorRow = corporationRows.find((row) => row.isExecutor);
-  const creatorStillMember = corporationRows.some((row) => row.isCreator);
+  let creatorMembership: string | undefined;
+  if (corporationRows.length > 0) {
+    creatorMembership = corporationRows.some((row) => row.isCreator)
+      ? "Still a member"
+      : "No longer a member";
+  }
   const hasSovereignty = sovereigntySummary.systems > 0;
   const hasWars = (warSummary?.total ?? 0) > 0;
   const killEfficiency = iskEfficiency(
@@ -559,13 +596,7 @@ export default function AlliancePage({
                           name={profile?.creatorCorporationName}
                         />
                       }
-                      sub={
-                        corporationRows.length > 0
-                          ? creatorStillMember
-                            ? "Still a member"
-                            : "No longer a member"
-                          : undefined
-                      }
+                      sub={creatorMembership}
                     />
                   )}
                   <StatCard
