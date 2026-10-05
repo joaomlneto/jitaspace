@@ -5,11 +5,14 @@ import type {
   RaceAgentCount,
   RaceAgentSummary,
   RaceAttributeValues,
+  RaceBloodlineRow,
   RaceCategoryCount,
   RaceCorporationRow,
+  RaceFactionRow,
   RaceItemRow,
   RaceLocation,
   RacePageData,
+  RaceSchoolRow,
   RaceShipClass,
   RaceSkillRow,
   RaceStationRow,
@@ -316,6 +319,264 @@ function summarizeAgents(
   };
 }
 
+/** Runs a lookup by ids only when there are any: `in: []` is a wasted query. */
+function whenAny<T>(
+  ids: readonly unknown[],
+  read: () => Promise<T[]>,
+): Promise<T[]> {
+  return ids.length === 0 ? Promise.resolve([]) : read();
+}
+
+/** An optional reference with its name, or the id when the row is gone. */
+function namedOrNull(
+  id: number | null,
+  name: string | undefined,
+  kind: string,
+): { id: number; name: string } | null {
+  return id === null ? null : { id, name: name ?? `${kind} ${id}` };
+}
+
+/** By group, then by name: how the game lists skills. */
+const bySkillGroup = <T extends { groupName: string; name: string }>(
+  a: T,
+  b: T,
+) => a.groupName.localeCompare(b.groupName) || a.name.localeCompare(b.name);
+
+/** Skill points at a level, from the skill's rank; null without a rank. */
+function skillPointsAt(level: number, rank: number | null): number | null {
+  if (rank === null) return null;
+  return Math.round((SKILL_POINTS_AT_LEVEL[level] ?? 0) * rank);
+}
+
+/**
+ * Builds a skill's row from the names and dogma attributes read for it: its
+ * group, rank and the two attributes it trains from.
+ */
+function skillRowBuilder(
+  types: {
+    typeId: number;
+    name: string;
+    published: boolean;
+    groupId: number;
+    group: { name: string };
+  }[],
+  attributes: { typeId: number; attributeId: number; value: number }[],
+): (typeId: number) => RaceSkillRow {
+  const typesById = new Map(types.map((type) => [type.typeId, type]));
+  const attributesBySkill = new Map<number, Map<number, number>>();
+  for (const row of attributes) {
+    const skillAttributes =
+      attributesBySkill.get(row.typeId) ?? new Map<number, number>();
+    skillAttributes.set(row.attributeId, row.value);
+    attributesBySkill.set(row.typeId, skillAttributes);
+  }
+  return (typeId) => {
+    const type = typesById.get(typeId);
+    const skillAttributes = attributesBySkill.get(typeId);
+    const trainingAttribute = (attributeId: number) => {
+      const value = skillAttributes?.get(attributeId);
+      return value === undefined
+        ? null
+        : (CHARACTER_ATTRIBUTE_BY_DOGMA_ID.get(value) ?? null);
+    };
+    return {
+      typeId,
+      name: type?.name ?? `Type ${typeId}`,
+      groupId: type?.groupId ?? 0,
+      groupName: type?.group.name ?? "Unknown",
+      published: type?.published ?? false,
+      rank: skillAttributes?.get(SKILL_TIME_CONSTANT_ID) ?? null,
+      primaryAttribute: trainingAttribute(PRIMARY_ATTRIBUTE_ID),
+      secondaryAttribute: trainingAttribute(SECONDARY_ATTRIBUTE_ID),
+    };
+  };
+}
+
+/** Station types the race builds, with the operations that use each. */
+function buildStationTypeRows(
+  stationTypes: {
+    stationTypeId: number;
+    stationOperation: { operationName: string };
+  }[],
+  typeNames: Map<number, string>,
+): RaceStationTypeRow[] {
+  const operationsByStationType = new Map<number, Set<string>>();
+  for (const row of stationTypes) {
+    const operations =
+      operationsByStationType.get(row.stationTypeId) ?? new Set<string>();
+    operations.add(row.stationOperation.operationName);
+    operationsByStationType.set(row.stationTypeId, operations);
+  }
+  return [...operationsByStationType]
+    .map(([typeId, operations]) => ({
+      typeId,
+      name: typeNames.get(typeId) ?? `Type ${typeId}`,
+      operations: [...operations].sort((a, b) => a.localeCompare(b)),
+    }))
+    .sort(
+      (a, b) =>
+        b.operations.length - a.operations.length ||
+        a.name.localeCompare(b.name),
+    );
+}
+
+/**
+ * The factions that list the race as a member, plus its home faction when
+ * none of them is it. The home faction first, then the others by name.
+ */
+function buildFactionRows(
+  home: { id: number; name: string } | null,
+  members: { factionId: number; faction: { name: string } }[],
+): RaceFactionRow[] {
+  const factions = new Map(
+    members.map((member) => [
+      member.factionId,
+      {
+        factionId: member.factionId,
+        name: member.faction.name,
+        isHomeFaction: member.factionId === home?.id,
+        isMemberRace: true,
+      },
+    ]),
+  );
+  if (home && !factions.has(home.id)) {
+    factions.set(home.id, {
+      factionId: home.id,
+      name: home.name,
+      isHomeFaction: true,
+      isMemberRace: false,
+    });
+  }
+  return [...factions.values()].sort(
+    (a, b) =>
+      Number(b.isHomeFaction) - Number(a.isHomeFaction) ||
+      a.name.localeCompare(b.name),
+  );
+}
+
+type AttributeColumns = Record<CharacterAttribute, number | null>;
+
+function buildBloodlineRows(
+  bloodlines: (AttributeColumns & {
+    bloodlineId: number;
+    name: string;
+    description: string;
+    iconId: number | null;
+    corporationId: number;
+    corporation: { name: string };
+    shipTypeId: number | null;
+    shipType: { name: string } | null;
+    ancestries: (AttributeColumns & {
+      ancestryId: number;
+      name: string;
+      shortDescription: string | null;
+      description: string;
+      iconId: number | null;
+    })[];
+  })[],
+): RaceBloodlineRow[] {
+  return bloodlines
+    .map((bloodline) => ({
+      bloodlineId: bloodline.bloodlineId,
+      name: bloodline.name,
+      description: bloodline.description,
+      iconId: bloodline.iconId,
+      corporation: {
+        id: bloodline.corporationId,
+        name: bloodline.corporation.name,
+      },
+      shipType: namedOrNull(
+        bloodline.shipTypeId,
+        bloodline.shipType?.name,
+        "Type",
+      ),
+      attributes: attributeValues(bloodline),
+      ancestries: bloodline.ancestries
+        .map((ancestry) => ({
+          ancestryId: ancestry.ancestryId,
+          name: ancestry.name,
+          shortDescription: ancestry.shortDescription,
+          description: ancestry.description,
+          iconId: ancestry.iconId,
+          bonuses: attributeValues(ancestry),
+        }))
+        .sort((a, b) => a.ancestryId - b.ancestryId),
+    }))
+    .sort((a, b) => a.bloodlineId - b.bloodlineId);
+}
+
+/** The names and places a race's schools carry only as ids. */
+interface SchoolLookups {
+  systemBySchool: Map<number, number>;
+  systems: Map<number, RaceLocation>;
+  stations: Map<number, { name: string; solarSystem: LocationRow | null }>;
+  corporationNames: Map<number, string>;
+  agentNames: Map<number, string>;
+}
+
+/** The race's schools, the originals first, each before its Starter Space copy. */
+function buildSchoolRows(
+  schools: {
+    schoolId: number;
+    name: string;
+    title: string | null;
+    description: string | null;
+    characterDescription: string | null;
+    iconId: number | null;
+    corporationId: number;
+    isStarterSpaceSchool: boolean | null;
+    careerAgents: { agentId: number }[];
+    startingStations: { stationId: number }[];
+  }[],
+  lookups: SchoolLookups,
+): RaceSchoolRow[] {
+  return schools
+    .map((school) => {
+      const homeSystemId = lookups.systemBySchool.get(school.schoolId);
+      return {
+        schoolId: school.schoolId,
+        name: school.name,
+        title: school.title,
+        description: school.description,
+        characterDescription: school.characterDescription,
+        iconId: school.iconId,
+        corporation: named(
+          school.corporationId,
+          lookups.corporationNames,
+          "Corporation",
+        ),
+        isStarterSpaceSchool: school.isStarterSpaceSchool ?? false,
+        homeSystem:
+          homeSystemId === undefined
+            ? null
+            : (lookups.systems.get(homeSystemId) ?? null),
+        startingStations: school.startingStations
+          .flatMap(({ stationId }) => {
+            const station = lookups.stations.get(stationId);
+            if (!station?.solarSystem) return [];
+            return [
+              {
+                ...toLocation(station.solarSystem),
+                stationId,
+                stationName: station.name,
+              },
+            ];
+          })
+          .sort((a, b) => a.stationName.localeCompare(b.stationName)),
+        careerAgents: school.careerAgents
+          .flatMap(
+            ({ agentId }) => named(agentId, lookups.agentNames, "Agent") ?? [],
+          )
+          .sort(byName),
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(a.isStarterSpaceSchool) - Number(b.isStarterSpaceSchool) ||
+        a.schoolId - b.schoolId,
+    );
+}
+
 /**
  * What the race's OpenGraph card needs. Returns null for an unknown or deleted
  * race; a failure throws, as everywhere on this cached-whole route.
@@ -537,281 +798,120 @@ export async function readRaceData(
     divisions,
     agentTypes,
   ] = await Promise.all([
-    namedTypeIds.length === 0
-      ? []
-      : prisma.type.findMany({
-          select: {
-            typeId: true,
-            name: true,
-            published: true,
-            groupId: true,
-            group: { select: { name: true } },
+    whenAny(namedTypeIds, () =>
+      prisma.type.findMany({
+        select: {
+          typeId: true,
+          name: true,
+          published: true,
+          groupId: true,
+          group: { select: { name: true } },
+        },
+        where: { typeId: { in: namedTypeIds } },
+      }),
+    ),
+    whenAny(skillIds, () =>
+      prisma.typeAttribute.findMany({
+        select: { typeId: true, attributeId: true, value: true },
+        where: {
+          typeId: { in: skillIds },
+          attributeId: {
+            in: [
+              PRIMARY_ATTRIBUTE_ID,
+              SECONDARY_ATTRIBUTE_ID,
+              SKILL_TIME_CONSTANT_ID,
+            ],
           },
-          where: { typeId: { in: namedTypeIds } },
-        }),
-    skillIds.length === 0
-      ? []
-      : prisma.typeAttribute.findMany({
-          select: { typeId: true, attributeId: true, value: true },
-          where: {
-            typeId: { in: skillIds },
-            attributeId: {
-              in: [
-                PRIMARY_ATTRIBUTE_ID,
-                SECONDARY_ATTRIBUTE_ID,
-                SKILL_TIME_CONSTANT_ID,
-              ],
-            },
-            isDeleted: false,
-          },
-        }),
-    schoolCorporationIds.length === 0
-      ? []
-      : prisma.corporation.findMany({
-          select: { corporationId: true, name: true },
-          where: { corporationId: { in: schoolCorporationIds } },
-        }),
-    schoolStationIds.length === 0
-      ? []
-      : prisma.station.findMany({
-          select: {
-            stationId: true,
-            name: true,
-            solarSystem: { select: locationSelect },
-          },
-          where: { stationId: { in: schoolStationIds } },
-        }),
-    careerAgentIds.length === 0
-      ? []
-      : prisma.character.findMany({
-          select: { characterId: true, name: true },
-          where: { characterId: { in: careerAgentIds } },
-        }),
-    schoolSystemIds.length === 0
-      ? []
-      : prisma.solarSystem.findMany({
-          select: locationSelect,
-          where: { solarSystemId: { in: schoolSystemIds } },
-        }),
-    divisionIds.length === 0
-      ? []
-      : prisma.npcCorporationDivision.findMany({
-          select: {
-            npcCorporationDivisionId: true,
-            name: true,
-            displayName: true,
-          },
-          where: { npcCorporationDivisionId: { in: divisionIds } },
-        }),
-    agentTypeIds.length === 0
-      ? []
-      : prisma.agentType.findMany({
-          select: { agentTypeId: true, name: true },
-          where: { agentTypeId: { in: agentTypeIds } },
-        }),
+          isDeleted: false,
+        },
+      }),
+    ),
+    whenAny(schoolCorporationIds, () =>
+      prisma.corporation.findMany({
+        select: { corporationId: true, name: true },
+        where: { corporationId: { in: schoolCorporationIds } },
+      }),
+    ),
+    whenAny(schoolStationIds, () =>
+      prisma.station.findMany({
+        select: {
+          stationId: true,
+          name: true,
+          solarSystem: { select: locationSelect },
+        },
+        where: { stationId: { in: schoolStationIds } },
+      }),
+    ),
+    whenAny(careerAgentIds, () =>
+      prisma.character.findMany({
+        select: { characterId: true, name: true },
+        where: { characterId: { in: careerAgentIds } },
+      }),
+    ),
+    whenAny(schoolSystemIds, () =>
+      prisma.solarSystem.findMany({
+        select: locationSelect,
+        where: { solarSystemId: { in: schoolSystemIds } },
+      }),
+    ),
+    whenAny(divisionIds, () =>
+      prisma.npcCorporationDivision.findMany({
+        select: {
+          npcCorporationDivisionId: true,
+          name: true,
+          displayName: true,
+        },
+        where: { npcCorporationDivisionId: { in: divisionIds } },
+      }),
+    ),
+    whenAny(agentTypeIds, () =>
+      prisma.agentType.findMany({
+        select: { agentTypeId: true, name: true },
+        where: { agentTypeId: { in: agentTypeIds } },
+      }),
+    ),
   ]);
 
-  const typesById = new Map(namedTypes.map((type) => [type.typeId, type]));
-  const attributesBySkill = new Map<number, Map<number, number>>();
-  for (const row of skillAttributes) {
-    const attributes =
-      attributesBySkill.get(row.typeId) ?? new Map<number, number>();
-    attributes.set(row.attributeId, row.value);
-    attributesBySkill.set(row.typeId, attributes);
-  }
-  const corporationNames = new Map(
-    schoolCorporations.map((corp) => [corp.corporationId, corp.name]),
-  );
-  const stationsById = new Map(
-    schoolStations.map((station) => [station.stationId, station]),
-  );
-  const agentNames = new Map(
-    careerAgents.map((agent) => [agent.characterId, agent.name]),
-  );
-  const systemsById = new Map(
-    schoolSystems.map((system) => [system.solarSystemId, toLocation(system)]),
-  );
-
-  const skillRow = (typeId: number): RaceSkillRow => {
-    const type = typesById.get(typeId);
-    const attributes = attributesBySkill.get(typeId);
-    const trainingAttribute = (attributeId: number) => {
-      const value = attributes?.get(attributeId);
-      return value === undefined
-        ? null
-        : (CHARACTER_ATTRIBUTE_BY_DOGMA_ID.get(value) ?? null);
-    };
-    return {
-      typeId,
-      name: type?.name ?? `Type ${typeId}`,
-      groupId: type?.groupId ?? 0,
-      groupName: type?.group.name ?? "Unknown",
-      published: type?.published ?? false,
-      rank: attributes?.get(SKILL_TIME_CONSTANT_ID) ?? null,
-      primaryAttribute: trainingAttribute(PRIMARY_ATTRIBUTE_ID),
-      secondaryAttribute: trainingAttribute(SECONDARY_ATTRIBUTE_ID),
-    };
-  };
-
-  const operationsByStationType = new Map<number, Set<string>>();
-  for (const row of stationTypes) {
-    const operations =
-      operationsByStationType.get(row.stationTypeId) ?? new Set<string>();
-    operations.add(row.stationOperation.operationName);
-    operationsByStationType.set(row.stationTypeId, operations);
-  }
-  const stationTypeRows: RaceStationTypeRow[] = [...operationsByStationType]
-    .map(([typeId, operations]) => ({
-      typeId,
-      name: typesById.get(typeId)?.name ?? `Type ${typeId}`,
-      operations: [...operations].sort((a, b) => a.localeCompare(b)),
-    }))
-    .sort(
-      (a, b) =>
-        b.operations.length - a.operations.length ||
-        a.name.localeCompare(b.name),
-    );
-
-  const homeFactionId = race.factionId;
-  const factions = new Map(
-    memberFactions.map((member) => [
-      member.factionId,
-      {
-        factionId: member.factionId,
-        name: member.faction.name,
-        isHomeFaction: member.factionId === homeFactionId,
-        isMemberRace: true,
-      },
-    ]),
-  );
-  if (homeFactionId !== null && !factions.has(homeFactionId)) {
-    factions.set(homeFactionId, {
-      factionId: homeFactionId,
-      name: race.faction?.name ?? `Faction ${homeFactionId}`,
-      isHomeFaction: true,
-      isMemberRace: false,
-    });
-  }
+  const skillRow = skillRowBuilder(namedTypes, skillAttributes);
+  const faction = namedOrNull(race.factionId, race.faction?.name, "Faction");
 
   return {
     raceId: race.raceId,
     name: race.name,
     description: race.description ?? "",
     iconId: race.iconId,
-    faction:
-      homeFactionId === null
-        ? null
-        : {
-            id: homeFactionId,
-            name: race.faction?.name ?? `Faction ${homeFactionId}`,
-          },
-    starterShip:
-      race.shipTypeId === null
-        ? null
-        : {
-            id: race.shipTypeId,
-            name: race.shipType?.name ?? `Type ${race.shipTypeId}`,
-          },
-    // The home faction first, then the others by name.
-    factions: [...factions.values()].sort(
-      (a, b) =>
-        Number(b.isHomeFaction) - Number(a.isHomeFaction) ||
-        a.name.localeCompare(b.name),
-    ),
-    bloodlines: bloodlines
-      .map((bloodline) => ({
-        bloodlineId: bloodline.bloodlineId,
-        name: bloodline.name,
-        description: bloodline.description,
-        iconId: bloodline.iconId,
-        corporation: {
-          id: bloodline.corporationId,
-          name: bloodline.corporation.name,
-        },
-        shipType:
-          bloodline.shipTypeId === null
-            ? null
-            : {
-                id: bloodline.shipTypeId,
-                name:
-                  bloodline.shipType?.name ?? `Type ${bloodline.shipTypeId}`,
-              },
-        attributes: attributeValues(bloodline),
-        ancestries: bloodline.ancestries
-          .map((ancestry) => ({
-            ancestryId: ancestry.ancestryId,
-            name: ancestry.name,
-            shortDescription: ancestry.shortDescription,
-            description: ancestry.description,
-            iconId: ancestry.iconId,
-            bonuses: attributeValues(ancestry),
-          }))
-          .sort((a, b) => a.ancestryId - b.ancestryId),
-      }))
-      .sort((a, b) => a.bloodlineId - b.bloodlineId),
-    schools: schools
-      .map((school) => {
-        const homeSystemId = schoolMapBySchool.get(school.schoolId);
-        return {
-          schoolId: school.schoolId,
-          name: school.name,
-          title: school.title,
-          description: school.description,
-          characterDescription: school.characterDescription,
-          iconId: school.iconId,
-          corporation: named(
-            school.corporationId,
-            corporationNames,
-            "Corporation",
-          ),
-          isStarterSpaceSchool: school.isStarterSpaceSchool ?? false,
-          homeSystem:
-            homeSystemId === undefined
-              ? null
-              : (systemsById.get(homeSystemId) ?? null),
-          startingStations: school.startingStations
-            .flatMap(({ stationId }) => {
-              const station = stationsById.get(stationId);
-              if (!station?.solarSystem) return [];
-              return [
-                {
-                  ...toLocation(station.solarSystem),
-                  stationId,
-                  stationName: station.name,
-                },
-              ];
-            })
-            .sort((a, b) => a.stationName.localeCompare(b.stationName)),
-          careerAgents: school.careerAgents
-            .flatMap(({ agentId }) => named(agentId, agentNames, "Agent") ?? [])
-            .sort(byName),
-        };
-      })
-      // The original schools first, each before its Starter Space copy.
-      .sort(
-        (a, b) =>
-          Number(a.isStarterSpaceSchool) - Number(b.isStarterSpaceSchool) ||
-          a.schoolId - b.schoolId,
+    faction,
+    starterShip: namedOrNull(race.shipTypeId, race.shipType?.name, "Type"),
+    factions: buildFactionRows(faction, memberFactions),
+    bloodlines: buildBloodlineRows(bloodlines),
+    schools: buildSchoolRows(schools, {
+      systemBySchool: schoolMapBySchool,
+      systems: new Map(
+        schoolSystems.map((system) => [
+          system.solarSystemId,
+          toLocation(system),
+        ]),
       ),
+      stations: new Map(
+        schoolStations.map((station) => [station.stationId, station]),
+      ),
+      corporationNames: new Map(
+        schoolCorporations.map((corp) => [corp.corporationId, corp.name]),
+      ),
+      agentNames: new Map(
+        careerAgents.map((agent) => [agent.characterId, agent.name]),
+      ),
+    }),
     startingSkills: startingSkills
       .map((skill) => {
         const row = skillRow(skill.skillTypeId);
         return {
           ...row,
           level: skill.level,
-          skillPoints:
-            row.rank === null
-              ? null
-              : Math.round(
-                  (SKILL_POINTS_AT_LEVEL[skill.level] ?? 0) * row.rank,
-                ),
+          skillPoints: skillPointsAt(skill.level, row.rank),
         };
       })
-      .sort(
-        (a, b) =>
-          a.groupName.localeCompare(b.groupName) ||
-          a.name.localeCompare(b.name),
-      ),
+      .sort(bySkillGroup),
     cloneGrade: grade && {
       cloneGradeId: grade.cloneGradeId,
       name: grade.name,
@@ -820,22 +920,15 @@ export async function readRaceData(
           ...skillRow(skill.skillTypeId),
           maxLevel: skill.level,
         }))
-        .sort(
-          (a, b) =>
-            a.groupName.localeCompare(b.groupName) ||
-            a.name.localeCompare(b.name),
-        ),
+        .sort(bySkillGroup),
     },
-    racialSkills: racialSkillIds
-      .map(skillRow)
-      .sort(
-        (a, b) =>
-          a.groupName.localeCompare(b.groupName) ||
-          a.name.localeCompare(b.name),
-      ),
+    racialSkills: racialSkillIds.map(skillRow).sort(bySkillGroup),
     shipClasses: buildShipClasses(types),
     itemCategories: countCategories(types),
-    stationTypes: stationTypeRows,
+    stationTypes: buildStationTypeRows(
+      stationTypes,
+      new Map(namedTypes.map((type) => [type.typeId, type.name])),
+    ),
     agents: summarizeAgents(
       agentGroups,
       new Map(
