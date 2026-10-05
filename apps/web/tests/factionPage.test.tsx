@@ -62,6 +62,11 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
+const mockEsiNameLookup = jest.fn<(entries: unknown) => unknown>();
+jest.mock("@jitaspace/hooks", () => ({
+  useEsiNameLookup: (entries: unknown) => mockEsiNameLookup(entries),
+}));
+
 const mockFwStats = jest.fn<() => unknown>();
 const mockFwWars = jest.fn<() => unknown>();
 const mockFwSystems = jest.fn<() => unknown>();
@@ -613,6 +618,7 @@ describe("faction page (server)", () => {
 
 describe("faction page (client)", () => {
   beforeEach(() => {
+    mockEsiNameLookup.mockReturnValue({});
     mockFwStats.mockReturnValue({ data: undefined });
     mockFwWars.mockReturnValue({ data: undefined });
     mockFwSystems.mockReturnValue({ data: undefined });
@@ -807,6 +813,45 @@ describe("faction page (client)", () => {
 
     expect(screen.getByText("Shield-and-Sword")).toBeInTheDocument();
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("names warzone systems in the rows, so search and sort can find them", () => {
+    const TAMA = 30002813;
+    mockFwSystems.mockReturnValue({
+      data: {
+        data: [
+          {
+            solar_system_id: TAMA,
+            occupier_faction_id: CALDARI,
+            owner_faction_id: CALDARI,
+            contested: "contested",
+            victory_points: 10,
+            victory_points_threshold: 100,
+          },
+        ],
+      },
+    });
+    mockEsiNameLookup.mockImplementation((entries) =>
+      (entries as { id: number }[]).some((entry) => entry.id === TAMA)
+        ? { [String(TAMA)]: { value: { name: "Tama" } } }
+        : {},
+    );
+
+    renderClient(sdeData(), liveData(), "?tab=warfare");
+
+    // The SolarSystemName stub draws nothing: this is the row's own name.
+    expect(screen.getByText("Tama")).toBeInTheDocument();
+    expect(mockEsiNameLookup).toHaveBeenCalledWith([
+      { id: TAMA, category: "solar_system" },
+    ]);
+  });
+
+  it("keeps the militia pilots slot while ESI answers", () => {
+    renderClient(sdeData(), liveData());
+
+    // Rendered before /fw/stats resolves, so the number cannot shift the page.
+    expect(screen.getByText("Militia pilots")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
   });
 
   it("says one epic arc, not one epic arcs", () => {

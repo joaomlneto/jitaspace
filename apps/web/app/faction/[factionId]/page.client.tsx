@@ -55,6 +55,7 @@ import {
   SolarSystemName,
   TypeAnchor,
 } from "@jitaspace/eve-components";
+import { useEsiNameLookup } from "@jitaspace/hooks";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -1137,13 +1138,31 @@ export default function FactionPage({
     return known;
   }, [faction.homeSystem, tables]);
 
+  // The rest of the names in one batched `/universe/names` call, into the rows
+  // themselves: the table's search and sort read the name from the row, not
+  // from what the cell draws.
+  const unnamedWarzoneSystems = useMemo(
+    () =>
+      occupiedWarzone
+        .filter((system) => !knownSystems.has(system.solar_system_id))
+        .map((system) => ({
+          id: system.solar_system_id,
+          category: "solar_system" as const,
+        })),
+    [occupiedWarzone, knownSystems],
+  );
+  const warzoneNames = useEsiNameLookup(unnamedWarzoneSystems);
+
   const warzone = useMemo<WarzoneSystemRow[]>(
     () =>
       occupiedWarzone.map((system) => {
         const known = knownSystems.get(system.solar_system_id);
         return {
           solarSystemId: system.solar_system_id,
-          name: known?.name ?? null,
+          name:
+            known?.name ??
+            warzoneNames[system.solar_system_id.toString()]?.value?.name ??
+            null,
           securityStatus: known?.securityStatus ?? null,
           contested: system.contested,
           victoryPoints: system.victory_points,
@@ -1151,7 +1170,7 @@ export default function FactionPage({
           ownerFactionId: system.owner_faction_id,
         };
       }),
-    [occupiedWarzone, knownSystems],
+    [occupiedWarzone, knownSystems, warzoneNames],
   );
 
   const militiaPilots = fwStats?.pilots;
@@ -1242,10 +1261,17 @@ export default function FactionPage({
                     value={formatCount(counts.corporations)}
                   />
                 )}
-                {militiaPilots !== undefined && (
+                {/* A faction with a militia keeps the slot while ESI answers,
+                    so the number does not push the page down when it lands. */}
+                {(faction.militiaCorporation !== null ||
+                  militiaPilots !== undefined) && (
                   <HeroStat
                     label="Militia pilots"
-                    value={formatCount(militiaPilots)}
+                    value={
+                      militiaPilots === undefined
+                        ? "—"
+                        : formatCount(militiaPilots)
+                    }
                   />
                 )}
               </Group>
