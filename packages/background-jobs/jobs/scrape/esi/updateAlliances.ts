@@ -11,6 +11,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { planAllianceUpdates } from "../../../helpers/planAllianceUpdates.ts";
+import { syncSovereignty } from "./syncSovereignty.ts";
 
 // Neither /alliances/{id} nor /alliances/{id}/corporations is in an ESI
 // rate-limit group, so only the error limit applies. 20 in flight fetched all
@@ -38,7 +39,7 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
   singleton: true,
   retries: 0,
   description:
-    "Refresh every open alliance and its member corporations from ESI, and mark closed alliances",
+    "Refresh every open alliance, its member corporations and its sovereignty from ESI, and mark closed alliances",
   handler: async (ctx) => {
     const startedAt = performance.now();
     const limit = pLimit(ESI_CONCURRENCY);
@@ -152,7 +153,13 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
       0,
     );
 
-    // 5. Evict the web app's cached pages for everything that changed. Sent
+    // 5. Sovereignty. After step 1, so every alliance a claim names exists.
+    const sovereignty = await syncSovereignty({
+      knownAllianceIds: new Set(allianceIds),
+      logger: ctx.logger,
+    });
+
+    // 6. Evict the web app's cached pages for everything that changed. Sent
     // as its own retryable job, so a failed call cannot lose the eviction.
     // Corporations created above arrive already in their alliance, which
     // therefore gained a member too.
@@ -164,6 +171,7 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
     const allianceIdsToRevalidate = [
       ...new Set([
         ...plan.affectedAllianceIds,
+        ...sovereignty.affectedAllianceIds,
         ...corporationsToCreate.flatMap((id) => memberOf.get(id) ?? []),
       ]),
     ];
@@ -200,6 +208,7 @@ export const updateAlliances = defineJob<UpdateAlliancesEventPayload["data"]>({
           plan.missingCorporationIds.length - corporationsToCreate.length,
         moved: corporationsMoved,
       },
+      sovereignty: sovereignty.stats,
       elapsedMs: {
         esi: Math.round(esiElapsedMs),
         total: Math.round(performance.now() - startedAt),

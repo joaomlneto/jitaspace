@@ -577,26 +577,29 @@ model Alliance {
   killmailVictims   KillmailVictim[]   @relation("KillmailVictimAlliance")
   killmailAttackers KillmailAttacker[] @relation("KillmailAttackerAlliance")
 
+  sovereigntySystems SolarSystemSovereignty[] @relation("SolarSystemSovereigntyAlliance")
+
   @@index([creatorCorporationId])
   @@index([factionId])
 }
 
 model Faction {
-  factionId            Int                 @id
+  factionId            Int                      @id
   name                 String
   description          String
   isUnique             Boolean
-  militiaCorporation   Corporation?        @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  militiaCorporation   Corporation?             @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   militiaCorporationId Int?
   alliances            Alliance[]
-  corporations         Corporation[]       @relation("CorporationFaction")
-  factionCorporation   Corporation?        @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  corporations         Corporation[]            @relation("CorporationFaction")
+  factionCorporation   Corporation?             @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   corporationId        Int?
   sizeFactor           Float
-  solarSystem          SolarSystem?        @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystem          SolarSystem?             @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
   // Systems held by this faction (inverse of SolarSystem.factionId).
-  heldSolarSystems     SolarSystem[]       @relation("SolarSystemFaction")
+  heldSolarSystems     SolarSystem[]            @relation("SolarSystemFaction")
+  sovereigntySystems   SolarSystemSovereignty[] @relation("SolarSystemSovereigntyFaction")
   // do we need to store this?
   stationCount         Int
   // do we need to store this?
@@ -612,13 +615,13 @@ model Faction {
   iconId               Int?
   /// One-line tagline, carried for the four empire factions only.
   shortDescription     String?
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt()
-  isDeleted            Boolean             @default(false)
-  Character            Character[]         @relation("CharacterFaction")
-  races                Race[]              @relation("RaceFaction")
-  killmailVictims      KillmailVictim[]    @relation("KillmailVictimFaction")
-  killmailAttackers    KillmailAttacker[]  @relation("KillmailAttackerFaction")
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt()
+  isDeleted            Boolean                  @default(false)
+  Character            Character[]              @relation("CharacterFaction")
+  races                Race[]                   @relation("RaceFaction")
+  killmailVictims      KillmailVictim[]         @relation("KillmailVictimFaction")
+  killmailAttackers    KillmailAttacker[]       @relation("KillmailAttackerFaction")
   contrabandTypes      ContrabandType[]
 
   @@index([corporationId])
@@ -908,8 +911,45 @@ model SolarSystem {
   Planet                     Planet[]                              @relation("PlanetSolarSystem")
   AgentInSpace               AgentInSpace[]                        @relation("AgentInSpaceSolarSystem")
   Killmail                   Killmail[]                            @relation("KillmailSolarSystem")
+  sovereignty                SolarSystemSovereignty?               @relation("SolarSystemSovereigntySolarSystem")
 
   @@index([constellationId])
+  @@index([factionId])
+}
+
+/// Who holds sovereignty over a solar system, as ESI's GET /sovereignty/systems
+/// reports it: one row per system ESI lists, whether an alliance, an NPC faction
+/// or nobody holds it. Kept current by the hourly `esi-update-alliances` job;
+/// a system ESI stops listing is deleted.
+///
+/// Exactly one of three claims applies: an alliance claim (allianceId and the
+/// alliance-only columns set), a faction claim (factionId set), or unclaimed
+/// (isUnclaimed). Every field ESI returns is stored as-is.
+model SolarSystemSovereignty {
+  solarSystemId             Int         @id
+  solarSystem               SolarSystem @relation("SolarSystemSovereigntySolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  isUnclaimed               Boolean     @default(false)
+  factionId                 Int?
+  faction                   Faction?    @relation("SolarSystemSovereigntyFaction", fields: [factionId], references: [factionId])
+  allianceId                Int?
+  alliance                  Alliance?   @relation("SolarSystemSovereigntyAlliance", fields: [allianceId], references: [allianceId])
+  /// The alliance corporation holding the claim. Not a foreign key: the job
+  /// does not guarantee every holding corporation is in the Corporation table.
+  corporationId             Int?
+  claimedSince              DateTime?
+  isCapitalSystem           Boolean?
+  sovereigntyHubId          BigInt?
+  /// Null while the hub is in an active campaign (ESI omits the window then).
+  vulnerabilityWindowStart  DateTime?
+  vulnerabilityWindowEnd    DateTime?
+  activityDefenseMultiplier Float?
+  militaryLevel             Int?
+  industrialLevel           Int?
+  strategicLevel            Int?
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt()
+
+  @@index([allianceId])
   @@index([factionId])
 }
 
