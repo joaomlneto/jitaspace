@@ -177,6 +177,23 @@ describe("batched name resolution", () => {
     expect(mockPostUniverseNames).toHaveBeenCalledTimes(1);
   });
 
+  it("never sends an id beyond int32 to /universe/names", async () => {
+    // A market order in an Upwell structure: ESI 400s the whole batch on an id
+    // it cannot coerce to int32, so it must not join one. The station beside
+    // it still resolves, in a batch of its own.
+    mockPostUniverseNames.mockImplementation(answer);
+    const STRUCTURE = 1_044_752_365_771;
+
+    const station = renderHook(() => useEsiName(70_000, "inventory_type"));
+    const structure = renderHook(() => useEsiName(STRUCTURE));
+
+    await waitFor(() => expect(station.result.current.name).toBe("Type 70000"));
+    await waitFor(() => expect(cacheStatusOf(STRUCTURE)).toBe("error"));
+    expect(structure.result.current.name).toBeUndefined();
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(1);
+    expect(mockPostUniverseNames.mock.calls[0]?.[0]).toEqual([70_000]);
+  });
+
   it("resolves stargates through their own endpoint, outside the batch", async () => {
     // /universe/names cannot resolve stargates.
     mockGetStargate.mockResolvedValue({ data: { name: "Stargate (Jita)" } });

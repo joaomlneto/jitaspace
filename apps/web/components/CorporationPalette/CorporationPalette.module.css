@@ -1,0 +1,27 @@
+/*
+ * The wash and the ticker edge depend on the card surface, which differs per
+ * colour scheme (and per app theme), so `useCorporationPaletteVars` computes
+ * both schemes and these rules pick one. Choosing in CSS rather than in render
+ * keeps the server and client markup identical.
+ */
+.wash {
+  background: light-dark(
+    var(--corp-wash-light, transparent),
+    var(--corp-wash-dark, transparent)
+  );
+}
+
+.tickerEdge {
+  box-shadow: light-dark(
+    var(--corp-ticker-edge-light, none),
+    var(--corp-ticker-edge-dark, none)
+  );
+}
+
+/* Transparent logos would otherwise show the wash through them. */
+.logoBacking {
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-6)
+  );
+}

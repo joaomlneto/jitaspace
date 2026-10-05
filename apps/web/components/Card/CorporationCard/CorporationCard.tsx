@@ -2,15 +2,7 @@
 
 import type { ReactNode } from "react";
 import { memo } from "react";
-import {
-  Anchor,
-  Badge,
-  Card,
-  Group,
-  Skeleton,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Anchor, Card, Group, Skeleton, Stack, Text } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import {
@@ -29,6 +21,14 @@ import {
   DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
+
+import {
+  corporationPaletteClasses,
+  CorporationPaletteStripe,
+  CorporationTickerPaletteBadge,
+  getCorporationPaletteSlots,
+  useCorporationPaletteVars,
+} from "~/components/CorporationPalette";
 
 interface CorporationCardProps {
   corporationId: string | number;
@@ -66,6 +66,10 @@ export const CorporationCard = memo(
   }: CorporationCardProps) => {
     const { data: corporation } = useCorporation(Number(corporationId));
     const corporationData = corporation?.data;
+    const paletteSlots = getCorporationPaletteSlots(corporationData?.palette);
+    const paletteColors = paletteSlots.map(({ color }) => color);
+    const hasPalette = paletteColors.length > 0;
+    const paletteVars = useCorporationPaletteVars(paletteColors);
     const description = stripHtml(corporationData?.description);
     const homepageUrl = isValidHttpUrl(corporationData?.url)
       ? corporationData?.url
@@ -86,14 +90,24 @@ export const CorporationCard = memo(
     }
 
     return (
-      <Card withBorder radius="md">
-        <Card.Section p="xs" withBorder>
+      <Card withBorder radius="md" style={paletteVars}>
+        {hasPalette && (
+          <Card.Section>
+            <CorporationPaletteStripe slots={paletteSlots} />
+          </Card.Section>
+        )}
+        <Card.Section
+          p="xs"
+          withBorder
+          className={hasPalette ? corporationPaletteClasses.wash : undefined}
+        >
           <Group wrap="nowrap" justify="space-between" align="start">
             <Group wrap="nowrap" align="start">
               <CorporationAvatar
                 corporationId={corporationId}
                 size={96}
                 radius="md"
+                className={corporationPaletteClasses.logoBacking}
               />
               <div>
                 <Group gap="xs" wrap="nowrap">
@@ -105,7 +119,10 @@ export const CorporationCard = memo(
                     />
                   </CorporationAnchor>
                   {corporationData?.ticker && (
-                    <Badge>{corporationData.ticker}</Badge>
+                    <CorporationTickerPaletteBadge
+                      ticker={corporationData.ticker}
+                      colors={paletteColors}
+                    />
                   )}
                 </Group>
 

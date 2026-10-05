@@ -1,7 +1,8 @@
-import { Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Group, Stack, Text, Title } from "@mantine/core";
 
 import { MarketIcon } from "@jitaspace/eve-icons";
 
+import { ShowMarketTreeInline } from "~/layouts";
 import { pageMetadata } from "~/lib/metadata";
 
 export const metadata = pageMetadata({
@@ -14,16 +15,17 @@ export const metadata = pageMetadata({
 
 export default function Page() {
   return (
-    <Container size="xl">
-      <Stack gap="xl">
-        <Group>
-          <MarketIcon width={48} />
-          <Title order={1}>Market</Title>
-        </Group>
-        <Text c="dimmed">
-          Select an item from the market groups to view its buy and sell orders.
-        </Text>
-      </Stack>
-    </Container>
+    <Stack gap="md">
+      {/* The layout's sidebar tree is this page's content on small screens. */}
+      <ShowMarketTreeInline />
+      <Group wrap="nowrap">
+        <MarketIcon width={48} />
+        <Title order={1}>Market</Title>
+      </Group>
+      <Text c="dimmed">
+        Browse the market groups, or search for an item, to see its buy and sell
+        orders across New Eden.
+      </Text>
+    </Stack>
   );
 }

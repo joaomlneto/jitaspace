@@ -1,0 +1,17 @@
+/* A one-line, ellipsised entity name. The rules reach into the children
+   because the link and the name are Mantine `Text`s that reset `white-space`
+   themselves, and the name is a block `<p>`, so the ellipsis has to be on it. */
+.truncate {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.truncate,
+.truncate * {
+  white-space: nowrap;
+}
+
+.truncate p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

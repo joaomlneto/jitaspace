@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Alert,
@@ -15,6 +16,7 @@ import {
   Paper,
   Progress,
   SimpleGrid,
+  Skeleton,
   Stack,
   Table,
   Tabs,
@@ -38,7 +40,7 @@ import {
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
@@ -88,7 +90,12 @@ import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { EntityHistory } from "../../history/EntityHistory";
-import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
+import {
+  ENLISTED_CORPORATIONS_SHOWN,
+  SHIP_TREE_OMEGA_PARAM,
+  SHIP_TREE_TAB_HEIGHT,
+  SHIP_TREE_TAB_MIN_HEIGHT,
+} from "./constants";
 import {
   DEFAULT_FACTION_PAGE_TAB,
   FACTION_PAGE_TABS,
@@ -96,6 +103,26 @@ import {
 } from "./tabs";
 
 export type PageProps = FactionPageData;
+
+// Browser-only and on demand: the ship tree library and its stylesheet load
+// when the tab opens, and stay out of the page's cached HTML.
+const FactionShipTree = dynamic(() => import("./FactionShipTree"), {
+  ssr: false,
+  // The panel's own shape (controls, tree, credit line), so nothing below it
+  // moves when the tree arrives.
+  loading: () => (
+    <Stack gap="md" data-testid="ship-tree-placeholder">
+      {/* Measured: the controls row with the logged-out skills prompt. */}
+      <Skeleton h={56} radius="sm" />
+      <Skeleton
+        h={SHIP_TREE_TAB_HEIGHT}
+        mih={SHIP_TREE_TAB_MIN_HEIGHT}
+        radius="md"
+      />
+      <Skeleton h={17} w="60%" radius="sm" />
+    </Stack>
+  ),
+});
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
@@ -1045,6 +1072,11 @@ export default function FactionPage({
       .withDefault(DEFAULT_FACTION_PAGE_TAB)
       .withOptions({ history: "replace" }),
   );
+  // Written by the Ship Tree tab; the page only clears it (see the tab change).
+  const [, setShipTreeOmega] = useQueryState(
+    SHIP_TREE_OMEGA_PARAM,
+    parseAsBoolean,
+  );
 
   const { data: fwStatsResponse } = useGetFwStats();
   const { data: fwWarsResponse } = useGetFwWars();
@@ -1108,6 +1140,7 @@ export default function FactionPage({
     ...(counts.corporations > 0 ? ["corporations"] : []),
     ...(hasWarfare ? ["warfare"] : []),
     ...(counts.items > 0 ? ["items"] : []),
+    ...(shipTreeFaction ? ["ship-tree"] : []),
     ...(counts.contraband > 0 ? ["contraband"] : []),
     ...(hasMissions ? ["missions"] : []),
     ...(counts.standingRestrictions > 0 ? ["standings"] : []),
@@ -1226,9 +1259,9 @@ export default function FactionPage({
             </Box>
 
             <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <Text size="sm" c="dimmed">
-                Faction
-              </Text>
+              <Anchor component={Link} href="/factions" size="sm" c="dimmed">
+                Factions
+              </Anchor>
               <Group gap="sm" align="center">
                 <Title order={2}>{faction.name}</Title>
                 {hasWarfare && (
@@ -1280,17 +1313,6 @@ export default function FactionPage({
               </Group>
 
               <Group gap="xs">
-                {shipTreeFaction && (
-                  <Button
-                    component={Link}
-                    href={`/ship-tree?faction=${shipTreeFaction.slug}`}
-                    size="xs"
-                    variant="light"
-                    leftSection={<IconHierarchy3 size={14} />}
-                  >
-                    Ship tree
-                  </Button>
-                )}
                 <Button
                   component={Link}
                   href={`https://zkillboard.com/faction/${factionId}/`}
@@ -1315,7 +1337,11 @@ export default function FactionPage({
         <Tabs
           value={selectedTab}
           onChange={(value) => {
-            if (isFactionPageTab(value)) void setActiveTab(value);
+            if (!isFactionPageTab(value)) return;
+            void setActiveTab(value);
+            // The clone type belongs to the Ship Tree tab: don't carry it into
+            // the links of the others.
+            if (value !== "ship-tree") void setShipTreeOmega(null);
           }}
           variant="outline"
           keepMounted={false}
@@ -1337,6 +1363,7 @@ export default function FactionPage({
             )}
             {tab("warfare", <IconSwords size={16} />, "Warfare")}
             {tab("items", <IconPackage size={16} />, "Items", counts.items)}
+            {tab("ship-tree", <IconHierarchy3 size={16} />, "Ship Tree")}
             {tab(
               "contraband",
               <IconShieldHalf size={16} />,
@@ -1451,6 +1478,13 @@ export default function FactionPage({
                   striped
                 />
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Ship tree */}
+          {shipTreeFaction && (
+            <Tabs.Panel value="ship-tree" pt="lg">
+              <FactionShipTree faction={shipTreeFaction.id} />
             </Tabs.Panel>
           )}
 
