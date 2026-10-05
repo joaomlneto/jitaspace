@@ -31,7 +31,7 @@ interface SkeletonRecord {
   key: number;
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends object>({
   data,
   columns,
   isLoading = false,

@@ -199,6 +199,10 @@ const config = {
     // by jovespace), and suites that render history-backed routes without
     // mocking it (typePage, routeLoadingFallback) need jest to down-compile it.
     "@jitaspace/db-builds",
+    // Same reason again: TanStack Table v9 ships ESM only. Its store
+    // dependencies (@tanstack/store, @tanstack/react-store) still ship CJS.
+    "@tanstack/react-table",
+    "@tanstack/table-core",
   ],
 
   /** Avoid bundling server-only worker dependencies */

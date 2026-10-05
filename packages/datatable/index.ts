@@ -119,8 +119,11 @@ export interface DataTableSort {
 /**
  * Props shared by every DataTable implementation. Implementations may extend
  * this, but must accept everything here with identical semantics.
+ *
+ * A row is an object (or array): TanStack Table v9 requires it, and a column's
+ * `accessor` names one of its keys anyway.
  */
-export interface DataTableProps<TData> {
+export interface DataTableProps<TData extends object> {
   /** The rows to display. */
   data: TData[];
   /** Column definitions. */
@@ -184,6 +187,6 @@ export interface DataTableProps<TData> {
  * const Table: DataTableComponent = DataTable;
  * ```
  */
-export type DataTableComponent = <TData>(
+export type DataTableComponent = <TData extends object>(
   props: DataTableProps<TData>,
 ) => ReactNode;
