@@ -94,12 +94,16 @@ export const ingestSdeNpcCorporations = defineJob<
         },
       }),
     );
-    for (const [factionId, corporationIds] of moves) {
-      await prisma.corporation.updateMany({
-        where: { corporationId: { in: corporationIds } },
-        data: { enlistedFactionId: factionId },
-      });
-    }
+    // The moves touch disjoint rows, so they run together, but all of them must
+    // land before `factionId` is cleared, or an interrupted run would lose them.
+    await Promise.all(
+      [...moves].map(([factionId, corporationIds]) =>
+        prisma.corporation.updateMany({
+          where: { corporationId: { in: corporationIds } },
+          data: { enlistedFactionId: factionId },
+        }),
+      ),
+    );
     if (clear.length > 0) {
       await prisma.corporation.updateMany({
         where: { corporationId: { in: clear } },
