@@ -1,0 +1,54 @@
+/* One column on phones and tablets; from md, the market tree sits in a fixed
+   column beside the page. Laid out in CSS rather than with `useMediaQuery`,
+   which is `undefined` until hydration and so painted the desktop row first on
+   every phone, then reflowed it into a column. */
+.root {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mantine-spacing-lg);
+  padding-inline: var(--mantine-spacing-md);
+}
+
+@media (min-width: $mantine-breakpoint-md) {
+  .root {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+}
+
+/* The sidebar keeps its place while the orders scroll: sticky under the
+   header, and exactly as tall as the space between the header and the footer
+   (both fixed), so the tree scrolls on its own instead of running off under
+   the footer. */
+.sidebar {
+  display: none;
+}
+
+@media (min-width: $mantine-breakpoint-md) {
+  .sidebar {
+    display: block;
+    position: sticky;
+    top: calc(var(--app-shell-header-offset, 0rem) + var(--mantine-spacing-xs));
+    height: calc(
+      100dvh - var(--app-shell-header-offset, 0rem) -
+        var(--app-shell-footer-offset, 0rem) - 2 * var(--mantine-spacing-xs)
+    );
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Room for the scrollbar, so it doesn't sit on the NavLink chevrons. */
+    padding-right: var(--mantine-spacing-xs);
+  }
+}
+
+.content {
+  min-width: 0;
+}
+
+/* The /market index has no item to show, so on small screens the sidebar
+   itself is shown inline after the page's intro, rather than the page
+   mounting a second copy of the tree. */
+@media (max-width: calc($mantine-breakpoint-md - 0.0625em)) {
+  .root:has([data-market-index]) .sidebar {
+    display: block;
+    order: 1;
+  }
+}

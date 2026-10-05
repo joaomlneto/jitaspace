@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import type { ReactNode } from "react";
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
 // @jitaspace/ui stubs (used by AgentsTable and MarketOrdersDataTable)
@@ -223,9 +223,52 @@ describe("MarketOrdersDataTable", () => {
     expect(screen.getByText("1,500")).toBeInTheDocument();
   });
 
-  it("formats the price with an ISK suffix", () => {
+  it("formats the price with two decimals and an ISK suffix", () => {
     renderOrders();
-    expect(screen.getByText("9,999.5 ISK")).toBeInTheDocument();
+    expect(screen.getByText("9,999.50 ISK")).toBeInTheDocument();
+  });
+
+  it("spells out the duration and the range", () => {
+    renderOrders([
+      SAMPLE_ORDER,
+      { ...SAMPLE_ORDER, order_id: 2, range: "solarsystem" },
+      { ...SAMPLE_ORDER, order_id: 3, range: "5" },
+    ]);
+    expect(screen.getAllByText("90 days")).toHaveLength(3);
+    expect(screen.getByText("Region")).toBeInTheDocument();
+    expect(screen.getByText("System")).toBeInTheDocument();
+    expect(screen.getByText("5 jumps")).toBeInTheDocument();
+  });
+
+  it("searches and sorts ranges as they read, not as ESI spells them", () => {
+    renderOrders([
+      { ...SAMPLE_ORDER, order_id: 1, range: "region" },
+      { ...SAMPLE_ORDER, order_id: 2, range: "solarsystem" },
+      { ...SAMPLE_ORDER, order_id: 3, range: "10" },
+      { ...SAMPLE_ORDER, order_id: 4, range: "2" },
+    ]);
+
+    fireEvent.click(screen.getByText("Range"));
+    expect(dataRows().map((row) => row.textContent)).toEqual([
+      expect.stringContaining("System"),
+      expect.stringContaining("2 jumps"),
+      expect.stringContaining("10 jumps"),
+      expect.stringContaining("Region"),
+    ]);
+
+    fireEvent.change(screen.getByPlaceholderText("Search..."), {
+      target: { value: "jumps" },
+    });
+    expect(dataRows()).toHaveLength(2);
+  });
+
+  it("expires an order after its own duration, not a fixed 30 days", () => {
+    renderOrders([{ ...SAMPLE_ORDER, duration: 3 }]);
+    const [issued, expires] = screen
+      .getAllByTestId("time-ago")
+      .map((element) => element.textContent);
+    expect(issued).toBe("2024-01-01T00:00:00.000Z");
+    expect(expires).toBe("2024-01-04T00:00:00.000Z");
   });
 
   it("renders the location column with the security badge and entity name", () => {
@@ -247,6 +290,6 @@ describe("MarketOrdersDataTable", () => {
 
   it("accepts sortPriceDescending without crashing", () => {
     renderOrders([SAMPLE_ORDER], true);
-    expect(screen.getByText("9,999.5 ISK")).toBeInTheDocument();
+    expect(screen.getByText("9,999.50 ISK")).toBeInTheDocument();
   });
 });

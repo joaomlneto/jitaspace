@@ -1,0 +1,81 @@
+/* Series colours, by role. Slots 1, 2, 3 and 7 of the reference categorical
+   palette (validated as a set: adjacent CVD ΔE ≥ 9.2 in both modes), each with
+   its own dark-mode step rather than an automatic flip. Aqua sits below 3:1 on
+   the light surface, which is why the legend and the daily-data table exist. */
+.root {
+  --series-median: light-dark(#2a78d6, #3987e5);
+  --series-ma-short: light-dark(#eb6834, #d95926);
+  --series-ma-long: light-dark(#1baf7a, #199e70);
+  --series-donchian: light-dark(#4a3aa7, #9085e9);
+  /* The day's min/max is context for the median, not a series of its own:
+     neutral ink, so it recedes behind the coloured lines. */
+  --series-range: light-dark(#898781, #6b6a65);
+  --chart-grid: light-dark(#e1e0d9, #2c2c2a);
+  --chart-axis: light-dark(#898781, #898781);
+}
+
+/* Legend toggles: the key mirrors the mark, a line for lines, a block for
+   the band and the bars. */
+.key {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--key-color);
+}
+
+.key[data-shape="band"] {
+  height: 10px;
+  background: color-mix(in srgb, var(--key-color) 25%, transparent);
+  border-block: 1px solid var(--key-color);
+}
+
+.key[data-shape="bar"] {
+  width: 3px;
+  height: 12px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: 2px var(--mantine-spacing-xs);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-xl);
+  background: none;
+  color: var(--mantine-color-text);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  cursor: pointer;
+}
+
+.toggle[aria-pressed="false"] {
+  color: var(--mantine-color-dimmed);
+  border-style: dashed;
+}
+
+.toggle[aria-pressed="false"] .key {
+  opacity: 0.35;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.tooltip {
+  min-width: 190px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+
+.tooltipValue {
+  margin-left: auto;
+  font-weight: 600;
+}

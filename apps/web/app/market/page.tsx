@@ -1,4 +1,4 @@
-import { Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Group, Stack, Text, Title } from "@mantine/core";
 
 import { MarketIcon } from "@jitaspace/eve-icons";
 
@@ -14,16 +14,17 @@ export const metadata = pageMetadata({
 
 export default function Page() {
   return (
-    <Container size="xl">
-      <Stack gap="xl">
-        <Group>
-          <MarketIcon width={48} />
-          <Title order={1}>Market</Title>
-        </Group>
-        <Text c="dimmed">
-          Select an item from the market groups to view its buy and sell orders.
-        </Text>
-      </Stack>
-    </Container>
+    // Marks the page for the market layout, which lists its own sidebar tree
+    // inline below md here instead of hiding it (see MarketLayout.module.css).
+    <Stack gap="md" data-market-index>
+      <Group wrap="nowrap">
+        <MarketIcon width={48} />
+        <Title order={1}>Market</Title>
+      </Group>
+      <Text c="dimmed">
+        Browse the market groups, or search for an item, to see its buy and sell
+        orders across New Eden.
+      </Text>
+    </Stack>
   );
 }

@@ -17,3 +17,8 @@ export interface FuzzworkTypeMarketAggregate {
   buy: { percentile: number; volume: number };
   sell: { percentile: number; volume: number };
 }
+
+/** Mirrors the real list in `src/hooks/useTypeMarketOrders.ts`. */
+export const MARKET_HUB_REGION_IDS = [
+  10000002, 10000043, 10000032, 10000030, 10000042,
+];

@@ -16,7 +16,7 @@ import {
  * Largest Contentful Paint on the market page. Every region is still fetched;
  * only the order in which the requests are kicked off changes.
  */
-const MARKET_HUB_REGION_IDS = [
+export const MARKET_HUB_REGION_IDS = [
   10000002, // The Forge (Jita)
   10000043, // Domain (Amarr)
   10000032, // Sinq Laison (Dodixie)
