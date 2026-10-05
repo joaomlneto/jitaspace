@@ -5,9 +5,46 @@ import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
 
 /**
  * The building blocks of the entity detail pages that share the item page's
- * layout (`/type/[typeId]`, `/faction/[factionId]`): a section heading, a
- * labelled stat card, and the compact stat under the hero title.
+ * layout (`/type/[typeId]`, `/faction/[factionId]`, `/alliance/[allianceId]`):
+ * the hero card, a section heading, a labelled stat card, and the compact stat
+ * under the hero title.
  */
+
+/**
+ * A page's hero card: framed artwork on the left, title and stats beside it.
+ * The type and faction pages still draw the same frame inline.
+ */
+export function HeroCard({
+  artwork,
+  children,
+}: Readonly<{ artwork: ReactNode; children: ReactNode }>) {
+  return (
+    <Paper withBorder radius="md" p="lg">
+      <Group align="flex-start" gap="xl" wrap="wrap">
+        <Box
+          style={{
+            width: 170,
+            height: 170,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+            borderRadius: 8,
+            border: "1px solid rgba(108, 132, 151, 0.28)",
+            background:
+              "radial-gradient(circle at 50% 35%, rgba(44, 66, 88, 0.4), rgba(6, 9, 15, 0.92))",
+          }}
+        >
+          {artwork}
+        </Box>
+        <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
+          {children}
+        </Stack>
+      </Group>
+    </Paper>
+  );
+}
 
 export function SectionHeading({
   icon,

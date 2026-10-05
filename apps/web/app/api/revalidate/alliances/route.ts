@@ -1,7 +1,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 
-import { ALLIANCES_CACHE_TAG } from "~/lib/alliancesCache";
+import { allianceCacheTag, ALLIANCES_CACHE_TAG } from "~/lib/alliancesCache";
 import { isCronAuthorized } from "~/lib/cronAuth";
 
 // ESI lists ~3,650 open alliances; a run that touches more than this is not a
@@ -23,8 +23,11 @@ const bodySchema = z.object({
  * - Each `/alliance/[allianceId]` page is **expired** (`revalidatePath`), so
  *   the next request renders it afresh: its cached title and social card carry
  *   the alliance's name, ticker and executor, and serving those stale once more
- *   is what this route exists to stop. That render reads ESI, not our
- *   database, so expiring it cannot turn a database outage into an error page.
+ *   is what this route exists to stop. Its database read (members,
+ *   sovereignty, wars) is expired with it (`allianceCacheTag`), or the fresh
+ *   render would reuse the stale rows. That read degrades to the ESI-only page
+ *   when the database fails, so expiring it cannot turn a database outage into
+ *   an error page.
  * - The `/alliances` list is marked stale (`"max"`): the next visitor still
  *   gets the old copy while a fresh one renders, because that page reads the
  *   database and an outage must not replace it with an error page.
@@ -50,6 +53,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const allianceIds = [...new Set(parsed.data.allianceIds)];
   for (const allianceId of allianceIds) {
+    revalidateTag(allianceCacheTag(allianceId), { expire: 0 });
     revalidatePath(`/alliance/${allianceId}`);
   }
   revalidateTag(ALLIANCES_CACHE_TAG, "max");

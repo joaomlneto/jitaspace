@@ -1,26 +1,42 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import {
   Anchor,
   Badge,
+  Breadcrumbs,
   Button,
   Container,
   Group,
+  Paper,
+  Progress,
+  SimpleGrid,
   Stack,
+  Tabs,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
-import { format } from "date-fns";
+import {
+  IconBuildingSkyscraper,
+  IconExternalLink,
+  IconFlag,
+  IconInfoCircle,
+  IconSkull,
+  IconSwords,
+  IconUsersGroup,
+} from "@tabler/icons-react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import {
-  AllianceName,
   CharacterAnchor,
   CharacterName,
   CorporationName,
+  FactionAnchor,
   FactionName,
+  SolarSystemAnchor,
 } from "@jitaspace/eve-components";
 import {
   useEsiAllianceInformation,
@@ -35,171 +51,764 @@ import {
   FactionAvatar,
 } from "@jitaspace/ui";
 
+import type { CorporationRow } from "./corporations";
+import type { AlliancePageTab } from "./tabs";
+import type { AllianceProfile } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import {
+  HeroCard,
+  HeroStat,
+  SectionHeading,
+  StatCard,
+} from "~/components/EntityPage";
+import { buildCorporationRows, summarizeCorporations } from "./corporations";
+import { CorporationsTab } from "./CorporationsTab";
+import {
+  formatAge,
+  formatDate,
+  formatDecimal,
+  formatInteger,
+  formatPercent,
+} from "./format";
+import { KillboardSummaryCards, KillboardTab } from "./KillboardTab";
+import { summarizeSovereignty } from "./sovereignty";
+import { SovereigntyTab } from "./SovereigntyTab";
+import {
+  ALLIANCE_PAGE_TABS,
+  DEFAULT_ALLIANCE_PAGE_TAB,
+  isAlliancePageTab,
+} from "./tabs";
+import { toWarRow, WarsTab } from "./WarsTab";
+import { iskEfficiency, useZkillboardAllianceStats } from "./zkillboard";
 
-export default function Page() {
-  const character = useSelectedCharacter();
-  const params = useParams();
-  const rawAllianceId = params.allianceId;
-  const allianceId = Number(
-    typeof rawAllianceId === "string" ? rawAllianceId : rawAllianceId?.[0],
+export interface PageProps {
+  allianceId: number;
+  /** Null when our database has no row for the alliance or is unavailable. */
+  profile: AllianceProfile | null;
+}
+
+/** How many corporations the composition bar names before "others". */
+const COMPOSITION_SIZE = 8;
+const COMPOSITION_COLORS = [
+  "blue.6",
+  "teal.6",
+  "grape.6",
+  "orange.6",
+  "cyan.6",
+  "pink.6",
+  "lime.6",
+  "indigo.6",
+];
+
+const EXTERNAL_LINKS = [
+  { label: "DOTLAN EveMaps", href: "https://evemaps.dotlan.net/alliance/" },
+  { label: "EveWho", href: "https://evewho.com/alliance/" },
+  { label: "zKillboard", href: "https://zkillboard.com/alliance/" },
+] as const;
+
+function EntityLine({
+  avatar,
+  children,
+}: Readonly<{ avatar: ReactNode; children: ReactNode }>) {
+  return (
+    <Group gap="xs" wrap="nowrap">
+      {avatar}
+      {children}
+    </Group>
   );
-  const { data: alliance } = useEsiAllianceInformation(allianceId);
-  const { data: allianceCorporations } =
-    useEsiAllianceMemberCorporations(allianceId);
+}
 
-  if (!Number.isFinite(allianceId)) {
-    return null;
-  }
+function CorporationLine({
+  corporationId,
+  name,
+}: Readonly<{ corporationId: number; name?: string | null }>) {
+  return (
+    <EntityLine
+      avatar={<CorporationAvatar corporationId={corporationId} size="sm" />}
+    >
+      <CorporationAnchor corporationId={corporationId}>
+        {name ?? <CorporationName span corporationId={corporationId} />}
+      </CorporationAnchor>
+    </EntityLine>
+  );
+}
+
+function CompositionBar({
+  rows,
+  pilots,
+}: Readonly<{ rows: CorporationRow[]; pilots: number }>) {
+  const ranked = rows
+    .filter(
+      (row): row is CorporationRow & { memberCount: number } =>
+        row.memberCount !== null && row.memberCount > 0,
+    )
+    .sort((a, b) => b.memberCount - a.memberCount);
+  if (pilots === 0 || ranked.length === 0) return null;
+  const top = ranked.slice(0, COMPOSITION_SIZE);
+  const others = pilots - top.reduce((sum, row) => sum + row.memberCount, 0);
 
   return (
-    <Container size="sm">
-      <Stack>
-        <Group gap="xl">
-          <AllianceAvatar allianceId={allianceId} size="xl" radius={256} />
-          <Title order={3}>
-            <AllianceName span allianceId={allianceId} />
-          </Title>
-          {alliance?.data.ticker && <Badge>{alliance.data.ticker}</Badge>}
-          {character !== null && (
-            <OpenInformationWindowActionIcon
-              characterId={character.characterId}
-              entityId={allianceId}
-            />
+    <Paper withBorder radius="md" p="sm">
+      <Stack gap="sm">
+        <Progress.Root size={22}>
+          {top.map((row, index) => (
+            <Tooltip
+              key={row.corporationId}
+              label={`${row.name ?? row.corporationId}: ${formatInteger(row.memberCount)} pilots (${formatPercent(row.memberCount / pilots)})`}
+            >
+              <Progress.Section
+                value={(row.memberCount / pilots) * 100}
+                color={COMPOSITION_COLORS[index % COMPOSITION_COLORS.length]}
+              />
+            </Tooltip>
+          ))}
+          {others > 0 && (
+            <Tooltip
+              label={`${formatInteger(ranked.length - top.length)} other corporations: ${formatInteger(others)} pilots (${formatPercent(others / pilots)})`}
+            >
+              <Progress.Section
+                value={(others / pilots) * 100}
+                color="dark.3"
+              />
+            </Tooltip>
           )}
-        </Group>
-        <Group>
-          <Link
-            href={`https://evemaps.dotlan.net/alliance/${allianceId}`}
-            target="_blank"
-          >
-            <Button>
-              <Group gap="xs">
-                <IconExternalLink size={14} />
-                DOTLAN EveMaps
-              </Group>
-            </Button>
-          </Link>
-          <Link
-            href={`https://evewho.com/alliance/${allianceId}`}
-            target="_blank"
-          >
-            <Button>
-              <Group gap="xs">
-                <IconExternalLink size={14} />
-                EveWho
-              </Group>
-            </Button>
-          </Link>
-          <Link
-            href={`https://zkillboard.com/alliance/${allianceId}`}
-            target="_blank"
-          >
-            <Button>
-              <Group gap="xs">
-                <IconExternalLink size={14} />
-                zKillboard
-              </Group>
-            </Button>
-          </Link>
-        </Group>
-        <Stack gap="xs">
-          <Group justify="space-between">
-            <Text>Creator</Text>
-            <Group wrap="nowrap">
-              <CharacterAvatar
-                characterId={alliance?.data.creator_id}
-                size="sm"
-              />
-              <CharacterAnchor characterId={alliance?.data.creator_id}>
-                <CharacterName span characterId={alliance?.data.creator_id} />
-              </CharacterAnchor>
-            </Group>
-          </Group>
-          <Group justify="space-between">
-            <Text>Creator Corporation</Text>
-            <Group wrap="nowrap">
-              <CorporationAvatar
-                corporationId={alliance?.data.creator_corporation_id}
-                size="sm"
-              />
-              <CorporationAnchor
-                corporationId={alliance?.data.creator_corporation_id}
+        </Progress.Root>
+        <Group gap="md" wrap="wrap">
+          {top.map((row, index) => (
+            <Group key={row.corporationId} gap={6} wrap="nowrap">
+              <Badge
+                size="xs"
+                circle
+                color={COMPOSITION_COLORS[index % COMPOSITION_COLORS.length]}
               >
-                <CorporationName
-                  span
-                  corporationId={alliance?.data.creator_corporation_id}
-                />
-              </CorporationAnchor>
+                {" "}
+              </Badge>
+              <Text size="xs">
+                {row.ticker ? `[${row.ticker}]` : row.name}{" "}
+                <Text span c="dimmed" size="xs">
+                  {formatPercent(row.memberCount / pilots)}
+                </Text>
+              </Text>
             </Group>
-          </Group>
-          {alliance?.data.executor_corporation_id && (
-            <Group justify="space-between">
-              <Text>Executor</Text>
-              <Group wrap="nowrap">
-                <CorporationAvatar
-                  corporationId={alliance.data.executor_corporation_id}
-                  size="sm"
-                />
-                <Anchor
-                  component={Link}
-                  href={`/corporation/${alliance.data.executor_corporation_id}`}
-                >
-                  <CorporationName
-                    span
-                    corporationId={alliance.data.executor_corporation_id}
-                  />
-                </Anchor>
-              </Group>
-            </Group>
-          )}
-          {alliance?.data.date_founded && (
-            <Group justify="space-between">
-              <Text>Founded on</Text>
-              <Text>
-                {format(
-                  new Date(alliance.data.date_founded),
-                  "yyyy-MM-dd HH:mm",
-                )}
+          ))}
+          {others > 0 && (
+            <Group gap={6} wrap="nowrap">
+              <Badge size="xs" circle color="dark.3">
+                {" "}
+              </Badge>
+              <Text size="xs">
+                Others{" "}
+                <Text span c="dimmed" size="xs">
+                  {formatPercent(others / pilots)}
+                </Text>
               </Text>
             </Group>
           )}
-          {alliance?.data.faction_id && (
-            <Group justify="space-between">
-              <Text>Factional Warfare</Text>
-              <Group wrap="nowrap">
-                <FactionAvatar factionId={alliance.data.faction_id} size="sm" />
-                <Anchor
-                  component={Link}
-                  href={`/faction/${alliance.data.faction_id}`}
-                >
-                  <FactionName span factionId={alliance.data.faction_id} />
-                </Anchor>
-              </Group>
+        </Group>
+      </Stack>
+    </Paper>
+  );
+}
+
+export default function AlliancePage({
+  allianceId,
+  profile,
+}: Readonly<PageProps>) {
+  const character = useSelectedCharacter();
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(ALLIANCE_PAGE_TABS)
+      .withDefault(DEFAULT_ALLIANCE_PAGE_TAB)
+      .withOptions({ history: "replace" }),
+  );
+  const { data: esiAlliance } = useEsiAllianceInformation(allianceId);
+  const { data: esiMembers, isLoading: esiMembersLoading } =
+    useEsiAllianceMemberCorporations(allianceId);
+  const zkill = useZkillboardAllianceStats(allianceId);
+  // "Now" for time-relative text: the server read's own timestamp, so the
+  // server render and hydration agree.
+  const now = profile?.readAt;
+
+  const esi = esiAlliance?.data;
+  // Our row first: it is what the server rendered, so hydration agrees. ESI
+  // fills in what we do not store, and the whole page when we have no row.
+  const name = profile?.name ?? esi?.name;
+  const ticker = profile?.ticker ?? esi?.ticker;
+  const dateFounded = profile?.dateFounded ?? esi?.date_founded;
+  // Null in our row is a fact (no executor, no militia), not a gap for ESI.
+  const executorCorporationId = profile
+    ? profile.executorCorporationId
+    : (esi?.executor_corporation_id ?? null);
+  const creatorCorporationId =
+    profile?.creatorCorporationId ?? esi?.creator_corporation_id ?? null;
+  const factionId = profile ? profile.factionId : (esi?.faction_id ?? null);
+  const creatorId = esi?.creator_id;
+  // A closed alliance has no executor; ESI still answers for it.
+  const isClosed =
+    profile?.isClosed ?? (esi !== undefined && !esi.executor_corporation_id);
+
+  const corporationRows = useMemo(
+    () =>
+      buildCorporationRows({
+        corporations: profile?.corporations ?? [],
+        esiMemberIds: esiMembers?.data,
+        executorCorporationId,
+        creatorCorporationId,
+      }),
+    [
+      profile?.corporations,
+      esiMembers?.data,
+      executorCorporationId,
+      creatorCorporationId,
+    ],
+  );
+  const corporationSummary = useMemo(
+    () => summarizeCorporations(corporationRows),
+    [corporationRows],
+  );
+  const corporationNames = useMemo(
+    () =>
+      new Map(
+        (profile?.corporations ?? []).map((corporation) => [
+          corporation.corporationId,
+          corporation.name,
+        ]),
+      ),
+    [profile?.corporations],
+  );
+  const sovereignty = profile?.sovereignty;
+  const sovereigntySummary = useMemo(
+    () => summarizeSovereignty(sovereignty ?? []),
+    [sovereignty],
+  );
+  const warRows = useMemo(
+    () => (profile?.wars ?? []).map(toWarRow),
+    [profile?.wars],
+  );
+  const warSummary = profile?.warSummary;
+
+  const executorRow = corporationRows.find((row) => row.isExecutor);
+  const creatorStillMember = corporationRows.some((row) => row.isCreator);
+  const hasSovereignty = sovereigntySummary.systems > 0;
+  const hasWars = (warSummary?.total ?? 0) > 0;
+  const killEfficiency = iskEfficiency(
+    zkill.data?.iskDestroyed,
+    zkill.data?.iskLost,
+  );
+
+  const visibleTabs: Record<AlliancePageTab, boolean> = {
+    overview: true,
+    corporations: true,
+    sovereignty: hasSovereignty,
+    wars: hasWars,
+    killboard: true,
+  };
+  // `?tab=wars` on an alliance with none would select a tab that is not
+  // rendered, leaving the page blank; show the overview instead.
+  const selectedTab = visibleTabs[activeTab]
+    ? activeTab
+    : DEFAULT_ALLIANCE_PAGE_TAB;
+
+  return (
+    <Container size="lg" py="md">
+      <Stack gap="lg">
+        <HeroCard
+          artwork={
+            <AllianceAvatar allianceId={allianceId} size={128} radius="sm" />
+          }
+        >
+          <Breadcrumbs fz="sm">
+            <Anchor component={Link} href="/alliances" size="sm">
+              Alliances
+            </Anchor>
+            <Text size="sm">{name ?? allianceId}</Text>
+          </Breadcrumbs>
+          <Group gap="sm" align="center">
+            <Title order={2}>{name ?? `Alliance ${allianceId}`}</Title>
+            {ticker && (
+              <Badge variant="light" size="lg">
+                {`<${ticker}>`}
+              </Badge>
+            )}
+            {isClosed && (
+              <Badge color="red" variant="light">
+                Closed
+              </Badge>
+            )}
+            {character !== null && (
+              <OpenInformationWindowActionIcon
+                characterId={character.characterId}
+                entityId={allianceId}
+              />
+            )}
+          </Group>
+
+          {(executorCorporationId !== null || factionId !== null) && (
+            <Group gap="xs" align="center">
+              {executorCorporationId !== null && (
+                <>
+                  <Text size="sm" c="dimmed">
+                    Executor
+                  </Text>
+                  <CorporationAnchor corporationId={executorCorporationId}>
+                    {profile?.executorCorporationName ?? (
+                      <CorporationName
+                        span
+                        corporationId={executorCorporationId}
+                      />
+                    )}
+                  </CorporationAnchor>
+                </>
+              )}
+              {executorCorporationId !== null && factionId !== null && (
+                <Text c="dimmed">·</Text>
+              )}
+              {factionId !== null && (
+                <>
+                  <Text size="sm" c="dimmed">
+                    Militia
+                  </Text>
+                  <FactionAnchor factionId={factionId}>
+                    {profile?.factionName ?? (
+                      <FactionName span factionId={factionId} />
+                    )}
+                  </FactionAnchor>
+                </>
+              )}
             </Group>
           )}
-        </Stack>
-        <Title order={4}>Member Corporations</Title>
-        <Stack>
-          {allianceCorporations?.data.map((corporationId) => (
-            <Group wrap="nowrap" key={corporationId}>
-              <CorporationAvatar corporationId={corporationId} size="sm" />
-              {/* One link per member corporation, unpaginated — the largest
-                  prefetch fan-out on the site. */}
-              <CorporationAnchor corporationId={corporationId} prefetch={false}>
-                <CorporationName span corporationId={corporationId} />
-              </CorporationAnchor>
-              <Group gap="xs">
-                {alliance?.data.creator_corporation_id === corporationId && (
-                  <Badge size="xs">Creator</Badge>
+
+          <Group gap="xl">
+            {profile && (
+              <HeroStat
+                label="Pilots"
+                value={formatInteger(corporationSummary.pilots)}
+              />
+            )}
+            {corporationRows.length > 0 && (
+              <HeroStat
+                label="Corporations"
+                value={formatInteger(corporationRows.length)}
+              />
+            )}
+            {hasSovereignty && (
+              <HeroStat
+                label="Sov systems"
+                value={formatInteger(sovereigntySummary.systems)}
+              />
+            )}
+            {dateFounded && (
+              <HeroStat label="Founded" value={formatDate(dateFounded)} />
+            )}
+            {warSummary && warSummary.ongoing > 0 && (
+              <HeroStat
+                label="Ongoing wars"
+                value={formatInteger(warSummary.ongoing)}
+              />
+            )}
+            {killEfficiency !== null && (
+              <HeroStat
+                label="ISK efficiency"
+                value={formatPercent(killEfficiency)}
+              />
+            )}
+          </Group>
+
+          <Group gap="xs">
+            {EXTERNAL_LINKS.map((link) => (
+              <Button
+                key={link.label}
+                component={Link}
+                href={`${link.href}${allianceId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="xs"
+                leftSection={<IconExternalLink size={14} />}
+              >
+                {link.label}
+              </Button>
+            ))}
+          </Group>
+        </HeroCard>
+
+        <Tabs
+          value={selectedTab}
+          onChange={(value) => {
+            if (isAlliancePageTab(value)) void setActiveTab(value);
+          }}
+          variant="outline"
+          keepMounted={false}
+        >
+          <Tabs.List>
+            <Tabs.Tab
+              value="overview"
+              leftSection={<IconInfoCircle size={16} />}
+            >
+              Overview
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="corporations"
+              leftSection={<IconBuildingSkyscraper size={16} />}
+            >
+              Corporations
+              {corporationRows.length > 0 &&
+                ` (${formatInteger(corporationRows.length)})`}
+            </Tabs.Tab>
+            {hasSovereignty && (
+              <Tabs.Tab
+                value="sovereignty"
+                leftSection={<IconFlag size={16} />}
+              >
+                Sovereignty ({formatInteger(sovereigntySummary.systems)})
+              </Tabs.Tab>
+            )}
+            {hasWars && warSummary && (
+              <Tabs.Tab value="wars" leftSection={<IconSwords size={16} />}>
+                Wars ({formatInteger(warSummary.total)})
+              </Tabs.Tab>
+            )}
+            <Tabs.Tab value="killboard" leftSection={<IconSkull size={16} />}>
+              Killboard
+            </Tabs.Tab>
+          </Tabs.List>
+
+          {/* Overview */}
+          <Tabs.Panel value="overview" pt="lg">
+            <Stack gap="lg">
+              <Stack gap="sm">
+                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                  Identity &amp; Leadership
+                </SectionHeading>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+                  <StatCard label="Alliance ID" value={allianceId} />
+                  {ticker && <StatCard label="Ticker" value={`<${ticker}>`} />}
+                  {dateFounded && (
+                    <StatCard
+                      label="Founded"
+                      value={formatDate(dateFounded)}
+                      sub={
+                        now ? `${formatAge(dateFounded, now)} ago` : undefined
+                      }
+                    />
+                  )}
+                  <StatCard
+                    label="Executor corporation"
+                    value={
+                      executorCorporationId === null ? (
+                        "None — the alliance is closed"
+                      ) : (
+                        <CorporationLine
+                          corporationId={executorCorporationId}
+                          name={profile?.executorCorporationName}
+                        />
+                      )
+                    }
+                    sub={
+                      executorRow?.ceoId ? (
+                        <Group gap={4} wrap="nowrap">
+                          CEO
+                          <CharacterAnchor
+                            characterId={executorRow.ceoId}
+                            size="xs"
+                          >
+                            {executorRow.ceoName ?? (
+                              <CharacterName
+                                span
+                                characterId={executorRow.ceoId}
+                              />
+                            )}
+                          </CharacterAnchor>
+                        </Group>
+                      ) : undefined
+                    }
+                  />
+                  {creatorId !== undefined && (
+                    <StatCard
+                      label="Creator"
+                      value={
+                        <EntityLine
+                          avatar={
+                            <CharacterAvatar
+                              characterId={creatorId}
+                              size="sm"
+                            />
+                          }
+                        >
+                          <CharacterAnchor characterId={creatorId}>
+                            <CharacterName span characterId={creatorId} />
+                          </CharacterAnchor>
+                        </EntityLine>
+                      }
+                    />
+                  )}
+                  {creatorCorporationId !== null && (
+                    <StatCard
+                      label="Creator corporation"
+                      value={
+                        <CorporationLine
+                          corporationId={creatorCorporationId}
+                          name={profile?.creatorCorporationName}
+                        />
+                      }
+                      sub={
+                        corporationRows.length > 0
+                          ? creatorStillMember
+                            ? "Still a member"
+                            : "No longer a member"
+                          : undefined
+                      }
+                    />
+                  )}
+                  <StatCard
+                    label="Faction Warfare"
+                    value={
+                      factionId === null ? (
+                        "Not enlisted"
+                      ) : (
+                        <EntityLine
+                          avatar={
+                            <FactionAvatar factionId={factionId} size="sm" />
+                          }
+                        >
+                          <FactionAnchor factionId={factionId}>
+                            {profile?.factionName ?? (
+                              <FactionName span factionId={factionId} />
+                            )}
+                          </FactionAnchor>
+                        </EntityLine>
+                      )
+                    }
+                    sub={
+                      corporationSummary.enlisted > 0
+                        ? `${formatInteger(corporationSummary.enlisted)} member corporations enlisted`
+                        : undefined
+                    }
+                  />
+                  <StatCard
+                    label="Status"
+                    value={
+                      <Badge variant="light" color={isClosed ? "red" : "teal"}>
+                        {isClosed ? "Closed" : "Open"}
+                      </Badge>
+                    }
+                  />
+                </SimpleGrid>
+              </Stack>
+
+              {profile && corporationRows.length > 0 && (
+                <Stack gap="sm">
+                  <SectionHeading icon={<IconUsersGroup size={18} />}>
+                    Membership
+                  </SectionHeading>
+                  <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
+                    <StatCard
+                      label="Pilots"
+                      value={formatInteger(corporationSummary.pilots)}
+                    />
+                    <StatCard
+                      label="Corporations"
+                      value={formatInteger(corporationSummary.corporations)}
+                    />
+                    {corporationSummary.averagePilots !== null && (
+                      <StatCard
+                        label="Average corporation"
+                        value={`${formatDecimal(corporationSummary.averagePilots)} pilots`}
+                      />
+                    )}
+                    {corporationSummary.largest && (
+                      <StatCard
+                        label="Largest corporation"
+                        value={
+                          <CorporationLine
+                            corporationId={
+                              corporationSummary.largest.corporationId
+                            }
+                            name={corporationSummary.largest.name}
+                          />
+                        }
+                        sub={`${formatInteger(corporationSummary.largest.memberCount ?? 0)} pilots${
+                          corporationSummary.largest.share === null
+                            ? ""
+                            : ` · ${formatPercent(corporationSummary.largest.share)}`
+                        }`}
+                      />
+                    )}
+                    {corporationSummary.executorShare !== null && (
+                      <StatCard
+                        label="Executor's share"
+                        value={formatPercent(corporationSummary.executorShare)}
+                        sub="of the alliance's pilots"
+                      />
+                    )}
+                    <StatCard
+                      label="War eligible"
+                      value={`${formatInteger(corporationSummary.warEligible)} of ${formatInteger(corporationSummary.corporations)}`}
+                      sub="corporations"
+                    />
+                    {corporationSummary.pilotWeightedTaxRate !== null && (
+                      <StatCard
+                        label="Average tax rate"
+                        value={formatPercent(
+                          corporationSummary.pilotWeightedTaxRate,
+                        )}
+                        sub="Weighted by pilots"
+                      />
+                    )}
+                    {corporationSummary.oldest?.dateFounded && (
+                      <StatCard
+                        label="Oldest corporation"
+                        value={
+                          <CorporationLine
+                            corporationId={
+                              corporationSummary.oldest.corporationId
+                            }
+                            name={corporationSummary.oldest.name}
+                          />
+                        }
+                        sub={`Founded ${formatDate(corporationSummary.oldest.dateFounded)}`}
+                      />
+                    )}
+                  </SimpleGrid>
+                  <CompositionBar
+                    rows={corporationRows}
+                    pilots={corporationSummary.pilots}
+                  />
+                </Stack>
+              )}
+
+              {hasSovereignty && (
+                <Stack gap="sm">
+                  <SectionHeading icon={<IconFlag size={18} />}>
+                    Sovereignty
+                  </SectionHeading>
+                  <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
+                    <StatCard
+                      label="Systems"
+                      value={formatInteger(sovereigntySummary.systems)}
+                    />
+                    <StatCard
+                      label="Regions"
+                      value={formatInteger(sovereigntySummary.regions.length)}
+                      sub={sovereigntySummary.regions
+                        .slice(0, 3)
+                        .map((region) => region.regionName)
+                        .filter(Boolean)
+                        .join(", ")}
+                    />
+                    {sovereigntySummary.capital && (
+                      <StatCard
+                        label="Capital system"
+                        value={
+                          <SolarSystemAnchor
+                            solarSystemId={
+                              sovereigntySummary.capital.solarSystemId
+                            }
+                          >
+                            {sovereigntySummary.capital.name}
+                          </SolarSystemAnchor>
+                        }
+                        sub={sovereigntySummary.capital.regionName ?? undefined}
+                      />
+                    )}
+                    {sovereigntySummary.averageAdm !== null && (
+                      <StatCard
+                        label="Average ADM"
+                        value={formatDecimal(sovereigntySummary.averageAdm)}
+                      />
+                    )}
+                  </SimpleGrid>
+                </Stack>
+              )}
+
+              {hasWars && warSummary && (
+                <Stack gap="sm">
+                  <SectionHeading icon={<IconSwords size={18} />}>
+                    Wars
+                  </SectionHeading>
+                  <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
+                    <StatCard
+                      label="Wars"
+                      value={formatInteger(warSummary.total)}
+                    />
+                    <StatCard
+                      label="Ongoing"
+                      value={formatInteger(warSummary.ongoing)}
+                    />
+                    <StatCard
+                      label="Declared"
+                      value={formatInteger(warSummary.asAggressor)}
+                      sub={`Defended ${formatInteger(warSummary.asDefender)} · allied ${formatInteger(warSummary.asAlly)}`}
+                    />
+                    <StatCard
+                      label="Ships killed / lost"
+                      value={`${formatInteger(warSummary.shipsKilled)} / ${formatInteger(warSummary.shipsLost)}`}
+                    />
+                  </SimpleGrid>
+                </Stack>
+              )}
+
+              <Stack gap="sm">
+                <SectionHeading icon={<IconSkull size={18} />}>
+                  Killboard
+                </SectionHeading>
+                {zkill.isError ? (
+                  <Text size="sm" c="dimmed">
+                    zKillboard did not answer. Try again later.
+                  </Text>
+                ) : (
+                  <KillboardSummaryCards
+                    stats={zkill.data}
+                    isLoading={zkill.isLoading}
+                  />
                 )}
-                {alliance?.data.executor_corporation_id === corporationId && (
-                  <Badge size="xs">Executor</Badge>
-                )}
-              </Group>
-            </Group>
-          ))}
-        </Stack>
+              </Stack>
+
+              {profile && (
+                <Text size="xs" c="dimmed">
+                  Membership, sovereignty and wars come from our hourly refresh
+                  of ESI, read {formatDate(profile.readAt)}{" "}
+                  {profile.readAt.slice(11, 16)} EVE time. Killboard figures are
+                  from zKillboard.
+                </Text>
+              )}
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="corporations" pt="lg">
+            <CorporationsTab
+              rows={corporationRows}
+              isLoading={esiMembersLoading}
+              hasProfile={profile !== null}
+            />
+          </Tabs.Panel>
+
+          {hasSovereignty && profile && (
+            <Tabs.Panel value="sovereignty" pt="lg">
+              <SovereigntyTab
+                allianceId={allianceId}
+                systems={profile.sovereignty}
+                summary={sovereigntySummary}
+                corporationNames={corporationNames}
+                readAt={profile.readAt}
+              />
+            </Tabs.Panel>
+          )}
+
+          {hasWars && warSummary && (
+            <Tabs.Panel value="wars" pt="lg">
+              <WarsTab rows={warRows} summary={warSummary} />
+            </Tabs.Panel>
+          )}
+
+          <Tabs.Panel value="killboard" pt="lg">
+            <KillboardTab
+              allianceId={allianceId}
+              stats={zkill.data}
+              isLoading={zkill.isLoading}
+              isError={zkill.isError}
+            />
+          </Tabs.Panel>
+        </Tabs>
       </Stack>
     </Container>
   );

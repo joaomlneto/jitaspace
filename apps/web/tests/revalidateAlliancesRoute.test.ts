@@ -42,7 +42,7 @@ beforeEach(() => {
 });
 
 describe("POST /api/revalidate/alliances", () => {
-  it("expires each alliance page and marks the list stale", async () => {
+  it("expires each alliance page and its data, and marks the list stale", async () => {
     const res = await post(JSON.stringify({ allianceIds: [1, 2, 2] }));
 
     expect(res.status).toBe(200);
@@ -51,9 +51,14 @@ describe("POST /api/revalidate/alliances", () => {
       ["/alliance/1"],
       ["/alliance/2"],
     ]);
-    // "max": the list reads the database, so its next visitor keeps the old
-    // copy while a fresh one renders.
-    expect(mockRevalidateTag).toHaveBeenCalledWith("alliances", "max");
+    // Each page's database read is expired with it, so the fresh render does
+    // not reuse the stale rows; "max": the list reads the database, so its
+    // next visitor keeps the old copy while a fresh one renders.
+    expect(mockRevalidateTag.mock.calls).toEqual([
+      ["alliance:1", { expire: 0 }],
+      ["alliance:2", { expire: 0 }],
+      ["alliances", "max"],
+    ]);
   });
 
   it("refuses a wrong secret and evicts nothing", async () => {
