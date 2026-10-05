@@ -64,3 +64,5 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@jitaspace/db-builds@0.1.0'
+patchedDependencies:
+  '@tanstack/table-core@8.21.3': patches/@tanstack__table-core@8.21.3.patch

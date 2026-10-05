@@ -1,0 +1,162 @@
+diff --git a/build/lib/index.esm.js b/build/lib/index.esm.js
+index 3093c8a503a657b9ba69cc6527add857ae37a05b..30c811a3db5c34820a78d3e5ae42718568b5b4ea 100644
+--- a/build/lib/index.esm.js
++++ b/build/lib/index.esm.js
+@@ -111,8 +111,13 @@ function memo(getDeps, fn, opts) {
+   let deps = [];
+   let result;
+   return depArgs => {
++    // Patched: decide up front, so Date.now() only runs while debugging.
++    // Upstream tests the always-truthy `opts.debug` function instead, so
++    // every memo reads the clock in development (Next.js cacheComponents
++    // rejects that during prerender).
++    const isDebugging = !!(opts.key && (opts.debug == null ? void 0 : opts.debug()));
+     let depTime;
+-    if (opts.key && opts.debug) depTime = Date.now();
++    if (isDebugging) depTime = Date.now();
+     const newDeps = getDeps(depArgs);
+     const depsChanged = newDeps.length !== deps.length || newDeps.some((dep, index) => deps[index] !== dep);
+     if (!depsChanged) {
+@@ -120,10 +125,10 @@ function memo(getDeps, fn, opts) {
+     }
+     deps = newDeps;
+     let resultTime;
+-    if (opts.key && opts.debug) resultTime = Date.now();
++    if (isDebugging) resultTime = Date.now();
+     result = fn(...newDeps);
+     opts == null || opts.onChange == null || opts.onChange(result);
+-    if (opts.key && opts.debug) {
++    if (isDebugging) {
+       if (opts != null && opts.debug()) {
+         const depEndTime = Math.round((Date.now() - depTime) * 100) / 100;
+         const resultEndTime = Math.round((Date.now() - resultTime) * 100) / 100;
+diff --git a/build/lib/index.mjs b/build/lib/index.mjs
+index b00ad055d1f95ef714072fba3ea0a528ea545ded..2230391f68cf62958cc591b6c24239a493991bc0 100644
+--- a/build/lib/index.mjs
++++ b/build/lib/index.mjs
+@@ -111,8 +111,13 @@ function memo(getDeps, fn, opts) {
+   let deps = [];
+   let result;
+   return depArgs => {
++    // Patched: decide up front, so Date.now() only runs while debugging.
++    // Upstream tests the always-truthy `opts.debug` function instead, so
++    // every memo reads the clock in development (Next.js cacheComponents
++    // rejects that during prerender).
++    const isDebugging = !!(opts.key && (opts.debug == null ? void 0 : opts.debug()));
+     let depTime;
+-    if (opts.key && opts.debug) depTime = Date.now();
++    if (isDebugging) depTime = Date.now();
+     const newDeps = getDeps(depArgs);
+     const depsChanged = newDeps.length !== deps.length || newDeps.some((dep, index) => deps[index] !== dep);
+     if (!depsChanged) {
+@@ -120,10 +125,10 @@ function memo(getDeps, fn, opts) {
+     }
+     deps = newDeps;
+     let resultTime;
+-    if (opts.key && opts.debug) resultTime = Date.now();
++    if (isDebugging) resultTime = Date.now();
+     result = fn(...newDeps);
+     opts == null || opts.onChange == null || opts.onChange(result);
+-    if (opts.key && opts.debug) {
++    if (isDebugging) {
+       if (opts != null && opts.debug()) {
+         const depEndTime = Math.round((Date.now() - depTime) * 100) / 100;
+         const resultEndTime = Math.round((Date.now() - resultTime) * 100) / 100;
+diff --git a/build/lib/utils.js b/build/lib/utils.js
+index a153f7d296446d21cf14aff45c76ba9fc5289242..2a094921df4ae2f4ed29fdcc6bea58d95581dd7c 100644
+--- a/build/lib/utils.js
++++ b/build/lib/utils.js
+@@ -56,8 +56,13 @@ function memo(getDeps, fn, opts) {
+   let deps = [];
+   let result;
+   return depArgs => {
++    // Patched: decide up front, so Date.now() only runs while debugging.
++    // Upstream tests the always-truthy `opts.debug` function instead, so
++    // every memo reads the clock in development (Next.js cacheComponents
++    // rejects that during prerender).
++    const isDebugging = !!(opts.key && (opts.debug == null ? void 0 : opts.debug()));
+     let depTime;
+-    if (opts.key && opts.debug) depTime = Date.now();
++    if (isDebugging) depTime = Date.now();
+     const newDeps = getDeps(depArgs);
+     const depsChanged = newDeps.length !== deps.length || newDeps.some((dep, index) => deps[index] !== dep);
+     if (!depsChanged) {
+@@ -65,10 +70,10 @@ function memo(getDeps, fn, opts) {
+     }
+     deps = newDeps;
+     let resultTime;
+-    if (opts.key && opts.debug) resultTime = Date.now();
++    if (isDebugging) resultTime = Date.now();
+     result = fn(...newDeps);
+     opts == null || opts.onChange == null || opts.onChange(result);
+-    if (opts.key && opts.debug) {
++    if (isDebugging) {
+       if (opts != null && opts.debug()) {
+         const depEndTime = Math.round((Date.now() - depTime) * 100) / 100;
+         const resultEndTime = Math.round((Date.now() - resultTime) * 100) / 100;
+diff --git a/build/umd/index.development.js b/build/umd/index.development.js
+index a38aa6df0ecd64f8a3ea5b8301464649a2372b90..a1d83d6719ef1aac48cf18855d8038c71b3e464a 100644
+--- a/build/umd/index.development.js
++++ b/build/umd/index.development.js
+@@ -117,8 +117,13 @@
+     let deps = [];
+     let result;
+     return depArgs => {
++      // Patched: decide up front, so Date.now() only runs while debugging.
++      // Upstream tests the always-truthy `opts.debug` function instead, so
++      // every memo reads the clock in development (Next.js cacheComponents
++      // rejects that during prerender).
++      const isDebugging = !!(opts.key && (opts.debug == null ? void 0 : opts.debug()));
+       let depTime;
+-      if (opts.key && opts.debug) depTime = Date.now();
++      if (isDebugging) depTime = Date.now();
+       const newDeps = getDeps(depArgs);
+       const depsChanged = newDeps.length !== deps.length || newDeps.some((dep, index) => deps[index] !== dep);
+       if (!depsChanged) {
+@@ -126,10 +131,10 @@
+       }
+       deps = newDeps;
+       let resultTime;
+-      if (opts.key && opts.debug) resultTime = Date.now();
++      if (isDebugging) resultTime = Date.now();
+       result = fn(...newDeps);
+       opts == null || opts.onChange == null || opts.onChange(result);
+-      if (opts.key && opts.debug) {
++      if (isDebugging) {
+         if (opts != null && opts.debug()) {
+           const depEndTime = Math.round((Date.now() - depTime) * 100) / 100;
+           const resultEndTime = Math.round((Date.now() - resultTime) * 100) / 100;
+diff --git a/src/utils.ts b/src/utils.ts
+index 77be57d750df2d83e6324c6b1026f17b3a22ff74..7f87f94f89da2cf4f69ef0095ac4ab85a5f58a14 100644
+--- a/src/utils.ts
++++ b/src/utils.ts
+@@ -146,8 +146,13 @@ export function memo<TDeps extends readonly any[], TDepArgs, TResult>(
+   let result: TResult | undefined
+ 
+   return depArgs => {
++    // Patched: decide up front, so Date.now() only runs while debugging.
++    // Upstream tests the always-truthy `opts.debug` function instead, so
++    // every memo reads the clock in development (Next.js cacheComponents
++    // rejects that during prerender).
++    const isDebugging = !!(opts.key && opts.debug?.())
+     let depTime: number
+-    if (opts.key && opts.debug) depTime = Date.now()
++    if (isDebugging) depTime = Date.now()
+ 
+     const newDeps = getDeps(depArgs)
+ 
+@@ -162,12 +167,12 @@ export function memo<TDeps extends readonly any[], TDepArgs, TResult>(
+     deps = newDeps
+ 
+     let resultTime: number
+-    if (opts.key && opts.debug) resultTime = Date.now()
++    if (isDebugging) resultTime = Date.now()
+ 
+     result = fn(...newDeps)
+     opts?.onChange?.(result)
+ 
+-    if (opts.key && opts.debug) {
++    if (isDebugging) {
+       if (opts?.debug()) {
+         const depEndTime = Math.round((Date.now() - depTime!) * 100) / 100
+         const resultEndTime = Math.round((Date.now() - resultTime!) * 100) / 100
