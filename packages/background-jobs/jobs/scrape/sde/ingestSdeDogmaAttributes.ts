@@ -8,6 +8,7 @@ import {
   optionalBoolean,
   optionalNumber,
   plainString,
+  present,
 } from "../../../helpers";
 
 export interface IngestSdeDogmaAttributesEventPayload {
@@ -58,12 +59,10 @@ export const ingestSdeDogmaAttributes = defineJob<
         // `attributeCategoryID` — reading `categoryID`, which the file has never
         // contained, wrote null for every attribute and left both this column
         // and the whole DogmaAttributeCategory table unused.
-        attributeCategoryId: (() => {
-          const categoryId = optionalNumber(record.attributeCategoryID);
-          return categoryId != null && categoryIds.has(categoryId)
-            ? categoryId
-            : null;
-        })(),
+        attributeCategoryId: present(
+          categoryIds,
+          optionalNumber(record.attributeCategoryID),
+        ),
         isDeleted: false,
       }),
     });

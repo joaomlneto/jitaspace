@@ -8,6 +8,7 @@ import {
   loadSdeFiles,
   optionalBoolean,
   optionalNumber,
+  present,
   requiredBoolean,
   requiredNumber,
 } from "../../../helpers";
@@ -36,8 +37,6 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
     // factions.yaml (they are NPC corporation ids), so guard this one too.
     // `raceID` and `metaGroupID` have no dangling values and need no guard.
     const factionIds = await loadSdeFileIds("factions.yaml");
-    const present = (ids: ReadonlySet<number>, value: number | null) =>
-      value != null && ids.has(value) ? value : null;
 
     // `packagedVolume` is left to ESI even though types.yaml has carried it
     // since build 3475087 (46,748 of 52,863 types). Two writers for one column

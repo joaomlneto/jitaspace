@@ -7,6 +7,7 @@ import {
   loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
+  present,
   subRecord,
 } from "../../../helpers";
 
@@ -37,7 +38,10 @@ export const ingestSdeRegions = defineJob<IngestSdeRegionsEventPayload["data"]>(
         idField: "regionId",
         delegate: prisma.region,
         toRow: (record, id): Prisma.RegionCreateManyInput => {
-          const nebulaGraphicId = optionalNumber(record.nebulaID);
+          const nebulaGraphicId = present(
+            graphicIds,
+            optionalNumber(record.nebulaID),
+          );
           // Galactic coordinates of the region centre, flattened into three
           // columns the way ingestSdeSolarSystems flattens `position`.
           const position = subRecord(record.position);
@@ -45,10 +49,7 @@ export const ingestSdeRegions = defineJob<IngestSdeRegionsEventPayload["data"]>(
             regionId: id,
             name: enString(record.name) ?? "",
             description: enString(record.description),
-            nebulaGraphicId:
-              nebulaGraphicId != null && graphicIds.has(nebulaGraphicId)
-                ? nebulaGraphicId
-                : null,
+            nebulaGraphicId,
             wormholeClassId: optionalNumber(record.wormholeClassID),
             positionX: optionalNumber(position.x),
             positionY: optionalNumber(position.y),

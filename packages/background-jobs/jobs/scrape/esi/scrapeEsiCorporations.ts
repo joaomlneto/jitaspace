@@ -190,7 +190,7 @@ const processCorporationBatch = async (
             ? new Date(corporation.date_founded)
             : null,
           description: corporation.description,
-          factionId: corporation.enlisted_faction_id ?? null,
+          enlistedFactionId: corporation.enlisted_faction_id ?? null,
           homeStationId: corporation.home_station_id,
           memberCount: corporation.member_count,
           name: corporation.name,

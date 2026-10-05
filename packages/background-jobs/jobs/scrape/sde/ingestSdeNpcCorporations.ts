@@ -1,5 +1,3 @@
-import type { Prisma } from "../../../db";
-import type { SDE_OWNED_CORPORATION_COLUMNS } from "../../../helpers";
 import type { NpcCorporationRecord } from "./npcCorporationTransforms";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
@@ -7,28 +5,17 @@ import {
   ingestSdeCompositeTable,
   ingestSdeTable,
   loadSdeFiles,
-  optionalBoolean,
-  optionalNumber,
-  plainString,
 } from "../../../helpers";
 import {
   mergeNpcCorporationChildRows,
+  planLegacyEnlistmentMoves,
   toNpcCorporationChildRows,
+  toSdeCorporationRow,
 } from "./npcCorporationTransforms";
 
 export interface IngestSdeNpcCorporationsEventPayload {
   data: Record<string, never>;
 }
-
-/**
- * The primary key plus exactly the SDE-owned columns — `ingestSdeTable` writes
- * only the columns `toRow` returns, so the ESI-owned required ones
- * (`name`, `memberCount`, `ticker`, `taxRate`) must stay out of this type.
- */
-type SdeCorporationRow = Pick<
-  Prisma.CorporationCreateManyInput,
-  "corporationId" | (typeof SDE_OWNED_CORPORATION_COLUMNS)[number]
->;
 
 /**
  * npcCorporations.yaml — the 283 NPC corporations' own attributes, which until now
@@ -39,8 +26,9 @@ type SdeCorporationRow = Pick<
  * 1. `Corporation` also holds every player corporation, and its `memberCount` /
  *    `name` are required columns the SDE does not supply (`memberCount` is not in
  *    the file at all). So this job must never CREATE a row: it scopes itself to
- *    corporation ids that already exist locally, leaving any NPC corp the ESI
- *    scraper has not yet fetched for the next run. `ingestSdeTable` already bounds
+ *    corporation ids that already exist locally. When scrape-esi-npc-corporations
+ *    creates an NPC corporation it sends this job, so the new row gets its SDE
+ *    columns without waiting for the next build. `ingestSdeTable` already bounds
  *    its diff to the ids it is given, so nothing outside that set is soft-deleted.
  * 2. `ceoID`, `taxRate` and `tickerName` are deliberately not taken from the SDE —
  *    ESI owns `ceoId` / `taxRate` / `ticker` for all corporations, and writing them
@@ -60,6 +48,14 @@ export const ingestSdeNpcCorporations = defineJob<
     const start = performance.now();
     const files = await loadSdeFiles(["npcCorporations.yaml"]);
     const all = files["npcCorporations.yaml"];
+    // Guarded against the Faction table rather than factions.yaml: `factionId`
+    // is a foreign key, and this job also runs on its own, possibly before
+    // ingest-sde-factions has created a faction a new build adds.
+    const factionIds = new Set(
+      await prisma.faction
+        .findMany({ select: { factionId: true } })
+        .then((rows) => rows.map(({ factionId }) => factionId)),
+    );
 
     // Only corporations that already exist — see the note above.
     const sdeIds = Object.keys(all).map(Number);
@@ -82,40 +78,38 @@ export const ingestSdeNpcCorporations = defineJob<
       records,
       idField: "corporationId",
       delegate: prisma.corporation,
-      toRow: (record, id): SdeCorporationRow => ({
-        corporationId: id,
-        extent: plainString(record.extent),
-        memberLimit: optionalNumber(record.memberLimit),
-        minSecurity: optionalNumber(record.minSecurity),
-        minimumJoinStanding: optionalNumber(record.minimumJoinStanding),
-        initialPrice: optionalNumber(record.initialPrice),
-        hasPlayerPersonnelManager: optionalBoolean(
-          record.hasPlayerPersonnelManager,
-        ),
-        sendCharTerminationMessage: optionalBoolean(
-          record.sendCharTerminationMessage,
-        ),
-        mainActivityId: optionalNumber(record.mainActivityID),
-        secondaryActivityId: optionalNumber(record.secondaryActivityID),
-        enemyId: optionalNumber(record.enemyID),
-        friendId: optionalNumber(record.friendID),
-        size: plainString(record.size),
-        sizeFactor: optionalNumber(record.sizeFactor),
-        isUnique: optionalBoolean(record.uniqueName),
-        // CCP's own `deleted` marker, kept apart from the ingest's `isDeleted`
-        // soft-delete flag (which this job does not own — the ESI scraper does).
-        isDeletedByCcp: optionalBoolean(record.deleted),
-        // Plain ids, not relations: nothing dangles today (0 of 261 / 257 / 252
-        // miss mapSolarSystems.yaml / races.yaml / icons.yaml) and the columns
-        // carry no FK, so no `present()` guard is needed.
-        solarSystemId: optionalNumber(record.solarSystemID),
-        raceId: optionalNumber(record.raceID),
-        iconId: optionalNumber(record.iconID),
-        // NOTE: no `name`, `memberCount`, `ticker`, `taxRate` or `ceoId` — those are
-        // ESI-owned. Omitting them also keeps them out of ingestSdeTable's managed
-        // key set, so the diff leaves them untouched.
-      }),
+      toRow: (record, id) => toSdeCorporationRow(record, id, factionIds),
     });
+
+    // Clear the Faction Warfare enlistments `factionId` held before ESI's rename
+    // from every corporation outside npcCorporations.yaml, moving each into
+    // `enlistedFactionId` first. A no-op once done; see planLegacyEnlistmentMoves.
+    const { moves, clear } = planLegacyEnlistmentMoves(
+      await prisma.corporation.findMany({
+        where: { factionId: { not: null }, corporationId: { notIn: sdeIds } },
+        select: {
+          corporationId: true,
+          factionId: true,
+          enlistedFactionId: true,
+        },
+      }),
+    );
+    // The moves touch disjoint rows, so they run together, but all of them must
+    // land before `factionId` is cleared, or an interrupted run would lose them.
+    await Promise.all(
+      [...moves].map(([factionId, corporationIds]) =>
+        prisma.corporation.updateMany({
+          where: { corporationId: { in: corporationIds } },
+          data: { enlistedFactionId: factionId },
+        }),
+      ),
+    );
+    if (clear.length > 0) {
+      await prisma.corporation.updateMany({
+        where: { corporationId: { in: clear } },
+        data: { factionId: null },
+      });
+    }
 
     const {
       allowedRaces,
@@ -188,6 +182,7 @@ export const ingestSdeNpcCorporations = defineJob<
         npcCorporationTrades,
         npcCorporationExchangeRates,
         skipped: sdeIds.length - scopeIds.length,
+        legacyEnlistmentsCleared: clear.length,
       },
       elapsed: performance.now() - start,
     };

@@ -40,7 +40,7 @@ const remoteRecord: EsiCorporationRow = {
   creatorId: 2000,
   dateFounded: new Date("2018-01-01"),
   description: null,
-  factionId: null,
+  enlistedFactionId: null,
   homeStationId: null,
   memberCount: 42,
   name: "Test Corp",

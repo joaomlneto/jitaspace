@@ -26,6 +26,18 @@ export function optionalNumber(value: unknown): number | null {
   return value == null ? null : Number(value);
 }
 
+/**
+ * The guard for an optional foreign key: `value` when `ids` holds it, else
+ * null, so a reference to a row that does not exist lands as null instead of
+ * failing the write.
+ */
+export function present(
+  ids: ReadonlySet<number>,
+  value: number | null,
+): number | null {
+  return value != null && ids.has(value) ? value : null;
+}
+
 /** A required SDE field for a `BigInt` column (rounded; non-finite → 0n). */
 export function requiredBigInt(value: unknown): bigint {
   const n = Number(value);

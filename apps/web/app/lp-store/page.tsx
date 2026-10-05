@@ -1,8 +1,8 @@
 import { cacheLife } from "next/cache";
 
-import type { LPStorePageProps } from "./page.client";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
+import { groupCorporationsByFaction } from "./groups";
 import LPStorePage from "./page.client";
 
 export const metadata = pageMetadata({
@@ -21,25 +21,15 @@ export default async function Page() {
   // for the whole `cacheLife` window. Throwing writes nothing to the cache, so
   // the route recovers as soon as the database does. See CLAUDE.md → "Never
   // catch a database error inside a `"use cache"` scope".
-  const corporationIds = (
-    await prisma.loyaltyStoreOffer.groupBy({
-      by: ["corporationId"],
-    })
-  ).map(({ corporationId }) => corporationId);
+  const corporations = await prisma.corporation.findMany({
+    select: {
+      corporationId: true,
+      name: true,
+      faction: { select: { factionId: true, name: true } },
+    },
+    // The corporations that have at least one LP store offer.
+    where: { LoyaltyStoreOffer: { some: {} } },
+  });
 
-  const corporations: LPStorePageProps["corporations"] =
-    await prisma.corporation.findMany({
-      select: {
-        corporationId: true,
-        name: true,
-      },
-      where: {
-        corporationId: { in: corporationIds },
-      },
-    });
-
-  const sortedCorporations = [...corporations].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-  return <LPStorePage corporations={sortedCorporations} />;
+  return <LPStorePage groups={groupCorporationsByFaction(corporations)} />;
 }

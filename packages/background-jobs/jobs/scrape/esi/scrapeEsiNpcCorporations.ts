@@ -28,7 +28,7 @@ export const scrapeEsiNpcCorporations = defineJob<
   name: "Scrape NPC Corporations",
   concurrencyLimit: 1,
   retries: 5,
-  handler: async () => {
+  handler: async (ctx) => {
     const stepStartTime = performance.now();
 
     // Get all NPC Corporation IDs in ESI
@@ -74,6 +74,22 @@ export const scrapeEsiNpcCorporations = defineJob<
           })),
         ),
       ),
+    );
+
+    // NPC corporations this run is about to create. ingest-sde-npc-corporations
+    // only fills the SDE-owned columns (faction included) of rows that already
+    // exist, and ingest-sde-all runs only when CCP publishes a new SDE build, so
+    // without a nudge a new corporation would wait for the next build.
+    const knownCorporationIds = new Set(
+      await prisma.corporation
+        .findMany({
+          where: { corporationId: { in: corporationIds } },
+          select: { corporationId: true },
+        })
+        .then((rows) => rows.map((row) => row.corporationId)),
+    );
+    const newCorporationIds = corporationIds.filter(
+      (id) => !knownCorporationIds.has(id),
     );
 
     // bootstrap missing corporationIds
@@ -202,7 +218,7 @@ export const scrapeEsiNpcCorporations = defineJob<
               ? new Date(corporation.date_founded)
               : null,
             description: corporation.description,
-            factionId: corporation.enlisted_faction_id ?? null,
+            enlistedFactionId: corporation.enlisted_faction_id ?? null,
             homeStationId:
               corporation.home_station_id > 1
                 ? corporation.home_station_id
@@ -250,10 +266,15 @@ export const scrapeEsiNpcCorporations = defineJob<
       idAccessor: (e) => e.corporationId,
     });
 
+    if (newCorporationIds.length > 0) {
+      await ctx.send("ingest-sde-npc-corporations", {});
+    }
+
     return {
       stats: {
         characterChanges,
         npcCorporationChanges,
+        newCorporationIds,
       },
       elapsed: performance.now() - stepStartTime,
     };
