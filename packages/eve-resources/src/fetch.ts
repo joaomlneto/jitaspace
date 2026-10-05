@@ -1,6 +1,6 @@
 import type { EveServer } from "./constants";
 import type { ResourceEntry } from "./types";
-import { gunzipIfNeeded } from "./decode/gzip";
+import { gunzipIfNeeded } from "./gzip";
 import { binariesUrl, resourceUrl } from "./url";
 
 /**

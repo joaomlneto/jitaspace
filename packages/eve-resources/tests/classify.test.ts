@@ -1,11 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import {
-  classifyResourcePath,
-  decodeResource,
-  decodeText,
-  getExtension,
-} from "../src/index";
+import { classifyResourcePath, getExtension } from "../src/index";
 
 describe("getExtension", () => {
   it("lowercases the extension", () => {
@@ -70,55 +65,5 @@ describe("classifyResourcePath", () => {
       mimeType: "application/octet-stream",
       preview: "none",
     });
-  });
-});
-
-describe("decodeText", () => {
-  it("decodes UTF-8 bytes", () => {
-    expect(decodeText(new TextEncoder().encode("héllo: wörld"))).toBe(
-      "héllo: wörld",
-    );
-  });
-
-  it("strips a leading UTF-8 byte-order mark", () => {
-    const withBom = new Uint8Array([
-      0xef,
-      0xbb,
-      0xbf,
-      ...new TextEncoder().encode("data"),
-    ]);
-    expect(decodeText(withBom)).toBe("data");
-  });
-});
-
-describe("decodeResource", () => {
-  it("decodes text resources to a text result", () => {
-    const result = decodeResource(
-      "res:/a.yaml",
-      new TextEncoder().encode("k: v"),
-    );
-    expect(result).toEqual({
-      kind: "text",
-      type: classifyResourcePath("res:/a.yaml"),
-      text: "k: v",
-    });
-  });
-
-  it("passes native media through by kind", () => {
-    expect(decodeResource("res:/a.png", new Uint8Array()).kind).toBe("image");
-    expect(decodeResource("res:/a.webm", new Uint8Array()).kind).toBe("video");
-    expect(decodeResource("res:/a.ogg", new Uint8Array()).kind).toBe("audio");
-  });
-
-  it("returns a dds result (info null for non-DDS bytes)", () => {
-    const result = decodeResource("res:/a.dds", new Uint8Array(8));
-    expect(result.kind).toBe("dds");
-    if (result.kind === "dds") expect(result.info).toBeNull();
-  });
-
-  it("returns raw for undecodable binary categories", () => {
-    expect(decodeResource("res:/model.gr2", new Uint8Array(4)).kind).toBe(
-      "raw",
-    );
   });
 });

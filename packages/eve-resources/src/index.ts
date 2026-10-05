@@ -6,8 +6,6 @@ export * from "./url";
 export * from "./parse";
 export * from "./tree";
 export * from "./classify";
-export * from "./json";
-export * from "./decode";
 
 // Network-bound helpers (server/CLI use — the CDN sends no CORS headers):
 export * from "./build";

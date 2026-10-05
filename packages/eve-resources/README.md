@@ -1,13 +1,12 @@
 # @jitaspace/eve-resources
 
 Resolve, browse and fetch the EVE Online client's resource files as served from
-CCP's content CDN — and decode the common formats among them (DDS/TGA textures,
-pickles, plain text).
+CCP's content CDN.
 
 These functions are **isomorphic and dependency-free**. The pure helpers
-(parsing, tree navigation, classification, decoding) run anywhere; the
-network helpers (`getCurrentBuild`, `fetch*`) are intended for server/CLI use,
-since the CDN sends no CORS headers.
+(index parsing, tree navigation, classification) run anywhere; the network
+helpers (`getCurrentBuild`, `fetch*`) are intended for server/CLI use, since
+the CDN sends no CORS headers.
 
 ## How EVE resource resolution works
 
@@ -38,42 +37,34 @@ Tranquility and Singularity builds.
 ```ts
 import {
   buildTreeIndex,
-  decodeResource,
+  classifyResourcePath,
   fetchResourceBytes,
   fetchResourceIndex,
   listChildren,
+  resourceUrl,
 } from "@jitaspace/eve-resources";
 
 // Resolve the whole index for the current Tranquility build.
 const { build, entries } = await fetchResourceIndex("tranquility");
 
-// Navigate it lazily, one directory at a time.
+// Look a file up by its res:/ path and get its CDN URL…
+const icon = entries.find(
+  (e) => e.path === "res:/ui/texture/icons/7_64_15.png",
+);
+const url = icon && resourceUrl(icon.relPath);
+
+// …or navigate the tree lazily, one directory at a time.
 const tree = buildTreeIndex(entries);
 const { directories, files } = listChildren(tree, "res:/ui/");
 
-// Fetch + decode a single file.
+// Fetch a file's bytes, with its MIME type from the extension.
 const entry = tree.byPath.get("res:/videocardcategories.yaml")!;
-const decoded = decodeResource(entry.path, await fetchResourceBytes(entry));
-if (decoded.kind === "text") console.log(decoded.text);
+const bytes = await fetchResourceBytes(entry);
+const { mimeType } = classifyResourcePath(entry.path);
 ```
-
-## Supported formats
-
-| Format                                                                     | Support                                                                                                                                                                                                                                                             |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Text (`yaml`, `json`, `py`, `xml`, …; + paperdoll `color`/`type`/`pose`/…) | `decodeText` (CCP ships paperdoll config as plain YAML)                                                                                                                                                                                                             |
-| Native media (`png`, `jpg`, `webm`, `ogg`, fonts, …)                       | classification + correct MIME                                                                                                                                                                                                                                       |
-| DDS textures (`dds`)                                                       | `decodeDds` → RGBA: block-compressed (BC1–BC7, BC6H HDR→sRGB), uncompressed at any bit depth (8/16/24/32bpp via the pixel-format masks, incl. luminance & alpha-only), float/HDR (R16F–RGBA32F + R11G11B10, tone-mapped), and cubemaps (6 faces → horizontal strip) |
-| TGA images (`tga`)                                                         | `decodeTga` → RGBA (true-color + grayscale, uncompressed/RLE)                                                                                                                                                                                                       |
-| Python pickle (`pickle`)                                                   | `unpickle` → JSON — protocols 0–2 plus the protocol-4 opcodes EVE emits (`FRAME`/`MEMOIZE`/`STACK_GLOBAL`/`SHORT_BINUNICODE`); plain data, throws on anything unhandled                                                                                             |
-| Any other file                                                             | `inspectBinary` — size, magic, hex dump + embedded strings                                                                                                                                                                                                          |
-
-Decoded pixels can be turned into a PNG with `encodePng`.
 
 ## Tests
 
-`pnpm test` runs the Jest suite (`tests/`). It covers the resolution layer
-(parse / tree / url / classify), the network helpers (build / resolve / fetch,
-with an injected `fetch`), and the decoders — `unpickle` (protocols 0–2),
-DDS / BC / BPTC / TGA / PNG, and `inspectBinary` — against hand-crafted
-fixtures, with no network access.
+`pnpm test` runs the Jest suite (`tests/`). It covers index parsing, tree
+navigation, URL building and classification, and the network helpers (build /
+resolve / fetch, with an injected `fetch`), with no network access.
