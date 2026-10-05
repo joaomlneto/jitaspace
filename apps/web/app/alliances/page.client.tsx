@@ -12,6 +12,7 @@ import {
 } from "@jitaspace/ui";
 
 import { DataTable } from "~/components/DataTable";
+import { formatInteger } from "~/lib/format";
 
 export interface AllianceRow {
   allianceId: number;
@@ -31,8 +32,6 @@ export interface AllianceRow {
 export interface PageProps {
   alliances: AllianceRow[];
 }
-
-const numberFormat = new Intl.NumberFormat("en-US");
 
 function nameCell(alliance: AllianceRow) {
   return (
@@ -77,7 +76,7 @@ const columns: DataTableColumn<AllianceRow>[] = [
     sortable: true,
     filter: { type: "range", min: 0 },
     align: "right",
-    cell: (alliance) => numberFormat.format(alliance.pilots),
+    cell: (alliance) => formatInteger(alliance.pilots),
   },
   {
     id: "corporations",
@@ -86,7 +85,7 @@ const columns: DataTableColumn<AllianceRow>[] = [
     sortable: true,
     filter: { type: "range", min: 0 },
     align: "right",
-    cell: (alliance) => numberFormat.format(alliance.corporations),
+    cell: (alliance) => formatInteger(alliance.corporations),
   },
   {
     id: "sovSystems",
@@ -95,7 +94,7 @@ const columns: DataTableColumn<AllianceRow>[] = [
     sortable: true,
     filter: { type: "range", min: 0 },
     align: "right",
-    cell: (alliance) => numberFormat.format(alliance.sovSystems),
+    cell: (alliance) => formatInteger(alliance.sovSystems),
   },
   {
     id: "executor",
@@ -140,8 +139,8 @@ export default function AlliancesPage({ alliances }: Readonly<PageProps>) {
           <Stack gap={0}>
             <Title>Alliances</Title>
             <Text c="dimmed" size="sm">
-              {numberFormat.format(totals.alliances)} open alliances,{" "}
-              {numberFormat.format(totals.pilots)} pilots
+              {formatInteger(totals.alliances)} open alliances,{" "}
+              {formatInteger(totals.pilots)} pilots
             </Text>
           </Stack>
         </Group>

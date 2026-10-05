@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Anchor,
   Badge,
-  Box,
   Button,
   Container,
   Group,
@@ -64,7 +63,12 @@ import {
 } from "~/components/Breadcrumbs";
 import { COMPARABLE_CATEGORY_IDS } from "~/components/Compare/catalog";
 import { ItemVariations } from "~/components/Compare/ItemVariations";
-import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
+import {
+  HeroCard,
+  HeroStat,
+  SectionHeading,
+  StatCard,
+} from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
   CategoryName,
@@ -424,132 +428,112 @@ export default function TypePage({
     <Container size="lg" py="md">
       <Stack gap="lg">
         {/* Hero */}
-        <Paper withBorder radius="md" p="lg">
-          <Group align="flex-start" gap="xl" wrap="wrap">
-            <Box
-              style={{
-                width: 170,
-                height: 170,
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-                borderRadius: 8,
-                border: "1px solid rgba(108, 132, 151, 0.28)",
-                background:
-                  "radial-gradient(circle at 50% 35%, rgba(44, 66, 88, 0.4), rgba(6, 9, 15, 0.92))",
-              }}
-            >
-              <Image
-                src={`https://images.evetech.net/types/${typeId}/${heroVariation}?size=${
-                  isLargeImage ? 512 : 128
-                }`}
-                alt={name ?? `Type ${typeId}`}
-                w={isLargeImage ? 150 : 72}
-                h={isLargeImage ? 150 : 72}
-                fit="contain"
+        <HeroCard
+          artwork={
+            <Image
+              src={`https://images.evetech.net/types/${typeId}/${heroVariation}?size=${
+                isLargeImage ? 512 : 128
+              }`}
+              alt={name ?? `Type ${typeId}`}
+              w={isLargeImage ? 150 : 72}
+              h={isLargeImage ? 150 : 72}
+              fit="contain"
+            />
+          }
+        >
+          <TypeInventoryBreadcrumbs typeId={typeId} fz="sm" />
+          <Group gap="sm" align="center">
+            <Title order={2}>{name ?? notAvailableText}</Title>
+            {typeData?.published === false && (
+              <Badge color="red" variant="light">
+                Unpublished
+              </Badge>
+            )}
+            {character && (
+              <OpenMarketWindowActionIcon
+                characterId={character.characterId}
+                typeId={typeId}
               />
-            </Box>
-
-            <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <TypeInventoryBreadcrumbs typeId={typeId} fz="sm" />
-              <Group gap="sm" align="center">
-                <Title order={2}>{name ?? notAvailableText}</Title>
-                {typeData?.published === false && (
-                  <Badge color="red" variant="light">
-                    Unpublished
-                  </Badge>
-                )}
-                {character && (
-                  <OpenMarketWindowActionIcon
-                    characterId={character.characterId}
-                    typeId={typeId}
-                  />
-                )}
-              </Group>
-
-              <Group gap="xs" align="center">
-                <GroupAnchor groupId={typeData?.group_id}>
-                  <GroupName groupId={typeData?.group_id} />
-                </GroupAnchor>
-                {categoryId !== undefined && (
-                  <>
-                    <Text c="dimmed">·</Text>
-                    <CategoryAnchor categoryId={categoryId}>
-                      <CategoryName categoryId={categoryId} />
-                    </CategoryAnchor>
-                  </>
-                )}
-              </Group>
-
-              <Group gap="xl">
-                {typeData?.volume !== undefined && (
-                  <HeroStat
-                    label="Volume"
-                    value={`${formatNumber(typeData.volume)} m³`}
-                  />
-                )}
-                {heroPrice !== undefined && (
-                  <HeroStat
-                    label={
-                      jitaSellPrice === undefined
-                        ? "Average Price"
-                        : "Jita Sell"
-                    }
-                    value={<ISKAmount amount={heroPrice} />}
-                  />
-                )}
-              </Group>
-
-              <Group gap="xs">
-                {isComparable && (
-                  <Button
-                    component={Link}
-                    href={`/compare?types=${typeId}`}
-                    size="xs"
-                    variant="light"
-                    leftSection={<IconArrowsDiff size={14} />}
-                  >
-                    Compare
-                  </Button>
-                )}
-                <Button
-                  component={Link}
-                  href={`https://www.everef.net/type/${typeId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  size="xs"
-                  leftSection={<IconExternalLink size={14} />}
-                >
-                  EVE Ref
-                </Button>
-                <Button
-                  component={Link}
-                  href={`https://evetycoon.com/market/${typeId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  size="xs"
-                  leftSection={<IconExternalLink size={14} />}
-                >
-                  EVE Tycoon
-                </Button>
-                {categoryId === SHIP_CATEGORY_ID && (
-                  <Button
-                    component={Link}
-                    href={`https://eveworkbench.com/fits?ship=${typeId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    size="xs"
-                    leftSection={<IconExternalLink size={14} />}
-                  >
-                    EVE Workbench
-                  </Button>
-                )}
-              </Group>
-            </Stack>
+            )}
           </Group>
-        </Paper>
+
+          <Group gap="xs" align="center">
+            <GroupAnchor groupId={typeData?.group_id}>
+              <GroupName groupId={typeData?.group_id} />
+            </GroupAnchor>
+            {categoryId !== undefined && (
+              <>
+                <Text c="dimmed">·</Text>
+                <CategoryAnchor categoryId={categoryId}>
+                  <CategoryName categoryId={categoryId} />
+                </CategoryAnchor>
+              </>
+            )}
+          </Group>
+
+          <Group gap="xl">
+            {typeData?.volume !== undefined && (
+              <HeroStat
+                label="Volume"
+                value={`${formatNumber(typeData.volume)} m³`}
+              />
+            )}
+            {heroPrice !== undefined && (
+              <HeroStat
+                label={
+                  jitaSellPrice === undefined ? "Average Price" : "Jita Sell"
+                }
+                value={<ISKAmount amount={heroPrice} />}
+              />
+            )}
+          </Group>
+
+          <Group gap="xs">
+            {isComparable && (
+              <Button
+                component={Link}
+                href={`/compare?types=${typeId}`}
+                size="xs"
+                variant="light"
+                leftSection={<IconArrowsDiff size={14} />}
+              >
+                Compare
+              </Button>
+            )}
+            <Button
+              component={Link}
+              href={`https://www.everef.net/type/${typeId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="xs"
+              leftSection={<IconExternalLink size={14} />}
+            >
+              EVE Ref
+            </Button>
+            <Button
+              component={Link}
+              href={`https://evetycoon.com/market/${typeId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="xs"
+              leftSection={<IconExternalLink size={14} />}
+            >
+              EVE Tycoon
+            </Button>
+            {categoryId === SHIP_CATEGORY_ID && (
+              <Button
+                component={Link}
+                href={`https://eveworkbench.com/fits?ship=${typeId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="xs"
+                leftSection={<IconExternalLink size={14} />}
+              >
+                EVE Workbench
+              </Button>
+            )}
+          </Group>
+        </HeroCard>
 
         <Tabs
           value={selectedTab}

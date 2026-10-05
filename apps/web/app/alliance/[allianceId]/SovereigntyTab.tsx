@@ -319,12 +319,15 @@ function Campaigns({
 export function SovereigntyTab({
   allianceId,
   systems,
+  isLoading,
   summary,
   corporationNames,
   readAt,
 }: Readonly<{
   allianceId: number;
   systems: AllianceSovereigntySystem[];
+  /** The rows are still on their way from `/api/alliance/[allianceId]`. */
+  isLoading: boolean;
   summary: SovereigntySummary;
   corporationNames: ReadonlyMap<number, string>;
   readAt: string;
@@ -457,6 +460,7 @@ export function SovereigntyTab({
           data={systems}
           columns={columns}
           rowId={(system) => system.solarSystemId}
+          isLoading={isLoading}
           initialSort={{ columnId: "system", direction: "asc" }}
           withGlobalFilter
           withColumnVisibility

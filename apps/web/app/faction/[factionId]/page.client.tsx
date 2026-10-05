@@ -8,7 +8,6 @@ import {
   Alert,
   Anchor,
   Badge,
-  Box,
   Button,
   Container,
   Group,
@@ -87,8 +86,14 @@ import type {
   FactionTables,
 } from "./types";
 import { DataTable } from "~/components/DataTable";
-import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
+import {
+  HeroCard,
+  HeroStat,
+  SectionHeading,
+  StatCard,
+} from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { formatInteger as formatCount } from "~/lib/format";
 import { EntityHistory } from "../../history/EntityHistory";
 import {
   ENLISTED_CORPORATIONS_SHOWN,
@@ -153,8 +158,6 @@ function useFactionTables(factionId: number, enabled: boolean) {
   });
 }
 
-const numberFormat = new Intl.NumberFormat("en-US");
-const formatCount = (value: number) => numberFormat.format(value);
 /** "1 epic arc", "2 epic arcs". */
 const formatCountOf = (value: number, one: string, many: string) =>
   `${formatCount(value)} ${value === 1 ? one : many}`;
@@ -1233,100 +1236,80 @@ export default function FactionPage({
     <Container size="lg" py="md">
       <Stack gap="lg">
         {/* Hero */}
-        <Paper withBorder radius="md" p="lg">
-          <Group align="flex-start" gap="xl" wrap="wrap">
-            <Box
-              style={{
-                width: 170,
-                height: 170,
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-                borderRadius: 8,
-                border: "1px solid rgba(108, 132, 151, 0.28)",
-                background:
-                  "radial-gradient(circle at 50% 35%, rgba(44, 66, 88, 0.4), rgba(6, 9, 15, 0.92))",
-              }}
-            >
-              <FactionAvatar
-                factionId={factionId}
-                size={150}
-                radius={0}
-                alt={faction.name}
-              />
-            </Box>
-
-            <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <Text size="sm" c="dimmed">
-                Faction
-              </Text>
-              <Group gap="sm" align="center">
-                <Title order={2}>{faction.name}</Title>
-                {hasWarfare && (
-                  <Badge color="red" variant="light">
-                    Faction Warfare
-                  </Badge>
-                )}
-              </Group>
-              {faction.shortDescription && (
-                <Text fs="italic" c="dimmed">
-                  {faction.shortDescription}
-                </Text>
-              )}
-
-              {faction.homeSystem && (
-                <Group gap="xs" align="center">
-                  <Text size="sm" c="dimmed">
-                    Headquarters
-                  </Text>
-                  <LocationTrail location={faction.homeSystem} />
-                </Group>
-              )}
-
-              <Group gap="xl">
-                <HeroStat label="Systems" value={formatCount(totalSystems)} />
-                <HeroStat
-                  label="Stations"
-                  value={formatCount(faction.stationCount)}
-                />
-                {counts.corporations > 0 && (
-                  <HeroStat
-                    label="Corporations"
-                    value={formatCount(counts.corporations)}
-                  />
-                )}
-                {/* A faction with a militia keeps the slot while ESI answers,
-                    so the number does not push the page down when it lands. */}
-                {(faction.militiaCorporation !== null ||
-                  militiaPilots !== undefined) && (
-                  <HeroStat
-                    label="Militia pilots"
-                    value={
-                      militiaPilots === undefined
-                        ? "—"
-                        : formatCount(militiaPilots)
-                    }
-                  />
-                )}
-              </Group>
-
-              <Group gap="xs">
-                <Button
-                  component={Link}
-                  href={`https://zkillboard.com/faction/${factionId}/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  size="xs"
-                  leftSection={<IconExternalLink size={14} />}
-                >
-                  zKillboard
-                </Button>
-              </Group>
-            </Stack>
+        <HeroCard
+          artwork={
+            <FactionAvatar
+              factionId={factionId}
+              size={150}
+              radius={0}
+              alt={faction.name}
+            />
+          }
+        >
+          <Text size="sm" c="dimmed">
+            Faction
+          </Text>
+          <Group gap="sm" align="center">
+            <Title order={2}>{faction.name}</Title>
+            {hasWarfare && (
+              <Badge color="red" variant="light">
+                Faction Warfare
+              </Badge>
+            )}
           </Group>
-        </Paper>
+          {faction.shortDescription && (
+            <Text fs="italic" c="dimmed">
+              {faction.shortDescription}
+            </Text>
+          )}
+
+          {faction.homeSystem && (
+            <Group gap="xs" align="center">
+              <Text size="sm" c="dimmed">
+                Headquarters
+              </Text>
+              <LocationTrail location={faction.homeSystem} />
+            </Group>
+          )}
+
+          <Group gap="xl">
+            <HeroStat label="Systems" value={formatCount(totalSystems)} />
+            <HeroStat
+              label="Stations"
+              value={formatCount(faction.stationCount)}
+            />
+            {counts.corporations > 0 && (
+              <HeroStat
+                label="Corporations"
+                value={formatCount(counts.corporations)}
+              />
+            )}
+            {/* A faction with a militia keeps the slot while ESI answers,
+                    so the number does not push the page down when it lands. */}
+            {(faction.militiaCorporation !== null ||
+              militiaPilots !== undefined) && (
+              <HeroStat
+                label="Militia pilots"
+                value={
+                  militiaPilots === undefined ? "—" : formatCount(militiaPilots)
+                }
+              />
+            )}
+          </Group>
+
+          <Group gap="xs">
+            <Button
+              component={Link}
+              href={`https://zkillboard.com/faction/${factionId}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="xs"
+              leftSection={<IconExternalLink size={14} />}
+            >
+              zKillboard
+            </Button>
+          </Group>
+        </HeroCard>
 
         {tablesQuery.isError && TABLE_TABS.has(selectedTab) && (
           <Alert color="red" variant="light">

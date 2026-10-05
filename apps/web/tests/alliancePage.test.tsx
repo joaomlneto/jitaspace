@@ -9,8 +9,12 @@ import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type { AllianceProfileResult } from "~/app/alliance/[allianceId]/data";
 import type * as PageModule from "~/app/alliance/[allianceId]/page";
-import type { AllianceProfile } from "~/app/alliance/[allianceId]/types";
+import type {
+  AllianceProfile,
+  AllianceTables,
+} from "~/app/alliance/[allianceId]/types";
 import type { ZkbStats } from "~/app/alliance/[allianceId]/zkillboard";
+import { splitAllianceProfile } from "~/app/alliance/[allianceId]/split";
 
 const ALLIANCE_ID = 99000001;
 
@@ -26,6 +30,16 @@ const mockGetCorporationsCorporationId =
 const mockLoadAllianceProfile =
   jest.fn<(id: number) => Promise<AllianceProfileResult>>();
 const mockConnection = jest.fn<() => Promise<void>>();
+const mockUseAllianceTables = jest.fn<
+  (
+    id: number,
+    enabled: boolean,
+  ) => {
+    data: AllianceTables | undefined;
+    isPending: boolean;
+    isError: boolean;
+  }
+>();
 
 // The page's ESI reads run inside `"use cache"`, which Jest does not apply.
 jest.mock("next/cache", () => ({ cacheLife: jest.fn(), cacheTag: jest.fn() }));
@@ -151,6 +165,11 @@ jest.mock("~/components/DataTable", () => ({
 jest.mock("next/dynamic", () => ({
   __esModule: true,
   default: () => () => <div>chart</div>,
+}));
+
+jest.mock("~/app/alliance/[allianceId]/tables", () => ({
+  useAllianceTables: (id: number, enabled: boolean) =>
+    mockUseAllianceTables(id, enabled),
 }));
 
 jest.mock("~/app/alliance/[allianceId]/zkillboard", () => ({
@@ -407,14 +426,25 @@ function mockEsi({
   });
 }
 
+/**
+ * Renders the page as the server hands it over: the profile split into the
+ * page's own data and the table rows, which the (stubbed) tables hook serves.
+ */
 function renderPage(
-  pageProfile: AllianceProfile | null = profile,
+  fullProfile: AllianceProfile | null = profile,
   searchParams = "",
+  tables: "loaded" | "loading" | "error" = "loaded",
 ) {
+  const split = fullProfile ? splitAllianceProfile(fullProfile) : null;
+  mockUseAllianceTables.mockReturnValue({
+    data: tables === "loaded" ? split?.tables : undefined,
+    isPending: tables !== "loaded",
+    isError: tables === "error",
+  });
   const Page = require("~/app/alliance/[allianceId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page allianceId={ALLIANCE_ID} profile={pageProfile} />
+      <Page allianceId={ALLIANCE_ID} profile={split?.page ?? null} />
     </MantineProvider>,
     { wrapper: withNuqsTestingAdapter({ hasMemory: true, searchParams }) },
   );
@@ -557,6 +587,35 @@ describe("alliance page — tabs", () => {
     expect(screen.getByText(/most recently declared of/)).toBeInTheDocument();
   });
 
+  it("fetches the table rows only when a table tab opens", () => {
+    mockEsi();
+    renderPage(profile);
+    expect(mockUseAllianceTables).toHaveBeenLastCalledWith(ALLIANCE_ID, false);
+    mockUseAllianceTables.mockClear();
+    renderPage(profile, "?tab=wars");
+    expect(mockUseAllianceTables).toHaveBeenLastCalledWith(ALLIANCE_ID, true);
+  });
+
+  it("shows loading rows while the tables arrive, and says so if they fail", () => {
+    mockEsi();
+    const { unmount } = renderPage(profile, "?tab=corporations", "loading");
+    // The DataTable stub renders no rows; nothing claims ESI-only members.
+    expect(screen.queryAllByTestId("row")).toHaveLength(0);
+    expect(
+      screen.queryByText(/joined since our last hourly refresh/),
+    ).toBeNull();
+    unmount();
+
+    renderPage(profile, "?tab=sovereignty", "error");
+    expect(
+      screen.getByText(
+        "Could not load this alliance's tables. Try again later.",
+      ),
+    ).toBeInTheDocument();
+    // The summary still renders from the page's own data.
+    expect(screen.getByText("Holdings")).toBeInTheDocument();
+  });
+
   it("shows zKillboard statistics", () => {
     mockEsi();
     renderPage(profile, "?tab=killboard");
@@ -609,7 +668,9 @@ describe("alliance page server wrapper", () => {
     mockLoadAllianceProfile.mockResolvedValue({ ok: true, profile });
     const element = await runWrapper("99005338");
     expect(element.props.allianceId).toBe(99005338);
-    expect(element.props.profile).toBe(profile);
+    // The page carries summaries; the table rows stay behind the API.
+    expect(element.props.profile).toEqual(splitAllianceProfile(profile).page);
+    expect(element.props.profile).not.toHaveProperty("corporations");
     expect(mockLoadAllianceProfile).toHaveBeenCalledWith(99005338);
     // A good read is cacheable: nothing opts the render out of ISR.
     expect(mockConnection).not.toHaveBeenCalled();

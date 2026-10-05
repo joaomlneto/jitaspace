@@ -1,3 +1,6 @@
+import type { CorporationSummary } from "./corporations";
+import type { SovereigntySummary } from "./sovereignty";
+
 /**
  * What the alliance page reads from our own database, resolved on the server
  * and handed to the client page as plain, serializable props. Dates cross the
@@ -122,3 +125,34 @@ export interface AllianceProfile {
   /** When the read was taken: the page's "now" for anything time-relative. */
   readAt: string;
 }
+
+/** The rows behind the page's tables, served by `/api/alliance/[allianceId]`. */
+export type AllianceTables = Pick<
+  AllianceProfile,
+  "corporations" | "sovereignty" | "wars"
+>;
+
+/** One corporation in the overview's pilot-composition bar. */
+export interface CompositionEntry {
+  corporationId: number;
+  name: string;
+  ticker: string;
+  memberCount: number;
+}
+
+/**
+ * What the page itself carries: the profile without its table rows, plus the
+ * summaries the overview and hero show, computed on the server. The rows are
+ * most of the page's weight (Goonswarm's 809 corporations and 509 systems made
+ * it ~700 kB), so a tab fetches them only when it opens.
+ */
+export type AlliancePageData = Omit<AllianceProfile, keyof AllianceTables> & {
+  corporationSummary: CorporationSummary;
+  /** The largest corporations by pilots, largest first. */
+  composition: CompositionEntry[];
+  executorCeo: { id: number; name: string | null } | null;
+  creatorStillMember: boolean;
+  sovereigntySummary: SovereigntySummary;
+  /** How many wars the Wars tab lists (at most `ALLIANCE_WAR_LIST_LIMIT`). */
+  listedWars: number;
+};

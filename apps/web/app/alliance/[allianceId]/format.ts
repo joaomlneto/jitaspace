@@ -1,19 +1,6 @@
 import { formatDistanceStrict } from "date-fns";
 
-const integerFormat = new Intl.NumberFormat("en-US");
-const decimalFormat = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 1,
-});
-const percentFormat = new Intl.NumberFormat("en-US", {
-  style: "percent",
-  maximumFractionDigits: 1,
-});
-
-export const formatInteger = (value: number) => integerFormat.format(value);
-export const formatDecimal = (value: number) => decimalFormat.format(value);
-/** `0.123` → `12.3%`. */
-export const formatPercent = (fraction: number) =>
-  percentFormat.format(fraction);
+export { formatDecimal, formatInteger, formatPercent } from "~/lib/format";
 
 /** The `YYYY-MM-DD` of an ISO timestamp, in UTC (EVE time). */
 export const formatDate = (iso: string) => iso.slice(0, 10);

@@ -278,8 +278,17 @@ export function WarSummaryCards({
 
 export function WarsTab({
   rows,
+  isLoading,
+  listed,
   summary,
-}: Readonly<{ rows: WarRow[]; summary: AllianceWarSummary }>) {
+}: Readonly<{
+  rows: WarRow[];
+  /** The rows are still on their way from `/api/alliance/[allianceId]`. */
+  isLoading: boolean;
+  /** How many wars the table lists once loaded. */
+  listed: number;
+  summary: AllianceWarSummary;
+}>) {
   return (
     <Stack gap="lg">
       <Stack gap="sm">
@@ -296,6 +305,7 @@ export function WarsTab({
         <SectionHeading icon={<IconSwords size={18} />}>Wars</SectionHeading>
         <DataTable
           data={rows}
+          isLoading={isLoading}
           columns={columns}
           rowId={(war) => war.warId}
           initialSort={{ columnId: "declared", direction: "desc" }}
@@ -307,9 +317,9 @@ export function WarsTab({
           highlightOnHover
           striped
         />
-        {summary.total > rows.length && (
+        {summary.total > listed && (
           <Text size="xs" c="dimmed">
-            Showing the {formatInteger(rows.length)} most recently declared of{" "}
+            Showing the {formatInteger(listed)} most recently declared of{" "}
             {formatInteger(summary.total)} wars. The record above counts them
             all.
           </Text>

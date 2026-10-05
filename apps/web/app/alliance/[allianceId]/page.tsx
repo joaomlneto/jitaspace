@@ -11,6 +11,7 @@ import { parsePositiveEntityId } from "~/lib/routeParams";
 import { loadAllianceProfile } from "./data";
 import { readEsiAlliance, readEsiCorporationName } from "./esi";
 import PageClient from "./page.client";
+import { splitAllianceProfile } from "./split";
 
 const count = (n: number) => n.toLocaleString("en-US");
 
@@ -101,13 +102,16 @@ async function PageContent({
   // Null when the alliance is not in our database (yet), or the database is
   // unavailable: the page then renders from ESI alone.
   const profile = result.ok ? result.profile : null;
+  // The table rows stay behind `/api/alliance/[allianceId]`; the page carries
+  // the identity and the summaries computed from them.
+  const page = profile ? splitAllianceProfile(profile).page : null;
   // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
   // `useSearchParams()`, which drops this subtree out of the cached render, so
   // the ISR page would hold only the skeleton. The React adapter reads
   // `location.search` after hydration; `?tab=` still lives in the URL.
   return (
     <NuqsAdapter>
-      <PageClient allianceId={id} profile={profile} />
+      <PageClient allianceId={id} profile={page} />
     </NuqsAdapter>
   );
 }

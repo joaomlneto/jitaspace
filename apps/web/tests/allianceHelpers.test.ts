@@ -13,6 +13,7 @@ import {
 } from "~/app/alliance/[allianceId]/corporations";
 import { formatAge } from "~/app/alliance/[allianceId]/format";
 import { summarizeSovereignty } from "~/app/alliance/[allianceId]/sovereignty";
+import { splitAllianceProfile } from "~/app/alliance/[allianceId]/split";
 import { isAlliancePageTab } from "~/app/alliance/[allianceId]/tabs";
 import {
   activityGrid,
@@ -261,5 +262,77 @@ describe("page helpers", () => {
     expect(formatAge("2016-10-05T12:00:00Z", "2026-10-05T12:00:00Z")).toBe(
       "10 years",
     );
+  });
+});
+
+describe("splitAllianceProfile", () => {
+  const base = {
+    allianceId: 1,
+    name: "A",
+    ticker: "A",
+    dateFounded: "2010-01-01T00:00:00Z",
+    isClosed: false,
+    creatorCorporationId: 3,
+    creatorCorporationName: "Gone",
+    executorCorporationId: 1,
+    executorCorporationName: "Exec",
+    factionId: null,
+    factionName: null,
+    warSummary: {
+      total: 0,
+      asAggressor: 0,
+      asDefender: 0,
+      asAlly: 0,
+      ongoing: 0,
+      shipsKilled: 0,
+      iskDestroyed: 0,
+      shipsLost: 0,
+      iskLost: 0,
+    },
+    readAt: "2026-10-05T12:00:00Z",
+  };
+
+  it("keeps the rows out of the page and summarizes them instead", () => {
+    const corporations = Array.from({ length: 10 }, (_, i) =>
+      corporation({
+        corporationId: i + 1,
+        name: `Corp ${i + 1}`,
+        memberCount: i === 9 ? 0 : 100 - i,
+        ceoId: i === 0 ? 90000001 : null,
+        ceoName: i === 0 ? "Boss" : null,
+      }),
+    );
+    const { page, tables } = splitAllianceProfile({
+      ...base,
+      corporations,
+      sovereignty: [system({ isCapitalSystem: true })],
+      wars: [],
+    });
+
+    expect(tables.corporations).toBe(corporations);
+    expect(page).not.toHaveProperty("corporations");
+    expect(page).not.toHaveProperty("sovereignty");
+    expect(page).not.toHaveProperty("wars");
+    // The eight largest corporations with pilots, largest first.
+    expect(page.composition.map((entry) => entry.corporationId)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8,
+    ]);
+    expect(page.executorCeo).toEqual({ id: 90000001, name: "Boss" });
+    expect(page.creatorStillMember).toBe(true);
+    expect(page.corporationSummary.corporations).toBe(10);
+    expect(page.sovereigntySummary.capital?.solarSystemId).toBe(1);
+    expect(page.listedWars).toBe(0);
+  });
+
+  it("knows when the executor has no CEO on record and the creator left", () => {
+    const { page } = splitAllianceProfile({
+      ...base,
+      creatorCorporationId: 99,
+      corporations: [corporation({ corporationId: 1, memberCount: 5 })],
+      sovereignty: [],
+      wars: [],
+    });
+    expect(page.executorCeo).toBeNull();
+    expect(page.creatorStillMember).toBe(false);
   });
 });

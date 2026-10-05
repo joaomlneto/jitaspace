@@ -10,10 +10,7 @@ import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
  * under the hero title.
  */
 
-/**
- * A page's hero card: framed artwork on the left, title and stats beside it.
- * The type and faction pages still draw the same frame inline.
- */
+/** A page's hero card: framed artwork on the left, title and stats beside it. */
 export function HeroCard({
   artwork,
   children,

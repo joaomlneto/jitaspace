@@ -53,9 +53,8 @@ import {
   FactionAvatar,
 } from "@jitaspace/ui";
 
-import type { CorporationRow } from "./corporations";
 import type { AlliancePageTab } from "./tabs";
-import type { AllianceProfile } from "./types";
+import type { AlliancePageData, CompositionEntry } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import {
   HeroCard,
@@ -63,7 +62,7 @@ import {
   SectionHeading,
   StatCard,
 } from "~/components/EntityPage";
-import { buildCorporationRows, summarizeCorporations } from "./corporations";
+import { buildCorporationRows } from "./corporations";
 import { CorporationsTab } from "./CorporationsTab";
 import {
   formatAge,
@@ -73,8 +72,8 @@ import {
   formatPercent,
 } from "./format";
 import { KillboardSummaryCards, KillboardTab } from "./KillboardTab";
-import { summarizeSovereignty } from "./sovereignty";
 import { SovereigntyTab } from "./SovereigntyTab";
+import { useAllianceTables } from "./tables";
 import {
   ALLIANCE_PAGE_TABS,
   DEFAULT_ALLIANCE_PAGE_TAB,
@@ -86,11 +85,9 @@ import { iskEfficiency, useZkillboardAllianceStats } from "./zkillboard";
 export interface PageProps {
   allianceId: number;
   /** Null when our database has no row for the alliance or is unavailable. */
-  profile: AllianceProfile | null;
+  profile: AlliancePageData | null;
 }
 
-/** How many corporations the composition bar names before "others". */
-const COMPOSITION_SIZE = 8;
 const COMPOSITION_COLORS = [
   "blue.6",
   "teal.6",
@@ -136,17 +133,15 @@ function CorporationLine({
 }
 
 function CompositionBar({
-  rows,
+  top,
   pilots,
-}: Readonly<{ rows: CorporationRow[]; pilots: number }>) {
-  const ranked = rows
-    .filter(
-      (row): row is CorporationRow & { memberCount: number } =>
-        row.memberCount !== null && row.memberCount > 0,
-    )
-    .sort((a, b) => b.memberCount - a.memberCount);
-  if (pilots === 0 || ranked.length === 0) return null;
-  const top = ranked.slice(0, COMPOSITION_SIZE);
+  corporations,
+}: Readonly<{
+  top: CompositionEntry[];
+  pilots: number;
+  corporations: number;
+}>) {
+  if (pilots === 0 || top.length === 0) return null;
   const others = pilots - top.reduce((sum, row) => sum + row.memberCount, 0);
 
   return (
@@ -156,7 +151,7 @@ function CompositionBar({
           {top.map((row, index) => (
             <Tooltip
               key={row.corporationId}
-              label={`${row.name ?? row.corporationId}: ${formatInteger(row.memberCount)} pilots (${formatPercent(row.memberCount / pilots)})`}
+              label={`${row.name}: ${formatInteger(row.memberCount)} pilots (${formatPercent(row.memberCount / pilots)})`}
             >
               <Progress.Section
                 value={(row.memberCount / pilots) * 100}
@@ -166,7 +161,7 @@ function CompositionBar({
           ))}
           {others > 0 && (
             <Tooltip
-              label={`${formatInteger(ranked.length - top.length)} other corporations: ${formatInteger(others)} pilots (${formatPercent(others / pilots)})`}
+              label={`${formatInteger(corporations - top.length)} other corporations: ${formatInteger(others)} pilots (${formatPercent(others / pilots)})`}
             >
               <Progress.Section
                 value={(others / pilots) * 100}
@@ -218,7 +213,7 @@ function CompositionBar({
  * creator), and everything when we have no row.
  */
 function resolveIdentity(
-  profile: AllianceProfile | null,
+  profile: AlliancePageData | null,
   esi: GetAlliancesAllianceIdQueryResponse | undefined,
 ) {
   if (profile) {
@@ -247,12 +242,22 @@ function resolveIdentity(
   };
 }
 
+/** The table tabs: their rows are fetched when one opens. */
+const TABLE_TABS = new Set<AlliancePageTab>([
+  "corporations",
+  "sovereignty",
+  "wars",
+]);
+
+/** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
+const NO_ROWS: never[] = [];
+
 /** Whether the creator corporation is still in the alliance, once we know. */
-function describeCreatorMembership(rows: CorporationRow[]): string | undefined {
-  if (rows.length === 0) return undefined;
-  return rows.some((row) => row.isCreator)
-    ? "Still a member"
-    : "No longer a member";
+function describeCreatorMembership(
+  stillMember: boolean | undefined,
+): string | undefined {
+  if (stillMember === undefined) return undefined;
+  return stillMember ? "Still a member" : "No longer a member";
 }
 
 export default function AlliancePage({
@@ -288,49 +293,64 @@ export default function AlliancePage({
     [profile, esiAlliance?.data],
   );
 
+  // Without a database row, ESI's member list is all we have, and it is cheap:
+  // ids only. With one, the rows come from `/api/alliance/[allianceId]`.
+  const tablesQuery = useAllianceTables(
+    allianceId,
+    profile !== null && TABLE_TABS.has(activeTab),
+  );
+  const tables = tablesQuery.data;
+  const tablesLoading = profile !== null && tablesQuery.isPending;
   const corporationRows = useMemo(
     () =>
-      buildCorporationRows({
-        corporations: profile?.corporations ?? [],
-        esiMemberIds: esiMembers?.data,
-        executorCorporationId,
-        creatorCorporationId,
-      }),
+      profile === null || tables
+        ? buildCorporationRows({
+            corporations: tables?.corporations ?? NO_ROWS,
+            esiMemberIds: esiMembers?.data,
+            executorCorporationId,
+            creatorCorporationId,
+          })
+        : NO_ROWS,
     [
-      profile?.corporations,
+      profile,
+      tables,
       esiMembers?.data,
       executorCorporationId,
       creatorCorporationId,
     ],
   );
-  const corporationSummary = useMemo(
-    () => summarizeCorporations(corporationRows),
-    [corporationRows],
-  );
   const corporationNames = useMemo(
     () =>
       new Map(
-        (profile?.corporations ?? []).map((corporation) => [
+        (tables?.corporations ?? NO_ROWS).map((corporation) => [
           corporation.corporationId,
           corporation.name,
         ]),
       ),
-    [profile?.corporations],
-  );
-  const sovereignty = profile?.sovereignty;
-  const sovereigntySummary = useMemo(
-    () => summarizeSovereignty(sovereignty ?? []),
-    [sovereignty],
+    [tables?.corporations],
   );
   const warRows = useMemo(
-    () => (profile?.wars ?? []).map(toWarRow),
-    [profile?.wars],
+    () => (tables?.wars ?? NO_ROWS).map(toWarRow),
+    [tables?.wars],
   );
+  const corporationSummary = profile?.corporationSummary;
+  const sovereigntySummary = profile?.sovereigntySummary;
   const warSummary = profile?.warSummary;
+  const composition = profile?.composition ?? NO_ROWS;
+  const executorCeo = profile?.executorCeo ?? null;
+  const sovereigntySystems = sovereigntySummary?.systems ?? 0;
+  const corporationCount = profile
+    ? profile.corporationSummary.corporations
+    : (esiMembers?.data.length ?? 0);
+  const creatorMembership = describeCreatorMembership(
+    profile
+      ? profile.creatorStillMember
+      : corporationRows.length > 0
+        ? corporationRows.some((row) => row.isCreator)
+        : undefined,
+  );
 
-  const executorRow = corporationRows.find((row) => row.isExecutor);
-  const creatorMembership = describeCreatorMembership(corporationRows);
-  const hasSovereignty = sovereigntySummary.systems > 0;
+  const hasSovereignty = sovereigntySystems > 0;
   const hasWars = (warSummary?.total ?? 0) > 0;
   const killEfficiency = iskEfficiency(
     zkill.data?.iskDestroyed,
@@ -420,22 +440,22 @@ export default function AlliancePage({
           )}
 
           <Group gap="xl">
-            {profile && (
+            {corporationSummary && (
               <HeroStat
                 label="Pilots"
                 value={formatInteger(corporationSummary.pilots)}
               />
             )}
-            {corporationRows.length > 0 && (
+            {corporationCount > 0 && (
               <HeroStat
                 label="Corporations"
-                value={formatInteger(corporationRows.length)}
+                value={formatInteger(corporationCount)}
               />
             )}
             {hasSovereignty && (
               <HeroStat
                 label="Sov systems"
-                value={formatInteger(sovereigntySummary.systems)}
+                value={formatInteger(sovereigntySystems)}
               />
             )}
             {dateFounded && (
@@ -500,15 +520,14 @@ export default function AlliancePage({
               leftSection={<IconBuildingSkyscraper size={16} />}
             >
               Corporations
-              {corporationRows.length > 0 &&
-                ` (${formatInteger(corporationRows.length)})`}
+              {corporationCount > 0 && ` (${formatInteger(corporationCount)})`}
             </Tabs.Tab>
             {hasSovereignty && (
               <Tabs.Tab
                 value="sovereignty"
                 leftSection={<IconFlag size={16} />}
               >
-                Sovereignty ({formatInteger(sovereigntySummary.systems)})
+                Sovereignty ({formatInteger(sovereigntySystems)})
               </Tabs.Tab>
             )}
             {hasWars && warSummary && (
@@ -520,6 +539,12 @@ export default function AlliancePage({
               Killboard
             </Tabs.Tab>
           </Tabs.List>
+
+          {tablesQuery.isError && TABLE_TABS.has(selectedTab) && (
+            <Text c="dimmed" pt="lg">
+              Could not load this alliance&apos;s tables. Try again later.
+            </Text>
+          )}
 
           {/* Overview */}
           <Tabs.Panel value="overview" pt="lg">
@@ -553,17 +578,17 @@ export default function AlliancePage({
                       )
                     }
                     sub={
-                      executorRow?.ceoId ? (
+                      executorCeo ? (
                         <Group gap={4} wrap="nowrap">
                           CEO
                           <CharacterAnchor
-                            characterId={executorRow.ceoId}
+                            characterId={executorCeo.id}
                             size="xs"
                           >
-                            {executorRow.ceoName ?? (
+                            {executorCeo.name ?? (
                               <CharacterName
                                 span
-                                characterId={executorRow.ceoId}
+                                characterId={executorCeo.id}
                               />
                             )}
                           </CharacterAnchor>
@@ -622,7 +647,7 @@ export default function AlliancePage({
                       )
                     }
                     sub={
-                      corporationSummary.enlisted > 0
+                      corporationSummary && corporationSummary.enlisted > 0
                         ? `${formatInteger(corporationSummary.enlisted)} member corporations enlisted`
                         : undefined
                     }
@@ -638,7 +663,7 @@ export default function AlliancePage({
                 </SimpleGrid>
               </Stack>
 
-              {profile && corporationRows.length > 0 && (
+              {corporationSummary && corporationSummary.corporations > 0 && (
                 <Stack gap="sm">
                   <SectionHeading icon={<IconUsersGroup size={18} />}>
                     Membership
@@ -713,13 +738,14 @@ export default function AlliancePage({
                     )}
                   </SimpleGrid>
                   <CompositionBar
-                    rows={corporationRows}
+                    top={composition}
                     pilots={corporationSummary.pilots}
+                    corporations={corporationSummary.corporations}
                   />
                 </Stack>
               )}
 
-              {hasSovereignty && (
+              {hasSovereignty && sovereigntySummary && (
                 <Stack gap="sm">
                   <SectionHeading icon={<IconFlag size={18} />}>
                     Sovereignty
@@ -820,16 +846,17 @@ export default function AlliancePage({
           <Tabs.Panel value="corporations" pt="lg">
             <CorporationsTab
               rows={corporationRows}
-              isLoading={esiMembersLoading}
+              isLoading={profile ? tablesLoading : esiMembersLoading}
               hasProfile={profile !== null}
             />
           </Tabs.Panel>
 
-          {hasSovereignty && profile && (
+          {hasSovereignty && profile && sovereigntySummary && (
             <Tabs.Panel value="sovereignty" pt="lg">
               <SovereigntyTab
                 allianceId={allianceId}
-                systems={profile.sovereignty}
+                systems={tables?.sovereignty ?? NO_ROWS}
+                isLoading={tablesLoading}
                 summary={sovereigntySummary}
                 corporationNames={corporationNames}
                 readAt={profile.readAt}
@@ -837,9 +864,14 @@ export default function AlliancePage({
             </Tabs.Panel>
           )}
 
-          {hasWars && warSummary && (
+          {hasWars && profile && (
             <Tabs.Panel value="wars" pt="lg">
-              <WarsTab rows={warRows} summary={warSummary} />
+              <WarsTab
+                rows={warRows}
+                isLoading={tablesLoading}
+                listed={profile.listedWars}
+                summary={profile.warSummary}
+              />
             </Tabs.Panel>
           )}
 

@@ -12,6 +12,7 @@ import type {
 } from "./types";
 import { allianceCacheTag } from "~/lib/alliancesCache";
 import { prisma } from "~/lib/db";
+import { deriveOngoingWarStatus } from "~/lib/warStatus";
 
 /**
  * How many wars the page lists. Mercenary alliances have declared thousands;
@@ -46,11 +47,7 @@ export function deriveWarStatus(
 ): AllianceWarStatus {
   const finished = war.finishedDate?.getTime();
   if (finished !== undefined && finished <= now) return "finished";
-  const started = war.startedDate?.getTime();
-  if (started === undefined || started > now) return "pending";
-  const retracted = war.retractedDate?.getTime();
-  if (retracted !== undefined && retracted <= now) return "retracting";
-  return "active";
+  return deriveOngoingWarStatus(war, now);
 }
 
 function toAllianceWar(
