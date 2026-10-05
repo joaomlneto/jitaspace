@@ -4,7 +4,7 @@ import { serverEndpoints } from "./constants";
 /**
  * Absolute CDN URL for a `res:/` file, given its hashed relative path. Resolves
  * against the operating provider's `res` host (CCP vs NetEase); defaults to
- * Tranquility so existing CCP-only callers are unaffected.
+ * Tranquility.
  */
 export function resourceUrl(
   relPath: string,

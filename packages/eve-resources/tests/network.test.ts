@@ -530,3 +530,107 @@ describe("network helpers default to the global fetch and Tranquility", () => {
     await expect(fetchBuildDate(100)).resolves.toBe("2026-10-01");
   });
 });
+
+describe("review hardening", () => {
+  const entry: ResourceEntry = {
+    path: "res:/big.bin",
+    relPath: "a/1",
+    md5: "m",
+    size: 9,
+    compressedSize: 9,
+  };
+  const URL_ = "https://resources.eveonline.com/a/1";
+
+  /**
+   * An endless body (one 3-byte chunk per pull) served by a `fetch` that
+   * ignores the abort signal, so only cancelling the reader can stop it.
+   */
+  function endless(onCancel: () => void) {
+    let pulls = 0;
+    const fetchImpl = (() =>
+      Promise.resolve(
+        new Response(
+          new ReadableStream<Uint8Array>({
+            pull(controller) {
+              pulls++;
+              controller.enqueue(new Uint8Array([pulls, pulls, pulls]));
+            },
+            cancel: onCancel,
+          }),
+        ),
+      )) as typeof fetch;
+    return { fetchImpl, pulls: () => pulls };
+  }
+
+  it("fetchResourceHead cancels a stream whose fetch ignores the abort signal", async () => {
+    let cancelled = false;
+    const { fetchImpl, pulls } = endless(() => {
+      cancelled = true;
+    });
+    const head = await fetchResourceHead(entry, 4, fetchImpl);
+    expect([...head]).toEqual([1, 1, 1, 2]);
+    expect(cancelled).toBe(true);
+    const pullsAtReturn = pulls();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(pulls()).toBe(pullsAtReturn); // nothing read after cancelling
+  });
+
+  it("fetchResourceHead still returns its bytes when cancelling fails", async () => {
+    const { fetchImpl } = endless(() => {
+      throw new Error("cancel failed");
+    });
+    const head = await fetchResourceHead(entry, 2, fetchImpl);
+    expect([...head]).toEqual([1, 1]);
+  });
+
+  it.each([0, -1, Number.NaN])(
+    "fetchResourceHead(maxBytes=%s) returns nothing without a request",
+    async (maxBytes) => {
+      const fetchImpl = jest.fn<typeof fetch>();
+      const head = await fetchResourceHead(entry, maxBytes, fetchImpl);
+      expect(head).toHaveLength(0);
+      expect(fetchImpl).not.toHaveBeenCalled();
+    },
+  );
+
+  it("fetchResourceHead floors a fractional maxBytes", async () => {
+    const fetchImpl = mockFetch({
+      [URL_]: { body: new Uint8Array([1, 2, 3]) },
+    });
+    expect([...(await fetchResourceHead(entry, 2.9, fetchImpl))]).toEqual([
+      1, 2,
+    ]);
+  });
+
+  it("fetchResourceBytes names the resource when a gzip-looking body is corrupt", async () => {
+    const fetchImpl = mockFetch({
+      [URL_]: { body: new Uint8Array([0x1f, 0x8b, 0, 1, 2, 3]) },
+    });
+    await expect(fetchResourceBytes(entry, fetchImpl)).rejects.toThrow(
+      `Failed to gunzip ${URL_}`,
+    );
+  });
+
+  it("fetchBuildDate returns null for a non-OK response even with Last-Modified", async () => {
+    const fetchImpl = (() =>
+      Promise.resolve(
+        new Response(null, {
+          status: 403,
+          headers: { "last-modified": "Thu, 01 Oct 2026 23:30:00 GMT" },
+        }),
+      )) as typeof fetch;
+    await expect(fetchBuildDate(1, fetchImpl)).resolves.toBeNull();
+  });
+
+  it.each([
+    ["no build", JSON.stringify({ protected: false })],
+    ["a numeric build", JSON.stringify({ build: 100 })],
+    ["a non-numeric build", JSON.stringify({ build: "latest" })],
+    ["null", "null"],
+  ])("getCurrentBuild rejects a pointer with %s", async (_, body) => {
+    const fetchImpl = mockFetch({ [POINTER]: { body } });
+    await expect(getCurrentBuild("tranquility", fetchImpl)).rejects.toThrow(
+      /has no valid build number/,
+    );
+  });
+});

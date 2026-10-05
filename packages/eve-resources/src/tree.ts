@@ -16,7 +16,7 @@ export interface DirectoryListing {
   files: ResourceEntry[];
 }
 
-interface DirectoryNode {
+export interface DirectoryNode {
   subdirs: Set<string>;
   files: ResourceEntry[];
 }
@@ -65,6 +65,9 @@ export function buildTreeIndex(entries: ResourceEntry[]): ResourceTreeIndex {
   };
 
   for (const entry of entries) {
+    // A later entry for the same path (e.g. a platform overlay) replaces the
+    // earlier one in both the lookup and its directory listing.
+    const previous = byPath.get(entry.path);
     byPath.set(entry.path, entry);
 
     const split = splitScheme(entry.path);
@@ -79,7 +82,9 @@ export function buildTreeIndex(entries: ResourceEntry[]): ResourceTreeIndex {
       ensureDir(dir).subdirs.add(segment);
       dir = `${dir}${segment}/`;
     }
-    ensureDir(dir).files.push(entry);
+    const files = ensureDir(dir).files;
+    if (previous) files[files.indexOf(previous)] = entry;
+    else files.push(entry);
   }
 
   return { byPath, directories };

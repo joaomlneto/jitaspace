@@ -15,8 +15,8 @@ import { binariesUrl } from "./url";
  *
  * Each platform has its own app index (`eveonline_<build>.txt` for Windows,
  * `eveonlinemacOS_<build>.txt` for macOS); see {@link PLATFORM_LAYOUT}. The
- * `server` selects the operating provider's index host (CCP vs NetEase) — it
- * defaults to Tranquility so non-China callers are unaffected.
+ * `server` selects the operating provider's index host (CCP vs NetEase); it
+ * defaults to Tranquility.
  */
 export async function fetchAppIndex(
   build: string,
@@ -41,8 +41,7 @@ export async function fetchAppIndex(
  * The resfile index is itself an app file, so we first resolve the app index
  * to discover the index's hashed location. When a `platform` is given, the
  * platform-specific shader overlay (`effect.dx11` / `effect.metal`) is merged
- * on top of the base set; without one, the base set is returned alone (the
- * historical behaviour relied on by history diffs, icon resolution and the CLI).
+ * on top of the base set; without one, only the base set is returned.
  *
  * `server` selects the operating provider's hosts (the app-index host and the
  * `app:/` file host the resfile indexes themselves are fetched from).

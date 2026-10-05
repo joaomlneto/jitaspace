@@ -16,6 +16,8 @@ export interface BuildInfo {
  * This is the entry point of the resource-resolution chain:
  * build → app index → resfile index → individual resource files.
  *
+ * Throws if the request fails or the document has no numeric `build`.
+ *
  * Network-bound; intended for server/CLI use (the CDN sends no CORS headers).
  */
 export async function getCurrentBuild(
@@ -30,5 +32,9 @@ export async function getCurrentBuild(
       `Failed to fetch EVE build info from ${url} (HTTP ${response.status})`,
     );
   }
-  return (await response.json()) as BuildInfo;
+  const info = (await response.json()) as Partial<BuildInfo> | null;
+  if (typeof info?.build !== "string" || !/^\d+$/.test(info.build)) {
+    throw new Error(`EVE build pointer at ${url} has no valid build number`);
+  }
+  return info as BuildInfo;
 }

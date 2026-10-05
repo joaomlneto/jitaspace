@@ -4,7 +4,6 @@ import {
   BUILD_DATES,
   BUILD_TIMESTAMPS,
   CCP_SERVERS,
-  CDN_CUTOFF_BUILD,
   KNOWN_BUILDS,
 } from "../src/index";
 
@@ -26,11 +25,6 @@ describe("KNOWN_BUILDS", () => {
       }
     },
   );
-
-  it("includes builds from both sides of the CDN cutoff", () => {
-    expect([...allKnown].some((b) => b < CDN_CUTOFF_BUILD)).toBe(true);
-    expect([...allKnown].some((b) => b >= CDN_CUTOFF_BUILD)).toBe(true);
-  });
 });
 
 describe("BUILD_DATES", () => {

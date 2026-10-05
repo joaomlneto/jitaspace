@@ -74,10 +74,6 @@ export interface ServerConfig {
   metadataToken: string;
   /** Human-readable cluster name. */
   name: string;
-  /** Whether the token has been confirmed against the live CDN. */
-  confirmedToken: boolean;
-  /** Access-restricted cluster (the pointer / CDN may 403 without credentials). */
-  protected?: boolean;
 }
 
 export const SERVER_CONFIG: Record<EveServer, ServerConfig> = {
@@ -85,25 +81,21 @@ export const SERVER_CONFIG: Record<EveServer, ServerConfig> = {
     provider: "ccp",
     metadataToken: "TQ",
     name: "Tranquility",
-    confirmedToken: true,
   },
   singularity: {
     provider: "ccp",
     metadataToken: "SISI",
     name: "Singularity",
-    confirmedToken: true,
   },
   serenity: {
     provider: "netease",
     metadataToken: "SERENITY",
     name: "Serenity",
-    confirmedToken: true,
   },
   infinity: {
     provider: "netease",
     metadataToken: "INFINITY",
     name: "Infinity",
-    confirmedToken: true,
   },
 };
 
@@ -130,8 +122,9 @@ export const BINARIES_BASE_URL = PROVIDER_ENDPOINTS.ccp.appBaseUrl;
  * localization, audio, ...), content-addressed by a hashed path. Convenience
  * alias for the CCP provider's {@link ProviderEndpoints.resBaseUrl}.
  *
- * Note: the CDN serves these files *uncompressed* (the `content-type:
- * application/gzip` header it sometimes returns is bogus — trust the `res:/`
+ * Note: the CDN sends files gzip-compressed in transit (`Content-Encoding:
+ * gzip`), which `fetch` undoes transparently. Its `Content-Type` says nothing
+ * about the file's format — trust the `res:/`
  * file extension instead).
  */
 export const RESOURCES_BASE_URL = PROVIDER_ENDPOINTS.ccp.resBaseUrl;
@@ -181,12 +174,7 @@ export const PLATFORM_LAYOUT: Record<EvePlatform, PlatformResourceLayout> = {
   },
 };
 
-/**
- * Default platform when a caller doesn't specify one. Windows is the historical
- * default — `fetchAppIndex`/`fetchResfileIndex` have always fetched
- * `eveonline_<build>.txt` — so non-platform-aware callers (history diffs, icon
- * resolution, the CLI sweeps) keep their existing behaviour.
- */
+/** Platform used when a caller doesn't specify one. */
 export const DEFAULT_PLATFORM: EvePlatform = "windows";
 
 /** The `eveclient_<token>.json` build-pointer filename for a server. */

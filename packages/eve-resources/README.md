@@ -23,14 +23,20 @@ EVE's CDN is content-addressed by a hashed path. Resolution is a chain:
    `entryUrl(entry)` / `fetchResourceBytes(entry)` pick the host from the
    entry's scheme.
 
-> The CDN serves files **uncompressed** (its `content-type: application/gzip`
-> header is unreliable — trust the `res:/` extension instead).
+> The CDN sends files gzip-compressed in transit (`Content-Encoding: gzip`,
+> so the wire size is the index's `compressedSize`), which `fetch` undoes
+> transparently. Its `Content-Type` says nothing about a file's format — trust
+> the `res:/` extension instead (`classifyResourcePath`).
 
 Each platform has its own app index (`eveonline_` for Windows,
 `eveonlinemacOS_` for macOS — see `PLATFORM_LAYOUT`), and the Chinese clusters
 (Serenity, Infinity) resolve the same way from NetEase's hosts
-(`PROVIDER_ENDPOINTS`). `KNOWN_BUILDS` / `BUILD_DATES` list the historical
-Tranquility and Singularity builds.
+(`PROVIDER_ENDPOINTS`).
+
+`KNOWN_BUILDS` lists the historical Tranquility and Singularity builds, with
+dates in `BUILD_DATES` and, for builds since April 2023, timestamps in
+`BUILD_TIMESTAMPS`. These are snapshots: CCP no longer serves every listed
+build, and `fetchBuildDate` reads a build's date live from the CDN.
 
 ## Usage
 

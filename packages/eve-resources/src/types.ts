@@ -12,9 +12,9 @@ export interface ResourceEntry {
   relPath: string;
   /** MD5 of the uncompressed file contents, lowercase hex. */
   md5: string;
-  /** Uncompressed size in bytes — this is what the CDN actually serves. */
+  /** Size of the file in bytes. */
   size: number;
-  /** Compressed size recorded in the index (launcher delta-patching metadata). */
+  /** Gzip-compressed size: what the CDN sends over the wire. */
   compressedSize: number;
   /** Unix file mode (present in the app index only). */
   mode?: number;

@@ -13,8 +13,10 @@ import type { ResourceEntry } from "./types";
  *
  * Columns: `virtualPath, hashedRelPath, md5, uncompressedSize, compressedSize[, mode]`.
  *
- * The parser is tolerant: blank lines and malformed lines (fewer than 4
- * columns) are skipped rather than throwing.
+ * The parser is tolerant rather than throwing: blank lines and lines without a
+ * path or hashed path are skipped, and missing or non-numeric size and mode
+ * columns default to 0 (an empty mode column is omitted). The index is CRLF on
+ * the CDN; each line is trimmed.
  */
 export function parseResourceIndex(text: string): ResourceEntry[] {
   const entries: ResourceEntry[] = [];

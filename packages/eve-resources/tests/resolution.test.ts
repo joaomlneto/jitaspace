@@ -277,6 +277,22 @@ describe("tree", () => {
     ]);
   });
 
+  it("keeps only the last entry for a duplicated path", () => {
+    const dup = buildTreeIndex(
+      parseResourceIndex(
+        [
+          "res:/d/a.txt,base/1",
+          "res:/d/b.txt,base/2",
+          "res:/d/a.txt,overlay/1",
+        ].join("\n"),
+      ),
+    );
+    expect(dup.byPath.get("res:/d/a.txt")?.relPath).toBe("overlay/1");
+    expect(
+      listChildren(dup, "res:/d/").files.map((f) => `${f.path}=${f.relPath}`),
+    ).toEqual(["res:/d/a.txt=overlay/1", "res:/d/b.txt=base/2"]);
+  });
+
   it("collapses empty path segments", () => {
     const tree2 = buildTreeIndex(parseResourceIndex("res:/a//b.txt,a/1"));
     expect(listChildren(tree2, "res:/").directories.map((d) => d.name)).toEqual(

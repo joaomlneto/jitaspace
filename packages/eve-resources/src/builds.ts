@@ -1,19 +1,13 @@
 import type { CcpServer } from "./constants";
 
 /**
- * The oldest EVE client build still available on binaries.eveonline.com.
- * Builds with a lower number have been purged from the CDN.
- * Last verified: 2026-06-05.
- */
-export const CDN_CUTOFF_BUILD = 2258955;
-
-/**
  * A build's publication date (YYYY-MM-DD, UTC) read live from the CDN
  * `Last-Modified` header of its app-index file (`eveonline_{build}.txt`) — the
  * same source {@link BUILD_TIMESTAMPS} was captured from, and it covers
  * Singularity builds too (the build number is globally unique). Returns null if
- * the build is no longer on the CDN or the header is missing. This is the live
- * fallback when the static {@link BUILD_DATES} table (refreshed only
+ * the CDN doesn't serve the build's app index (it answers 403 for unknown or
+ * removed builds), the header is missing, or the request fails. This is the
+ * live fallback when the static {@link BUILD_DATES} table (refreshed only
  * periodically) doesn't yet cover a freshly released build.
  */
 export async function fetchBuildDate(
@@ -25,6 +19,7 @@ export async function fetchBuildDate(
       `https://binaries.eveonline.com/eveonline_${build}.txt`,
       { method: "HEAD" },
     );
+    if (!res.ok) return null;
     const lastModified = res.headers.get("last-modified");
     if (!lastModified) return null;
     const date = new Date(lastModified);
@@ -41,7 +36,8 @@ export async function fetchBuildDate(
  * Sourced from https://github.com/Inomares/hoboleaks (last verified: 2026-06-05);
  * tranquility builds from 3378101 onward observed via the CDN build pointer
  * (last verified: 2026-06-10).
- * Includes builds that may no longer be available on the CDN (see {@link CDN_CUTOFF_BUILD}).
+ * Not every listed build is still served by the CDN: CCP keeps some old builds
+ * and drops others, so check before fetching one.
  *
  * Keyed by {@link CcpServer}: hoboleaks tracks only CCP's clusters, so the
  * NetEase servers (Serenity, Infinity) have no entry here — their live builds
@@ -338,10 +334,8 @@ export const KNOWN_BUILDS: Record<CcpServer, number[]> = {
 /**
  * Release dates (YYYY-MM-DD, UTC) for known EVE client builds, derived from
  * the commit history of https://github.com/Inomares/hoboleaks.
- * Each date reflects when hoboleaks processed the new client — within minutes
- * of CCP's publish. Coverage: 2122 builds (two builds have no
- * recorded commit: 1282000 and 2975229). Builds from 3383521 onward are dated
- * from the CDN `Last-Modified` header instead (see {@link BUILD_TIMESTAMPS}).
+ * Each date reflects when hoboleaks processed the new client, usually shortly
+ * after CCP published it. Not every build in {@link KNOWN_BUILDS} has a date.
  * Last updated: 2026-06-10.
  */
 export const BUILD_DATES: Readonly<Partial<Record<number, string>>> = {
@@ -2470,16 +2464,14 @@ export const BUILD_DATES: Readonly<Partial<Record<number, string>>> = {
 };
 
 /**
- * Precise publication timestamps for EVE client builds still available on
- * the CDN, taken from the HTTP `Last-Modified` header of each build's app
- * index file (`binaries.eveonline.com/eveonline_{build}.txt`).
+ * Publication timestamps for EVE client builds since April 2023, captured on
+ * 2026-06-10 from the HTTP `Last-Modified` header of each build's app index
+ * file (`binaries.eveonline.com/eveonline_{build}.txt`).
  * Format: ISO 8601 UTC (`YYYY-MM-DDTHH:MM:SSZ`).
- * Coverage: 615 builds (those at or above {@link CDN_CUTOFF_BUILD}).
- * Last verified: 2026-06-10.
  *
- * These are more precise than {@link BUILD_DATES} — the two sources can
- * disagree by up to one calendar day due to timezone / automation skew in
- * the hoboleaks commit pipeline.
+ * This is a snapshot: CCP has since stopped serving many of these builds, and
+ * re-uploads can move a build's live `Last-Modified`. It can also disagree with
+ * {@link BUILD_DATES} (a different source) by a day or, rarely, by weeks.
  */
 export const BUILD_TIMESTAMPS: Readonly<Partial<Record<number, string>>> = {
   2258955: "2023-04-27T12:55:24Z",

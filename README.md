@@ -95,13 +95,14 @@ tooling/
 
 ### Data & UI
 
-| Package                   | Description                                                      |
-| ------------------------- | ---------------------------------------------------------------- |
-| `@jitaspace/esi-metadata` | ESI scope definitions, ID ranges, and endpoint→scope mappings    |
-| `@jitaspace/eve-data`     | Static EVE Online datasets (ships, skills, regions, …)           |
-| `@jitaspace/ui`           | Shared Mantine component library — forms, tables, modals, charts |
-| `@jitaspace/eve-icons`    | EVE Online icons as React components                             |
-| `@jitaspace/tiptap-eve`   | Tiptap extension for parsing and rendering EVE's HTML format     |
+| Package                    | Description                                                                |
+| -------------------------- | -------------------------------------------------------------------------- |
+| `@jitaspace/esi-metadata`  | ESI scope definitions, ID ranges, and endpoint→scope mappings              |
+| `@jitaspace/eve-data`      | Static EVE Online datasets (ships, skills, regions, …)                     |
+| `@jitaspace/eve-resources` | Resolve, browse and fetch EVE client resource files from CCP's content CDN |
+| `@jitaspace/ui`            | Shared Mantine component library — forms, tables, modals, charts           |
+| `@jitaspace/eve-icons`     | EVE Online icons as React components                                       |
+| `@jitaspace/tiptap-eve`    | Tiptap extension for parsing and rendering EVE's HTML format               |
 
 ### Utilities
 
