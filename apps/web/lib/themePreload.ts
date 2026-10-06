@@ -1,5 +1,6 @@
 import type { AppTheme, DEFAULT_APP_THEME } from "~/lib/preferences";
 import { PREFERENCES_STORAGE_KEY } from "~/lib/preferences";
+import { lightDark } from "~/themes/lightDark";
 import { WALLPAPERS } from "~/themes/wallpapers";
 
 /**
@@ -24,7 +25,10 @@ import { WALLPAPERS } from "~/themes/wallpapers";
 export const THEME_PENDING_ATTRIBUTE = "data-app-theme-pending";
 
 interface ThemePreload {
-  /** The theme's `--mantine-color-body` (dark scheme: `colors.dark[7]`). */
+  /**
+   * The theme's `--mantine-color-body`: `white` on the light scheme and
+   * `colors.dark[7]` on the dark one, as `light-dark()`.
+   */
   body: string;
   /** The theme's `other.appBackground`, if it has one. */
   background?: string;
@@ -36,7 +40,7 @@ const preload = (
   body: string,
   wallpaper: { appBackground: string; appBackgroundMobile: string },
 ): ThemePreload => ({
-  body,
+  body: lightDark("#f2f7fb", body),
   background: wallpaper.appBackground,
   backgroundMobile: wallpaper.appBackgroundMobile,
 });
@@ -57,9 +61,9 @@ export const THEME_PRELOAD: Record<
   gallente: preload("#111111", WALLPAPERS.gallente),
   minmatar: preload("#111111", WALLPAPERS.minmatar),
   whpd: {
-    body: "#080c18",
-    background: "#000",
-    backgroundMobile: "#000",
+    body: lightDark("#eef2ff", "#080c18"),
+    background: lightDark("#eef2ff", "#000"),
+    backgroundMobile: lightDark("#eef2ff", "#000"),
   },
 };
 

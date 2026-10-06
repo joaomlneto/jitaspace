@@ -1,6 +1,7 @@
 import type { MantineColorsTuple } from "@mantine/core";
 import { createTheme } from "@mantine/core";
 
+import { evePanelSurface, lightDark } from "./lightDark";
 import { WALLPAPERS } from "./wallpapers";
 
 /**
@@ -225,16 +226,14 @@ export const eveV2Theme = createTheme({
       defaultProps: {
         radius: "xs",
         withBorder: true,
-        bg: "#070b11",
+        bg: evePanelSurface.bg,
       },
       styles: {
         root: {
-          backgroundImage:
-            "linear-gradient(180deg, rgba(26,33,45,.9) 0%, rgba(13,18,28,.93) 58%, rgba(8,11,18,.96) 100%)",
-          borderColor: "rgba(108, 132, 151, 0.28)",
-          borderTopColor: "rgba(147, 214, 224, 0.46)",
-          boxShadow:
-            "inset 0 1px 0 rgba(182,210,230,.12), inset 0 -10px 18px rgba(2,8,16,.35), 0 10px 22px rgba(0,0,0,.36)",
+          backgroundImage: evePanelSurface.backgroundImage,
+          borderColor: evePanelSurface.borderColor,
+          borderTopColor: evePanelSurface.borderTopColor,
+          boxShadow: evePanelSurface.boxShadow,
         },
       },
     },
@@ -244,16 +243,14 @@ export const eveV2Theme = createTheme({
         radius: "xs",
         withBorder: true,
         padding: "lg",
-        bg: "#070b11",
+        bg: evePanelSurface.bg,
       },
       styles: {
         root: {
-          backgroundImage:
-            "linear-gradient(180deg, rgba(26,33,45,.9) 0%, rgba(13,18,28,.93) 58%, rgba(8,11,18,.96) 100%)",
-          borderColor: "rgba(108, 132, 151, 0.28)",
-          borderTopColor: "rgba(147, 214, 224, 0.46)",
-          boxShadow:
-            "inset 0 1px 0 rgba(182,210,230,.12), inset 0 -10px 18px rgba(2,8,16,.35), 0 10px 22px rgba(0,0,0,.36)",
+          backgroundImage: evePanelSurface.backgroundImage,
+          borderColor: evePanelSurface.borderColor,
+          borderTopColor: evePanelSurface.borderTopColor,
+          boxShadow: evePanelSurface.boxShadow,
         },
       },
     },
@@ -291,8 +288,14 @@ export const eveV2Theme = createTheme({
       defaultProps: { radius: "xs" },
       styles: {
         input: {
-          backgroundColor: "rgba(8, 12, 18, 0.72)",
-          borderColor: "rgba(198, 212, 226, 0.24)",
+          backgroundColor: lightDark(
+            "rgba(255, 255, 255, 0.9)",
+            "rgba(8, 12, 18, 0.72)",
+          ),
+          borderColor: lightDark(
+            "rgba(67, 100, 127, 0.3)",
+            "rgba(198, 212, 226, 0.24)",
+          ),
         },
       },
     },
@@ -313,7 +316,7 @@ export const eveV2Theme = createTheme({
     },
 
     Anchor: {
-      styles: { root: { color: "#64b9d2" } },
+      styles: { root: { color: lightDark("#1f6f86", "#64b9d2") } },
     },
 
     Title: {

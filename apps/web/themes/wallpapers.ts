@@ -12,10 +12,16 @@
  * pre-paint theme script (`lib/themePreload.ts`) reads these on the server, and
  * a server import of a "use client" module yields references, not values.
  */
+import { lightDark } from "./lightDark";
+
 const DIRECTORY = "/wallpapers/2026-cradle-of-war";
 
+// The veil over the art: 55% black on the dark scheme, and a pale wash on the
+// light one so light panels and dark text stand out from it.
+const veil = lightDark("rgba(242,247,251,0.86)", "rgba(0,0,0,0.55)");
+
 const layer = (url: string) =>
-  `linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(${url}) center/cover no-repeat`;
+  `linear-gradient(${veil},${veil}),url(${url}) center/cover no-repeat`;
 
 const wallpaper = (file: string, extension: "jpg" | "jpeg") => ({
   appBackground: layer(`${DIRECTORY}/${file}.${extension}`),
