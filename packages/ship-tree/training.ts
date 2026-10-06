@@ -8,6 +8,8 @@ export interface EsiSkillQueueEntry {
   skill_id: number;
   finished_level: number;
   queue_position: number;
+  /** Omitted on every entry while the queue is paused. */
+  finish_date?: string;
 }
 
 const isTrainableLevel = (level: number): level is SkillTraining["level"] =>
@@ -20,8 +22,8 @@ const isTrainableLevel = (level: number): level is SkillTraining["level"] =>
  * ESI keeps completed entries in the queue until the game client next syncs,
  * so the head of the queue can be a level that is already trained. Comparing
  * against the trained skills skips those without reading the clock, which a
- * prerendered page must not do. Returns `undefined` when nothing is training,
- * or while either list is still loading.
+ * prerendered page must not do. Returns `undefined` when nothing is training
+ * (an empty or paused queue), or while either list is still loading.
  */
 export function getSkillInTraining(
   queue: readonly EsiSkillQueueEntry[] | undefined,
@@ -36,6 +38,9 @@ export function getSkillInTraining(
     .toSorted((a, b) => a.queue_position - b.queue_position)
     .find((entry) => entry.finished_level > (trained.get(entry.skill_id) ?? 0));
 
-  if (!next || !isTrainableLevel(next.finished_level)) return undefined;
+  // A paused queue lists what would train next, without dates: nothing is
+  // training.
+  if (next?.finish_date === undefined) return undefined;
+  if (!isTrainableLevel(next.finished_level)) return undefined;
   return { skillId: next.skill_id, level: next.finished_level };
 }

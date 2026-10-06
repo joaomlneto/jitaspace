@@ -14,7 +14,12 @@ const queued = (
   skill_id: number,
   finished_level: number,
   queue_position: number,
-) => ({ skill_id, finished_level, queue_position });
+) => ({
+  skill_id,
+  finished_level,
+  queue_position,
+  finish_date: "2026-10-08T12:00:00Z",
+});
 
 describe("getSkillInTraining", () => {
   it("is the head of the queue when it is not trained yet", () => {
@@ -65,6 +70,14 @@ describe("getSkillInTraining", () => {
   it("is undefined while either list is loading", () => {
     expect(getSkillInTraining(undefined, [skill(3330, 3)])).toBeUndefined();
     expect(getSkillInTraining([queued(3330, 4, 0)], undefined)).toBeUndefined();
+  });
+
+  // ESI omits the dates on every entry while the queue is paused.
+  it("is undefined while the queue is paused", () => {
+    const paused = [queued(3330, 4, 0), queued(3327, 5, 1)].map(
+      ({ finish_date: _, ...entry }) => entry,
+    );
+    expect(getSkillInTraining(paused, [skill(3330, 3)])).toBeUndefined();
   });
 
   it("ignores a level the library cannot draw", () => {

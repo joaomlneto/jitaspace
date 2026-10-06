@@ -331,8 +331,18 @@ describe("/ship-tree page", () => {
       mockUseCharacterSkillQueue.mockReturnValue({
         data: {
           data: [
-            { skill_id: 3330, finished_level: 4, queue_position: 1 },
-            { skill_id: 3330, finished_level: 3, queue_position: 0 },
+            {
+              skill_id: 3330,
+              finished_level: 4,
+              queue_position: 1,
+              finish_date: "2026-10-09T12:00:00Z",
+            },
+            {
+              skill_id: 3330,
+              finished_level: 3,
+              queue_position: 0,
+              finish_date: "2026-10-07T12:00:00Z",
+            },
           ],
         },
       });
