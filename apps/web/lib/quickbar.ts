@@ -404,16 +404,14 @@ export const useQuickbarStore = create<QuickbarState>()(
       partialize: ({ folders, items, view }) => ({ folders, items, view }),
       merge: (persisted, current) => {
         const stored = (persisted ?? {}) as Partial<QuickbarState>;
+        const storedView: MarketSidebarView =
+          stored.view === "quickbar" ? "quickbar" : "groups";
         return {
           ...current,
           ...sanitizeQuickbar(stored),
           // The tab in view is restored on the first load only: re-reading
           // another tab's save must not switch this window's sidebar.
-          view: hydrationSettled
-            ? current.view
-            : stored.view === "quickbar"
-              ? "quickbar"
-              : "groups",
+          view: hydrationSettled ? current.view : storedView,
         };
       },
       // Called once a read finishes, whether it succeeded or threw.
