@@ -191,28 +191,33 @@ export async function readHistoryLabels(
   };
 }
 
-/** Each market group's parent, following every chain up to its root. */
+/**
+ * Each market group's parent, following every chain up to its root: one query
+ * per level, for every chain at once, at most {@link MAX_MARKET_GROUP_DEPTH}
+ * levels deep. `seen` stops a chain that loops.
+ */
 async function readMarketGroupParents(
-  start: readonly number[],
+  frontier: readonly number[],
+  seen = new Set<number>(frontier),
+  depth = 0,
 ): Promise<Record<number, number>> {
+  if (frontier.length === 0 || depth >= MAX_MARKET_GROUP_DEPTH) return {};
+  const rows = await prisma.marketGroup.findMany({
+    where: { marketGroupId: { in: [...frontier] } },
+    select: { marketGroupId: true, parentMarketGroupId: true },
+  });
   const parents: Record<number, number> = {};
-  const seen = new Set<number>(start);
-  let frontier = [...seen];
-  for (let depth = 0; frontier.length > 0; depth++) {
-    if (depth >= MAX_MARKET_GROUP_DEPTH) break;
-    const rows = await prisma.marketGroup.findMany({
-      where: { marketGroupId: { in: frontier } },
-      select: { marketGroupId: true, parentMarketGroupId: true },
-    });
-    frontier = [];
-    for (const { marketGroupId, parentMarketGroupId } of rows) {
-      if (parentMarketGroupId === null) continue;
-      parents[marketGroupId] = parentMarketGroupId;
-      if (!seen.has(parentMarketGroupId)) {
-        seen.add(parentMarketGroupId);
-        frontier.push(parentMarketGroupId);
-      }
+  const next: number[] = [];
+  for (const { marketGroupId, parentMarketGroupId } of rows) {
+    if (parentMarketGroupId === null) continue;
+    parents[marketGroupId] = parentMarketGroupId;
+    if (!seen.has(parentMarketGroupId)) {
+      seen.add(parentMarketGroupId);
+      next.push(parentMarketGroupId);
     }
   }
-  return parents;
+  return {
+    ...parents,
+    ...(await readMarketGroupParents(next, seen, depth + 1)),
+  };
 }

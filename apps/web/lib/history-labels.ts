@@ -89,6 +89,49 @@ export const ID_LIST_COLLECTION_KIND: Readonly<Record<string, string>> = {
   masteries: "certificate",
 };
 
+/** The records an event's ids sit in: a modified field's `from` and `to` each
+ * read as the field itself, `{ [field]: value }`. */
+function recordsOf(
+  event: EntityTimeline["events"][number],
+): Record<string, unknown>[] {
+  if (event.kind !== "modified") return [event.values ?? {}];
+  return Object.entries(event.fields).flatMap(([field, delta]) => [
+    { [field]: delta.from },
+    { [field]: delta.to },
+  ]);
+}
+
+/** Calls `add` for every id in the fields of `value`, at any depth. */
+function visitIds(value: unknown, add: (kind: string, id: unknown) => void) {
+  if (Array.isArray(value)) {
+    for (const v of value) visitIds(v, add);
+    return;
+  }
+  if (typeof value !== "object" || value === null) return;
+  for (const [field, v] of Object.entries(value)) {
+    const kind = ID_FIELD_KIND[field];
+    if (kind) add(kind, v);
+    const listKind = ID_LIST_FIELD_KIND[field];
+    if (listKind && Array.isArray(v)) for (const id of v) add(listKind, id);
+    visitIds(v, add);
+  }
+}
+
+/** Calls `add` for the ids `collection` implies by its shape alone. */
+function visitCollectionIds(
+  collection: string | undefined,
+  record: Record<string, unknown>,
+  add: (kind: string, id: unknown) => void,
+) {
+  const keyedKind = ID_KEYED_COLLECTION_KIND[collection ?? ""];
+  const listKind = ID_LIST_COLLECTION_KIND[collection ?? ""];
+  for (const [field, value] of Object.entries(record)) {
+    if (keyedKind && /^\d+$/.test(field)) add(keyedKind, Number(field));
+    if (listKind && Array.isArray(value))
+      for (const id of value) add(listKind, id);
+  }
+}
+
 /**
  * Every entity the timeline's values refer to, each once: the ids in the
  * fields of {@link ID_FIELD_KIND} and {@link ID_LIST_FIELD_KIND} at any depth,
@@ -101,39 +144,10 @@ export function collectLabelRefs(timeline: EntityTimeline | null): EntityRef[] {
     if (typeof id !== "number" || !Number.isInteger(id)) return;
     seen.set(`${kind} ${id}`, { kind, id });
   };
-  const visit = (value: unknown): void => {
-    if (Array.isArray(value)) {
-      for (const v of value) visit(v);
-      return;
-    }
-    if (typeof value !== "object" || value === null) return;
-    for (const [field, v] of Object.entries(value)) {
-      const kind = ID_FIELD_KIND[field];
-      if (kind) add(kind, v);
-      const listKind = ID_LIST_FIELD_KIND[field];
-      if (listKind && Array.isArray(v)) for (const id of v) add(listKind, id);
-      visit(v);
-    }
-  };
-
   for (const event of timeline?.events ?? []) {
-    // A modified field is `{ from, to }`: label both sides as the field itself.
-    const records =
-      event.kind === "modified"
-        ? Object.entries(event.fields).flatMap(([field, delta]) => [
-            { [field]: delta.from },
-            { [field]: delta.to },
-          ])
-        : [event.values ?? {}];
-    const keyedKind = ID_KEYED_COLLECTION_KIND[event.collection ?? ""];
-    const listKind = ID_LIST_COLLECTION_KIND[event.collection ?? ""];
-    for (const record of records) {
-      visit(record);
-      for (const [field, value] of Object.entries(record)) {
-        if (keyedKind && /^\d+$/.test(field)) add(keyedKind, Number(field));
-        if (listKind && Array.isArray(value))
-          for (const id of value) add(listKind, id);
-      }
+    for (const record of recordsOf(event)) {
+      visitIds(record, add);
+      visitCollectionIds(event.collection, record, add);
     }
   }
   return [...seen.values()];

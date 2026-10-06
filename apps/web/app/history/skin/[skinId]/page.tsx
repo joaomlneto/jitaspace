@@ -17,8 +17,9 @@ export async function generateMetadata({
   const id = parsePositiveEntityId(skinId);
   if (id === null) return {};
   const { name } = await getCachedEntityHistory("skin", id);
+  const title = name ?? `SKIN ${id}`;
   return pageMetadata({
-    title: `${name ?? `SKIN ${id}`} — Change History`,
+    title: `${title} — Change History`,
     description: `How EVE Online SKIN ${name ?? id} has changed across client builds.`,
     path: `/history/skin/${id}`,
     badge: "Change History",
