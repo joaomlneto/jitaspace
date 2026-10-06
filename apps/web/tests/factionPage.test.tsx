@@ -110,11 +110,13 @@ jest.mock("~/components/EveMail", () => ({
 }));
 
 // The real tab loads the ship tree library and its stylesheet.
+const mockPreloadShipTreeSprites = jest.fn(() => Promise.resolve());
 jest.mock("~/components/ShipTree/ShipTreeTab", () => ({
   __esModule: true,
   default: ({ faction }: { faction: number }) => (
     <div data-testid="faction-ship-tree">{`ship tree of ${faction}`}</div>
   ),
+  preloadShipTreeSprites: () => mockPreloadShipTreeSprites(),
 }));
 
 jest.mock("~/app/history/EntityHistory", () => ({
@@ -725,6 +727,22 @@ describe("faction page (client)", () => {
     );
     // It needs none of the table rows.
     expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("starts loading the ship tree when its tab is hovered or focused", async () => {
+    mockPreloadShipTreeSprites.mockClear();
+    renderClient(sdeData(), liveData());
+
+    const tab = screen.getByRole("tab", { name: "Ship Tree" });
+    fireEvent.pointerEnter(tab);
+    await waitFor(() => expect(mockPreloadShipTreeSprites).toHaveBeenCalled());
+
+    // Still only a head start: the tab stays closed.
+    expect(screen.queryByTestId("faction-ship-tree")).not.toBeInTheDocument();
+
+    mockPreloadShipTreeSprites.mockClear();
+    fireEvent.focus(tab);
+    await waitFor(() => expect(mockPreloadShipTreeSprites).toHaveBeenCalled());
   });
 
   it("drops the tree's clone type from the URL when another tab opens", async () => {

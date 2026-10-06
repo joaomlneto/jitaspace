@@ -4,6 +4,7 @@ import "@eve-online-tools/eve-ship-tree/styles.css";
 
 import type {
   FactionIdentifier,
+  PanZoomOptions,
   ShipPrices,
   SkillsInput,
   SkillTraining,
@@ -67,6 +68,23 @@ export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
    * pointer to preview it. Hidden on phones, where it would cover the tree.
    */
   summaryFaction?: FactionIdentifier;
+  /**
+   * Number format for tooltip prices and bonuses, as a BCP 47 tag. Defaults to
+   * the reader's browser locale.
+   */
+  locale?: string;
+  /** Draws the capsule node in the gold of the golden pod skin. Off by default. */
+  goldenCapsule?: boolean;
+  /** Hides the skill bars of locked groups. Off by default. */
+  strictMode?: boolean;
+  /** Pan and zoom: `false` freezes the tree at its fitted size. On by default. */
+  panZoom?: boolean | PanZoomOptions;
+  /** Canvas colour behind the tree. Defaults to the game's. */
+  backgroundColor?: string;
+  /** Tooltips on group nodes. On by default. */
+  groupTooltip?: boolean;
+  /** Tooltips on ship nodes. On by default. */
+  shipTooltip?: boolean;
 }
 
 /**
@@ -96,6 +114,13 @@ export function ShipTreeView({
   fetch,
   disclaimer = null,
   summaryFaction,
+  locale,
+  goldenCapsule,
+  strictMode,
+  panZoom,
+  backgroundColor,
+  groupTooltip,
+  shipTooltip,
   h = "75vh",
   mih = 420,
   ...boxProps
@@ -113,6 +138,11 @@ export function ShipTreeView({
             faction={faction}
             isOmega={isOmega}
             prices={prices}
+            locale={locale}
+            goldenCapsule={goldenCapsule}
+            strictMode={strictMode}
+            panZoom={panZoom}
+            backgroundColor={backgroundColor}
           >
             <Grid
               topLabel={name}
@@ -120,7 +150,10 @@ export function ShipTreeView({
               bottomLabel={["Showing", `${name} ships`]}
               disclaimer={disclaimer}
             >
-              <TreeDisplay />
+              <TreeDisplay
+                groupTooltip={groupTooltip}
+                shipTooltip={shipTooltip}
+              />
             </Grid>
           </ShipTree>
           {summaryFaction !== undefined && (

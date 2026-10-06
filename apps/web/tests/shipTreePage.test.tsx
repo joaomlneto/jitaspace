@@ -18,6 +18,7 @@ const mockUseAuthStoreHasHydrated = jest.fn();
 const mockUseCharacterSkills = jest.fn();
 const mockUseCharacterSkillQueue = jest.fn();
 const mockUseMarketPrices = jest.fn();
+const mockUseEsiAcceptLanguage = jest.fn();
 const mockLoginWithEveOnline = jest.fn();
 const mockShipTreeView = jest.fn();
 
@@ -28,6 +29,7 @@ jest.mock("@jitaspace/hooks", () => ({
   useCharacterSkillQueue: (...args: unknown[]) =>
     mockUseCharacterSkillQueue(...args),
   useMarketPrices: () => mockUseMarketPrices(),
+  useEsiAcceptLanguage: () => mockUseEsiAcceptLanguage(),
 }));
 jest.mock("@jitaspace/ui", () => ({
   LoginWithEveOnlineButton: ({ onClick }: { onClick: () => void }) => (
@@ -91,6 +93,11 @@ jest.mock("../../../packages/ship-tree/ShipTreeFactionSelector", () => {
 });
 
 const ShipTreePage = require("../app/ship-tree/page.client").default;
+const { usePreferencesStore } = require("~/lib/preferences") as {
+  usePreferencesStore: {
+    setState: (state: { shipTreeDebugMode: boolean }) => void;
+  };
+};
 
 const SKILL = { skill_id: 3330, active_skill_level: 4 };
 const CHARACTER = {
@@ -133,6 +140,8 @@ describe("/ship-tree page", () => {
     mockUseCharacterSkills.mockReset().mockReturnValue(skillsQuery());
     mockUseCharacterSkillQueue.mockReset().mockReturnValue({ data: undefined });
     mockUseMarketPrices.mockReset().mockReturnValue({ data: {} });
+    mockUseEsiAcceptLanguage.mockReset().mockReturnValue("en");
+    usePreferencesStore.setState({ shipTreeDebugMode: false });
     mockLoginWithEveOnline.mockReset();
     mockShipTreeView.mockReset();
   });
@@ -414,6 +423,86 @@ describe("/ship-tree page", () => {
         "esi-mail.read_mail.v1",
         "esi-skills.read_skillqueue.v1",
       ]);
+    });
+  });
+  describe("locale", () => {
+    it("formats tooltip numbers in the language chosen in Settings", () => {
+      mockUseEsiAcceptLanguage.mockReturnValue("de");
+
+      renderPage();
+
+      expect(lastViewProps().locale).toBe("de");
+    });
+  });
+
+  describe("debug mode", () => {
+    it("shows no debug options, and leaves the tree's defaults alone, while off", () => {
+      renderPage();
+
+      expect(
+        screen.queryByRole("region", { name: "Ship Tree debug options" }),
+      ).not.toBeInTheDocument();
+      expect(lastViewProps().goldenCapsule).toBeUndefined();
+      expect(lastViewProps().panZoom).toBeUndefined();
+      expect(typeof lastViewProps().prices).toBe("function");
+    });
+
+    it("drives the tree's rendering options from the switches above it", () => {
+      usePreferencesStore.setState({ shipTreeDebugMode: true });
+
+      renderPage();
+
+      const options = screen.getByRole("region", {
+        name: "Ship Tree debug options",
+      });
+      // Turning it on changes nothing until a switch is flipped.
+      expect(lastViewProps().goldenCapsule).toBe(false);
+      expect(lastViewProps().strictMode).toBe(false);
+      expect(lastViewProps().panZoom).toEqual({
+        wheelZoom: true,
+        pinchZoom: true,
+        pan: true,
+      });
+
+      fireEvent.click(
+        within(options).getByRole("switch", { name: /Golden capsule/ }),
+      );
+      expect(lastViewProps().goldenCapsule).toBe(true);
+
+      fireEvent.click(
+        within(options).getByRole("switch", { name: /Strict mode/ }),
+      );
+      expect(lastViewProps().strictMode).toBe(true);
+
+      fireEvent.click(
+        within(options).getByRole("switch", { name: /Wheel zoom/ }),
+      );
+      expect(lastViewProps().panZoom).toEqual({
+        wheelZoom: false,
+        pinchZoom: true,
+        pan: true,
+      });
+
+      fireEvent.click(
+        within(options).getByRole("switch", { name: /Pan and zoom/ }),
+      );
+      expect(lastViewProps().panZoom).toBe(false);
+      expect(
+        within(options).getByRole("switch", { name: /Pinch zoom/ }),
+      ).toBeDisabled();
+
+      fireEvent.click(
+        within(options).getByRole("switch", { name: /Ship tooltips/ }),
+      );
+      expect(lastViewProps().shipTooltip).toBe(false);
+
+      fireEvent.click(within(options).getByRole("switch", { name: /^Prices/ }));
+      expect(lastViewProps().prices).toBeUndefined();
+
+      fireEvent.click(within(options).getByRole("button", { name: "Reset" }));
+      expect(lastViewProps().goldenCapsule).toBe(false);
+      expect(lastViewProps().shipTooltip).toBe(true);
+      expect(typeof lastViewProps().prices).toBe("function");
     });
   });
 });

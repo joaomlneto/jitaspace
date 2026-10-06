@@ -93,7 +93,10 @@ import {
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
-import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
+import {
+  LazyShipTreeTab,
+  preloadShipTreeTab,
+} from "~/components/ShipTree/LazyShipTreeTab";
 import { formatInteger as formatCount, formatCountOf } from "~/lib/format";
 import { EntityHistory } from "../../history/EntityHistory";
 import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
@@ -1133,10 +1136,19 @@ export default function FactionPage({
   const militiaPilots = fwStats?.pilots;
   const totalSystems = counts.territory;
 
-  const tab = (value: string, icon: ReactNode, label: string, count?: number) =>
+  const tab = (
+    value: string,
+    icon: ReactNode,
+    label: string,
+    count?: number,
+    /** Runs when the tab is about to be opened: on hover or focus. */
+    onIntent?: () => void,
+  ) =>
     visibleTabs.has(value) && (
       <Tabs.Tab
         value={value}
+        onPointerEnter={onIntent}
+        onFocus={onIntent}
         leftSection={icon}
         rightSection={
           count === undefined ? undefined : (
@@ -1264,7 +1276,13 @@ export default function FactionPage({
             )}
             {tab("warfare", <IconSwords size={16} />, "Warfare")}
             {tab("items", <IconPackage size={16} />, "Items", counts.items)}
-            {tab("ship-tree", <IconHierarchy3 size={16} />, "Ship Tree")}
+            {tab(
+              "ship-tree",
+              <IconHierarchy3 size={16} />,
+              "Ship Tree",
+              undefined,
+              preloadShipTreeTab,
+            )}
             {tab(
               "contraband",
               <IconShieldHalf size={16} />,

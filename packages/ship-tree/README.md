@@ -26,6 +26,10 @@ import { ShipTreeView } from "@jitaspace/ship-tree";
 
 `summaryFaction` pins the game's faction summary (logo, name, strengths as icons, a one-line description) to the tree's top-left corner, outside its pan and zoom; pass the hovered faction to preview it. It has to render inside the tree's `DataProvider` to get its description and icons, which is why it is a prop rather than a separate component. Hidden on phones.
 
+Rendering options pass straight through to the library, which keeps its defaults for any left out: `locale` (number format in tooltips; the web app passes the Settings language), `goldenCapsule`, `strictMode` (hide the skill bars of locked groups), `panZoom` (`false`, or which gestures), `backgroundColor`, and `groupTooltip`/`shipTooltip` (`false` turns them off). The web app exposes all of them under Settings → Experimental → Ship Tree debug mode.
+
+`preloadShipTreeSprites()` starts fetching the tree's status sprites before it mounts; the faction and race pages call it when their Ship Tree tab is hovered or focused.
+
 The library's tooltips are on by default. Two optional props feed them:
 
 - `training` (`{ skillId, level }`) highlights the skill in training in group tooltips. `getSkillInTraining(queue, skills)` derives it from ESI's `/characters/{id}/skillqueue/` and `/skills/`, skipping the finished entries ESI keeps at the head of the queue until the game client syncs.

@@ -12,6 +12,8 @@ import {
 } from "./constants";
 import { ShipTreePanel } from "./ShipTreePanel";
 
+export { preloadShipTreeSprites } from "@jitaspace/ship-tree";
+
 /**
  * The Ship Tree tab of the faction and race pages. Its own module so a page can
  * load it lazily, through `LazyShipTreeTab`: the tree library and its

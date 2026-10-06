@@ -47,9 +47,12 @@ interface PreferencesState {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
   dataTableEngine: DataTableEngine;
+  /** Experimental: show the ship tree's rendering options above the tree. */
+  shipTreeDebugMode: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
   setDataTableEngine: (value: DataTableEngine) => void;
+  setShipTreeDebugMode: (value: boolean) => void;
 }
 
 export const sanitizeAppTheme = (
@@ -91,9 +94,11 @@ export const usePreferencesStore = create<PreferencesState>()(
       esiAcceptLanguage: DEFAULT_ESI_ACCEPT_LANGUAGE,
       appTheme: DEFAULT_APP_THEME,
       dataTableEngine: DEFAULT_DATA_TABLE_ENGINE,
+      shipTreeDebugMode: false,
       setEsiAcceptLanguage: (value) => set({ esiAcceptLanguage: value }),
       setAppTheme: (value) => set({ appTheme: value }),
       setDataTableEngine: (value) => set({ dataTableEngine: value }),
+      setShipTreeDebugMode: (value) => set({ shipTreeDebugMode: value }),
     }),
     {
       name: PREFERENCES_STORAGE_KEY,
@@ -110,6 +115,7 @@ export const usePreferencesStore = create<PreferencesState>()(
           dataTableEngine:
             sanitizeDataTableEngine(persisted.dataTableEngine) ??
             DEFAULT_DATA_TABLE_ENGINE,
+          shipTreeDebugMode: persisted.shipTreeDebugMode === true,
         };
       },
     },
