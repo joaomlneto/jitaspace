@@ -257,6 +257,17 @@ const ENTITY_SOURCES: EntitySource[] = [
       ).map((row) => ({ id: row.missionId, updatedAt: row.updatedAt })),
   },
   {
+    path: "/epic-arc",
+    rows: async () =>
+      (
+        await prisma.epicArc.findMany({
+          where: { isDeleted: false },
+          select: { epicArcId: true, updatedAt: true },
+          orderBy: { epicArcId: "asc" },
+        })
+      ).map((row) => ({ id: row.epicArcId, updatedAt: row.updatedAt })),
+  },
+  {
     // Only the dungeons dungeons.yaml describes. The mission pockets it merely
     // refers to also have pages, but a page holding little more than an id
     // is not one worth advertising to crawlers.

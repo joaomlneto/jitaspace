@@ -95,6 +95,7 @@ const rows = {
   bloodline: [1],
   typeList: [7],
   mission: [875],
+  epicArc: [29],
   dungeon: [43],
 };
 
@@ -111,6 +112,7 @@ const idField: Record<keyof typeof rows, string> = {
   bloodline: "bloodlineId",
   typeList: "typeListId",
   mission: "missionId",
+  epicArc: "epicArcId",
   dungeon: "dungeonId",
 };
 
@@ -428,7 +430,7 @@ describe("sitemap", () => {
     // every family fails together and N fragments bury the incident.
     const { message, extra } = soleCapture();
     expect(message).toContain("Sitemap degraded");
-    expect(message).toContain("2 of 14 entity families unavailable");
+    expect(message).toContain("2 of 15 entity families unavailable");
     expect(extra.failedFamilies).toEqual(["/region", "/station"]);
     expect(extra.staticRoutesFailed).toBe(false);
   });
@@ -471,7 +473,7 @@ describe("sitemap", () => {
     const second = mockCaptureException.mock.calls[1];
     if (!second) throw new Error("no second capture");
     expect((second[0] as Error).message).toContain(
-      "14 of 14 entity families unavailable",
+      "15 of 15 entity families unavailable",
     );
   });
 
@@ -592,6 +594,7 @@ describe("sitemap", () => {
         "https://www.jita.space/bloodline/1",
         "https://www.jita.space/type-list/7",
         "https://www.jita.space/mission/875",
+        "https://www.jita.space/epic-arc/29",
         "https://www.jita.space/dungeon/43",
         "https://www.jita.space/lp-store/Caldari_Navy",
       ]),
@@ -652,8 +655,8 @@ describe("sitemap", () => {
     expect(pages).toEqual([{ id: 0 }, { id: 1 }]);
 
     // 6 crawlable static routes (incl. the optional catch-all's parent)
-    // + 60,000 types + 13 single-row families.
-    const TOTAL = 6 + 60_000 + 13;
+    // + 60,000 types + 14 single-row families.
+    const TOTAL = 6 + 60_000 + 14;
     const first = await mod.default({ id: Promise.resolve("0") });
     const second = await mod.default({ id: Promise.resolve("1") });
 
