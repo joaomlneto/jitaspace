@@ -30,6 +30,7 @@ const TABLES = {
   shipTreeElements: true,
   shipTreeFactions: true,
   shipTreeGroups: true,
+  skills: true,
   typeBonus: true,
   typeElements: true,
   types: true,

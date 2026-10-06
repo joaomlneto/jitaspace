@@ -2,10 +2,10 @@
  * PostCSS plugin that drops declarations whose value is an empty `url("")`, in
  * `@eve-online-tools/eve-ship-tree`'s stylesheet only.
  *
- * Why: the library's published `styles.css` contains twenty of them
- * (`--ship-tree-elements-icons: url("")` for sixteen element icons and
- * `--ship-tree-groups-icon-small-npc: url("")` for four group icons), left by
- * textures its build could not resolve. They render as nothing, but Turbopack
+ * Why: the library's published `styles.css` contains four of them
+ * (`--ship-tree-groups-icon-small-npc: url("")`, one per rule that sets it),
+ * left by a texture its build could not resolve. Up to 0.2.0 it also had
+ * sixteen `--ship-tree-elements-icons: url("")` for element icons. They render as nothing, but Turbopack
  * tries to resolve every `url()` and fails the whole build on the empty one
  * (`Module not found: Can't resolve ''`). Removing them changes nothing that
  * was visible and lets the stylesheet be imported.

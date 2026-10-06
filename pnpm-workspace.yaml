@@ -64,3 +64,4 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@jitaspace/db-builds@0.1.0'
+  - '@eve-online-tools/eve-ship-tree@0.3.0'

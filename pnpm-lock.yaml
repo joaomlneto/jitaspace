@@ -1837,8 +1837,8 @@ importers:
   packages/ship-tree:
     dependencies:
       '@eve-online-tools/eve-ship-tree':
-        specifier: 0.0.2
-        version: 0.0.2(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(@use-gesture/react@10.3.1(react@19.2.6))(motion@12.43.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(rollup@4.60.4)
+        specifier: 0.3.0
+        version: 0.3.0(@use-gesture/react@10.3.1(react@19.2.6))(motion@12.43.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(rollup@4.60.4)
       '@mantine/core':
         specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -3425,11 +3425,9 @@ packages:
       vite:
         optional: true
 
-  '@eve-online-tools/eve-ship-tree@0.0.2':
-    resolution: {integrity: sha512-rO+1rbh6XEwtnWd5f6+y4P8qjCyjKvOuNVC0MKVmZyN6GwKQ2Ee/h7kZQDfyBmQVPZxj/3v87NozdrDgWkQaOQ==}
+  '@eve-online-tools/eve-ship-tree@0.3.0':
+    resolution: {integrity: sha512-RfD8y4VjAZRFuyB4CT2ezRlm4DtH0iS4FTwJF0sRw9tUKPcLYNKr82JbwvBEYs4OUZ6ETmU1qj+4+GV9gnw/9A==}
     peerDependencies:
-      '@mantine/core': ^9.0.0
-      '@mantine/hooks': ^9.0.0
       '@use-gesture/react': ^10.0.0
       motion: ^12.0.0
       react: ^18.x || ^19.x
@@ -3463,6 +3461,9 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/saira-semi-condensed@5.3.0':
+    resolution: {integrity: sha512-ODnnx0osErt7pRMY+MhxqwXOpPEKlRNW6Bb1Ci70Y37JMnISFAUZYo6ZGv/VOWc2x/IetzdmMaiiEVNPtWMi9Q==}
 
   '@google-cloud/precise-date@4.0.0':
     resolution: {integrity: sha512-1TUx3KdaU3cN7nfCdNf+UVqA/PSX29Cjcox3fZZBtINlRrXVTmUkQnCKv2MbBUbCopbK4olAT1IHl76uZyCiVA==}
@@ -13612,12 +13613,11 @@ snapshots:
     optionalDependencies:
       rollup: 4.60.4
 
-  '@eve-online-tools/eve-ship-tree@0.0.2(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(@use-gesture/react@10.3.1(react@19.2.6))(motion@12.43.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(rollup@4.60.4)':
+  '@eve-online-tools/eve-ship-tree@0.3.0(@use-gesture/react@10.3.1(react@19.2.6))(motion@12.43.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(rollup@4.60.4)':
     dependencies:
       '@eve-online-tools/eve-resfile': 0.3.0(rollup@4.60.4)
       '@eve-online-tools/eve-sde': 0.1.0(rollup@4.60.4)
-      '@mantine/core': 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      '@mantine/hooks': 9.3.0(react@19.2.6)
+      '@fontsource/saira-semi-condensed': 5.3.0
       '@use-gesture/react': 10.3.1(react@19.2.6)
       motion: 12.43.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react: 19.2.6
@@ -13662,6 +13662,8 @@ snapshots:
       tabbable: 6.2.0
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/saira-semi-condensed@5.3.0': {}
 
   '@google-cloud/precise-date@4.0.0': {}
 
@@ -16982,9 +16984,9 @@ snapshots:
     dependencies:
       acorn: 8.17.0
 
-  acorn-import-phases@1.0.4(acorn@8.17.0):
+  acorn-import-phases@1.0.4(acorn@8.18.0):
     dependencies:
-      acorn: 8.17.0
+      acorn: 8.18.0
 
   acorn-jsx@5.3.2(acorn@8.17.0):
     dependencies:
@@ -24236,8 +24238,8 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      acorn: 8.17.0
-      acorn-import-phases: 1.0.4(acorn@8.17.0)
+      acorn: 8.18.0
+      acorn-import-phases: 1.0.4(acorn@8.18.0)
       browserslist: 4.28.7
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.24.3
@@ -24277,8 +24279,8 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1
       '@webassemblyjs/wasm-parser': 1.14.1
-      acorn: 8.17.0
-      acorn-import-phases: 1.0.4(acorn@8.17.0)
+      acorn: 8.18.0
+      acorn-import-phases: 1.0.4(acorn@8.18.0)
       browserslist: 4.28.7
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.24.3

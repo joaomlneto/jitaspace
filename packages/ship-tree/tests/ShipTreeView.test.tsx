@@ -115,7 +115,7 @@ describe("ShipTreeView", () => {
     );
     await screen.findByTestId("ship-tree-content", {}, READY);
 
-    expect(requested).toHaveLength(13);
+    expect(requested).toHaveLength(14);
     for (const url of requested) {
       expect(url.startsWith("/elsewhere/tables/")).toBe(true);
     }
@@ -193,8 +193,8 @@ describe("ShipTreeView", () => {
         ),
       READY,
     );
-    // Still the original thirteen requests: switching faction is not a reload.
-    expect(requested).toHaveLength(13);
+    // Still the original fourteen requests: switching faction is not a reload.
+    expect(requested).toHaveLength(14);
     expect(screen.getByText("Minmatar Republic ships")).toBeInTheDocument();
   });
 

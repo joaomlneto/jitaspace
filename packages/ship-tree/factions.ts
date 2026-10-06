@@ -15,8 +15,8 @@ export interface ShipTreeFaction {
  * Every faction the library can draw a ship tree for, in the order the
  * in-game picker lists them: the four empires first.
  *
- * The library's README says only the four empires have layouts. That is stale
- * for the version we ship (0.0.2): all 17 render a full tree.
+ * All 17 render a full tree. The library's README said only the four empires
+ * had layouts until 0.3.0, and was stale about it for every version before.
  */
 export const SHIP_TREE_FACTIONS = [
   { id: 500001, slug: "caldari", name: "Caldari State" },
