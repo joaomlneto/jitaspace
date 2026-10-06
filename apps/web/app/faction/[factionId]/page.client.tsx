@@ -1735,7 +1735,7 @@ function MissionsPanel({
                     <EveIconAvatar iconId={arc.iconId} size="md" alt="" />
                   )}
                   <Stack gap={0}>
-                    <Text fw={600} c="gray.0">
+                    <Text fw={600} c="bright">
                       {arc.name}
                     </Text>
                     <Text size="xs" c="dimmed">
