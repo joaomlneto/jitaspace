@@ -44,6 +44,10 @@ jest.mock("../../../packages/ship-tree/ShipTreeView", () => ({
   },
 }));
 
+jest.mock("../../../packages/ship-tree/ShipTreeFactionSelector", () => ({
+  ShipTreeFactionSelector: () => null,
+}));
+
 const ShipTreeTab = require("~/components/ShipTree/ShipTreeTab")
   .default as (props: { faction: number }) => React.JSX.Element;
 
