@@ -83,7 +83,7 @@ jobs:
       # a `pnpm update` resolves a new cypress.
       - name: Cache Cypress binary
         id: cypress-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
