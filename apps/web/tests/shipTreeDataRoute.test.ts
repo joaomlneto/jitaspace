@@ -20,7 +20,6 @@ describe("/api/ship-tree-data/[file]", () => {
     expect(generateStaticParams()).toEqual(
       SHIP_TREE_DATA_FILE_NAMES.map((file) => ({ file })),
     );
-    expect(generateStaticParams()).toHaveLength(13);
   });
 
   it.each(SHIP_TREE_DATA_FILE_NAMES)(

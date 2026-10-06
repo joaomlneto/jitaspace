@@ -1,18 +1,18 @@
 # @jitaspace/ship-tree
 
-JitaSpace's adapter for [`@eve-online-tools/eve-ship-tree`](https://github.com/eve-online-tools/node-packages/tree/main/packages/eve-ship-tree), the Mantine components that draw EVE's in-game ship tree. Private to this monorepo; it powers the `/ship-tree` page in `apps/web`.
+JitaSpace's adapter for [`@eve-online-tools/eve-ship-tree`](https://github.com/eve-online-tools/node-packages/tree/main/packages/eve-ship-tree), the React components that draw EVE's in-game ship tree. Private to this monorepo; it powers the `/ship-tree` page in `apps/web`.
 
 The web app imports this package, never the library directly.
 
 ## What it adds
 
-| Export                                       | What                                                                                                                        |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `ShipTreeView`                               | One component: faction, optional skills, optional Omega. Loads the data once, sizes itself, hides the library's fake footer |
-| `SHIP_TREE_FACTIONS` and lookups             | The 17 factions with URL-safe slugs, for pickers and `?faction=`                                                            |
-| `SHIP_TREE_DATA_*`, `isShipTreeDataFileName` | The data tables the library fetches, and where we serve them                                                                |
-| `@jitaspace/ship-tree/server`                | `readShipTreeDataFile`: reads a table out of the installed library (Node only)                                              |
-| `@jitaspace/ship-tree/postcss`               | PostCSS plugin that makes the library's stylesheet importable (see below)                                                   |
+| Export                                       | What                                                                                                                              |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `ShipTreeView`                               | One component: faction, optional skills, optional Omega. Loads the data once, sizes itself, hides the library's decorative footer |
+| `SHIP_TREE_FACTIONS` and lookups             | The 17 factions with URL-safe slugs, for pickers and `?faction=`                                                                  |
+| `SHIP_TREE_DATA_*`, `isShipTreeDataFileName` | The data tables the library fetches, and where we serve them                                                                      |
+| `@jitaspace/ship-tree/server`                | `readShipTreeDataFile`: reads a table out of the installed library (Node only)                                                    |
+| `@jitaspace/ship-tree/postcss`               | PostCSS plugin that makes the library's stylesheet importable (see below)                                                         |
 
 ```tsx
 import { ShipTreeView } from "@jitaspace/ship-tree";
@@ -24,15 +24,13 @@ import { ShipTreeView } from "@jitaspace/ship-tree";
 
 ## Things to know
 
-**Data.** The library keeps no data in its JavaScript: it fetches thirteen `<table>.jsonl` files in the browser. They ship inside the npm package, and `apps/web/app/api/ship-tree-data/[file]/route.ts` serves them, prerendered at build from `node_modules`. Nothing is copied into the repository or `public/`. The tables are a pinned snapshot of the SDE, not our database, so new game data arrives with a library upgrade.
+**Data.** The library keeps no data in its JavaScript: it fetches its `<table>.jsonl` files in the browser. They ship inside the npm package, and `apps/web/app/api/ship-tree-data/[file]/route.ts` serves them, prerendered at build from `node_modules`. Nothing is copied into the repository or `public/`. The tables are a pinned snapshot of the SDE, not our database, so new game data arrives with a library upgrade.
 
 **Locating the files** uses `module.findPackageJSON` and not `require.resolve`: Turbopack expands a templated `require.resolve` into a glob over every file in `data/generated` and fails the build trying to bundle each `.jsonl` as a module.
 
-**The stylesheet** (`styles.css`) contains twenty empty `url("")` values that Turbopack refuses to resolve (`Can't resolve ''`). `postcss.cjs` drops them, for that file only, and `apps/web/postcss.config.cjs` loads it. They already rendered as nothing, so no visible change.
+**The stylesheet** (`styles.css`) contains four empty `url("")` values that Turbopack refuses to resolve (`Can't resolve ''`). `postcss.cjs` drops them, for that file only, and `apps/web/postcss.config.cjs` loads it. They already rendered as nothing, so no visible change.
 
-**The README lies.** It says only the four empires have layouts; in 0.0.2 all 17 render.
-
-**The footer lies too.** `Grid` defaults to an invented client version (`V1.569.496`), "Military and industrial vessels", and "Courtesy of Kaalakiota Corporation". `ShipTreeView` shows none of that.
+**The footer is decorative.** `Grid` defaults to an in-game-style client version (`V1.569.496`), "Military and industrial vessels", and "Courtesy of Kaalakiota Corporation". None of it means anything, and the version could be mistaken for the version of our data, so `ShipTreeView` shows none of that.
 
 ## Upgrading the library
 
