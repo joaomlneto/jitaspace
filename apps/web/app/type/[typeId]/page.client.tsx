@@ -55,6 +55,7 @@ import {
 
 import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
@@ -79,7 +80,7 @@ import {
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
 import { isTypeListMember } from "~/lib/typeLists";
-import { EntityHistory } from "../../history/EntityHistory";
+import { StreamedEntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
@@ -192,6 +193,9 @@ function AttributeValue({
   }
 }
 
+/** No history to show; one stable promise, so `use()` never sees a new one. */
+const NO_HISTORY: Promise<EntityHistoryData | null> = Promise.resolve(null);
+
 export default function TypePage({
   typeId,
   typeName,
@@ -199,11 +203,17 @@ export default function TypePage({
   dogmaMeta,
   variations = [],
   typeLists = [],
+  history = NO_HISTORY,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
     variations?: ItemVariation[];
     typeLists?: NamedTypeListMatch[];
+    /**
+     * The item's change history, still being read when the page starts
+     * streaming (`loadEntityHistory`); null once resolved if that failed.
+     */
+    history?: Promise<EntityHistoryData | null>;
   }
 >) {
   const character = useSelectedCharacter();
@@ -908,9 +918,9 @@ export default function TypePage({
             </Tabs.Panel>
           )}
 
-          {/* History — per-build change timeline (loaded on demand) */}
+          {/* History — per-build change timeline, streamed with the page */}
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory entityType="type" entityId={typeId} embedded />
+            <StreamedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

@@ -1,128 +1,84 @@
 "use client";
 
 import type { TextProps } from "@mantine/core";
-import { Text } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { Anchor, Text } from "@mantine/core";
 
+import { useEntityName, useHistoryLabels } from "./_labels-context";
 import {
   CategoryAnchor,
-  CategoryName,
+  CorporationAnchor,
   DogmaAttributeAnchor,
-  DogmaAttributeName,
   DogmaAttributeValue,
   DogmaEffectAnchor,
-  DogmaEffectName,
   FactionAnchor,
-  FactionName,
   GroupAnchor,
-  GroupName,
   MarketGroupAnchor,
-  MarketGroupName,
   RaceAnchor,
-  RaceName,
   TypeAnchor,
-  TypeName,
 } from "./_sde-ui";
-import {
-  resolveCategoryLabel,
-  resolveDogmaAttributeLabel,
-  resolveDogmaEffectLabel,
-  resolveDogmaUnitLabel,
-  resolveGroupLabel,
-  resolveMarketGroupLabel,
-  resolveRaceLabel,
-  resolveTypeLabel,
-} from "./actions";
 
-// Entities newer than the published SDE 404 on the name lookup (our history is
-// generated straight from the client, which can be ahead of the SDE release) —
-// fall back to the raw id instead of a skeleton, and don't retry the 404.
+/**
+ * Named, linked labels for the ids in a timeline's values. Every name, parent
+ * and unit comes from the labels the server read with the timeline
+ * (`HistoryLabelsProvider`), so nothing here fetches. An id the labels do not
+ * name shows as `#id`; every changed entity has a name, so that means a lookup
+ * failed to find one.
+ */
 
-function renderAttributeContent(
-  id: number,
-  name: string | undefined,
-  isPending: boolean,
-) {
-  if (name) return <DogmaAttributeName span size="xs" name={name} />;
-  if (isPending) return <DogmaAttributeName span size="xs" />;
+type LabelSize = "xs" | "sm";
+
+/** The entity's name, or `#id` when nothing names it. */
+function NameText({
+  kind,
+  id,
+  size,
+}: Readonly<{ kind: string; id: number; size: LabelSize }>) {
+  const name = useEntityName(kind, id);
   return (
-    <Text span size="xs">
-      #{id}
+    <Text span size={size}>
+      {name ?? `#${id}`}
+    </Text>
+  );
+}
+
+/** Dimmed " › " separator between breadcrumb crumbs. */
+function CrumbSep({ size }: Readonly<{ size: LabelSize }>) {
+  return (
+    <Text span size={size} c="dimmed">
+      {" › "}
     </Text>
   );
 }
 
 function AttributeLabel({ id }: Readonly<{ id: number }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "dogmaAttribute", id],
-    queryFn: () => resolveDogmaAttributeLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = query.data?.name ?? undefined;
   return (
     <DogmaAttributeAnchor attributeId={id} size="xs">
-      {renderAttributeContent(id, name, query.isPending)}
+      <NameText kind="dogmaAttribute" id={id} size="xs" />
     </DogmaAttributeAnchor>
   );
 }
 
-function renderEffectContent(
-  id: number,
-  name: string | undefined,
-  isPending: boolean,
-) {
-  if (name) return <DogmaEffectName span size="xs" name={name} />;
-  if (isPending) return <DogmaEffectName span size="xs" />;
-  return (
-    <Text span size="xs">
-      #{id}
-    </Text>
-  );
-}
-
 function EffectLabel({ id }: Readonly<{ id: number }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "dogmaEffect", id],
-    queryFn: () => resolveDogmaEffectLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = query.data?.name ?? undefined;
   return (
     <DogmaEffectAnchor effectId={id} size="xs">
-      {renderEffectContent(id, name, query.isPending)}
+      <NameText kind="dogmaEffect" id={id} size="xs" />
     </DogmaEffectAnchor>
   );
 }
 
 /**
- * A single dogma attribute value, formatted for the attribute's unit. Resolves
- * the attribute's `unitID` and the unit's display symbol from the SDE, then
- * defers to the shared <DogmaAttributeValue>. While the unit is still loading
- * (or the attribute is newer than the published SDE) it falls back to a plain
- * number. Extra <Text> props (colour, strike-through) pass straight through.
+ * A single dogma attribute value, formatted for the attribute's unit. Extra
+ * <Text> props (colour, strike-through) pass straight through.
  */
 export function DogmaValue({
   attributeId,
   value,
   ...textProps
 }: Readonly<{ attributeId: number; value: number } & TextProps>) {
-  const attribute = useQuery({
-    queryKey: ["history", "sde", "dogmaAttribute", attributeId],
-    queryFn: () => resolveDogmaAttributeLabel(attributeId),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const unitId = attribute.data?.unitId ?? undefined;
-  const unit = useQuery({
-    queryKey: ["history", "sde", "dogmaUnit", unitId],
-    queryFn: () => resolveDogmaUnitLabel(unitId ?? 0),
-    staleTime: Infinity,
-    retry: false,
-    enabled: unitId !== undefined,
-  });
-  const symbol = unit.data?.name ?? undefined;
+  const labels = useHistoryLabels();
+  const unitId = labels.attributes[attributeId]?.unitId ?? undefined;
+  const symbol = unitId === undefined ? undefined : labels.unitSymbols[unitId];
   return (
     <DogmaAttributeValue
       span
@@ -174,13 +130,7 @@ export function AttributeValueChange({
   from: number;
   to: number;
 }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "dogmaAttribute", id],
-    queryFn: () => resolveDogmaAttributeLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const highIsGood = query.data?.highIsGood ?? undefined;
+  const highIsGood = useHistoryLabels().attributes[id]?.highIsGood;
   const highColor = highIsGood === false ? "red" : "green";
   const lowColor = highIsGood === false ? "green" : "red";
   const fromColor = pickFromColor(from, to, highColor, lowColor);
@@ -195,62 +145,14 @@ export function AttributeValueChange({
   );
 }
 
-type LabelSize = "xs" | "sm";
-
-/** Dimmed " › " separator between breadcrumb crumbs. */
-function CrumbSep({ size }: Readonly<{ size: LabelSize }>) {
-  return (
-    <Text span size={size} c="dimmed">
-      {" › "}
-    </Text>
-  );
-}
-
-function renderCategoryContent(
-  id: number,
-  size: LabelSize,
-  name: string | undefined,
-  isPending: boolean,
-) {
-  if (name) return <CategoryName span size={size} name={name} />;
-  if (isPending) return <CategoryName span size={size} />;
-  return (
-    <Text span size={size}>
-      #{id}
-    </Text>
-  );
-}
-
-function CategoryLabel({
+export function CategoryLabel({
   id,
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "category", id],
-    queryFn: () => resolveCategoryLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = query.data?.name ?? undefined;
   return (
     <CategoryAnchor categoryId={id} size={size} c="dimmed">
-      {renderCategoryContent(id, size, name, query.isPending)}
+      <NameText kind="category" id={id} size={size} />
     </CategoryAnchor>
-  );
-}
-
-function renderGroupContent(
-  id: number,
-  size: LabelSize,
-  name: string | undefined,
-  isPending: boolean,
-) {
-  if (name) return <GroupName span size={size} name={name} />;
-  if (isPending) return <GroupName span size={size} />;
-  return (
-    <Text span size={size}>
-      #{id}
-    </Text>
   );
 }
 
@@ -265,14 +167,7 @@ export function GroupLabel({
   size?: LabelSize;
   dim?: boolean;
 }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "group", id],
-    queryFn: () => resolveGroupLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const parentId = query.data?.parentId ?? undefined;
-  const name = query.data?.name ?? undefined;
+  const parentId = useHistoryLabels().parents.group[id];
   return (
     <>
       {parentId !== undefined && (
@@ -282,7 +177,7 @@ export function GroupLabel({
         </>
       )}
       <GroupAnchor groupId={id} size={size} c={dim ? "dimmed" : undefined}>
-        {renderGroupContent(id, size, name, query.isPending)}
+        <NameText kind="group" id={id} size={size} />
       </GroupAnchor>
     </>
   );
@@ -293,13 +188,7 @@ export function TypeLabel({
   id,
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "type", id],
-    queryFn: () => resolveTypeLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const parentId = query.data?.parentId ?? undefined;
+  const parentId = useHistoryLabels().parents.type[id];
   return (
     <>
       {parentId !== undefined && (
@@ -309,29 +198,9 @@ export function TypeLabel({
         </>
       )}
       <TypeAnchor typeId={id} size={size}>
-        <TypeName
-          span
-          size={size}
-          typeId={id}
-          name={query.data?.name ?? undefined}
-        />
+        <NameText kind="type" id={id} size={size} />
       </TypeAnchor>
     </>
-  );
-}
-
-function renderMarketGroupContent(
-  id: number,
-  size: LabelSize,
-  name: string | undefined,
-  isPending: boolean,
-) {
-  if (name) return <MarketGroupName span size={size} name={name} />;
-  if (isPending) return <MarketGroupName span size={size} />;
-  return (
-    <Text span size={size}>
-      #{id}
-    </Text>
   );
 }
 
@@ -345,14 +214,7 @@ export function MarketGroupLabel({
   size?: LabelSize;
   dim?: boolean;
 }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "marketGroup", id],
-    queryFn: () => resolveMarketGroupLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const parentId = query.data?.parentId ?? undefined;
-  const name = query.data?.name ?? undefined;
+  const parentId = useHistoryLabels().parents.marketGroup[id];
   return (
     <>
       {parentId !== undefined && (
@@ -366,24 +228,9 @@ export function MarketGroupLabel({
         size={size}
         c={dim ? "dimmed" : undefined}
       >
-        {renderMarketGroupContent(id, size, name, query.isPending)}
+        <NameText kind="marketGroup" id={id} size={size} />
       </MarketGroupAnchor>
     </>
-  );
-}
-
-function renderRaceContent(
-  id: number,
-  size: LabelSize,
-  name: string | undefined,
-  isPending: boolean,
-) {
-  if (name) return <RaceName span size={size} name={name} />;
-  if (isPending) return <RaceName span size={size} />;
-  return (
-    <Text span size={size}>
-      #{id}
-    </Text>
   );
 }
 
@@ -391,16 +238,9 @@ export function RaceLabel({
   id,
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
-  const query = useQuery({
-    queryKey: ["history", "sde", "race", id],
-    queryFn: () => resolveRaceLabel(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = query.data?.name ?? undefined;
   return (
     <RaceAnchor raceId={id} size={size}>
-      {renderRaceContent(id, size, name, query.isPending)}
+      <NameText kind="race" id={id} size={size} />
     </RaceAnchor>
   );
 }
@@ -408,15 +248,49 @@ export function RaceLabel({
 export function FactionLabel({
   id,
   size = "xs",
-}: Readonly<{
-  id: number;
-  size?: LabelSize;
-}>) {
+}: Readonly<{ id: number; size?: LabelSize }>) {
   return (
     <FactionAnchor factionId={id} size={size}>
-      <FactionName span size={size} factionId={id} />
+      <NameText kind="faction" id={id} size={size} />
     </FactionAnchor>
   );
+}
+
+export function CorporationLabel({
+  id,
+  size = "xs",
+}: Readonly<{ id: number; size?: LabelSize }>) {
+  return (
+    <CorporationAnchor corporationId={id} size={size}>
+      <NameText kind="npcCorporation" id={id} size={size} />
+    </CorporationAnchor>
+  );
+}
+
+/** A skin material, linked to its own change history. */
+export function SkinMaterialLabel({
+  id,
+  size = "xs",
+}: Readonly<{ id: number; size?: LabelSize }>) {
+  return (
+    <Anchor
+      component={Link}
+      href={`/history/skinMaterial/${id}`}
+      size={size}
+      prefetch={false}
+    >
+      <NameText kind="skinMaterial" id={id} size={size} />
+    </Anchor>
+  );
+}
+
+/** An entity with no page of its own to link to (meta groups, units, …). */
+export function PlainLabel({
+  kind,
+  id,
+  size = "xs",
+}: Readonly<{ kind: string; id: number; size?: LabelSize }>) {
+  return <NameText kind={kind} id={id} size={size} />;
 }
 
 /** Name + link for a sub-record key, resolved by the kind of id it holds. */

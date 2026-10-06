@@ -48,6 +48,7 @@ import {
 
 import type { MissionDetail, MissionVariant } from "./data";
 import type { EpicArc } from "~/lib/epicArcs";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { CorporationRef, FactionRef, TypeRef } from "~/lib/missionRefs";
 import type { MissionMessageSpeaker, MissionTextValues } from "~/lib/missions";
 import { DataTable } from "~/components/DataTable";
@@ -70,7 +71,7 @@ import {
   MISSION_KIND_LABELS,
   missionMessageSlot,
 } from "~/lib/missions";
-import { EntityHistory } from "../../history/EntityHistory";
+import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import {
   DEFAULT_MISSION_PAGE_TAB,
   isMissionPageTab,
@@ -816,7 +817,8 @@ function MissionDialogue({
 
 export default function MissionPage({
   mission,
-}: Readonly<{ mission: MissionDetail }>) {
+  history,
+}: Readonly<{ mission: MissionDetail; history: EntityHistoryData | null }>) {
   const character = useSelectedCharacter();
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
@@ -980,11 +982,7 @@ export default function MissionPage({
           )}
 
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory
-              entityType="mission"
-              entityId={mission.missionId}
-              embedded
-            />
+            <EmbeddedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

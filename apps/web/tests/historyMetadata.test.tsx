@@ -19,6 +19,18 @@ const mockGetCachedBuildPage = jest.fn<(build: number) => Promise<unknown>>(
 jest.mock("~/app/history/build/[build]/data", () => ({
   getCachedBuildPage: (build: number) => mockGetCachedBuildPage(build),
 }));
+// Every entity history page reads its history on the server; stub the read.
+// Unnamed by default, so the titles fall back to the kind and id.
+const mockEntityName = jest.fn<() => string | null>(() => null);
+jest.mock("~/lib/history-entity-page", () => ({
+  getCachedEntityHistory: (entityType: string, entityId: number) =>
+    Promise.resolve({
+      entityType,
+      entityId,
+      name: mockEntityName(),
+      timeline: null,
+    }),
+}));
 jest.mock("~/app/history/[entityType]/[id]/page.client", () => ({
   default: () => null,
 }));
@@ -43,7 +55,7 @@ const cases = [
   {
     mod: "~/app/history/[entityType]/[id]/page",
     params: { entityType: "group", id: "25" },
-    title: "group 25 — Change History",
+    title: "Group 25 — Change History",
     needle: "group",
     canonical: "/history/group/25",
     // The kind is matched verbatim against `Entity.kind`, so a re-cased
@@ -67,7 +79,7 @@ const cases = [
   {
     mod: "~/app/history/skinMaterial/[skinMaterialId]/page",
     params: { skinMaterialId: "7" },
-    title: "SKIN Material 7 — Change History",
+    title: "Skin material 7 — Change History",
     needle: "7",
     canonical: "/history/skinMaterial/7",
     bad: [{ skinMaterialId: "7e0" }, { skinMaterialId: " 7" }],
@@ -128,6 +140,19 @@ describe("history page metadata + wrappers", () => {
       }
     });
   }
+});
+
+describe("entity history page titles", () => {
+  it("names the entity when anything names it", async () => {
+    mockEntityName.mockReturnValueOnce("Frigate");
+    const mod =
+      (await import("~/app/history/[entityType]/[id]/page")) as unknown as PageModule;
+    const meta = await mod.generateMetadata({
+      params: rp({ entityType: "group", id: "25" }),
+    });
+    expect(meta.title).toBe("Frigate (Group 25) — Change History");
+    expect(meta.description).toContain("group Frigate");
+  });
 });
 
 describe("build page server read", () => {

@@ -1,8 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { Anchor, Group, Spoiler, Stack, Text } from "@mantine/core";
+import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import type { SubRow } from "./_diff";
 import type { FieldDelta } from "~/lib/history";
@@ -18,60 +17,113 @@ import {
 } from "./_diff";
 import {
   AttributeValueChange,
+  CategoryLabel,
+  CorporationLabel,
   DogmaValue,
   FactionLabel,
   GroupLabel,
   MarketGroupLabel,
+  PlainLabel,
   RaceLabel,
+  SkinMaterialLabel,
   SubKeyLabel,
   TypeLabel,
 } from "./_labels";
 import { ISKAmount } from "./_sde-ui";
 
 /**
- * Entity-aware rendering for well-known type metadata fields (groupID, raceID,
- * wreckTypeID, …). Returns null when the field has no special meaning — and
- * deliberately leaves `typeID` plain: it is the page's own id. `entityType` is
- * the kind of entity being viewed, used to avoid self-linking its own id field.
+ * The kind of entity each id is in a field holding a list of ids, or null when
+ * the field's list is not one: a skin's applicable ship `types`, a type's
+ * `designerIDs` (corporations), and each level of its `masteries`
+ * (certificates).
+ */
+function idListKind(
+  field: string,
+  collection: string | undefined,
+): "type" | "npcCorporation" | "certificate" | null {
+  if (field === "types") return "type";
+  if (field === "designerIDs") return "npcCorporation";
+  if (collection === "masteries") return "certificate";
+  return null;
+}
+
+/** One id of an {@link idListKind} list, named and linked by its kind. */
+function IdListItem({
+  kind,
+  id,
+}: Readonly<{ kind: NonNullable<ReturnType<typeof idListKind>>; id: number }>) {
+  if (kind === "type") return <TypeLabel id={id} />;
+  if (kind === "npcCorporation") return <CorporationLabel id={id} />;
+  return <PlainLabel kind={kind} id={id} />;
+}
+
+/** A capped, one-per-line list of labels (a skin's ships, a mastery's certificates). */
+function LabelList({
+  ids,
+  kind,
+}: Readonly<{
+  ids: number[];
+  kind: NonNullable<ReturnType<typeof idListKind>>;
+}>) {
+  return (
+    <Spoiler
+      maxHeight={SPOILER_MAX_HEIGHT}
+      showLabel={`Show all ${ids.length}`}
+      hideLabel="Show less"
+      fz="xs"
+    >
+      <Stack gap={1}>
+        {ids.map((id) => (
+          <Group gap={4} key={id}>
+            <IdListItem kind={kind} id={id} />
+          </Group>
+        ))}
+      </Stack>
+    </Spoiler>
+  );
+}
+
+const isIdList = (value: unknown): value is number[] =>
+  Array.isArray(value) &&
+  value.length > 0 &&
+  value.every((v) => typeof v === "number");
+
+/**
+ * Entity-aware rendering for fields whose value is another entity's id
+ * (groupID, raceID, wreckTypeID, designerIDs, …; the fields the server reads
+ * labels for, `ID_FIELD_KIND` in `~/lib/history-labels`). Returns null when the
+ * field has no special meaning — and deliberately leaves `typeID` plain: it is
+ * the page's own id. `entityType` is the kind of entity being viewed, used to
+ * avoid self-linking its own id field; `collection` names the dataset, for the
+ * ones whose fields are positional (`masteries`).
  */
 export function entityValueFor(
   field: string,
   value: unknown,
   entityType?: string,
+  collection?: string,
 ): ReactNode | null {
-  // A list of typeIDs (e.g. a skin's applicable ship `types`) — link each, so
-  // they read as items rather than a comma-formatted "37,453".
-  if (
-    field === "types" &&
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every((v) => typeof v === "number")
-  ) {
-    return (
-      <Spoiler
-        maxHeight={SPOILER_MAX_HEIGHT}
-        showLabel={`Show all ${value.length}`}
-        hideLabel="Show less"
-        fz="xs"
-      >
-        <Stack gap={1}>
-          {value.map((id) => (
-            <Group gap={4} key={id}>
-              <TypeLabel id={id} />
-            </Group>
-          ))}
-        </Stack>
-      </Spoiler>
-    );
-  }
+  const listKind = idListKind(field, collection);
+  // Link each id, so the list reads as named entities rather than a
+  // comma-formatted "37,453".
+  if (listKind && isIdList(value))
+    return <LabelList ids={value} kind={listKind} />;
   if (typeof value !== "number") return null;
   switch (field) {
     case "wreckTypeID":
+    case "variationParentTypeID":
       return <TypeLabel id={value} size="sm" />;
     case "groupID":
       return <GroupLabel id={value} size="sm" />;
+    case "categoryID":
+      return <CategoryLabel id={value} size="sm" />;
     case "marketGroupID":
+    case "parentGroupID":
       return <MarketGroupLabel id={value} size="sm" />;
+    case "metaGroupID":
+      return <PlainLabel kind="metaGroup" id={value} size="sm" />;
+    case "unitID":
+      return <PlainLabel kind="dogmaUnit" id={value} size="sm" />;
     case "raceID":
       return <RaceLabel id={value} size="sm" />;
     case "factionID":
@@ -82,13 +134,7 @@ export function entityValueFor(
       // cross-link to the material's own timeline — but not on the material's
       // own page, where this is its identity field (cf. typeID above).
       return entityType === "skinMaterial" ? null : (
-        <Anchor
-          component={Link}
-          href={`/history/skinMaterial/${value}`}
-          size="sm"
-        >
-          #{value}
-        </Anchor>
+        <SkinMaterialLabel id={value} size="sm" />
       );
     default:
       return null;
@@ -299,19 +345,33 @@ function KeyedArrayDiff({
   return <CappedRows rows={rows} />;
 }
 
-/** Set diff of two arrays of primitives. */
+/** Set diff of two arrays of primitives, labelling each id when it is one. */
 function PrimitiveArrayDiff({
   from,
   to,
-}: Readonly<{ from: unknown[]; to: unknown[] }>) {
+  listKind,
+}: Readonly<{
+  from: unknown[];
+  to: unknown[];
+  listKind?: ReturnType<typeof idListKind>;
+}>) {
   const fromSet = new Set(from.map(keyLabel));
   const toSet = new Set(to.map(keyLabel));
+  const row = (v: string, kind: "added" | "removed"): SubRow =>
+    listKind && /^\d+$/.test(v)
+      ? {
+          key: v,
+          kind,
+          label: <IdListItem kind={listKind} id={Number(v)} />,
+          text: "",
+        }
+      : { key: v, kind, text: v };
   const rows: SubRow[] = [];
   for (const v of fromSet) {
-    if (!toSet.has(v)) rows.push({ key: v, kind: "removed", text: v });
+    if (!toSet.has(v)) rows.push(row(v, "removed"));
   }
   for (const v of toSet) {
-    if (!fromSet.has(v)) rows.push({ key: v, kind: "added", text: v });
+    if (!fromSet.has(v)) rows.push(row(v, "added"));
   }
   if (rows.length === 0) {
     return (
@@ -357,7 +417,13 @@ function DeepDiff({ from, to }: Readonly<{ from: unknown; to: unknown }>) {
 }
 
 /** Best-effort readable rendering for a changed field value. */
-function SmartChanged({ delta }: Readonly<{ delta: FieldDelta }>) {
+function SmartChanged({
+  delta,
+  listKind,
+}: Readonly<{
+  delta: FieldDelta;
+  listKind?: ReturnType<typeof idListKind>;
+}>) {
   const { from, to } = delta;
   if (Array.isArray(from) && Array.isArray(to)) {
     const keyField = arrayKeyOf(from) ?? arrayKeyOf(to);
@@ -365,7 +431,7 @@ function SmartChanged({ delta }: Readonly<{ delta: FieldDelta }>) {
       return <KeyedArrayDiff from={from} to={to} keyField={keyField} />;
     }
     if (!from.some(isPlainObject) && !to.some(isPlainObject)) {
-      return <PrimitiveArrayDiff from={from} to={to} />;
+      return <PrimitiveArrayDiff from={from} to={to} listKind={listKind} />;
     }
     return <DeepDiff from={from} to={to} />; // mixed array → recurse
   }
@@ -391,20 +457,24 @@ export function DeltaValue({
   delta,
   kind,
   entityType,
+  collection,
 }: Readonly<{
   field: string;
   delta: FieldDelta;
   kind: "added" | "removed" | "changed";
   entityType?: string;
+  collection?: string;
 }>) {
   if (kind === "changed") {
     // Arrays diff better element-wise (added/removed entries) than as two whole
     // renders joined by an arrow — keep them on the SmartChanged path.
     if (Array.isArray(delta.from) || Array.isArray(delta.to)) {
-      return <SmartChanged delta={delta} />;
+      return (
+        <SmartChanged delta={delta} listKind={idListKind(field, collection)} />
+      );
     }
-    const fromNode = entityValueFor(field, delta.from, entityType);
-    const toNode = entityValueFor(field, delta.to, entityType);
+    const fromNode = entityValueFor(field, delta.from, entityType, collection);
+    const toNode = entityValueFor(field, delta.to, entityType, collection);
     if (fromNode && toNode) {
       return (
         <Group gap={6} wrap="nowrap">
@@ -420,13 +490,13 @@ export function DeltaValue({
   }
   if (kind === "added") {
     return (
-      entityValueFor(field, delta.to, entityType) ?? (
+      entityValueFor(field, delta.to, entityType, collection) ?? (
         <RichValue value={delta.to} />
       )
     );
   }
   // removed
-  const node = entityValueFor(field, delta.from, entityType);
+  const node = entityValueFor(field, delta.from, entityType, collection);
   if (node) {
     return (
       <span style={{ textDecoration: "line-through", opacity: 0.65 }}>

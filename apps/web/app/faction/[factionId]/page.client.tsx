@@ -80,6 +80,7 @@ import type {
   FactionPageData,
   FactionTables,
 } from "./types";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import { DataTable } from "~/components/DataTable";
 import {
   CorporationLink,
@@ -95,7 +96,7 @@ import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
 import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
 import { formatInteger as formatCount, formatCountOf } from "~/lib/format";
-import { EntityHistory } from "../../history/EntityHistory";
+import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
 import {
   DEFAULT_FACTION_PAGE_TAB,
@@ -103,7 +104,10 @@ import {
   isFactionPageTab,
 } from "./tabs";
 
-export type PageProps = FactionPageData;
+export type PageProps = FactionPageData & {
+  /** The faction's change history, read with the page; null if that failed. */
+  history: EntityHistoryData | null;
+};
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
@@ -985,6 +989,7 @@ export default function FactionPage({
   faction,
   live,
   counts,
+  history,
 }: Readonly<PageProps>) {
   const { factionId } = faction;
   const [activeTab, setActiveTab] = useQueryState(
@@ -1473,7 +1478,7 @@ export default function FactionPage({
 
           {/* History — per-build change timeline (loaded on demand) */}
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory entityType="faction" entityId={factionId} embedded />
+            <EmbeddedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

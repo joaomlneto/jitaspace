@@ -7,10 +7,17 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
-import type { BuildPage } from "~/lib/history";
+import type { BuildPage, EntityTimeline } from "~/lib/history";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 
 // ── mocks ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +43,6 @@ jest.mock("@mantine/charts", () => ({
 // never loaded; they're only passed as queryFn to the (mocked) useQuery anyway.
 jest.mock("~/lib/history-actions", () => ({
   getBuildRangeChanges: jest.fn(),
-  getEntityTimeline: jest.fn(),
 }));
 
 // The index page server-renders the day-cached index from ~/lib/history-cache
@@ -47,23 +53,6 @@ jest.mock("~/lib/history-cache", () => ({
   getCachedEntityTimeline: jest.fn(),
 }));
 jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
-
-// The breadcrumb labels resolve names through server actions that read Prisma;
-// stub each `resolveXLabel` so the real client is never loaded. They're only
-// passed as a queryFn to the (mocked) useQuery anyway.
-jest.mock(
-  "~/app/history/actions",
-  () =>
-    new Proxy(
-      {},
-      {
-        get: (_t, prop) =>
-          typeof prop === "string"
-            ? () => Promise.resolve({ name: "Rifter", parentId: null })
-            : undefined,
-      },
-    ),
-);
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -159,6 +148,54 @@ const TIMELINE = {
       },
     },
   ],
+};
+
+/**
+ * What the server reads with a timeline (`getCachedEntityHistory`): the
+ * timeline plus a label for every id in it, so the page renders named without
+ * a single lookup.
+ */
+const ENTITY_HISTORY: EntityHistoryData = {
+  entityType: "type",
+  entityId: 587,
+  name: "Rifter",
+  timeline: TIMELINE as EntityTimeline,
+  labels: {
+    names: {
+      type: {
+        1: "Rifter Wreck",
+        2: "Frigate Wreck",
+        587: "Rifter",
+        588: "Slasher",
+      },
+      group: { 25: "Frigate", 26: "Assault Frigate" },
+      category: { 6: "Ship" },
+      marketGroup: {
+        4: "Ships",
+        10: "Standard Frigates",
+        11: "Faction Frigates",
+      },
+      race: { 1: "Caldari", 2: "Minmatar" },
+      faction: { 500001: "Caldari State", 500002: "Minmatar Republic" },
+      dogmaAttribute: {
+        3: "Damage",
+        9: "Structure Hitpoints",
+        11: "Powergrid Output",
+      },
+      npcCorporation: { 1000049: "Thukker Mix" },
+      dogmaUnit: { 1: "Length" },
+    },
+    parents: {
+      type: { 587: 25, 588: 25 },
+      group: { 25: 6, 26: 6 },
+      marketGroup: { 10: 4, 11: 4 },
+    },
+    attributes: {
+      9: { unitId: 1, highIsGood: true },
+      11: { unitId: 2, highIsGood: true },
+    },
+    unitSymbols: { 1: "HP", 2: "MW" },
+  },
 };
 
 const BUILD_PAGE: BuildPage = {
@@ -367,8 +404,7 @@ describe("EntityHistory", () => {
     const { EntityHistory } = await import("~/app/history/EntityHistory");
     wrap(
       <EntityHistory
-        entityType="type"
-        entityId={587}
+        history={ENTITY_HISTORY}
         renderHeader={() => <div>Rifter header</div>}
       />,
     );
@@ -382,6 +418,78 @@ describe("EntityHistory", () => {
     expect(screen.getByText(/from build 97/)).toBeTruthy();
   });
 
+  it("labels every id from the server's labels, fetching nothing", async () => {
+    const { EntityHistory } = await import("~/app/history/EntityHistory");
+    wrap(<EntityHistory history={ENTITY_HISTORY} />);
+
+    const href = (path: string) =>
+      document.querySelector(`a[href="${path}"]`)?.textContent;
+    // A group with its category crumb; a race, a faction, a type.
+    expect(href("/group/26")).toBe("Assault Frigate");
+    expect(href("/category/6")).toBe("Ship");
+    expect(href("/race/2")).toBe("Minmatar");
+    expect(href("/faction/500002")).toBe("Minmatar Republic");
+    expect(href("/type/2")).toBe("Frigate Wreck");
+    // A market group with its parent chain.
+    expect(screen.getAllByText("Ships").length).toBeGreaterThan(0);
+    expect(screen.getByText("Faction Frigates")).toBeTruthy();
+    // The designer corporation, named and linked.
+    expect(href("/corporation/1000049")).toBe("Thukker Mix");
+    // Dogma attributes by name, values suffixed with their unit.
+    expect(href("/dogma/attribute/9")).toBe("Structure Hitpoints");
+    expect(screen.getByText("350 HP")).toBeTruthy();
+    expect(screen.getByText("40 MW")).toBeTruthy();
+    expect(mockUseQuery).not.toHaveBeenCalled();
+  });
+
+  it("shows an id the labels do not name as #id", async () => {
+    const { EntityHistory } = await import("~/app/history/EntityHistory");
+    wrap(
+      <EntityHistory
+        history={{
+          ...ENTITY_HISTORY,
+          labels: { ...ENTITY_HISTORY.labels, names: {} },
+        }}
+      />,
+    );
+    expect(document.querySelector(`a[href="/group/26"]`)?.textContent).toBe(
+      "#26",
+    );
+  });
+
+  it("streams a history the host page is still reading", async () => {
+    const { StreamedEntityHistory } =
+      await import("~/app/history/EntityHistory");
+    let resolve: (h: EntityHistoryData | null) => void = () => undefined;
+    const pending = new Promise<EntityHistoryData | null>((r) => {
+      resolve = r;
+    });
+    await act(async () => {
+      wrap(<StreamedEntityHistory history={pending} />);
+      await Promise.resolve();
+    });
+    // Suspended: the tab shows its loader until the server's read arrives.
+    expect(screen.queryByText("2025-01-01")).toBeNull();
+
+    await act(async () => {
+      resolve(ENTITY_HISTORY);
+      await pending;
+    });
+    expect(await screen.findByText("2025-01-01")).toBeTruthy();
+    expect(mockUseQuery).not.toHaveBeenCalled();
+  });
+
+  it("says when a host page could not load the history", async () => {
+    const { EmbeddedEntityHistory } =
+      await import("~/app/history/EntityHistory");
+    wrap(<EmbeddedEntityHistory history={null} />);
+    expect(screen.getByText(/could not be loaded/)).toBeTruthy();
+
+    cleanup();
+    wrap(<EmbeddedEntityHistory history={ENTITY_HISTORY} />);
+    expect(screen.getByText("2025-01-01")).toBeTruthy();
+  });
+
   // The histCollections param is shared across entities, so it can name a
   // collection this one doesn't have. Without a guard that filters everything
   // out AND renders no chip to untick, stranding the view.
@@ -389,8 +497,7 @@ describe("EntityHistory", () => {
     const { EntityHistory } = await import("~/app/history/EntityHistory");
     wrap(
       <EntityHistory
-        entityType="type"
-        entityId={587}
+        history={ENTITY_HISTORY}
         renderHeader={() => <div>Rifter header</div>}
       />,
       "?histCollections=blueprints",
@@ -408,8 +515,7 @@ describe("EntityHistory", () => {
     const { EntityHistory } = await import("~/app/history/EntityHistory");
     wrap(
       <EntityHistory
-        entityType="type"
-        entityId={587}
+        history={ENTITY_HISTORY}
         renderHeader={() => <div>Rifter header</div>}
       />,
       "?histCollections=",
@@ -422,14 +528,9 @@ describe("EntityHistory", () => {
 
   it("renders an empty state when there are no events", async () => {
     const { EntityHistory } = await import("~/app/history/EntityHistory");
-    mockUseQuery.mockImplementation(() => ({
-      data: { entityType: "type", entityId: 1, events: [] },
-      isLoading: false,
-    }));
     wrap(
       <EntityHistory
-        entityType="type"
-        entityId={1}
+        history={{ ...ENTITY_HISTORY, timeline: null }}
         renderHeader={() => <div>empty header</div>}
       />,
     );
@@ -580,13 +681,24 @@ describe("detail page clients + index page", () => {
       await import("~/app/history/skinMaterial/[skinMaterialId]/page.client");
     const { default: EntityHistoryClient } =
       await import("~/app/history/[entityType]/[id]/page.client");
-    expect(() => wrap(<SkinHistoryClient skinId={1} />)).not.toThrow();
-    expect(() =>
-      wrap(<SkinMaterialHistoryClient skinMaterialId={1} />),
-    ).not.toThrow();
-    expect(() =>
-      wrap(<EntityHistoryClient entityType="group" entityId={25} />),
-    ).not.toThrow();
+    const of = (entityType: string, entityId: number, name: string | null) => ({
+      ...ENTITY_HISTORY,
+      entityType,
+      entityId,
+      name,
+    });
+    wrap(<SkinHistoryClient history={of("skin", 1, "Rifter Tash")} />);
+    expect(screen.getByText("Rifter Tash")).toBeTruthy();
+    cleanup();
+    wrap(<SkinMaterialHistoryClient history={of("skinMaterial", 2, "Tash")} />);
+    expect(screen.getByText("Tash")).toBeTruthy();
+    cleanup();
+    wrap(<EntityHistoryClient history={of("group", 25, "Frigate")} />);
+    expect(screen.getByRole("heading", { name: /Frigate/ })).toBeTruthy();
+    cleanup();
+    // Nothing names it: the kind's label heads the page instead.
+    wrap(<EntityHistoryClient history={of("group", 25, null)} />);
+    expect(screen.getByRole("heading", { name: /Group/ })).toBeTruthy();
   });
 
   it("covers the static-metadata index page", async () => {

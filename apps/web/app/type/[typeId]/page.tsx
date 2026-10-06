@@ -9,6 +9,7 @@ import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead } from "~/lib/sdeCache";
@@ -373,6 +374,9 @@ async function PageContent({
     typeName: data.typeName,
     typeDescription: data.typeDescription,
   };
+  // Not awaited: the History tab streams it in after the rest of the page, so
+  // the item's first byte never waits on seconds of history reads.
+  const history = loadEntityHistory("type", typeId);
   const [dogmaMeta, variations, typeLists] = await Promise.all([
     getTypeDogmaMeta(typeId),
     getTypeVariations(data.variationBaseTypeId),
@@ -384,6 +388,7 @@ async function PageContent({
       dogmaMeta={dogmaMeta}
       variations={variations}
       typeLists={typeLists}
+      history={history}
     />
   );
 }

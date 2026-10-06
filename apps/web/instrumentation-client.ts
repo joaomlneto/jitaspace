@@ -6,39 +6,28 @@ import { env } from "~/env";
 import { SENTRY_DENY_URLS, SENTRY_IGNORE_ERRORS } from "~/lib/sentryNoise";
 
 /**
- * Vercel BotID — invisible bot protection for the expensive `/history` server
- * actions ({@link ~/lib/history-actions}). They are unauthenticated, run heavy
- * range SQL against the build-history database (plus a day-cached read of the
- * compared types' names from the main one), and `getBuildRangeChanges`
- * mints a `cacheLife("max")` entry that effectively never expires — the app's
- * most attractive target for automated abuse. The matching `checkBotId()`
- * guards live in `lib/history-actions.ts`.
+ * Vercel BotID — invisible bot protection for the one expensive server action
+ * left in the change history, the build comparison
+ * ({@link ~/lib/history-actions}). It is unauthenticated, runs heavy range SQL
+ * against the build-history database (plus a day-cached read of the compared
+ * entities' names), and `getBuildRangeChanges` mints a `cacheLife("max")` entry
+ * that effectively never expires — the app's most attractive target for
+ * automated abuse. The matching `checkBotId()` guard lives in
+ * `lib/history-actions.ts`.
  *
  * BotID matches on request PATH + METHOD, not on which action is invoked, and
  * Server Actions POST to the *page* they are invoked from. So an entry here
  * intercepts EVERY Server Action fired from a matching page, not just the
- * guarded ones — each one waits on `getChallenge()` before its POST goes out.
- * Keep this list as narrow as the guarded actions allow.
+ * guarded one — each waits on `getChallenge()` before its POST goes out,
+ * including the root layout's EVE token refresh. Hence the narrow path: the
+ * comparison runs only on `/history/compare/{from}/{to}`.
  *
- * That is why `/type/*` is deliberately NOT listed even though the type page
- * embeds <EntityHistory>: it is the busiest route family in the app, and the
- * root layout mounts <EsiClientSSOAccessTokenInjector>, whose EVE token-refresh
- * action would otherwise be gated behind a challenge fetch on every type page.
- * The reader that <EntityHistory> calls, `getEntityTimeline`, is consequently
- * left unguarded — it is the cheaper of the two and only `cacheLife("days")`,
- * so it expires on its own rather than accumulating.
- *
- * Residual, accepted: Server Actions invoked from `/history/*` pages (including
- * that same token refresh) still wait on a challenge. Those are low-traffic
- * pages. The way to remove this class of coupling entirely is to move the
- * readers behind `/api/history/*` route handlers and protect those paths, so
- * BotID intercepts only the reader fetches.
- *
- * The `/history` index and the `/history/build/*` pages need no guard of their
- * own: both are server-rendered from cached reads, not client-invoked actions.
+ * Every other history page needs no guard: the `/history` index, the build
+ * pages and every entity's history are server-rendered from cached reads, with
+ * no client-invoked action.
  */
 initBotId({
-  protect: [{ path: "/history/*", method: "POST" }],
+  protect: [{ path: "/history/compare/*", method: "POST" }],
 });
 
 Sentry.init({

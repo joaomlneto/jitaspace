@@ -160,7 +160,7 @@ const config = {
   // Lets a dynamic route cache pages for params its `generateStaticParams` did
   // not list (ISR): the first request renders the page in the background, later
   // ones are served from the cache. Only routes with `generateStaticParams` get
-  // that upgrade — today just `/history/build/[build]`; see its page.tsx. Other
+  // that upgrade (`/history/build/[build]` is the reference; see its page.tsx). Other
   // dynamic routes still take a changed internal cache key, but checked under
   // `next start` (`/category`, and `/history/type` while it existed) they
   // respond as before. Without

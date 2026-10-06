@@ -36,6 +36,7 @@ import {
 } from "@jitaspace/ui";
 
 import type { EpicArc, EpicArcStep, EpicArcSummary } from "~/lib/epicArcs";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { MissionKind } from "~/lib/missions";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
@@ -46,7 +47,7 @@ import {
 } from "~/components/Missions";
 import { epicArcAgents, epicArcSummary, isRepeatable } from "~/lib/epicArcs";
 import { formatMinutes } from "~/lib/missions";
-import { EntityHistory } from "../../history/EntityHistory";
+import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import {
   DEFAULT_EPIC_ARC_PAGE_TAB,
   EPIC_ARC_PAGE_TABS,
@@ -295,7 +296,10 @@ function EpicArcAgentsTable({ arc }: Readonly<{ arc: EpicArc }>) {
   );
 }
 
-export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
+export default function EpicArcPage({
+  arc,
+  history,
+}: Readonly<{ arc: EpicArc; history: EntityHistoryData | null }>) {
   const summary = useMemo(() => epicArcSummary(arc), [arc]);
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
@@ -355,11 +359,7 @@ export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
           </Tabs.Panel>
 
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory
-              entityType="epicArc"
-              entityId={arc.epicArcId}
-              embedded
-            />
+            <EmbeddedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

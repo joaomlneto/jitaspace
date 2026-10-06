@@ -221,12 +221,13 @@ jest.mock("next/cache", () => ({
 
 // Lazy-require after jest.mock: next/jest (SWC) does not hoist jest.mock, so a
 // top-level import would load the real module before the stub is registered.
-// The index is read straight from the cache module (no server-action wrapper);
-// the build-range/entity readers live in history-actions.
-const { getEntityTimeline, getBuildRangeChanges } =
+// The index and the entity timelines are read straight from the cache module
+// (no server-action wrapper); the comparison lives in history-actions.
+const { getBuildRangeChanges } =
   require("~/lib/history-actions") as typeof HistoryActions;
 const {
   getCachedBuildRangeChanges,
+  getCachedEntityTimeline,
   getCachedHistoryIndex,
   getCachedRangeNames,
   getLatestChangedBuild,
@@ -411,7 +412,7 @@ describe("getLatestChangedBuild", () => {
   });
 });
 
-describe("getEntityTimeline", () => {
+describe("getCachedEntityTimeline", () => {
   it("survives dangling FKs: null date when the Build row is missing, skips changes with no diff", async () => {
     // diff 10 → build 98 (present); diff 11 → build 99 (Build row missing);
     // diff 999 is absent entirely (dangling Change.diffId).
@@ -444,7 +445,7 @@ describe("getEntityTimeline", () => {
       },
     ];
 
-    const timeline = await getEntityTimeline("type", 587);
+    const timeline = await getCachedEntityTimeline("type", 587);
 
     expect(timeline?.events).toEqual([
       {
@@ -498,7 +499,7 @@ describe("getEntityTimeline", () => {
       },
     ];
 
-    const timeline = await getEntityTimeline("type", 587);
+    const timeline = await getCachedEntityTimeline("type", 587);
 
     expect(timeline?.events).toEqual([
       {
@@ -527,7 +528,7 @@ describe("getEntityTimeline", () => {
       },
     ];
 
-    expect(await getEntityTimeline("type", 587)).toBeNull();
+    expect(await getCachedEntityTimeline("type", 587)).toBeNull();
   });
 
   it("drops events on test-server (Singularity) builds, keeps Tranquility ones", async () => {
@@ -563,7 +564,7 @@ describe("getEntityTimeline", () => {
       },
     ];
 
-    const timeline = await getEntityTimeline("type", 587);
+    const timeline = await getCachedEntityTimeline("type", 587);
 
     expect(timeline?.events).toEqual([
       {
@@ -612,7 +613,7 @@ describe("getEntityTimeline", () => {
       },
     ];
 
-    const timeline = await getEntityTimeline("type", 587);
+    const timeline = await getCachedEntityTimeline("type", 587);
 
     expect(timeline?.events).toEqual([
       {
@@ -913,10 +914,6 @@ describe("BotID gate", () => {
   // `checkBotId()`. Local development always classifies as human, so without
   // the stub above this branch would never execute.
   //
-  // `getEntityTimeline` is intentionally unguarded: guarding it would force
-  // `/type/*` into the BotID protect list (see instrumentation-client.ts). The
-  // last test here pins that.
-  //
   // The fixtures are seeded so a HUMAN caller gets a non-null result; without
   // that, the refusal assertion would pass with the guard deleted.
   beforeEach(() => {
@@ -956,14 +953,6 @@ describe("BotID gate", () => {
     // ...and a human does reach the database, so the counter is wired up.
     mockIsBot = false;
     await getBuildRangeChanges(700000, 700003);
-    expect(mockDbCalls).toBeGreaterThan(0);
-  });
-
-  it("leaves getEntityTimeline unguarded so /type/* need not be protected", async () => {
-    // Guarding this would drag the busiest route family into the protect list,
-    // which intercepts every Server Action fired from those pages — including
-    // the root layout's EVE token refresh.
-    expect(await getEntityTimeline("type", 587)).not.toBeNull();
     expect(mockDbCalls).toBeGreaterThan(0);
   });
 });

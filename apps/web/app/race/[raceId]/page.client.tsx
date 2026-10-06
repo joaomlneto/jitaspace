@@ -75,6 +75,7 @@ import type {
   RaceTableName,
   RaceTables,
 } from "./types";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import { DataTable } from "~/components/DataTable";
 import {
   CorporationLink,
@@ -90,11 +91,14 @@ import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
 import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
 import { formatInteger as formatCount, formatCountOf } from "~/lib/format";
-import { EntityHistory } from "../../history/EntityHistory";
+import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import { CHARACTER_ATTRIBUTES } from "./constants";
 import { DEFAULT_RACE_PAGE_TAB, isRacePageTab, RACE_PAGE_TABS } from "./tabs";
 
-export type PageProps = RacePageData;
+export type PageProps = RacePageData & {
+  /** The race's change history, read with the page; null if that failed. */
+  history: EntityHistoryData | null;
+};
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
@@ -1492,7 +1496,7 @@ function HeroImage({
 }
 
 export default function RacePage(race: Readonly<PageProps>) {
-  const { raceId, counts } = race;
+  const { counts, history } = race;
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
     parseAsStringLiteral(RACE_PAGE_TABS)
@@ -1809,7 +1813,7 @@ export default function RacePage(race: Readonly<PageProps>) {
 
           {/* History — per-build change timeline (loaded on demand) */}
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory entityType="race" entityId={raceId} embedded />
+            <EmbeddedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>
