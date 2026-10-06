@@ -55,6 +55,7 @@ import {
 
 import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
@@ -79,7 +80,7 @@ import {
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
 import { isTypeListMember } from "~/lib/typeLists";
-import { EntityHistory } from "../../history/EntityHistory";
+import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
@@ -199,11 +200,13 @@ export default function TypePage({
   dogmaMeta,
   variations = [],
   typeLists = [],
+  history = null,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
     variations?: ItemVariation[];
     typeLists?: NamedTypeListMatch[];
+    history?: EntityHistoryData | null;
   }
 >) {
   const character = useSelectedCharacter();
@@ -908,9 +911,9 @@ export default function TypePage({
             </Tabs.Panel>
           )}
 
-          {/* History — per-build change timeline (loaded on demand) */}
+          {/* History — per-build change timeline, read with the page */}
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory entityType="type" entityId={typeId} embedded />
+            <EmbeddedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

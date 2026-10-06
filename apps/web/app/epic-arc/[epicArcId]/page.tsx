@@ -6,6 +6,7 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 import type { EpicArc } from "~/lib/epicArcs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { epicArcSummary } from "~/lib/epicArcs";
+import { loadEntityHistory } from "~/lib/history-entity-page";
 import { eveImage, pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { getEpicArc } from "./data";
@@ -72,11 +73,12 @@ async function PageContent({
   // rather than store a 404. `null` is an arc that genuinely does not exist.
   const arc = await getEpicArc(epicArcId);
   if (arc === null) notFound();
+  const history = await loadEntityHistory("epicArc", epicArcId);
   // nuqs's React adapter keeps the cached ISR page complete; see
   // apps/web/CLAUDE.md → "URL-synced filter state".
   return (
     <NuqsAdapter>
-      <EpicArcPage arc={arc} />
+      <EpicArcPage arc={arc} history={history} />
     </NuqsAdapter>
   );
 }

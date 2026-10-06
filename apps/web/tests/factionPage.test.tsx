@@ -117,9 +117,20 @@ jest.mock("~/components/ShipTree/ShipTreeTab", () => ({
   ),
 }));
 
+// The page reads the entity's change history on the server; stub that read
+// (it loads `next/server`, which jsdom cannot).
+jest.mock("~/lib/history-entity-page", () => ({
+  loadEntityHistory: () => Promise.resolve(null),
+}));
 jest.mock("~/app/history/EntityHistory", () => ({
-  EntityHistory: ({ entityId }: { entityId: number }) => (
-    <div data-testid="entity-history">{`history of ${entityId}`}</div>
+  EmbeddedEntityHistory: ({
+    history,
+  }: {
+    history: { entityId: number } | null;
+  }) => (
+    <div data-testid="entity-history">
+      {history ? `history of ${history.entityId}` : "no history"}
+    </div>
   ),
 }));
 

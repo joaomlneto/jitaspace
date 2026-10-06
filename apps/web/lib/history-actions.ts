@@ -3,14 +3,9 @@
 import * as Sentry from "@sentry/nextjs";
 import { checkBotId } from "botid/server";
 
-import type {
-  BuildRangeChanges,
-  EntityNames,
-  EntityTimeline,
-} from "~/lib/history";
+import type { BuildRangeChanges, EntityNames } from "~/lib/history";
 import {
   getCachedBuildRangeChanges,
-  getCachedEntityTimeline,
   getCachedRangeNames,
 } from "~/lib/history-cache";
 
@@ -34,8 +29,9 @@ import {
  *
  * Pages whose data does not depend on client state read it on the server
  * instead, with no action at all: the `/history` index
- * ({@link getCachedHistoryIndex}) and the per-build pages
- * (`app/history/build/[build]/data.ts`).
+ * ({@link getCachedHistoryIndex}), the per-build pages
+ * (`app/history/build/[build]/data.ts`) and every entity's history
+ * (`~/lib/history-entity-page`). The comparison is the one reader left here.
  */
 
 /**
@@ -108,24 +104,4 @@ async function readRangeNames(
   } finally {
     clearTimeout(timer);
   }
-}
-
-/**
- * Timeline for any entity kind ("type", "skin", "skinMaterial", …).
- *
- * Delegates to the day-cached {@link getCachedEntityTimeline} (keyed per
- * entityType+entityId) so the standalone history pages and the embedded History
- * tabs share one cache entry per entity rather than re-querying on every view.
- */
-// Deliberately NOT behind `isBot()`. <EntityHistory> is embedded in the type
-// page's History tab, so guarding this would force `/type/*` into the BotID
-// protect list — which intercepts every Server Action on the app's busiest route
-// family, including the root layout's EVE token refresh (see
-// `instrumentation-client.ts`). It is also the cheaper of the two readers and
-// only `cacheLife("days")`, so it expires rather than accumulating.
-export async function getEntityTimeline(
-  entityType: string,
-  entityId: number,
-): Promise<EntityTimeline | null> {
-  return getCachedEntityTimeline(entityType, entityId);
 }

@@ -1,8 +1,7 @@
 import { Suspense } from "react";
-import { connection } from "next/server";
 import { Loader } from "@mantine/core";
+import { NuqsAdapter } from "nuqs/adapters/react";
 
-import type { HistoryIndex } from "~/lib/history";
 import { getCachedHistoryIndex } from "~/lib/history-cache";
 import { pageMetadata } from "~/lib/metadata";
 import HistoryIndexClient from "./page.client";
@@ -15,23 +14,22 @@ export const metadata = pageMetadata({
   badge: "Change History",
 });
 
-// Server-render the index from the day-cached `getCachedHistoryIndex` and pass it
-// to the client as a prop — no client fetch and no per-visit DB query.
+// A static page: `next build` prerenders it from the day-cached
+// `getCachedHistoryIndex`, and the page revalidates with that read, so a visit
+// queries nothing and the browser fetches nothing. The CI build prerenders it
+// against an empty history database (cypress.yml).
 //
-// `connection()` marks the read as request-time, which (a) is correct — the index
-// is live data, not a build-time constant — and (b) keeps it out of the build-time
-// prerender, which would hit the history DB (unprovisioned in CI → ECONNREFUSED).
-// It is the `cacheComponents`-blessed dynamic opt-out; the `export const dynamic`
-// / `revalidate` config knobs are disallowed under `cacheComponents`.
+// Uncaught: a database failure while prerendering must fail the build (or the
+// revalidation) rather than cache an empty index for a day.
 async function HistoryData() {
-  await connection();
-  let index: HistoryIndex | null = null;
-  try {
-    index = await getCachedHistoryIndex();
-  } catch {
-    index = null; // DB unreachable ⇒ render the empty state instead of crashing
-  }
-  return <HistoryIndexClient initialIndex={index} />;
+  const index = await getCachedHistoryIndex();
+  // nuqs's React adapter keeps the prerendered page complete; see
+  // apps/web/CLAUDE.md → "URL-synced filter state".
+  return (
+    <NuqsAdapter>
+      <HistoryIndexClient initialIndex={index} />
+    </NuqsAdapter>
+  );
 }
 
 export default function Page() {

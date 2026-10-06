@@ -40,6 +40,11 @@ jest.mock("next/cache", () => ({
   cacheTag: () => undefined,
 }));
 
+// The type route reads the item's change history from the history database;
+// stub that read, which this suite does not exercise.
+jest.mock("~/lib/history-entity-page", () => ({
+  loadEntityHistory: () => Promise.resolve(null),
+}));
 jest.mock("~/components/PageSkeleton", () => ({ PageSkeleton: () => null }));
 
 // Each client page is replaced by a stub; the assertions read the props off the

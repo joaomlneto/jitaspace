@@ -44,6 +44,11 @@ jobs:
       # never executes page JS, and these placeholders are currently unguarded.
       SKIP_ENV_VALIDATION: "1"
       DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
+      # The build-history database, which `/history` and `/history/compare` are
+      # prerendered from. An empty one is enough for the build: those pages
+      # render their empty state, and every other history route is ISR, read on
+      # first request (the smoke suite visits none of them).
+      EVE_BUILDS_DATABASE_URL: "postgresql://root@localhost:26257/eve_builds?sslmode=disable"
       REDIS_URL: "redis://localhost:6379"
       # Placeholders that satisfy the client schema so the built bundle is
       # loadable. DISCORD_INVITE_LINK must parse as a URL; GOOGLE_TAG_ID is
@@ -66,6 +71,7 @@ jobs:
             start-single-node --insecure --store=type=mem,size=0.5
           timeout 120 bash -c 'until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done'
           docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
+          docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS eve_builds;"
       - name: Checkout
         uses: actions/checkout@v6
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
@@ -98,6 +104,16 @@ jobs:
         run: pnpm exec cypress install
       - name: Push database schema
         run: cd packages/db && pnpm exec prisma db push
+      # jovespace owns the history schema and ships it in @jitaspace/db-builds
+      # (apps/web/CLAUDE.md), so it is created from that package's copy rather
+      # than pushed: `migrate diff` turns it into SQL without a datasource.
+      - name: Create history database schema
+        run: |
+          cd packages/db
+          pnpm exec prisma migrate diff --from-empty \
+            --to-schema ../../node_modules/@jitaspace/db-builds/schema.prisma \
+            --script \
+            | docker exec -i cockroachdb cockroach sql --insecure -d eve_builds
       - name: Build
         run: pnpm build
       - name: Cypress run

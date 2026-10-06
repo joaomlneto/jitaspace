@@ -89,7 +89,7 @@ export function EventContent({
       <FieldsTable>
         {entries.map(([field, value]) => (
           <FieldRow key={field} label={fieldLabel(field)}>
-            {entityValueFor(field, value, entityType) ?? (
+            {entityValueFor(field, value, entityType, event.collection) ?? (
               <RichValue value={value} />
             )}
           </FieldRow>
@@ -117,9 +117,12 @@ export function EventContent({
               {lastValues.map(([field, value]) => (
                 <FieldRow key={field} label={fieldLabel(field)}>
                   <span style={{ opacity: 0.6 }}>
-                    {entityValueFor(field, value, entityType) ?? (
-                      <RichValue value={value} />
-                    )}
+                    {entityValueFor(
+                      field,
+                      value,
+                      entityType,
+                      event.collection,
+                    ) ?? <RichValue value={value} />}
                   </span>
                 </FieldRow>
               ))}
@@ -154,6 +157,7 @@ export function EventContent({
               delta={delta}
               kind={kind}
               entityType={entityType}
+              collection={event.collection}
             />
           </FieldRow>
         );

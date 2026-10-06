@@ -9,52 +9,66 @@ import {
   Chip,
   Container,
   Group,
-  Loader,
   Paper,
   Stack,
   Text,
   Timeline,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
 import { parseAsArrayOf, parseAsString, useQueryStates } from "nuqs";
 
-import type { EntityTimeline, Provenance, TimelineEvent } from "~/lib/history";
+import type { Provenance, TimelineEvent } from "~/lib/history";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import {
   collectionMeta,
   fromBuildLabel,
   provenanceMeta,
   serverMeta,
 } from "~/lib/history";
-import { getEntityTimeline } from "~/lib/history-actions";
 import { KIND_COLOR } from "./_diff";
 import { EventContent } from "./_event";
+import { HistoryLabelsProvider } from "./_labels-context";
 
 /**
- * Shared change-history timeline for any entity kind (type, skin, skinMaterial).
- * Fetches the entity's timeline, renders the collection-filter chips and the
- * per-build timeline. `renderHeader` lets each route supply its own heading
- * (icon, name, links), optionally using the loaded timeline for a label.
+ * Shared change-history timeline for any entity kind. Renders the
+ * collection-filter chips and the per-build timeline from `history`, which the
+ * server read with the page (`getCachedEntityHistory`): the timeline and the
+ * labels for every id in it, so nothing here fetches. `renderHeader` lets each
+ * route supply its own heading (icon, name, links).
  *
  * `embedded` renders without the outer page `Container` (and typically without
  * a header) so the timeline can sit inside a host that already provides one —
  * e.g. the History tab on the type page.
  */
 export function EntityHistory({
-  entityType,
-  entityId,
+  history,
   renderHeader,
   embedded = false,
 }: Readonly<{
-  entityType: string;
-  entityId: number;
-  renderHeader?: (timeline: EntityTimeline | null) => ReactNode;
+  history: EntityHistoryData;
+  renderHeader?: (history: EntityHistoryData) => ReactNode;
   embedded?: boolean;
 }>) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["history-entity", entityType, entityId],
-    queryFn: () => getEntityTimeline(entityType, entityId),
-    staleTime: Infinity,
-  });
+  return (
+    <HistoryLabelsProvider labels={history.labels}>
+      <EntityTimelineView
+        history={history}
+        renderHeader={renderHeader}
+        embedded={embedded}
+      />
+    </HistoryLabelsProvider>
+  );
+}
+
+function EntityTimelineView({
+  history,
+  renderHeader,
+  embedded,
+}: Readonly<{
+  history: EntityHistoryData;
+  renderHeader?: (history: EntityHistoryData) => ReactNode;
+  embedded: boolean;
+}>) {
+  const { entityType, timeline: data } = history;
   // Collections currently checked; null ⇒ all (until the user unchecks one).
   // No .withDefault() — nuqs returns null when the param is absent, which is
   // exactly the "all" sentinel this filter already used.
@@ -68,9 +82,7 @@ export function EntityHistory({
   );
   const setSelected = (value: string[]) => void setFilters({ selected: value });
 
-  if (isLoading) return <Loader />;
-
-  const header = renderHeader?.(data ?? null) ?? null;
+  const header = renderHeader?.(history) ?? null;
 
   // When embedded the host supplies the page Container, so render bare to avoid
   // nesting containers (which would mis-constrain the timeline's width).
@@ -253,4 +265,21 @@ export function EntityHistory({
       </Paper>
     </Stack>,
   );
+}
+
+/**
+ * An entity's history inside a host page's History tab. `history` is null when
+ * the host's server read of it failed (`loadEntityHistory`), which hides the
+ * timeline rather than failing the page.
+ */
+export function EmbeddedEntityHistory({
+  history,
+}: Readonly<{ history: EntityHistoryData | null }>) {
+  if (!history)
+    return (
+      <Alert color="gray">
+        The change history could not be loaded. Reload the page to try again.
+      </Alert>
+    );
+  return <EntityHistory history={history} embedded />;
 }

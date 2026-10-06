@@ -9,6 +9,7 @@ import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead } from "~/lib/sdeCache";
@@ -373,10 +374,11 @@ async function PageContent({
     typeName: data.typeName,
     typeDescription: data.typeDescription,
   };
-  const [dogmaMeta, variations, typeLists] = await Promise.all([
+  const [dogmaMeta, variations, typeLists, history] = await Promise.all([
     getTypeDogmaMeta(typeId),
     getTypeVariations(data.variationBaseTypeId),
     getTypeTypeLists(typeId, data.groupId, data.categoryId),
+    loadEntityHistory("type", typeId),
   ]);
   return (
     <TypePage
@@ -384,6 +386,7 @@ async function PageContent({
       dogmaMeta={dogmaMeta}
       variations={variations}
       typeLists={typeLists}
+      history={history}
     />
   );
 }
