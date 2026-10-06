@@ -21,6 +21,7 @@ import {
   stationRanges,
 } from "@jitaspace/esi-metadata";
 
+import { UNIVERSE_NAMES_MAX_ID } from "./universeNamesLimits";
 import { useEsiAcceptLanguage } from "./useEsiAcceptLanguage";
 
 interface EsiNameCacheValue {
@@ -77,15 +78,6 @@ const UNIVERSE_NAMES_CATEGORIES = new Set<ResolvableEntityCategory>([
 
 /** POST /universe/names takes at most this many ids per request. */
 const UNIVERSE_NAMES_MAX_IDS = 1000;
-
-/**
- * POST /universe/names only takes int32 ids. Anything larger (an Upwell
- * structure, or an item in a hangar or container; the two share one id space)
- * makes ESI reject the whole batch with a 400 ("failed to coerce value … into
- * type integer"). Bisecting then still spends a request and an error-limit hit
- * on the id itself, so it is never sent.
- */
-export const UNIVERSE_NAMES_MAX_ID = 2_147_483_647;
 
 /**
  * Statuses on which a batch is split rather than failed. ESI rejects the whole
@@ -273,7 +265,7 @@ const fetchCache = createCache(
 
     if (numericId > UNIVERSE_NAMES_MAX_ID) {
       throw new Error(
-        `${id} is beyond /universe/names' int32 ids; a structure needs useStructure`,
+        `${id} is beyond /universe/names' int32 ids (a structure or an item); structure names come from useStructure`,
       );
     }
 

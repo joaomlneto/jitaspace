@@ -1,0 +1,43 @@
+/* A tree row: the NavLink takes the width, its menu sits at the end. */
+.row {
+  display: flex;
+  align-items: center;
+  border-radius: var(--mantine-radius-sm);
+}
+
+.row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The row's menu shows on hover or keyboard focus where there is a pointer to
+   hover with; on a touch screen there is no hover, so it always shows. */
+@media (hover: hover) {
+  .row .menuButton {
+    opacity: 0;
+  }
+
+  .row:hover .menuButton,
+  .row:focus-within .menuButton,
+  .menuButton[data-expanded] {
+    opacity: 1;
+  }
+}
+
+/* A folder or the top level, while something is dragged over it. */
+.row[data-drop-target],
+.root[data-drop-target] {
+  outline: 2px dashed var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+  background: var(--mantine-primary-color-light);
+}
+
+.root {
+  border-radius: var(--mantine-radius-sm);
+  /* Room below the last row to drop onto the top level. */
+  padding-bottom: var(--mantine-spacing-md);
+}
+
+.children {
+  padding-left: var(--mantine-spacing-md);
+}

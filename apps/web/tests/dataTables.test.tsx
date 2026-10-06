@@ -304,6 +304,11 @@ describe("MarketOrdersDataTable", () => {
     expect(screen.getByText(/Structure in/)).toBeInTheDocument();
     expect(screen.getByText("entity-30000142")).toBeInTheDocument();
     expect(screen.queryByText("entity-1044752365771")).not.toBeInTheDocument();
+    // …and links to the structure's page, its destination known from the id.
+    expect(screen.getByText(/Structure in/).closest("a")).toHaveAttribute(
+      "href",
+      "/structure/1044752365771",
+    );
   });
 
   it("renders the issued time", () => {

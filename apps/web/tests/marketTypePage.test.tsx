@@ -5,7 +5,9 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+
+import { useQuickbarStore } from "~/lib/quickbar";
 
 interface MarketTypeRow {
   name: string;
@@ -157,6 +159,26 @@ describe("market item route", () => {
       data: {},
       isLoading: false,
     });
+  });
+
+  it("adds the item to the quickbar with its star, and takes it off again", async () => {
+    localStorage.clear();
+    await act(() => useQuickbarStore.persist.rehydrate());
+    await renderTypePage();
+
+    const star = await screen.findByRole("button", {
+      name: "Add Rifter to your quickbar",
+    });
+    expect(star).toBeEnabled();
+    fireEvent.click(star);
+    expect(useQuickbarStore.getState().items).toEqual({ 587: null });
+
+    const filled = screen.getByRole("button", {
+      name: "Remove Rifter from your quickbar",
+    });
+    expect(filled).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(filled);
+    expect(useQuickbarStore.getState().items).toEqual({});
   });
 
   it("server-renders the item identity and the order sections", async () => {
