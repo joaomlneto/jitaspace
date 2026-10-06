@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-// The type, system and character routes resolve their SDE half on the server and
+// The type and system routes resolve their SDE half on the server and
 // hand it to the client page as props. Each resolver is module-private, so these
 // tests drive it the way Next does: call the route's default export, then resolve
 // the async `PageContent` child inside its Suspense boundary. The client page is
@@ -10,9 +10,6 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 type Row = Record<string, unknown> | null;
 
 const solarSystemFindUnique = jest.fn<(args?: unknown) => Promise<Row>>();
-const agentFindUnique = jest.fn<(args?: unknown) => Promise<Row>>();
-const researchSkillsFindMany =
-  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeFindUniqueOrThrow = jest.fn<(args?: unknown) => Promise<Row>>();
 const typeAttributeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
@@ -26,10 +23,6 @@ const typeListEntryFindMany =
 jest.mock("~/lib/db", () => ({
   prisma: {
     solarSystem: { findUnique: (a?: unknown) => solarSystemFindUnique(a) },
-    agent: { findUnique: (a?: unknown) => agentFindUnique(a) },
-    researchAgentSkills: {
-      findMany: (a?: unknown) => researchSkillsFindMany(a),
-    },
     type: {
       findUniqueOrThrow: (a?: unknown) => typeFindUniqueOrThrow(a),
       findMany: (a?: unknown) => typeFindMany(a),
@@ -47,12 +40,6 @@ jest.mock("next/cache", () => ({
   cacheTag: () => undefined,
 }));
 
-jest.mock("@jitaspace/esi-client", () => ({
-  getCharactersDetail: jest.fn(() =>
-    Promise.resolve({ data: { name: "Test" } }),
-  ),
-}));
-
 jest.mock("~/components/PageSkeleton", () => ({ PageSkeleton: () => null }));
 
 // Each client page is replaced by a stub; the assertions read the props off the
@@ -63,10 +50,6 @@ jest.mock("~/app/type/[typeId]/page.client", () => ({
   default: probe,
 }));
 jest.mock("~/app/system/[systemId]/page.client", () => ({
-  __esModule: true,
-  default: probe,
-}));
-jest.mock("~/app/character/[characterId]/page.client", () => ({
   __esModule: true,
   default: probe,
 }));
@@ -99,8 +82,6 @@ async function runRoute(
 
 beforeEach(() => {
   solarSystemFindUnique.mockReset();
-  agentFindUnique.mockReset();
-  researchSkillsFindMany.mockReset().mockResolvedValue([]);
   typeFindUniqueOrThrow.mockReset();
   typeAttributeFindMany.mockReset().mockResolvedValue([]);
   typeFindMany.mockReset().mockResolvedValue([]);
@@ -212,88 +193,6 @@ describe("system route server data", () => {
     await expect(
       runRoute("~/app/system/[systemId]/page", { systemId: "30000142" }),
     ).rejects.toThrow("connection lost");
-  });
-});
-
-describe("character route server data", () => {
-  const agentRow = {
-    agentTypeId: 2,
-    agentDivisionId: 22,
-    isLocator: true,
-    level: 4,
-    stationId: 60000001,
-    AgentDivision: { name: "Distribution" },
-    Character: { corporationId: 1000035 },
-    agentsInSpace: [],
-  };
-
-  it("passes null for a character with no agent record", async () => {
-    agentFindUnique.mockResolvedValue(null);
-    const props = await runRoute("~/app/character/[characterId]/page", {
-      characterId: "90000001",
-    });
-    expect(props.agentData).toBeNull();
-    expect(props.agentDivisionName).toBeNull();
-  });
-
-  it("maps an ordinary agent, skipping the research-skills query", async () => {
-    agentFindUnique.mockResolvedValue(agentRow);
-
-    const props = await runRoute("~/app/character/[characterId]/page", {
-      characterId: "3019582",
-    });
-
-    expect(props.agentDivisionName).toBe("Distribution");
-    expect(props.agentData).toMatchObject({
-      agentTypeId: 2,
-      agentDivisionId: 22,
-      corporationId: 1000035,
-      isLocator: true,
-      level: 4,
-      locationId: 60000001,
-      isResearchAgent: false,
-      researchSkills: [],
-      inSpace: null,
-    });
-    // Only agent type 4 offers datacores, so the second query is skipped.
-    expect(researchSkillsFindMany).not.toHaveBeenCalled();
-  });
-
-  it("loads datacore skills for a research agent and folds in its in-space row", async () => {
-    agentFindUnique.mockResolvedValue({
-      ...agentRow,
-      agentTypeId: 4,
-      agentsInSpace: [
-        { dungeonId: 1, solarSystemId: 30000142, spawnPointId: 2, typeId: 3 },
-      ],
-    });
-    researchSkillsFindMany.mockResolvedValue([
-      { typeId: 11487 },
-      { typeId: 11488 },
-    ]);
-
-    const props = await runRoute("~/app/character/[characterId]/page", {
-      characterId: "3019582",
-    });
-
-    expect(props.agentData).toMatchObject({
-      isResearchAgent: true,
-      researchSkills: [11487, 11488],
-      inSpace: {
-        dungeonId: 1,
-        solarSystemId: 30000142,
-        spawnPointId: 2,
-        typeId: 3,
-      },
-    });
-  });
-
-  it("passes null when the query fails", async () => {
-    agentFindUnique.mockRejectedValue(new Error("connection lost"));
-    const props = await runRoute("~/app/character/[characterId]/page", {
-      characterId: "3019582",
-    });
-    expect(props.agentData).toBeNull();
   });
 });
 

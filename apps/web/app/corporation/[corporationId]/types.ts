@@ -1,4 +1,5 @@
 import type { Agent } from "~/components/Agents";
+import type { NamedRef } from "~/lib/namedRef";
 import type { EntityWar, WarSummary } from "~/lib/warRecord";
 
 /**
@@ -11,10 +12,7 @@ import type { EntityWar, WarSummary } from "~/lib/warRecord";
  * alliance, tax) and as the whole page when this read is unavailable.
  */
 
-export interface NamedRef {
-  id: number;
-  name: string | null;
-}
+export type { NamedRef } from "~/lib/namedRef";
 
 /** A corporation holding another's shares, or held by it. */
 export interface Shareholding {

@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 /**
- * zKillboard's statistics for an alliance or corporation
- * (`/api/stats/{allianceID|corporationID}/{id}/`),
+ * zKillboard's statistics for an alliance, corporation or character
+ * (`/api/stats/{allianceID|corporationID|characterID}/{id}/`),
  * read in the browser: the API sends `Access-Control-Allow-Origin: *`. Only
  * the fields the page shows are typed, and all of them are optional: an
  * entity zKillboard has never seen comes back nearly empty.
@@ -47,7 +47,7 @@ export interface ZkbStats extends ZkbMetrics {
 
 /** Whose statistics: the entity kind as zKillboard's URLs name it. */
 export interface ZkbEntity {
-  kind: "alliance" | "corporation";
+  kind: "alliance" | "corporation" | "character";
   id: number;
 }
 

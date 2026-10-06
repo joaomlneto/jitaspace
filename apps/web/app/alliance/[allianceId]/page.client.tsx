@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMemo } from "react";
 import Link from "next/link";
 import {
@@ -49,7 +48,6 @@ import {
   AllianceAvatar,
   CharacterAvatar,
   CorporationAnchor,
-  CorporationAvatar,
   FactionAvatar,
 } from "@jitaspace/ui";
 
@@ -62,6 +60,8 @@ import type {
 } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import {
+  CorporationLine,
+  EntityLine,
   HeroCard,
   HeroStat,
   SectionHeading,
@@ -113,33 +113,6 @@ const EXTERNAL_LINKS = [
   { label: "EveWho", href: "https://evewho.com/alliance/" },
   { label: "zKillboard", href: "https://zkillboard.com/alliance/" },
 ] as const;
-
-function EntityLine({
-  avatar,
-  children,
-}: Readonly<{ avatar: ReactNode; children: ReactNode }>) {
-  return (
-    <Group gap="xs" wrap="nowrap">
-      {avatar}
-      {children}
-    </Group>
-  );
-}
-
-function CorporationLine({
-  corporationId,
-  name,
-}: Readonly<{ corporationId: number; name?: string | null }>) {
-  return (
-    <EntityLine
-      avatar={<CorporationAvatar corporationId={corporationId} size="sm" />}
-    >
-      <CorporationAnchor corporationId={corporationId}>
-        {name ?? <CorporationName span corporationId={corporationId} />}
-      </CorporationAnchor>
-    </EntityLine>
-  );
-}
 
 function CompositionBar({
   top,
@@ -608,8 +581,10 @@ export default function AlliancePage({
                         "None — the alliance is closed"
                       ) : (
                         <CorporationLine
-                          corporationId={executorCorporationId}
-                          name={profile?.executorCorporationName}
+                          corporation={{
+                            id: executorCorporationId,
+                            name: profile?.executorCorporationName ?? null,
+                          }}
                         />
                       )
                     }
@@ -656,8 +631,10 @@ export default function AlliancePage({
                       label="Creator corporation"
                       value={
                         <CorporationLine
-                          corporationId={creatorCorporationId}
-                          name={profile?.creatorCorporationName}
+                          corporation={{
+                            id: creatorCorporationId,
+                            name: profile?.creatorCorporationName ?? null,
+                          }}
                         />
                       }
                       sub={creatorMembership}
@@ -724,10 +701,10 @@ export default function AlliancePage({
                         label="Largest corporation"
                         value={
                           <CorporationLine
-                            corporationId={
-                              corporationSummary.largest.corporationId
-                            }
-                            name={corporationSummary.largest.name}
+                            corporation={{
+                              id: corporationSummary.largest.corporationId,
+                              name: corporationSummary.largest.name ?? null,
+                            }}
                           />
                         }
                         sub={`${formatInteger(corporationSummary.largest.memberCount ?? 0)} pilots${
@@ -763,10 +740,10 @@ export default function AlliancePage({
                         label="Oldest corporation"
                         value={
                           <CorporationLine
-                            corporationId={
-                              corporationSummary.oldest.corporationId
-                            }
-                            name={corporationSummary.oldest.name}
+                            corporation={{
+                              id: corporationSummary.oldest.corporationId,
+                              name: corporationSummary.oldest.name ?? null,
+                            }}
                           />
                         }
                         sub={`Founded ${formatDate(corporationSummary.oldest.dateFounded)}`}

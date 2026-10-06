@@ -157,7 +157,7 @@ export function KillboardSummaryCards({
       <StatCard
         label="All-time rank"
         value={value(rank === undefined ? "—" : `#${formatInteger(rank)}`)}
-        sub={`Among ${entity.kind === "alliance" ? "alliances" : "corporations"} on zKillboard`}
+        sub={`Among ${entity.kind}s on zKillboard`}
       />
     </SimpleGrid>
   );
@@ -534,11 +534,14 @@ export function KillboardTab({
             All-time top killers
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-            <TopList
-              title="Pilots"
-              kind="character"
-              entries={topAllTime(stats, "character")}
-            />
+            {/* A character's own top pilot is itself. */}
+            {entity.kind !== "character" && (
+              <TopList
+                title="Pilots"
+                kind="character"
+                entries={topAllTime(stats, "character")}
+              />
+            )}
             <TopList
               title="Corporations"
               kind="corporation"

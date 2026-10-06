@@ -27,6 +27,9 @@ jest.mock("~/app/alliance/[allianceId]/data", () => ({
 jest.mock("~/app/corporation/[corporationId]/data", () => ({
   loadCorporationProfile: () => Promise.resolve({ ok: true, profile: null }),
 }));
+jest.mock("~/app/character/[characterId]/data", () => ({
+  loadCharacterRecord: () => Promise.resolve({ ok: true, record: null }),
+}));
 
 // ---------------------------------------------------------------------------
 // ESI-client mocks
