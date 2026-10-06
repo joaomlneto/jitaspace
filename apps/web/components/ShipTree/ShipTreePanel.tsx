@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useCallback, useMemo } from "react";
 import { Anchor, Group, Stack, Text } from "@mantine/core";
 
 import type {
@@ -10,15 +11,18 @@ import type {
 import { CharacterName } from "@jitaspace/eve-components";
 import {
   useAuthStoreHasHydrated,
+  useCharacterSkillQueue,
   useCharacterSkills,
+  useMarketPrices,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
-import { ShipTreeView } from "@jitaspace/ship-tree";
+import { getSkillInTraining, ShipTreeView } from "@jitaspace/ship-tree";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 
 const SKILLS_SCOPE = "esi-skills.read_skills.v1";
+const SKILL_QUEUE_SCOPE = "esi-skills.read_skillqueue.v1";
 
 export interface ShipTreePanelProps {
   faction: FactionIdentifier;
@@ -46,6 +50,21 @@ export function ShipTreePanel({
   const { hasToken, data, isLoading, isError } = useCharacterSkills(
     character?.characterId ?? 0,
   );
+  // Stays disabled without the queue scope; the tree just highlights nothing.
+  const { data: queue } = useCharacterSkillQueue(character?.characterId ?? 0);
+  const skills = data?.data.skills;
+  const training = useMemo(
+    () => getSkillInTraining(queue?.data, skills),
+    [queue?.data, skills],
+  );
+
+  // ESI's market average, the price the game shows as estimated. Public, so it
+  // loads with or without a character.
+  const { data: marketPrices } = useMarketPrices();
+  const prices = useCallback(
+    (typeId: number) => marketPrices[typeId]?.average_price,
+    [marketPrices],
+  );
 
   return (
     <Stack gap="md">
@@ -65,7 +84,9 @@ export function ShipTreePanel({
 
       <ShipTreeView
         faction={faction}
-        skills={data?.data.skills}
+        skills={skills}
+        training={training}
+        prices={prices}
         isOmega={isOmega}
         h={h}
         mih={mih}
@@ -117,6 +138,20 @@ function SkillsStatus({
       <Text size="sm" c="dimmed">
         {isLoading ? "Loading skills for " : "Showing the skills of "}
         <CharacterName characterId={characterId} span inherit />
+        {!grantedScopes.includes(SKILL_QUEUE_SCOPE) && (
+          <>
+            {" · "}
+            <Anchor
+              component="button"
+              inherit
+              onClick={() => {
+                loginWithEveOnline([...grantedScopes, SKILL_QUEUE_SCOPE]);
+              }}
+            >
+              Show the skill in training
+            </Anchor>
+          </>
+        )}
       </Text>
     );
   }
@@ -131,7 +166,9 @@ function SkillsStatus({
       <LoginWithEveOnlineButton
         size="small"
         onClick={() => {
-          loginWithEveOnline([...grantedScopes, SKILLS_SCOPE]);
+          loginWithEveOnline([
+            ...new Set([...grantedScopes, SKILLS_SCOPE, SKILL_QUEUE_SCOPE]),
+          ]);
         }}
       />
     </Group>
