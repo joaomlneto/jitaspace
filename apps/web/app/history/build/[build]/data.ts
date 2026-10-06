@@ -5,17 +5,17 @@ import { buildsDb } from "@jitaspace/db-builds";
 import type { BuildPage, EntityChangeRow } from "~/lib/history";
 import type { FileDiff, StringChange } from "~/lib/resource-history";
 import { isBuildInHistoryScope } from "~/lib/history";
-import { readTypeNames } from "~/lib/history-type-names";
+import { readEntityNames } from "~/lib/history-entity-names";
 
 /**
  * The build page's data, read on the server so the page is served complete: no
- * client fetches, and in particular no per-row type-name lookup — that used to
- * be one server action per type, and Next runs server actions one at a time, so
+ * client fetches, and in particular no per-row name lookup — that used to be
+ * one server action per type, and Next runs server actions one at a time, so
  * a build touching a thousand types took minutes to finish naming them.
  *
  * Cached per build for a day, matching the other history reads
  * (`lib/history-cache.ts`): a processed build's diffs only change when a
- * backfill connects a new diff onto it, and type names only when the SDE is
+ * backfill connects a new diff onto it, and names only when the SDE is
  * re-ingested. Unlike the `/history` index, this read is safe to render on the
  * server: `next build` never reaches it — the only build it prerenders is a
  * placeholder the page 404s first (see `generateStaticParams`) — so the
@@ -50,15 +50,15 @@ export async function getCachedBuildPage(
   });
   if (!b || !isBuildInHistoryScope(b.releasedAt, b.server)) return null;
 
-  const [{ changes, typeNames }, files, strings] = await Promise.all([
+  const [{ changes, names }, files, strings] = await Promise.all([
     readEntityChanges(build),
     readFileDiff(build),
     readStringChanges(build),
   ]);
-  return { build, date: ymd(b.releasedAt), changes, typeNames, files, strings };
+  return { build, date: ymd(b.releasedAt), changes, names, files, strings };
 }
 
-/** Decoded-SDE changes, plus the names of the types among them. */
+/** Decoded-SDE changes, plus the names of the entities among them. */
 async function readEntityChanges(build: number) {
   const rows = await buildsDb.change.findMany({
     where: {
@@ -77,7 +77,7 @@ async function readEntityChanges(build: number) {
     collection: c.collection.name,
     kind: c.op,
   }));
-  return { changes, typeNames: await readTypeNames(changes) };
+  return { changes, names: await readEntityNames(changes, build) };
 }
 
 async function readFileDiff(build: number): Promise<FileDiff> {

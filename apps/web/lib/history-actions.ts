@@ -3,11 +3,15 @@
 import * as Sentry from "@sentry/nextjs";
 import { checkBotId } from "botid/server";
 
-import type { BuildRangeChanges, EntityTimeline } from "~/lib/history";
+import type {
+  BuildRangeChanges,
+  EntityNames,
+  EntityTimeline,
+} from "~/lib/history";
 import {
   getCachedBuildRangeChanges,
   getCachedEntityTimeline,
-  getCachedRangeTypeNames,
+  getCachedRangeNames,
 } from "~/lib/history-cache";
 
 /**
@@ -60,7 +64,7 @@ const isBot = async (): Promise<boolean> => {
  * Delegates to the immutable, cached {@link getCachedBuildRangeChanges} (keyed on
  * the pair, `cacheLife("max")`) so the expensive range aggregation runs once per
  * `(from, to)` and is served from cache afterwards. The changed types' names are
- * added from an entry of their own — see {@link readRangeTypeNames}.
+ * added from an entry of their own — see {@link readRangeNames}.
  */
 export async function getBuildRangeChanges(
   from: number,
@@ -69,36 +73,35 @@ export async function getBuildRangeChanges(
   if (await isBot()) return null;
   const range = await getCachedBuildRangeChanges(from, to);
   if (!range) return null;
-  return { ...range, typeNames: await readRangeTypeNames(from, to) };
+  return { ...range, names: await readRangeNames(from, to) };
 }
 
-/** How long a comparison waits for its type names before going without. */
-const TYPE_NAMES_TIMEOUT_MS = 10_000;
+/** How long a comparison waits for its names before going without. */
+const NAMES_TIMEOUT_MS = 10_000;
 
 /**
- * Names of the types in a comparison ({@link getCachedRangeTypeNames}).
+ * Names of the entities in a comparison ({@link getCachedRangeNames}).
  *
  * Names are decorative, so a failed read degrades to `undefined` — rows labelled
  * by kind and id — rather than failing the comparison. So does a slow one, cut
- * off after {@link TYPE_NAMES_TIMEOUT_MS}: the names come from our main
+ * off after {@link NAMES_TIMEOUT_MS}: the names come mostly from our main
  * database, the comparison from the history one, and a stalled main database
  * must not hold up a comparison it has no part in. Either is reported first:
- * silent, a lasting failure would look exactly like types our tables lack.
+ * silent, a lasting failure would look exactly like entities nothing names.
  */
-async function readRangeTypeNames(
+async function readRangeNames(
   from: number,
   to: number,
-): Promise<Record<number, string> | undefined> {
+): Promise<EntityNames | undefined> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
-      () =>
-        reject(new Error(`Type names took over ${TYPE_NAMES_TIMEOUT_MS} ms`)),
-      TYPE_NAMES_TIMEOUT_MS,
+      () => reject(new Error(`Names took over ${NAMES_TIMEOUT_MS} ms`)),
+      NAMES_TIMEOUT_MS,
     );
   });
   try {
-    return await Promise.race([getCachedRangeTypeNames(from, to), timeout]);
+    return await Promise.race([getCachedRangeNames(from, to), timeout]);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: "history-compare" } });
     return undefined;

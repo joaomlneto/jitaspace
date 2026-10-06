@@ -3,72 +3,22 @@
 import Link from "next/link";
 import { Anchor, Badge, Group, List, Text, Title } from "@mantine/core";
 
-import type { EntityChangeRow } from "~/lib/history";
+import type { EntityChangeRow, EntityNames } from "~/lib/history";
 import {
   collectionMeta,
   entityHistoryHref,
   entityTypeMeta,
+  primaryCollectionOf,
 } from "~/lib/history";
 import { RowSpoiler } from "./_row-spoiler";
 
 /**
- * Resolved type names, by typeId, read on the server by both callers (the build
- * page and the compare page). Rows never fetch their own: one server action per
- * row, run one at a time, took minutes on a large list.
+ * One kind's names, by id, out of the {@link EntityNames} both callers (the
+ * build page and the compare page) read on the server. Rows never fetch their
+ * own: one server action per row, run one at a time, took minutes on a large
+ * list.
  */
-type TypeNames = Record<number, string>;
-
-// The "primary" collection per entity kind — its add/remove there means the
-// entity itself was born/retired (vs. a secondary collection like typeDogma,
-// which only ever decorates an existing entity).
-const PRIMARY_COLLECTION: Record<string, string> = {
-  type: "types",
-  skin: "skins",
-  skinMaterial: "skinMaterials",
-  category: "categories",
-  group: "groups",
-  marketGroup: "marketGroups",
-  metaGroup: "metaGroups",
-  typeList: "typeLists",
-  dogmaAttribute: "dogmaAttributes",
-  dogmaAttributeCategory: "dogmaAttributeCategories",
-  dogmaUnit: "dogmaUnits",
-  dogmaEffect: "dogmaEffects",
-  dbuffCollection: "dbuffCollections",
-  graphic: "graphicIDs",
-  graphicMaterialSet: "graphicMaterialSets",
-  icon: "iconIDs",
-  faction: "factions",
-  race: "races",
-  bloodline: "bloodlines",
-  ancestry: "ancestries",
-  corporationActivity: "corporationActivities",
-  npcCorporation: "npcCorporations",
-  npcCorporationDivision: "npcCorporationDivisions",
-  npcCharacter: "npcCharacters",
-  agentInSpace: "agentsInSpace",
-  mission: "missions",
-  epicArc: "epicArcs",
-  dungeon: "dungeons",
-  archetype: "archetypes",
-  schematic: "schematics",
-  stationOperation: "stationOperations",
-  stationService: "stationServices",
-  region: "regions",
-  constellation: "constellations",
-  solarSystem: "solarSystems",
-  planet: "planets",
-  moon: "moons",
-  asteroidBelt: "asteroidBelts",
-  npcStation: "npcStations",
-  star: "stars",
-  secondarySun: "secondarySuns",
-  stargate: "stargates",
-  landmark: "landmarks",
-  cloneGrade: "cloneGrades",
-};
-const primaryOf = (entityType: string) =>
-  PRIMARY_COLLECTION[entityType] ?? "types";
+type KindNames = Record<number, string>;
 
 // Section order on a build page; anything unlisted sorts last, alphabetically.
 const ENTITY_ORDER = [
@@ -131,25 +81,24 @@ function badgeSuffix(kind: string): string {
 function EntityName({
   entityType,
   id,
-  typeNames,
-}: Readonly<{ entityType: string; id: number; typeNames?: TypeNames }>) {
-  const label = entityTypeMeta(entityType).label;
-  if (entityType !== "type") return <Text span>{label}</Text>;
-  // Unnamed ⇒ newer than the ingested SDE (or, on the compare page, names that
-  // could not be read); the row still shows its #id. Never fetched per row.
-  return <Text span>{typeNames?.[id] ?? label}</Text>;
+  names,
+}: Readonly<{ entityType: string; id: number; names?: KindNames }>) {
+  // Every changed entity has a name, so the kind's label is only ever shown
+  // when a lookup failed (or, on the compare page, the names could not be read
+  // at all); the row still shows its #id. Never fetched per row.
+  return <Text span>{names?.[id] ?? entityTypeMeta(entityType).label}</Text>;
 }
 
 function EntityRow({
   entityType,
   id,
   badges,
-  typeNames,
+  names,
 }: Readonly<{
   entityType: string;
   id: number;
   badges?: { collection: string; kind: string }[];
-  typeNames?: TypeNames;
+  names?: KindNames;
 }>) {
   return (
     <Group gap="xs" wrap="nowrap">
@@ -160,7 +109,7 @@ function EntityRow({
         href={entityHistoryHref(entityType, id)}
         prefetch={false}
       >
-        <EntityName entityType={entityType} id={id} typeNames={typeNames} />{" "}
+        <EntityName entityType={entityType} id={id} names={names} />{" "}
         <Text span c="dimmed">
           #{id}
         </Text>
@@ -188,13 +137,13 @@ function ChangeList({
   color,
   entityType,
   rows,
-  typeNames,
+  names,
 }: Readonly<{
   title: string;
   color: string;
   entityType: string;
   rows: { id: number; badges?: { collection: string; kind: string }[] }[];
-  typeNames?: TypeNames;
+  names?: KindNames;
 }>) {
   if (rows.length === 0) return null;
   return (
@@ -214,7 +163,7 @@ function ChangeList({
                   entityType={entityType}
                   id={r.id}
                   badges={r.badges}
-                  typeNames={typeNames}
+                  names={names}
                 />
               </List.Item>
             ))}
@@ -229,13 +178,13 @@ function ChangeList({
 function EntityTypeSection({
   entityType,
   changes,
-  typeNames,
+  names,
 }: Readonly<{
   entityType: string;
   changes: EntityChangeRow[];
-  typeNames?: TypeNames;
+  names?: KindNames;
 }>) {
-  const primary = primaryOf(entityType);
+  const primary = primaryCollectionOf(entityType);
   const isPrimary = (c?: string) => (c ?? "types") === primary;
   const plural = entityTypeMeta(entityType).plural.toLowerCase();
 
@@ -266,21 +215,21 @@ function EntityTypeSection({
         color="green"
         entityType={entityType}
         rows={newRows}
-        typeNames={typeNames}
+        names={names}
       />
       <ChangeList
         title={`Removed ${plural}`}
         color="red"
         entityType={entityType}
         rows={removedRows}
-        typeNames={typeNames}
+        names={names}
       />
       <ChangeList
         title={`Changed ${plural}`}
         color="blue"
         entityType={entityType}
         rows={changedRows}
-        typeNames={typeNames}
+        names={names}
       />
     </>
   );
@@ -292,10 +241,10 @@ function EntityTypeSection({
  */
 export function EntityChangeSections({
   changes,
-  typeNames,
+  names,
 }: Readonly<{
   changes: EntityChangeRow[];
-  typeNames?: TypeNames;
+  names?: EntityNames;
 }>) {
   const byEntityType = new Map<string, EntityChangeRow[]>();
   for (const c of changes) {
@@ -315,7 +264,7 @@ export function EntityChangeSections({
           key={et}
           entityType={et}
           changes={etChanges}
-          typeNames={typeNames}
+          names={names?.[et]}
         />
       ))}
     </>

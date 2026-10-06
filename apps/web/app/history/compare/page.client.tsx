@@ -48,10 +48,7 @@ function CompareResults({ data }: Readonly<{ data: BuildRangeChanges }>) {
           Nothing changed in the tracked static data between these builds.
         </Alert>
       ) : (
-        <EntityChangeSections
-          changes={data.changes}
-          typeNames={data.typeNames}
-        />
+        <EntityChangeSections changes={data.changes} names={data.names} />
       )}
     </Stack>
   );
@@ -96,8 +93,7 @@ export default function CompareBuildsClient({
     // A past pair never changes, so a complete result is kept for the session.
     // One that came back without its names (the read failed) is not: it is
     // refetched on the next mount or window focus.
-    staleTime: ({ state }) =>
-      state.data && !state.data.typeNames ? 0 : Infinity,
+    staleTime: ({ state }) => (state.data && !state.data.names ? 0 : Infinity),
   });
 
   const outOfOrder = !!fromSel && !!toSel && Number(fromSel) >= Number(toSel);

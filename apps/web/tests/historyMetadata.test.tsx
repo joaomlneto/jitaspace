@@ -173,7 +173,7 @@ describe("build page server read", () => {
       build: 3383521,
       date: "2026-06-08",
       changes: [],
-      typeNames: {},
+      names: {},
       files: { added: [], changed: [], removed: [] },
       strings: {},
     };
