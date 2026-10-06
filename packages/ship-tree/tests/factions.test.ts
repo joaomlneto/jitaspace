@@ -30,11 +30,12 @@ describe("SHIP_TREE_FACTIONS", () => {
     }
   });
 
-  it("lists the factions alphabetically by name", () => {
+  it("lists the factions alphabetically by name, ignoring a leading The", () => {
+    const sortKey = (name: string) => name.replace(/^The /, "");
     const names = SHIP_TREE_FACTIONS.map((f) => f.name);
     expect(names).toEqual(
       [...names].sort((a, b) =>
-        a.localeCompare(b, "en", { sensitivity: "base" }),
+        sortKey(a).localeCompare(sortKey(b), "en", { sensitivity: "base" }),
       ),
     );
   });

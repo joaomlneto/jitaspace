@@ -15,8 +15,8 @@ export interface ShipTreeFaction {
  * Every faction the library can draw a ship tree for, alphabetically by name,
  * which is the order pickers list them in.
  *
- * All 17 render a full tree. The library's README said only the four empires
- * had layouts until 0.3.0, and was stale about it for every version before.
+ * All 17 render a full tree. A leading "The" is ignored when sorting, so "The
+ * Society of Conscious Thought" sits with the S factions.
  */
 export const SHIP_TREE_FACTIONS = [
   { id: 500003, slug: "amarr", name: "Amarr Empire" },

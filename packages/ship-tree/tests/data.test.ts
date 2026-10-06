@@ -12,9 +12,10 @@ import {
 import { ALL_TABLE_FILES, byName, fileName } from "./helpers";
 
 describe("SHIP_TREE_DATA_FILE_NAMES", () => {
-  it("lists fourteen distinct .jsonl files", () => {
-    expect(SHIP_TREE_DATA_FILE_NAMES).toHaveLength(14);
-    expect(new Set(SHIP_TREE_DATA_FILE_NAMES).size).toBe(14);
+  it("lists distinct .jsonl files", () => {
+    expect(new Set(SHIP_TREE_DATA_FILE_NAMES).size).toBe(
+      SHIP_TREE_DATA_FILE_NAMES.length,
+    );
     for (const name of SHIP_TREE_DATA_FILE_NAMES) {
       expect(name).toMatch(/^[A-Za-z]+\.jsonl$/);
     }

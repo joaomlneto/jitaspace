@@ -48,7 +48,7 @@ export async function GET(
 ): Promise<Response> {
   const { file } = await params;
   // Checked before the cache, so a made-up name never becomes a cache key: only
-  // the fourteen real ones can.
+  // the real ones can.
   if (!isShipTreeDataFileName(file)) {
     return new Response("Not found", { status: 404 });
   }

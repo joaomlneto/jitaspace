@@ -64,4 +64,5 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@jitaspace/db-builds@0.1.0'
+  # Published 2026-10-06 19:02 UTC; delete this entry once it is a day old.
   - '@eve-online-tools/eve-ship-tree@0.3.0'
