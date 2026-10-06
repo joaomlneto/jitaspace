@@ -30,13 +30,13 @@ describe("SHIP_TREE_FACTIONS", () => {
     }
   });
 
-  it("leads with the four empires, as the in-game picker does", () => {
-    expect(SHIP_TREE_FACTIONS.slice(0, 4).map((f) => f.slug)).toEqual([
-      "caldari",
-      "minmatar",
-      "amarr",
-      "gallente",
-    ]);
+  it("lists the factions alphabetically by name", () => {
+    const names = SHIP_TREE_FACTIONS.map((f) => f.name);
+    expect(names).toEqual(
+      [...names].sort((a, b) =>
+        a.localeCompare(b, "en", { sensitivity: "base" }),
+      ),
+    );
   });
 
   // Checks our ids against the library's own data rather than a copy of them.
@@ -55,7 +55,7 @@ describe("SHIP_TREE_FACTIONS", () => {
 });
 
 describe("SHIP_TREE_FACTION_SLUGS", () => {
-  it("is the slugs in picker order", () => {
+  it("is the slugs in list order", () => {
     expect(SHIP_TREE_FACTION_SLUGS).toEqual(
       SHIP_TREE_FACTIONS.map((faction) => faction.slug),
     );
