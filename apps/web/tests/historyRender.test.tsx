@@ -175,8 +175,11 @@ const BUILD_PAGE: BuildPage = {
     { entityId: 999, entityType: "type", collection: "types", kind: "removed" },
     { entityId: 1, entityType: "skin", collection: "skins", kind: "added" },
   ],
-  // 999 is left unnamed: a type newer than the ingested SDE.
-  typeNames: { 91920: "Pochven Spawner", 587: "Rifter" },
+  // 999 is left unnamed: a lookup that found nothing.
+  names: {
+    type: { 91920: "Pochven Spawner", 587: "Rifter" },
+    skin: { 1: "Rifter Tash-Murkon" },
+  },
   files: { added: ["res:/a.png"], changed: ["res:/b.png"], removed: [] },
   strings: {
     "en-us": [
@@ -192,7 +195,7 @@ const EMPTY_BUILD_PAGE: BuildPage = {
   build: 3383522,
   date: null,
   changes: [],
-  typeNames: {},
+  names: {},
   files: { added: [], changed: [], removed: [] },
   strings: {},
 };
@@ -219,7 +222,7 @@ const RANGE_CHANGES = {
   fromDate: "2025-01-01",
   toDate: "2025-02-01",
   // 588 has no entry: a type our SDE tables cannot name.
-  typeNames: { 587: "Vexor" },
+  names: { type: { 587: "Vexor" } },
   changes: [
     {
       entityId: 587,
@@ -455,6 +458,10 @@ describe("BuildHistoryClient", () => {
       document.querySelector(`a[href="/type/${id}/history"]`)?.textContent;
     expect(row(999)).toBe("Type #999");
     expect(row(587)).toBe("Rifter #587");
+    // Every kind is named, not only types.
+    expect(
+      document.querySelector(`a[href="/history/skin/1"]`)?.textContent,
+    ).toBe("Rifter Tash-Murkon #1");
     expect(mockUseQuery).not.toHaveBeenCalled();
   });
 
@@ -632,7 +639,7 @@ describe("CompareBuildsClient", () => {
   it("falls back to kind and id for every row when names are unavailable", async () => {
     mockUseQuery.mockImplementation((opts: { queryKey?: unknown[] }) =>
       opts.queryKey?.[0] === "history-compare"
-        ? { data: { ...RANGE_CHANGES, typeNames: undefined }, isLoading: false }
+        ? { data: { ...RANGE_CHANGES, names: undefined }, isLoading: false }
         : dataFor(opts),
     );
     const { default: CompareBuildsClient } =
@@ -661,7 +668,7 @@ describe("CompareBuildsClient", () => {
         : staleTime;
     expect(staleFor(RANGE_CHANGES)).toBe(Infinity);
     // Kept, a names-less result would label every row by id for the session.
-    expect(staleFor({ ...RANGE_CHANGES, typeNames: undefined })).toBe(0);
+    expect(staleFor({ ...RANGE_CHANGES, names: undefined })).toBe(0);
     // A pair outside the history has nothing more to fetch.
     expect(staleFor(null)).toBe(Infinity);
   });
