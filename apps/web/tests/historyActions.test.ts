@@ -64,6 +64,15 @@ let mockRangeRows: {
   firstOp: string;
   lastOp: string;
 }[] = [];
+// $queryRaw fixtures for the history-DB name reads (entities newer than the
+// SDE), told apart from the range query by their SQL: each entity's name fields,
+// then the English text of the message ids among them.
+let mockHistoryNameRows: {
+  kind: string;
+  id: string;
+  fields: Record<string, unknown>;
+}[] = [];
+let mockMessageRows: { id: string; text: string | null }[] = [];
 // Every $queryRaw call as made — template strings plus interpolated values — so
 // a test can inspect the SQL a reader builds, which the stub below cannot run.
 let mockRawQueries: { strings: string[]; values: unknown[] }[] = [];
@@ -120,6 +129,8 @@ jest.mock("~/lib/db", () => ({
         );
       },
     },
+    // No skin rows: a changed skin is named from the history DB.
+    skin: { findMany: () => Promise.resolve([]) },
   },
 }));
 
@@ -191,6 +202,10 @@ jest.mock("@jitaspace/db-builds", () => ({
     $queryRaw: (strings: readonly string[], ...values: unknown[]) => {
       mockDbCalls++;
       mockRawQueries.push({ strings: [...strings], values });
+      const sql = strings.join("");
+      if (sql.includes("unnest(")) return Promise.resolve(mockHistoryNameRows);
+      if (sql.includes("'string:en-us'"))
+        return Promise.resolve(mockMessageRows);
       return Promise.resolve(mockRangeRows);
     },
   },
@@ -213,7 +228,7 @@ const { getEntityTimeline, getBuildRangeChanges } =
 const {
   getCachedBuildRangeChanges,
   getCachedHistoryIndex,
-  getCachedRangeTypeNames,
+  getCachedRangeNames,
   getLatestChangedBuild,
 } = require("~/lib/history-cache") as typeof HistoryCache;
 
@@ -225,6 +240,8 @@ beforeEach(() => {
   mockTypeNamesRead = "ok";
   mockTypeQueries = [];
   mockRawQueries = [];
+  mockHistoryNameRows = [];
+  mockMessageRows = [];
   mockCaptureException.mockClear();
 });
 
@@ -762,7 +779,7 @@ describe("getBuildRangeChanges", () => {
     expect(result?.toDate).toBe("2024-06-04");
   });
 
-  describe("type names", () => {
+  describe("names", () => {
     beforeEach(() => {
       mockBuildUnique = null;
       mockBuilds = [tq(700000, "2024-06-01"), tq(700003, "2024-06-04")];
@@ -790,9 +807,41 @@ describe("getBuildRangeChanges", () => {
       // server action per type. Each type id is asked for once: not the
       // transient 589, and not the skin that shares 587's id.
       expect(mockTypeQueries).toEqual([[587, 588, 591, 592]]);
-      // Unknown and blank names are left out; those rows fall back to the id.
-      expect(result?.typeNames).toEqual({ 587: "Rifter", 588: "Slasher" });
+      // Names nothing has are left out; those rows fall back to the id.
+      expect(result?.names).toEqual({
+        type: { 587: "Rifter", 588: "Slasher" },
+      });
       expect(result?.changes).toHaveLength(6);
+    });
+
+    it("names what the SDE lacks from the history DB, as of `to`", async () => {
+      mockHistoryNameRows = [
+        { kind: "type", id: "591", fields: { typeNameID: 9001 } },
+        { kind: "skin", id: "587", fields: { internalName: "Rifter Tash" } },
+      ];
+      mockMessageRows = [{ id: "9001", text: "Tormentor" }];
+
+      const result = await getBuildRangeChanges(700000, 700003);
+
+      expect(result?.names).toEqual({
+        type: { 587: "Rifter", 588: "Slasher", 591: "Tormentor" },
+        skin: { 587: "Rifter Tash" },
+      });
+      // Only the SDE's misses are asked for (591 unknown, 592 blank, the skin),
+      // as of `to`.
+      const values = (sqlPart: string) =>
+        mockRawQueries
+          .find((q) => q.strings.join("").includes(sqlPart))
+          ?.values.filter(
+            (v) => !(typeof v === "object" && v !== null && "raw" in v),
+          );
+      expect(values("unnest(")).toEqual([
+        ["type", "type", "skin"],
+        [591, 592, 587],
+        ["types", "skins"],
+        700003,
+      ]);
+      expect(values("'string:en-us'")).toEqual([[9001], 700003]);
     });
 
     it("keeps the names out of the permanent range entry", async () => {
@@ -803,15 +852,14 @@ describe("getBuildRangeChanges", () => {
       // the split between the two reads, not their lifetimes.
       const cached = await getCachedBuildRangeChanges(700000, 700003);
       expect(cached).not.toBeNull();
-      expect(cached).not.toHaveProperty("typeNames");
+      expect(cached).not.toHaveProperty("names");
       expect(mockTypeQueries).toEqual([]);
 
-      expect(await getCachedRangeTypeNames(700000, 700003)).toEqual({
-        587: "Rifter",
-        588: "Slasher",
+      expect(await getCachedRangeNames(700000, 700003)).toEqual({
+        type: { 587: "Rifter", 588: "Slasher" },
       });
       // A pair with no comparison has no names to read.
-      expect(await getCachedRangeTypeNames(700003, 700000)).toEqual({});
+      expect(await getCachedRangeNames(700003, 700000)).toEqual({});
       expect(mockTypeQueries).toHaveLength(1);
     });
 
@@ -820,7 +868,7 @@ describe("getBuildRangeChanges", () => {
 
       const result = await getBuildRangeChanges(700000, 700003);
       expect(result?.changes).toHaveLength(6);
-      expect(result?.typeNames).toBeUndefined();
+      expect(result?.names).toBeUndefined();
       expect(mockCaptureException).toHaveBeenCalledTimes(1);
     });
 
@@ -835,19 +883,19 @@ describe("getBuildRangeChanges", () => {
         await jest.advanceTimersByTimeAsync(10_000);
         const result = await pending;
         expect(result?.changes).toHaveLength(6);
-        expect(result?.typeNames).toBeUndefined();
+        expect(result?.names).toBeUndefined();
         expect(mockCaptureException).toHaveBeenCalledTimes(1);
       } finally {
         jest.useRealTimers();
       }
     });
 
-    it("skips the names query when no type changed", async () => {
+    it("skips the type query when no type changed", async () => {
       mockRangeRows = [agg("skin", 1, "skins", "added", "added")];
 
       const result = await getBuildRangeChanges(700000, 700003);
       expect(mockTypeQueries).toEqual([]);
-      expect(result?.typeNames).toEqual({});
+      expect(result?.names).toEqual({});
     });
   });
 });

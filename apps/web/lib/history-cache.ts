@@ -4,6 +4,7 @@ import { buildsDb } from "@jitaspace/db-builds";
 
 import type {
   BuildRangeChanges,
+  EntityNames,
   EntityTimeline,
   HistoryIndex,
   LatestChangedBuild,
@@ -14,15 +15,15 @@ import {
   latestChangedBuild,
   netOp,
 } from "~/lib/history";
+import { readEntityNames } from "~/lib/history-entity-names";
 import { historyTable } from "~/lib/history-sql";
-import { readTypeNames } from "~/lib/history-type-names";
 
 /**
  * Day-cached reads of the change-history data.
  *
  * The underlying queries hit the standalone history database
- * (@jitaspace/db-builds) — all but {@link getCachedRangeTypeNames}, which names
- * a comparison's types from our main one — and the data only moves when a new
+ * (@jitaspace/db-builds) — {@link getCachedRangeNames} also names a
+ * comparison's entities from our main one — and the data only moves when a new
  * EVE client build is processed (rare, via the background jobs), so each result
  * is cached for a day (`cacheLife("days")`). The matching `"use server"`
  * actions in `history-actions.ts` delegate here, so every entry point (the
@@ -344,8 +345,9 @@ export async function getCachedBuildRangeChanges(
 }
 
 /**
- * Names of the types in the {@link getCachedBuildRangeChanges} comparison of
- * `(from, to)`, by typeId ({@link readTypeNames}).
+ * Names of the entities in the {@link getCachedBuildRangeChanges} comparison
+ * of `(from, to)` ({@link readEntityNames}); one newer than the ingested SDE is
+ * named as of `to`.
  *
  * An entry of their own: the range's is `cacheLife("max")`, and names change
  * when the SDE is re-ingested, so a name baked in there would be frozen for
@@ -358,13 +360,13 @@ export async function getCachedBuildRangeChanges(
  * Throws on failure, like the range read; the caller degrades, so nothing wrong
  * is cached.
  */
-export async function getCachedRangeTypeNames(
+export async function getCachedRangeNames(
   from: number,
   to: number,
-): Promise<Record<number, string>> {
+): Promise<EntityNames> {
   "use cache";
   cacheLife("days");
 
   const range = await getCachedBuildRangeChanges(from, to);
-  return range ? readTypeNames(range.changes) : {};
+  return range ? readEntityNames(range.changes, to) : {};
 }
