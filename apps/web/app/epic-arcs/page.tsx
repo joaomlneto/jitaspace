@@ -34,11 +34,11 @@ export default async function Page() {
 
   // Summaries only: the steps themselves stay on each arc's own page.
   const arcs = buildEpicArcs(rows, agents, factions).map((arc): EpicArcRow => {
-    const { starts, ...summary } = epicArcSummary(arc);
+    const summary = epicArcSummary(arc);
     // Every agent an arc can begin with: two arcs offer four starts.
     const startAgents = [
       ...new Map(
-        starts.flatMap((step) =>
+        summary.starts.flatMap((step) =>
           step.agent ? [[step.agent.characterId, step.agent] as const] : [],
         ),
       ).values(),
@@ -50,7 +50,12 @@ export default async function Page() {
       factionId: arc.faction?.factionId ?? null,
       factionName: arc.faction?.name ?? null,
       arcRestartInterval: arc.arcRestartInterval,
-      ...summary,
+      missionCount: summary.missionCount,
+      agentCount: summary.agentCount,
+      chapterCount: summary.chapterCount,
+      choiceCount: summary.choiceCount,
+      endingCount: summary.endingCount,
+      totalIsk: summary.totalIsk,
       startAgents,
     };
   });

@@ -143,6 +143,53 @@ describe("getEpicArc", () => {
   });
 });
 
+describe("an arc with a deleted step", () => {
+  it("closes the gap instead of leaving links to the deleted step", async () => {
+    // 1 → 2 → (3 | 4), where 2's mission is soft-deleted and 3 fails back to 2.
+    db.epicArc.findMany.mockResolvedValue([ARC]);
+    db.epicArcMission.findMany.mockResolvedValue([
+      step(1, [2], 3019356),
+      step(2, [3, 4], 3019358, { isDeleted: true }),
+      { ...step(3, [], 3019356), failMissionId: 2 },
+      step(4, [], 3019356),
+    ]);
+
+    const arc = await getEpicArc(29);
+
+    expect(arc?.steps.map((s) => s.missionId)).toEqual([1, 3, 4]);
+    // Step 1 leads on to where the deleted step led, not to the deleted step.
+    expect(arc?.steps[0]?.nextMissionIds).toEqual([3, 4]);
+    // A failure route to the deleted step becomes none.
+    expect(arc?.steps[1]?.failMissionId).toBeNull();
+
+    const element = (await index.default()) as ReactElement<{
+      arcs: {
+        startAgents: unknown[];
+        missionCount: number;
+        endingCount: number;
+        choiceCount: number;
+      }[];
+    }>;
+    // Still one start (no orphaned step 3 or 4), two endings, and the
+    // choice moved to step 1.
+    expect(element.props.arcs[0]).toMatchObject({
+      missionCount: 3,
+      endingCount: 2,
+      choiceCount: 1,
+      startAgents: [expect.objectContaining({ name: "Sister Alitura" })],
+    });
+  });
+
+  it("reads only the steps of live arcs", async () => {
+    await index.default();
+    expect(db.epicArcMission.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isDeleted: false, epicArc: { isDeleted: false } },
+      }),
+    );
+  });
+});
+
 describe("epic arc route", () => {
   it("describes the arc by its size and endings", async () => {
     db.epicArc.findMany.mockResolvedValue([ARC]);

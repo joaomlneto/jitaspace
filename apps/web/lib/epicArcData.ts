@@ -1,4 +1,4 @@
-import type { EpicArc } from "~/lib/epicArcs";
+import type { EpicArc, EpicArcStep } from "~/lib/epicArcs";
 import type { AgentRef, FactionRef } from "~/lib/missionRefs";
 import { prisma } from "~/lib/db";
 import { orderArcSteps } from "~/lib/epicArcs";
@@ -59,7 +59,8 @@ export async function readEpicArcRows(epicArcIds?: number[]) {
           where: { isDeleted: false },
         },
       },
-      where,
+      // Steps of a retired arc are never shown: skip them here.
+      where: { ...where, epicArc: { isDeleted: false } },
     }),
   ]);
   return { arcs, arcSteps };
@@ -96,14 +97,45 @@ export function buildEpicArcs(
       arc.factionId === null ? null : (factions.get(arc.factionId) ?? null),
     iconId: arc.iconId,
     arcRestartInterval: arc.arcRestartInterval,
-    steps: orderArcSteps(
-      arcSteps
-        // A step whose mission was soft-deleted reads as gone, like any other
-        // deleted row the pages look up.
-        .filter(
-          (step) => step.epicArcId === arc.epicArcId && !step.mission.isDeleted,
-        )
-        .map(({ mission, ...step }) => ({
+    steps: buildArcSteps(
+      arcSteps.filter((step) => step.epicArcId === arc.epicArcId),
+      agents,
+    ),
+  }));
+}
+
+type EpicArcStepRow = EpicArcRows["arcSteps"][number];
+
+/**
+ * One arc's steps, in play order. A step whose mission was soft-deleted reads
+ * as gone, like any other deleted row the pages look up, and the arc closes
+ * over the gap: whatever led to it leads on to its own next steps, and a
+ * failure route to it becomes none. Dropping it outright would leave links to
+ * a mission page that 404s, turn the step before it from an ending into a
+ * dead link, and make the step after it a second start.
+ */
+function buildArcSteps(
+  rows: EpicArcStepRow[],
+  agents: Map<number, AgentRef>,
+): EpicArcStep[] {
+  const byId = new Map(rows.map((row) => [row.missionId, row]));
+  const isGone = (missionId: number) =>
+    byId.get(missionId)?.mission.isDeleted === true;
+  /** Next steps, with each deleted one replaced by its own next steps. */
+  const liveNext = (row: EpicArcStepRow, seen = new Set<number>()): number[] =>
+    row.nextMissions.flatMap(({ nextMissionId }) => {
+      const next = byId.get(nextMissionId);
+      if (!next || !isGone(nextMissionId)) return [nextMissionId];
+      if (seen.has(nextMissionId)) return [];
+      seen.add(nextMissionId);
+      return liveNext(next, seen);
+    });
+
+  return orderArcSteps(
+    rows
+      .filter((row) => !row.mission.isDeleted)
+      .map(
+        ({ mission, ...step }): EpicArcStep => ({
           missionId: step.missionId,
           name: mission.name,
           kind: missionKind(mission),
@@ -115,12 +147,15 @@ export function buildEpicArcs(
           chapterTitle: mission.messages[0]?.text ?? null,
           agent:
             step.agentId === null ? null : (agents.get(step.agentId) ?? null),
-          failMissionId: step.failMissionId,
-          nextMissionIds: step.nextMissions
-            .map((next) => next.nextMissionId)
-            .sort((a, b) => a - b),
-        }))
-        .sort((a, b) => a.missionId - b.missionId),
-    ),
-  }));
+          failMissionId:
+            step.failMissionId === null || isGone(step.failMissionId)
+              ? null
+              : step.failMissionId,
+          nextMissionIds: [...new Set(liveNext({ ...step, mission }))].sort(
+            (a, b) => a - b,
+          ),
+        }),
+      )
+      .sort((a, b) => a.missionId - b.missionId),
+  );
 }

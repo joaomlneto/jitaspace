@@ -117,7 +117,7 @@ describe("epicArcSummary", () => {
       step(5, [], null),
     ];
 
-    const { starts, ...summary } = epicArcSummary({
+    const { starts, branchPoints, endings, ...summary } = epicArcSummary({
       epicArcId: 1,
       name: "Arc",
       faction: null,
@@ -135,5 +135,7 @@ describe("epicArcSummary", () => {
       totalIsk: 165,
     });
     expect(starts.map((s) => s.missionId)).toEqual([1, 2]);
+    expect(branchPoints.map((s) => s.missionId)).toEqual([3]);
+    expect(endings.map((s) => s.missionId)).toEqual([4, 5]);
   });
 });

@@ -136,12 +136,19 @@ export interface EpicArcSummary {
   totalIsk: number;
   /** The steps an arc can begin with; some arcs offer several. */
   starts: EpicArcStep[];
+  /** The steps that offer a choice of next missions. */
+  branchPoints: EpicArcStep[];
+  /** The steps that lead nowhere. */
+  endings: EpicArcStep[];
 }
 
 /** The figures the arc index, header, overview and metadata all show. */
 export function epicArcSummary(arc: EpicArc): EpicArcSummary {
   const shape = epicArcShape(arc.steps);
-  const startIds = new Set(shape.starts);
+  const stepsOf = (ids: number[]) => {
+    const wanted = new Set(ids);
+    return arc.steps.filter((step) => wanted.has(step.missionId));
+  };
   return {
     missionCount: arc.steps.length,
     agentCount: epicArcAgents(arc.steps).length,
@@ -152,6 +159,8 @@ export function epicArcSummary(arc: EpicArc): EpicArcSummary {
       (sum, step) => sum + (step.rewardIsk ?? 0) + (step.bonusIsk ?? 0),
       0,
     ),
-    starts: arc.steps.filter((step) => startIds.has(step.missionId)),
+    starts: stepsOf(shape.starts),
+    branchPoints: stepsOf(shape.branchPoints),
+    endings: stepsOf(shape.endings),
   };
 }

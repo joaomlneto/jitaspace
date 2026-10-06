@@ -30,7 +30,10 @@ import { StatCard } from "~/components/EntityPage";
 import { isRepeatable } from "~/lib/epicArcs";
 import { formatMinutes } from "~/lib/missions";
 
-export interface EpicArcRow extends Omit<EpicArcSummary, "starts"> {
+export interface EpicArcRow extends Omit<
+  EpicArcSummary,
+  "starts" | "branchPoints" | "endings"
+> {
   epicArcId: number;
   name: string;
   iconId: number | null;
@@ -162,7 +165,7 @@ const columns: DataTableColumn<EpicArcRow>[] = [
   },
   {
     id: "totalIsk",
-    header: "ISK (All Steps)",
+    header: "ISK incl. Bonuses",
     accessor: "totalIsk",
     sortable: true,
     align: "right",

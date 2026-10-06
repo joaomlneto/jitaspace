@@ -44,12 +44,7 @@ import {
   HeroImage,
   notAvailableText,
 } from "~/components/Missions";
-import {
-  epicArcAgents,
-  epicArcShape,
-  epicArcSummary,
-  isRepeatable,
-} from "~/lib/epicArcs";
+import { epicArcAgents, epicArcSummary, isRepeatable } from "~/lib/epicArcs";
 import { formatMinutes } from "~/lib/missions";
 import { EntityHistory } from "../../history/EntityHistory";
 import {
@@ -167,7 +162,6 @@ function EpicArcOverview({
     () => new Map(arc.steps.map((step) => [step.missionId, step])),
     [arc.steps],
   );
-  const shape = useMemo(() => epicArcShape(arc.steps), [arc.steps]);
   const stepsOf = (ids: number[]) =>
     ids.flatMap((id) => {
       const step = byId.get(id);
@@ -223,13 +217,13 @@ function EpicArcOverview({
         </SimpleGrid>
       </Stack>
 
-      {shape.branchPoints.length > 0 && (
+      {summary.branchPoints.length > 0 && (
         <Stack gap="sm">
           <SectionHeading icon={<IconGitBranch size={18} />}>
             Where It Branches
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-            {stepsOf(shape.branchPoints).map((step) => (
+            {summary.branchPoints.map((step) => (
               <StepWithAgent
                 key={step.missionId}
                 step={step}
@@ -257,7 +251,7 @@ function EpicArcOverview({
           Where It Ends
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-          {stepsOf(shape.endings).map((step) => (
+          {summary.endings.map((step) => (
             <StepWithAgent key={step.missionId} step={step} />
           ))}
         </SimpleGrid>
