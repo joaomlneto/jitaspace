@@ -31,6 +31,8 @@ export interface ShipTreePanelProps {
   controls?: ReactNode;
   h?: ShipTreeViewProps["h"];
   mih?: ShipTreeViewProps["mih"];
+  /** The faction whose summary bubble to pin over the tree; none if omitted. */
+  summaryFaction?: ShipTreeViewProps["summaryFaction"];
 }
 
 /**
@@ -43,6 +45,7 @@ export function ShipTreePanel({
   controls,
   h,
   mih,
+  summaryFaction,
 }: Readonly<ShipTreePanelProps>) {
   const hasHydrated = useAuthStoreHasHydrated();
   const character = useSelectedCharacter();
@@ -90,6 +93,7 @@ export function ShipTreePanel({
         isOmega={isOmega}
         h={h}
         mih={mih}
+        summaryFaction={summaryFaction}
       />
 
       <Text size="xs" c="dimmed">

@@ -194,15 +194,18 @@ describe("/ship-tree page", () => {
       renderPage();
 
       expect(screen.getByText("Faction: Caldari State")).toBeInTheDocument();
+      expect(lastViewProps().summaryFaction).toBe(500001);
 
       const serpentis = screen.getByRole("radio", { name: "Serpentis" });
       fireEvent.pointerEnter(serpentis);
       expect(screen.getByText("Faction: Serpentis")).toBeInTheDocument();
+      expect(lastViewProps().summaryFaction).toBe(500020);
       // Only a preview: the tree stays on the chosen faction.
       expect(lastViewProps().faction).toBe(500001);
 
       fireEvent.pointerLeave(serpentis);
       expect(screen.getByText("Faction: Caldari State")).toBeInTheDocument();
+      expect(lastViewProps().summaryFaction).toBe(500001);
     });
 
     it("writes the clone type to the URL", async () => {

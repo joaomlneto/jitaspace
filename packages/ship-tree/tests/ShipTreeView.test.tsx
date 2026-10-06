@@ -204,6 +204,38 @@ describe("ShipTreeView", () => {
     expect(mockSeen.shipTree.at(-1)?.prices).toBeUndefined();
   });
 
+  it("pins the summary of the faction it is given, with the tree's data", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { container } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} summaryFaction={500003} />,
+    );
+
+    // The description comes from the shipTreeFactions table: only there once
+    // the summary reads the tree's DataProvider.
+    expect(
+      await screen.findByText(
+        /Excel at engagements using Energy Turrets/,
+        {},
+        READY,
+      ),
+    ).toBeInTheDocument();
+    const summary = container.querySelector("section[data-faction]");
+    expect(summary).toHaveAttribute("data-faction", "500003");
+    expect(summary).toHaveAttribute("aria-label", "Amarr Empire");
+  });
+
+  it("shows no summary unless asked", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { container } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} />,
+    );
+
+    await screen.findByTestId("ship-tree-content", {}, READY);
+    expect(container.querySelector("section[data-faction]")).toBeNull();
+  });
+
   it("keeps the loaded data when the faction changes", async () => {
     const { fetch, requested } = createFakeFetch();
 
