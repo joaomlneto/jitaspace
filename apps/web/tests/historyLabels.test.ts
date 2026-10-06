@@ -136,6 +136,7 @@ const mockReadEntityNames = jest.fn(
 );
 let mockTimeline: EntityTimeline | null = null;
 let mockTimelineError: Error | null = null;
+let mockTimelineHang = false;
 const mockCapture = jest.fn();
 
 // A Prisma stand-in: each model's findMany returns its table's rows whose id
@@ -164,10 +165,12 @@ jest.mock("~/lib/history-entity-names", () => ({
   ) => mockReadEntityNames(changes, atBuild),
 }));
 jest.mock("~/lib/history-cache", () => ({
-  getCachedEntityTimeline: () =>
-    mockTimelineError
+  getCachedEntityTimeline: () => {
+    if (mockTimelineHang) return new Promise(() => undefined);
+    return mockTimelineError
       ? Promise.reject(mockTimelineError)
-      : Promise.resolve(mockTimeline),
+      : Promise.resolve(mockTimeline);
+  },
 }));
 jest.mock("next/cache", () => ({
   cacheLife: () => undefined,
@@ -187,6 +190,7 @@ beforeEach(() => {
   mockTables = {};
   mockTimeline = null;
   mockTimelineError = null;
+  mockTimelineHang = false;
   mockReadEntityNames.mockClear();
   mockCapture.mockClear();
   mockConnection.mockClear();
@@ -309,6 +313,20 @@ describe("loadEntityHistory", () => {
       entityId: 500_001,
     });
     expect(mockConnection).not.toHaveBeenCalled();
+  });
+
+  it("gives up on a stalled read rather than hold the page open", async () => {
+    mockTimelineHang = true;
+    jest.useFakeTimers();
+    try {
+      const pending = loadEntityHistory("type", 587);
+      await jest.advanceTimersByTimeAsync(10_000);
+      expect(await pending).toBeNull();
+      expect(mockCapture).toHaveBeenCalledTimes(1);
+      expect(mockConnection).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("reports a failure and keeps the degraded page out of the cache", async () => {

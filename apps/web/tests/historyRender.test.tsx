@@ -7,7 +7,13 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type { BuildPage, EntityTimeline } from "~/lib/history";
@@ -449,6 +455,28 @@ describe("EntityHistory", () => {
     expect(document.querySelector(`a[href="/group/26"]`)?.textContent).toBe(
       "#26",
     );
+  });
+
+  it("streams a history the host page is still reading", async () => {
+    const { StreamedEntityHistory } =
+      await import("~/app/history/EntityHistory");
+    let resolve: (h: EntityHistoryData | null) => void = () => undefined;
+    const pending = new Promise<EntityHistoryData | null>((r) => {
+      resolve = r;
+    });
+    await act(async () => {
+      wrap(<StreamedEntityHistory history={pending} />);
+      await Promise.resolve();
+    });
+    // Suspended: the tab shows its loader until the server's read arrives.
+    expect(screen.queryByText("2025-01-01")).toBeNull();
+
+    await act(async () => {
+      resolve(ENTITY_HISTORY);
+      await pending;
+    });
+    expect(await screen.findByText("2025-01-01")).toBeTruthy();
+    expect(mockUseQuery).not.toHaveBeenCalled();
   });
 
   it("says when a host page could not load the history", async () => {

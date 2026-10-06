@@ -80,7 +80,7 @@ import {
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
 import { isTypeListMember } from "~/lib/typeLists";
-import { EmbeddedEntityHistory } from "../../history/EntityHistory";
+import { StreamedEntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
@@ -193,6 +193,9 @@ function AttributeValue({
   }
 }
 
+/** No history to show; one stable promise, so `use()` never sees a new one. */
+const NO_HISTORY: Promise<EntityHistoryData | null> = Promise.resolve(null);
+
 export default function TypePage({
   typeId,
   typeName,
@@ -200,13 +203,17 @@ export default function TypePage({
   dogmaMeta,
   variations = [],
   typeLists = [],
-  history = null,
+  history = NO_HISTORY,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
     variations?: ItemVariation[];
     typeLists?: NamedTypeListMatch[];
-    history?: EntityHistoryData | null;
+    /**
+     * The item's change history, still being read when the page starts
+     * streaming (`loadEntityHistory`); null once resolved if that failed.
+     */
+    history?: Promise<EntityHistoryData | null>;
   }
 >) {
   const character = useSelectedCharacter();
@@ -911,9 +918,9 @@ export default function TypePage({
             </Tabs.Panel>
           )}
 
-          {/* History — per-build change timeline, read with the page */}
+          {/* History — per-build change timeline, streamed with the page */}
           <Tabs.Panel value="history" pt="lg">
-            <EmbeddedEntityHistory history={history} />
+            <StreamedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

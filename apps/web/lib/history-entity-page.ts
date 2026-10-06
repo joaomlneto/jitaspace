@@ -29,14 +29,19 @@ export interface EntityHistoryData {
  *
  * Cached per entity for a day, like the timeline it is built on
  * (`getCachedEntityTimeline`), and tagged `sde`: the labels come from our SDE
- * tables, so an ingest refreshes them. Throws on failure — nothing here
- * catches — so an outage fails the read instead of caching a wrong page.
+ * tables, so an ingest refreshes them. A `"use cache: remote"` entry, shared
+ * across instances: the item page renders per request and streams this into its
+ * History tab, so a per-instance entry would seldom be hit again and each view
+ * would re-read seconds of history. An entry over the Runtime Cache's 2 MB cap
+ * (the largest item measured is ~750 KB) is silently not stored, and is read
+ * again next time. Throws on failure — nothing here catches — so an outage
+ * fails the read instead of caching a wrong page.
  */
 export async function getCachedEntityHistory(
   entityType: string,
   entityId: number,
 ): Promise<EntityHistoryData> {
-  "use cache";
+  "use cache: remote";
   cacheLife("days");
   cacheTag(SDE_CACHE_TAG);
 
@@ -60,17 +65,32 @@ export async function getCachedEntityHistory(
 
 /**
  * {@link getCachedEntityHistory} for a page that renders fine without its
- * History tab (the item, faction, dungeon, mission and epic-arc pages). A
+ * History tab (the item, race, faction, dungeon, mission and epic-arc pages). A
  * failure is reported and hides the tab, and `connection()` keeps that
  * degraded render out of the page's ISR cache, so the next request retries
  * instead of the cache serving the page without its history.
+ *
+ * So is a read that takes over {@link HISTORY_TIMEOUT_MS}: the item page
+ * streams this into its tab, so a stalled history database would otherwise
+ * hold the response open until the function timed out.
  */
 export async function loadEntityHistory(
   entityType: string,
   entityId: number,
 ): Promise<EntityHistoryData | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(new Error(`Entity history took over ${HISTORY_TIMEOUT_MS} ms`)),
+      HISTORY_TIMEOUT_MS,
+    );
+  });
   try {
-    return await getCachedEntityHistory(entityType, entityId);
+    return await Promise.race([
+      getCachedEntityHistory(entityType, entityId),
+      timeout,
+    ]);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: "entity-history" } });
     // Imported here, on the failure path only: `next/server` cannot load in the
@@ -78,8 +98,13 @@ export async function loadEntityHistory(
     const { connection } = await import("next/server");
     await connection();
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
+
+/** How long a host page waits for an entity's history before going without. */
+export const HISTORY_TIMEOUT_MS = 10_000;
 
 /** How deep a market group's parent chain is followed. */
 const MAX_MARKET_GROUP_DEPTH = 12;

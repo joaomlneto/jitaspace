@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Suspense, use } from "react";
 import Link from "next/link";
 import {
   Alert,
@@ -9,6 +10,7 @@ import {
   Chip,
   Container,
   Group,
+  Loader,
   Paper,
   Stack,
   Text,
@@ -282,4 +284,26 @@ export function EmbeddedEntityHistory({
       </Alert>
     );
   return <EntityHistory history={history} embedded />;
+}
+
+/**
+ * An entity's history that the server is still reading when the host page
+ * starts streaming: the item page passes the read's promise rather than
+ * awaiting it, so its first byte never waits on the history, and the timeline
+ * arrives later in the same response. The browser fetches nothing.
+ */
+export function StreamedEntityHistory({
+  history,
+}: Readonly<{ history: Promise<EntityHistoryData | null> }>) {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ResolvedEntityHistory history={history} />
+    </Suspense>
+  );
+}
+
+function ResolvedEntityHistory({
+  history,
+}: Readonly<{ history: Promise<EntityHistoryData | null> }>) {
+  return <EmbeddedEntityHistory history={use(history)} />;
 }

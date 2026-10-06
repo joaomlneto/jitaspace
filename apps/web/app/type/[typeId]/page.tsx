@@ -374,11 +374,13 @@ async function PageContent({
     typeName: data.typeName,
     typeDescription: data.typeDescription,
   };
-  const [dogmaMeta, variations, typeLists, history] = await Promise.all([
+  // Not awaited: the History tab streams it in after the rest of the page, so
+  // the item's first byte never waits on seconds of history reads.
+  const history = loadEntityHistory("type", typeId);
+  const [dogmaMeta, variations, typeLists] = await Promise.all([
     getTypeDogmaMeta(typeId),
     getTypeVariations(data.variationBaseTypeId),
     getTypeTypeLists(typeId, data.groupId, data.categoryId),
-    loadEntityHistory("type", typeId),
   ]);
   return (
     <TypePage
