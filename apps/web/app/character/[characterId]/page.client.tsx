@@ -1,79 +1,127 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import {
-  Anchor,
   Badge,
-  Box,
+  Breadcrumbs,
   Button,
-  Card,
   Container,
-  Divider,
-  Grid,
   Group,
+  Paper,
+  SimpleGrid,
   Skeleton,
   Stack,
+  Tabs,
   Text,
-  Timeline,
   Title,
 } from "@mantine/core";
 import {
   IconBriefcase,
   IconExternalLink,
   IconId,
+  IconInfoCircle,
+  IconMapPin,
+  IconSkull,
   IconUserCircle,
+  IconUsers,
 } from "@tabler/icons-react";
-import { format, formatDistanceStrict } from "date-fns";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import type { CharacterAgentData } from "@jitaspace/hooks";
+import type { CharactersDetail } from "@jitaspace/esi-client";
 import { useGetCharactersCharacterIdCorporationhistory } from "@jitaspace/esi-client";
+import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
 import {
   AllianceName,
-  CharacterName,
   CharacterOnlineIndicator,
   CorporationName,
+  FactionAnchor,
   FactionName,
+  RegionAnchor,
   SolarSystemAnchor,
-  SolarSystemName,
   StationAnchor,
-  StationName,
   TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/eve-components";
 import {
   useAuthenticatedCharacter,
-  useCharacter,
   useCharacterSkills,
   useCharacterWalletBalance,
+  useEsiCharacter,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
+  AllianceAnchor,
   AllianceAvatar,
   BloodlineAnchor,
   CharacterAvatar,
   CorporationAnchor,
   CorporationAvatar,
-  DateHoverCard,
   DungeonAnchor,
   FactionAvatar,
-  FormattedDateText,
   ISKAmount,
   RaceAnchor,
+  SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
+import type { Stint } from "./employment";
+import type { CharacterPageTab } from "./tabs";
+import type {
+  AgentDetails,
+  CharacterRecord,
+  EsiCharacterCard,
+  NamedRef,
+} from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
-import { StationAvatar } from "~/components/Avatar";
 import {
   CharacterLocationCard,
   CharacterSkillTrainingCard,
 } from "~/components/Card";
+import {
+  HeroCard,
+  HeroStat,
+  SectionHeading,
+  StatCard,
+} from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { BloodlineName, RaceName } from "~/components/Text";
+import {
+  iskEfficiency,
+  KillboardSummaryCards,
+  KillboardTab,
+  useZkillboardStats,
+} from "~/components/Zkillboard";
+import {
+  formatAge,
+  formatDate,
+  formatInteger,
+  formatPercent,
+} from "~/lib/format";
+import { formatDays, summarizeEmployment, toStints } from "./employment";
+import { EmploymentHistory } from "./EmploymentHistory";
+import {
+  CHARACTER_PAGE_TABS,
+  DEFAULT_CHARACTER_PAGE_TAB,
+  isCharacterPageTab,
+} from "./tabs";
+
+export interface PageProps {
+  characterId: number;
+  /** Null when ESI could not be reached at render time. */
+  esi: EsiCharacterCard | null;
+  /** Null when we have no row, or the database could not be reached. */
+  record: CharacterRecord | null;
+}
+
+const EXTERNAL_LINKS = [
+  { label: "EveWho", href: "https://evewho.com/character/" },
+  { label: "zKillboard", href: "https://zkillboard.com/character/" },
+] as const;
+
+/** The 'Skill points' icon type, for the capsuleer's own SP. */
+const SKILL_POINTS_TYPE_ID = 19430;
 
 /** Map an EVE security status (-10 … +10) to a theme-safe Mantine color. */
 function securityStatusColor(sec: number): string {
@@ -84,195 +132,352 @@ function securityStatusColor(sec: number): string {
   return "red";
 }
 
-/** A dimmed uppercase eyebrow that sits above a section's content. */
-function SectionTitle({
-  icon,
-  children,
-}: Readonly<{
-  icon?: ReactNode;
-  children: ReactNode;
-}>) {
-  return (
-    <Group gap="xs" mb="md" wrap="nowrap">
-      {icon}
-      <Title order={4} style={{ letterSpacing: "0.08em" }}>
-        {children}
-      </Title>
-    </Group>
-  );
-}
+// The browser's clock, read once, only on the client. The server snapshot is
+// null: reading the clock while the page prerenders would drop it out of the
+// ISR cache. Used only when the server had no ESI card to time-stamp.
+let clientNow: string | null = null;
+const subscribeToNothing = () => () => undefined;
+const getClientNow = () => (clientNow ??= new Date().toISOString());
+const getServerNow = () => null;
 
-/** A single label / value row used inside the Details card. */
-function InfoRow({
-  label,
-  children,
-}: Readonly<{ label: string; children: ReactNode }>) {
-  return (
-    <Group justify="space-between" wrap="nowrap" gap="xl" align="center">
-      <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
-        {label}
-      </Text>
-      <Box style={{ textAlign: "right", minWidth: 0 }}>{children}</Box>
-    </Group>
-  );
+/** A reference by id, named from `stored` when its id agrees. */
+function named(
+  id: number | null | undefined,
+  ...stored: (NamedRef | null | undefined)[]
+): NamedRef | null {
+  if (id == null) return null;
+  const match = stored.find((candidate) => candidate?.id === id);
+  return { id, name: match?.name ?? null };
 }
 
 /**
- * Renders a capsuleer's age. The birthday row only mounts once character data
- * has loaded client-side, so a per-mount `now` is safe (no SSR/hydration gap).
+ * Who the character is. Live ESI wins once it answers; until then the
+ * server's ESI card (which the cached HTML was rendered from, so hydration
+ * agrees); for an NPC ESI does not know, our database row.
  */
-function CharacterAge({ birthday }: Readonly<{ birthday: Date }>) {
-  const [now] = useState(() => new Date());
-  return <>{formatDistanceStrict(birthday, now)}</>;
+function resolveIdentity(
+  live: CharactersDetail | undefined,
+  card: EsiCharacterCard | null,
+  record: CharacterRecord | null,
+) {
+  const corporationId =
+    live?.corporation_id ?? card?.corporation.id ?? record?.corporation.id;
+  const allianceId = live ? live.alliance_id : card?.alliance?.id;
+  const securityStatus =
+    live?.security_status ?? card?.securityStatus ?? record?.securityStatus;
+  return {
+    name: live?.name ?? card?.name ?? record?.name,
+    birthday: live?.birthday ?? card?.birthday ?? null,
+    gender: live?.gender ?? card?.gender ?? record?.gender,
+    raceId: live?.race_id ?? card?.raceId ?? record?.race.id,
+    bloodlineId:
+      live?.bloodline_id ?? card?.bloodlineId ?? record?.bloodline.id,
+    corporation: named(corporationId, card?.corporation, record?.corporation),
+    alliance: named(allianceId, card?.alliance),
+    factionId:
+      live?.faction_id ?? card?.factionId ?? record?.faction?.id ?? null,
+    securityStatus: securityStatus ?? null,
+    title: live?.corporation_title ?? card?.title ?? record?.title ?? null,
+    description:
+      live?.description ?? card?.description ?? record?.description ?? null,
+    achievementScore: live?.achievement_score ?? card?.achievementScore ?? null,
+  };
 }
 
-/** Public employment history — the corporations a character has belonged to. */
-function CharacterEmploymentHistory({
-  characterId,
-}: Readonly<{ characterId: number }>) {
-  const { data, isLoading } =
-    useGetCharactersCharacterIdCorporationhistory(characterId);
-
-  const entries = useMemo(() => {
-    const history = data?.data;
-    if (!history) return [];
-    // Newest first. Each record ends when the next-newer record begins.
-    const sorted = [...history].sort((a, b) => b.record_id - a.record_id);
-    return sorted.map((entry, index) => ({
-      ...entry,
-      endDate: index === 0 ? undefined : sorted[index - 1]?.start_date,
-      isCurrent: index === 0,
-    }));
-  }, [data?.data]);
-
-  if (isLoading) {
-    return (
-      <Stack gap="lg">
-        {[0, 1, 2].map((i) => (
-          <Group key={i} gap="sm" wrap="nowrap">
-            <Skeleton height={32} circle />
-            <Stack gap={6} style={{ flex: 1 }}>
-              <Skeleton height={14} width="45%" />
-              <Skeleton height={10} width="70%" />
-            </Stack>
-          </Group>
-        ))}
-      </Stack>
-    );
-  }
-
-  if (entries.length === 0) {
-    return (
-      <Text size="sm" c="dimmed">
-        No employment history available.
-      </Text>
-    );
-  }
-
+function EntityLine({
+  avatar,
+  children,
+}: Readonly<{ avatar: ReactNode; children: ReactNode }>) {
   return (
-    <Timeline active={-1} bulletSize={32} lineWidth={2}>
-      {entries.map((entry) => (
-        <Timeline.Item
-          key={entry.record_id}
-          bullet={
-            <CorporationAvatar corporationId={entry.corporation_id} size={28} />
-          }
-          title={
-            <Group gap="xs">
-              {/* A historical timeline is not a navigation surface. */}
-              <CorporationAnchor
-                corporationId={entry.corporation_id}
-                prefetch={false}
-              >
-                <CorporationName
-                  span
-                  corporationId={entry.corporation_id}
-                  fw={500}
-                />
-              </CorporationAnchor>
-              {entry.isCurrent && (
-                <Badge size="xs" color="teal" variant="light">
-                  Current
-                </Badge>
-              )}
-              {entry.is_deleted && (
-                <Badge size="xs" color="red" variant="light">
-                  Closed
-                </Badge>
-              )}
-            </Group>
-          }
-        >
-          <Text size="xs" c="dimmed" mt={4}>
-            {format(new Date(entry.start_date), "yyyy-MM-dd")}
-            {entry.endDate ? (
-              <>
-                {" → "}
-                {format(new Date(entry.endDate), "yyyy-MM-dd")}
-                {" · "}
-                {formatDistanceStrict(
-                  new Date(entry.start_date),
-                  new Date(entry.endDate),
-                )}
-              </>
-            ) : (
-              <> · present</>
-            )}
-          </Text>
-        </Timeline.Item>
-      ))}
-    </Timeline>
+    <Group gap="xs" wrap="nowrap">
+      {avatar}
+      {children}
+    </Group>
   );
 }
 
-export default function Page({
-  agentData,
-  agentDivisionName,
-}: Readonly<{
-  agentData: CharacterAgentData | null;
-  agentDivisionName: string | null;
-}>) {
-  const params = useParams();
-  const rawCharacterId = params.characterId;
-  const characterId = Number(
-    typeof rawCharacterId === "string" ? rawCharacterId : rawCharacterId?.[0],
+function CorporationLine({ corporation }: Readonly<{ corporation: NamedRef }>) {
+  return (
+    <EntityLine
+      avatar={<CorporationAvatar corporationId={corporation.id} size="sm" />}
+    >
+      <CorporationAnchor corporationId={corporation.id}>
+        {corporation.name ?? (
+          <CorporationName span corporationId={corporation.id} />
+        )}
+      </CorporationAnchor>
+    </EntityLine>
   );
+}
 
-  const selectedCharacter = useSelectedCharacter();
-  const { data: character } = useCharacter(characterId, agentData);
+function AllianceLine({ alliance }: Readonly<{ alliance: NamedRef }>) {
+  return (
+    <EntityLine avatar={<AllianceAvatar allianceId={alliance.id} size="sm" />}>
+      <AllianceAnchor allianceId={alliance.id}>
+        {alliance.name ?? <AllianceName span allianceId={alliance.id} />}
+      </AllianceAnchor>
+    </EntityLine>
+  );
+}
 
-  // Authenticated enrichment — only resolves when the viewer has a live token
-  // for this exact character (i.e. viewing one of their own characters).
+function FactionLine({ factionId }: Readonly<{ factionId: number }>) {
+  return (
+    <EntityLine avatar={<FactionAvatar factionId={factionId} size="sm" />}>
+      <FactionAnchor factionId={factionId}>
+        <FactionName span factionId={factionId} />
+      </FactionAnchor>
+    </EntityLine>
+  );
+}
+
+function CorporationList({
+  corporations,
+}: Readonly<{ corporations: NamedRef[] }>) {
+  return (
+    <Stack gap={4}>
+      {corporations.map((corporation) => (
+        <CorporationLine key={corporation.id} corporation={corporation} />
+      ))}
+    </Stack>
+  );
+}
+
+function AgentPanel({ agent }: Readonly<{ agent: AgentDetails }>) {
+  const { station, inSpace } = agent;
+  return (
+    <Stack gap="lg">
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+        <StatCard label="Level" value={`Level ${agent.level}`} />
+        <StatCard
+          label="Agent type"
+          value={agent.agentType.name ?? agent.agentType.id}
+        />
+        <StatCard
+          label="Division"
+          value={agent.division.name ?? agent.division.id}
+        />
+        <StatCard label="Locator" value={agent.isLocator ? "Yes" : "No"} />
+        {agent.isCeo !== null && (
+          <StatCard
+            label="Corporation CEO"
+            value={agent.isCeo ? "Yes" : "No"}
+          />
+        )}
+        {agent.startDate && (
+          <StatCard label="Started" value={formatDate(agent.startDate)} />
+        )}
+      </SimpleGrid>
+
+      <Stack gap="sm">
+        <SectionHeading icon={<IconMapPin size={18} />}>
+          Location
+        </SectionHeading>
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+          <StatCard
+            label="Station"
+            value={
+              <StationAnchor stationId={station.stationId}>
+                {station.name}
+              </StationAnchor>
+            }
+          />
+          {station.solarSystemId !== null && (
+            <StatCard
+              label="System"
+              value={
+                <Group gap="xs" wrap="nowrap">
+                  {station.securityStatus !== null && (
+                    <SolarSystemSecurityStatusBadge
+                      securityStatus={station.securityStatus}
+                      size="sm"
+                    />
+                  )}
+                  <SolarSystemAnchor solarSystemId={station.solarSystemId}>
+                    {station.solarSystemName ?? station.solarSystemId}
+                  </SolarSystemAnchor>
+                </Group>
+              }
+              sub={
+                station.regionId === null ? undefined : (
+                  <RegionAnchor regionId={station.regionId} size="xs">
+                    {station.regionName ?? station.regionId}
+                  </RegionAnchor>
+                )
+              }
+            />
+          )}
+          {inSpace && (
+            <>
+              <StatCard
+                label="In space at"
+                value={
+                  <DungeonAnchor dungeonId={inSpace.dungeon.id}>
+                    {inSpace.dungeon.name ?? `Dungeon ${inSpace.dungeon.id}`}
+                  </DungeonAnchor>
+                }
+                sub={
+                  <SolarSystemAnchor
+                    solarSystemId={inSpace.solarSystem.id}
+                    size="xs"
+                  >
+                    {inSpace.solarSystem.name ?? inSpace.solarSystem.id}
+                  </SolarSystemAnchor>
+                }
+              />
+              <StatCard
+                label="Aboard"
+                value={
+                  <EntityLine
+                    avatar={<TypeAvatar typeId={inSpace.type.id} size="sm" />}
+                  >
+                    <TypeAnchor typeId={inSpace.type.id}>
+                      {inSpace.type.name ?? inSpace.type.id}
+                    </TypeAnchor>
+                  </EntityLine>
+                }
+              />
+            </>
+          )}
+        </SimpleGrid>
+      </Stack>
+
+      {agent.researchSkills.length > 0 && (
+        <Stack gap="sm">
+          <SectionHeading icon={<IconId size={18} />}>
+            Research fields
+          </SectionHeading>
+          <Paper withBorder radius="md" p="sm">
+            <Group gap="md">
+              {agent.researchSkills.map((skill) => (
+                <EntityLine
+                  key={skill.id}
+                  avatar={<TypeAvatar typeId={skill.id} size="sm" />}
+                >
+                  <TypeAnchor typeId={skill.id}>
+                    {skill.name ?? skill.id}
+                  </TypeAnchor>
+                </EntityLine>
+              ))}
+            </Group>
+          </Paper>
+        </Stack>
+      )}
+    </Stack>
+  );
+}
+
+/** The viewer's own character: wallet, skill points, location, training. */
+function CapsuleerStatus({ characterId }: Readonly<{ characterId: number }>) {
   const authenticatedCharacter = useAuthenticatedCharacter(characterId);
   const { data: walletBalance, isAllowed: canReadWallet } =
     useCharacterWalletBalance(characterId);
   const { data: skills, hasToken: canReadSkills } =
     useCharacterSkills(characterId);
-
-  if (!Number.isFinite(characterId)) {
+  if (!authenticatedCharacter || authenticatedCharacter.sessionExpired) {
     return null;
   }
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<IconUserCircle size={18} />}>
+        Your character
+      </SectionHeading>
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+        {canReadWallet && (
+          <StatCard
+            label="Wallet"
+            value={<ISKAmount span fw={600} amount={walletBalance?.data} />}
+          />
+        )}
+        {canReadSkills && (
+          <StatCard
+            label="Skill points"
+            value={
+              <Group gap={6} wrap="nowrap">
+                <TypeAvatar typeId={SKILL_POINTS_TYPE_ID} size={16} />
+                {skills ? formatInteger(skills.data.total_sp) : "—"} SP
+              </Group>
+            }
+          />
+        )}
+      </SimpleGrid>
+      <CharacterLocationCard characterId={characterId} />
+      <CharacterSkillTrainingCard characterId={characterId} />
+    </Stack>
+  );
+}
 
-  const cleanTitle = character?.title
-    ? character.title.replace(/<[^<>]*>/g, "").trim()
-    : undefined;
-
-  let npcBadgeLabel: string | undefined;
-  if (character?.type === "agent") {
-    npcBadgeLabel = character.isResearchAgent ? "Research Agent" : "Agent";
-  } else if (character?.isNpc) {
-    npcBadgeLabel = "NPC";
+function npcBadgeLabel(record: CharacterRecord | null, isNpc: boolean) {
+  if (record?.agent) {
+    return record.agent.researchSkills.length > 0 ? "Research agent" : "Agent";
   }
+  return isNpc ? "NPC" : undefined;
+}
 
-  const showCapsuleerStatus =
-    !!authenticatedCharacter && !authenticatedCharacter.sessionExpired;
+export default function CharacterPage({
+  characterId,
+  esi,
+  record,
+}: Readonly<PageProps>) {
+  const selectedCharacter = useSelectedCharacter();
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(CHARACTER_PAGE_TABS)
+      .withDefault(DEFAULT_CHARACTER_PAGE_TAB)
+      .withOptions({ history: "replace" }),
+  );
+  const { data: liveCharacter } = useEsiCharacter(characterId);
+  const { data: history, isLoading: historyLoading } =
+    useGetCharactersCharacterIdCorporationhistory(characterId);
+  const zkillEntity = useMemo(
+    () => ({ kind: "character" as const, id: characterId }),
+    [characterId],
+  );
+  const zkill = useZkillboardStats(zkillEntity);
+  const clientClock = useSyncExternalStore(
+    subscribeToNothing,
+    getClientNow,
+    getServerNow,
+  );
+  // "Now" for ages and tenures: the server card's timestamp, so the server
+  // render and hydration agree; the browser's clock only without one.
+  const now = esi?.readAt ?? clientClock;
+
+  const identity = useMemo(
+    () => resolveIdentity(liveCharacter?.data, esi, record),
+    [liveCharacter?.data, esi, record],
+  );
+  const stints = useMemo(
+    () => toStints(history?.data ?? [], now),
+    [history?.data, now],
+  );
+  const employment = useMemo(() => summarizeEmployment(stints), [stints]);
+  const killEfficiency = iskEfficiency(
+    zkill.data?.iskDestroyed,
+    zkill.data?.iskLost,
+  );
+
+  const isNpc = isIdInRanges(characterId, npcCharacterIdRanges);
+  const badge = npcBadgeLabel(record, isNpc);
+  const agent = record?.agent ?? null;
+  const ceoOf = record?.ceoOf ?? [];
+  const founded = record?.founded ?? [];
+
+  const visibleTabs: Record<CharacterPageTab, boolean> = {
+    overview: true,
+    biography: Boolean(identity.description),
+    history: !isNpc,
+    agent: agent !== null,
+    killboard: !isNpc,
+  };
+  const selectedTab = visibleTabs[activeTab]
+    ? activeTab
+    : DEFAULT_CHARACTER_PAGE_TAB;
 
   return (
     <Container size="lg" py="md">
-      <Stack gap="xl">
-        {/* ---- Hero ---------------------------------------------------- */}
-        <Card padding="xl">
-          <Group align="flex-start" gap="xl" wrap="wrap">
+      <Stack gap="lg">
+        <HeroCard
+          artwork={
             <CharacterOnlineIndicator
               characterId={characterId}
               position="bottom-end"
@@ -286,340 +491,420 @@ export default function Page({
                 radius="md"
               />
             </CharacterOnlineIndicator>
-
-            <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <div>
-                {cleanTitle && (
-                  <Text size="xs" c="dimmed" tt="uppercase" fw={600} mb={2}>
-                    {cleanTitle}
-                  </Text>
+          }
+        >
+          <Breadcrumbs fz="sm">
+            {identity.alliance && (
+              <AllianceAnchor allianceId={identity.alliance.id} size="sm">
+                {identity.alliance.name ?? (
+                  <AllianceName span allianceId={identity.alliance.id} />
                 )}
-                <Group gap="sm" align="center">
-                  <Title order={2}>
-                    <CharacterName span characterId={characterId} />
-                  </Title>
-                  {npcBadgeLabel && (
-                    <Badge variant="light">{npcBadgeLabel}</Badge>
-                  )}
-                  {character?.securityStatus !== undefined && (
-                    <Badge
-                      variant="light"
-                      color={securityStatusColor(character.securityStatus)}
-                    >
-                      {character.securityStatus.toFixed(1)}
-                    </Badge>
-                  )}
-                  {selectedCharacter && (
-                    <OpenInformationWindowActionIcon
-                      characterId={selectedCharacter.characterId}
-                      entityId={characterId}
-                    />
-                  )}
-                </Group>
-              </div>
-
-              {/* Affiliations */}
-              <Stack gap={6}>
-                {character?.corporationId && (
-                  <Group gap="xs" wrap="nowrap">
-                    <CorporationAvatar
-                      corporationId={character.corporationId}
-                      size="sm"
-                    />
-                    <Anchor
-                      component={Link}
-                      href={`/corporation/${character.corporationId}`}
-                    >
-                      <CorporationName
-                        span
-                        corporationId={character.corporationId}
-                        size="sm"
-                      />
-                    </Anchor>
-                  </Group>
-                )}
-                {character?.allianceId && (
-                  <Group gap="xs" wrap="nowrap">
-                    <AllianceAvatar
-                      allianceId={character.allianceId}
-                      size="sm"
-                    />
-                    <Anchor
-                      component={Link}
-                      href={`/alliance/${character.allianceId}`}
-                    >
-                      <AllianceName
-                        span
-                        allianceId={character.allianceId}
-                        size="sm"
-                      />
-                    </Anchor>
-                  </Group>
-                )}
-                {character?.factionId && (
-                  <Group gap="xs" wrap="nowrap">
-                    <FactionAvatar factionId={character.factionId} size="sm" />
-                    <Anchor
-                      component={Link}
-                      href={`/faction/${character.factionId}`}
-                    >
-                      <FactionName
-                        span
-                        factionId={character.factionId}
-                        size="sm"
-                      />
-                    </Anchor>
-                  </Group>
-                )}
-              </Stack>
-
-              {/* External resources */}
-              <Group gap="xs" mt={4}>
-                <Button
-                  component={Link}
-                  href={`https://evewho.com/character/${characterId}`}
-                  target="_blank"
-                  size="xs"
-                  leftSection={<IconExternalLink size={14} />}
-                >
-                  EveWho
-                </Button>
-                <Button
-                  component={Link}
-                  href={`https://zkillboard.com/character/${characterId}`}
-                  target="_blank"
-                  size="xs"
-                  leftSection={<IconExternalLink size={14} />}
-                >
-                  zKillboard
-                </Button>
-              </Group>
-            </Stack>
-          </Group>
-        </Card>
-
-        {/* ---- Body --------------------------------------------------- */}
-        <Grid gap="xl">
-          {/* Main column — biography + employment history */}
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <Stack gap="xl">
-              <Card padding="xl">
-                <SectionTitle icon={<IconUserCircle size={18} />}>
-                  Biography
-                </SectionTitle>
-                {character ? (
-                  <MailMessageViewer
-                    content={
-                      character.description
-                        ? sanitizeFormattedEveString(character.description)
-                        : "No biography."
-                    }
+              </AllianceAnchor>
+            )}
+            {identity.corporation && (
+              <CorporationAnchor
+                corporationId={identity.corporation.id}
+                size="sm"
+              >
+                {identity.corporation.name ?? (
+                  <CorporationName
+                    span
+                    corporationId={identity.corporation.id}
                   />
-                ) : (
-                  <Skeleton height={80} />
                 )}
-              </Card>
+              </CorporationAnchor>
+            )}
+            <Text size="sm">{identity.name ?? characterId}</Text>
+          </Breadcrumbs>
+          {identity.title && (
+            <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+              {/* Titles are EVE markup; show the text. */}
+              {identity.title.replace(/<[^<>]*>/g, "").trim()}
+            </Text>
+          )}
+          <Group gap="sm" align="center">
+            <Title order={2}>
+              {identity.name ?? `Character ${characterId}`}
+            </Title>
+            {badge && <Badge variant="light">{badge}</Badge>}
+            {identity.securityStatus !== null && (
+              <Badge
+                variant="light"
+                color={securityStatusColor(identity.securityStatus)}
+              >
+                {identity.securityStatus.toFixed(1)}
+              </Badge>
+            )}
+            {selectedCharacter && (
+              <OpenInformationWindowActionIcon
+                characterId={selectedCharacter.characterId}
+                entityId={characterId}
+              />
+            )}
+          </Group>
 
-              <Card padding="xl">
-                <SectionTitle icon={<IconBriefcase size={18} />}>
-                  Employment History
-                </SectionTitle>
-                <CharacterEmploymentHistory characterId={characterId} />
-              </Card>
-            </Stack>
-          </Grid.Col>
+          <Group gap="xl">
+            {identity.birthday && now && (
+              <HeroStat label="Age" value={formatAge(identity.birthday, now)} />
+            )}
+            {employment.corporations > 0 && (
+              <HeroStat
+                label="Corporations"
+                value={formatInteger(employment.corporations)}
+              />
+            )}
+            {employment.current && (
+              <HeroStat
+                label="In corporation for"
+                value={formatDays(employment.current.days)}
+              />
+            )}
+            {agent && <HeroStat label="Agent level" value={agent.level} />}
+            {/* zKillboard loads in the browser: hold the slot while it does,
+                so the stat row does not shift when it arrives. */}
+            {!isNpc && (zkill.isLoading || killEfficiency !== null) && (
+              <HeroStat
+                label="ISK efficiency"
+                value={
+                  killEfficiency === null ? (
+                    <Skeleton h="1.2em" w="5ch" />
+                  ) : (
+                    formatPercent(killEfficiency)
+                  )
+                }
+              />
+            )}
+          </Group>
 
-          {/* Aside column — the facts sidebar */}
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <Stack gap="xl">
-              <Card padding="xl">
-                <SectionTitle icon={<IconId size={18} />}>Details</SectionTitle>
-                <Stack gap="sm">
-                  {character?.securityStatus !== undefined && (
-                    <>
-                      <InfoRow label="Security Status">
+          <Group gap="xs">
+            {EXTERNAL_LINKS.map((link) => (
+              <Button
+                key={link.label}
+                component={Link}
+                href={`${link.href}${characterId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="xs"
+                leftSection={<IconExternalLink size={14} />}
+              >
+                {link.label}
+              </Button>
+            ))}
+          </Group>
+        </HeroCard>
+
+        <Tabs
+          value={selectedTab}
+          onChange={(value) => {
+            if (isCharacterPageTab(value)) void setActiveTab(value);
+          }}
+          variant="outline"
+          keepMounted={false}
+        >
+          <Tabs.List>
+            <Tabs.Tab
+              value="overview"
+              leftSection={<IconInfoCircle size={16} />}
+            >
+              Overview
+            </Tabs.Tab>
+            {visibleTabs.biography && (
+              <Tabs.Tab
+                value="biography"
+                leftSection={<IconUserCircle size={16} />}
+              >
+                Biography
+              </Tabs.Tab>
+            )}
+            {visibleTabs.history && (
+              <Tabs.Tab
+                value="history"
+                leftSection={<IconBriefcase size={16} />}
+              >
+                Employment History
+                {employment.stints > 0 &&
+                  ` (${formatInteger(employment.stints)})`}
+              </Tabs.Tab>
+            )}
+            {visibleTabs.agent && (
+              <Tabs.Tab value="agent" leftSection={<IconId size={16} />}>
+                Agent
+              </Tabs.Tab>
+            )}
+            {visibleTabs.killboard && (
+              <Tabs.Tab value="killboard" leftSection={<IconSkull size={16} />}>
+                Killboard
+              </Tabs.Tab>
+            )}
+          </Tabs.List>
+
+          <Tabs.Panel value="overview" pt="lg">
+            <Stack gap="lg">
+              <Stack gap="sm">
+                <SectionHeading icon={<IconId size={18} />}>
+                  Identity
+                </SectionHeading>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+                  <StatCard label="Character ID" value={characterId} />
+                  {identity.birthday && (
+                    <StatCard
+                      label="Born"
+                      value={formatDate(identity.birthday)}
+                      sub={
+                        now
+                          ? `${formatAge(identity.birthday, now)} ago`
+                          : undefined
+                      }
+                    />
+                  )}
+                  {identity.gender && (
+                    <StatCard
+                      label="Gender"
+                      value={
+                        <Text span tt="capitalize" inherit>
+                          {identity.gender}
+                        </Text>
+                      }
+                    />
+                  )}
+                  {identity.raceId !== undefined && (
+                    <StatCard
+                      label="Race"
+                      value={
+                        <RaceAnchor raceId={identity.raceId}>
+                          <RaceName span raceId={identity.raceId} />
+                        </RaceAnchor>
+                      }
+                    />
+                  )}
+                  {identity.bloodlineId !== undefined && (
+                    <StatCard
+                      label="Bloodline"
+                      value={
+                        <BloodlineAnchor bloodlineId={identity.bloodlineId}>
+                          <BloodlineName bloodlineId={identity.bloodlineId} />
+                        </BloodlineAnchor>
+                      }
+                      sub={
+                        record?.ancestry?.name
+                          ? `${record.ancestry.name} ancestry`
+                          : undefined
+                      }
+                    />
+                  )}
+                  {identity.securityStatus !== null && (
+                    <StatCard
+                      label="Security status"
+                      value={
                         <Text
                           span
-                          fw={600}
-                          c={securityStatusColor(character.securityStatus)}
+                          inherit
+                          c={securityStatusColor(identity.securityStatus)}
                         >
-                          {character.securityStatus.toFixed(2)}
+                          {identity.securityStatus.toFixed(2)}
                         </Text>
-                      </InfoRow>
-                      <Divider />
-                    </>
+                      }
+                    />
                   )}
-                  {character?.birthday && (
-                    <>
-                      <InfoRow label="Born">
-                        <DateHoverCard date={character.birthday}>
-                          <FormattedDateText
-                            date={character.birthday}
-                            format="d MMM yyyy"
-                          />
-                        </DateHoverCard>
-                      </InfoRow>
-                      <InfoRow label="Age">
-                        <Text span>
-                          <CharacterAge birthday={character.birthday} />
-                        </Text>
-                      </InfoRow>
-                      <Divider />
-                    </>
+                  {identity.achievementScore !== null && (
+                    <StatCard
+                      label="Achievement score"
+                      value={formatInteger(identity.achievementScore)}
+                    />
                   )}
-                  {character?.gender && (
-                    <InfoRow label="Gender">
-                      <Text span tt="capitalize">
-                        {character.gender}
-                      </Text>
-                    </InfoRow>
+                  {record?.isUnique && (
+                    <StatCard label="Name" value="Unique" sub="SDE" />
                   )}
-                  <InfoRow label="Race">
-                    <RaceAnchor raceId={character?.raceId}>
-                      <RaceName span raceId={character?.raceId} />
-                    </RaceAnchor>
-                  </InfoRow>
-                  <InfoRow label="Bloodline">
-                    <BloodlineAnchor bloodlineId={character?.bloodlineId}>
-                      <BloodlineName bloodlineId={character?.bloodlineId} />
-                    </BloodlineAnchor>
-                  </InfoRow>
-                  {character?.factionId && (
-                    <InfoRow label="Faction">
-                      <Anchor
-                        component={Link}
-                        href={`/faction/${character.factionId}`}
-                      >
-                        <FactionName span factionId={character.factionId} />
-                      </Anchor>
-                    </InfoRow>
+                </SimpleGrid>
+              </Stack>
+
+              <Stack gap="sm">
+                <SectionHeading icon={<IconUsers size={18} />}>
+                  Affiliations
+                </SectionHeading>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+                  {identity.corporation && (
+                    <StatCard
+                      label="Corporation"
+                      value={
+                        <CorporationLine corporation={identity.corporation} />
+                      }
+                      sub={
+                        employment.current
+                          ? `Since ${formatDate(employment.current.start)}`
+                          : undefined
+                      }
+                    />
+                  )}
+                  <StatCard
+                    label="Alliance"
+                    value={
+                      identity.alliance ? (
+                        <AllianceLine alliance={identity.alliance} />
+                      ) : (
+                        "Not in an alliance"
+                      )
+                    }
+                  />
+                  {identity.factionId !== null && (
+                    <StatCard
+                      label="Faction"
+                      value={<FactionLine factionId={identity.factionId} />}
+                    />
+                  )}
+                  {ceoOf.length > 0 && (
+                    <StatCard
+                      label="CEO of"
+                      value={<CorporationList corporations={ceoOf} />}
+                    />
+                  )}
+                  {founded.length > 0 && (
+                    <StatCard
+                      label="Founded"
+                      value={<CorporationList corporations={founded} />}
+                    />
+                  )}
+                </SimpleGrid>
+              </Stack>
+
+              {employment.stints > 0 && <EmploymentSummary stints={stints} />}
+
+              {agent && (
+                <Stack gap="sm">
+                  <SectionHeading icon={<IconId size={18} />}>
+                    Agent
+                  </SectionHeading>
+                  <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+                    <StatCard label="Level" value={`Level ${agent.level}`} />
+                    <StatCard
+                      label="Division"
+                      value={agent.division.name ?? agent.division.id}
+                    />
+                    <StatCard
+                      label="Station"
+                      value={
+                        <StationAnchor stationId={agent.station.stationId}>
+                          {agent.station.name}
+                        </StationAnchor>
+                      }
+                    />
+                  </SimpleGrid>
+                </Stack>
+              )}
+
+              {!isNpc && (
+                <Stack gap="sm">
+                  <SectionHeading icon={<IconSkull size={18} />}>
+                    Killboard
+                  </SectionHeading>
+                  {zkill.isError ? (
+                    <Text size="sm" c="dimmed">
+                      zKillboard did not answer. Try again later.
+                    </Text>
+                  ) : (
+                    <KillboardSummaryCards
+                      entity={zkillEntity}
+                      stats={zkill.data}
+                      isLoading={zkill.isLoading}
+                    />
                   )}
                 </Stack>
-              </Card>
-
-              {/* NPC agent specifics */}
-              {character?.type === "agent" && (
-                <Card padding="xl">
-                  <SectionTitle icon={<IconId size={18} />}>
-                    Agent Details
-                  </SectionTitle>
-                  <Stack gap="sm">
-                    <InfoRow label="Division">
-                      <Text span>{agentDivisionName ?? "—"}</Text>
-                    </InfoRow>
-                    <InfoRow label="Agent Type">
-                      <Text span>{character.agentTypeId}</Text>
-                    </InfoRow>
-                    <InfoRow label="Level">
-                      <Text span>{character.level}</Text>
-                    </InfoRow>
-                    <InfoRow label="Locator Agent">
-                      <Text span>{character.isLocator ? "Yes" : "No"}</Text>
-                    </InfoRow>
-                    <InfoRow label="Station">
-                      <Group wrap="nowrap" gap="xs" justify="flex-end">
-                        <StationAvatar
-                          stationId={character.locationId}
-                          size="xs"
-                        />
-                        <StationAnchor
-                          stationId={character.locationId}
-                          target="_blank"
-                        >
-                          <StationName stationId={character.locationId} />
-                        </StationAnchor>
-                      </Group>
-                    </InfoRow>
-                    {character.isResearchAgent &&
-                      character.researchSkills &&
-                      character.researchSkills.length > 0 && (
-                        <InfoRow label="Research Skills">
-                          <Stack gap="xs">
-                            {character.researchSkills.map((typeId) => (
-                              <Group
-                                wrap="nowrap"
-                                gap="xs"
-                                justify="flex-end"
-                                key={typeId}
-                              >
-                                <TypeAvatar typeId={typeId} size="xs" />
-                                <TypeAnchor typeId={typeId} target="_blank">
-                                  <TypeName typeId={typeId} />
-                                </TypeAnchor>
-                              </Group>
-                            ))}
-                          </Stack>
-                        </InfoRow>
-                      )}
-                    {character.isInSpace && (
-                      <>
-                        <Divider />
-                        <InfoRow label="Solar System">
-                          <SolarSystemAnchor
-                            solarSystemId={character.solarSystemId}
-                            target="_blank"
-                          >
-                            <SolarSystemName
-                              solarSystemId={character.solarSystemId}
-                            />
-                          </SolarSystemAnchor>
-                        </InfoRow>
-                        <InfoRow label="Dungeon">
-                          <DungeonAnchor
-                            dungeonId={character.dungeonId}
-                            target="_blank"
-                          >
-                            Dungeon {character.dungeonId}
-                          </DungeonAnchor>
-                        </InfoRow>
-                        <InfoRow label="Ship">
-                          <Group wrap="nowrap" gap="xs" justify="flex-end">
-                            <TypeAvatar typeId={character.typeId} size="xs" />
-                            <TypeAnchor
-                              typeId={character.typeId}
-                              target="_blank"
-                            >
-                              <TypeName typeId={character.typeId} />
-                            </TypeAnchor>
-                          </Group>
-                        </InfoRow>
-                      </>
-                    )}
-                  </Stack>
-                </Card>
               )}
 
-              {/* Authenticated (own character) live data */}
-              {showCapsuleerStatus && (
-                <Card padding="xl">
-                  <SectionTitle icon={<IconUserCircle size={18} />}>
-                    Capsuleer Status
-                  </SectionTitle>
-                  <Stack gap="md">
-                    {canReadWallet && (
-                      <InfoRow label="Wallet">
-                        <ISKAmount span fw={600} amount={walletBalance?.data} />
-                      </InfoRow>
-                    )}
-                    {canReadSkills && (
-                      <InfoRow label="Skill Points">
-                        <Group gap={6} wrap="nowrap" justify="flex-end">
-                          <TypeAvatar typeId={19430} size={16} />
-                          <Text span fw={600}>
-                            {skills?.data.total_sp.toLocaleString() ?? "—"} SP
-                          </Text>
-                        </Group>
-                      </InfoRow>
-                    )}
-                    <CharacterLocationCard characterId={characterId} />
-                    <CharacterSkillTrainingCard characterId={characterId} />
-                  </Stack>
-                </Card>
-              )}
+              <CapsuleerStatus characterId={characterId} />
             </Stack>
-          </Grid.Col>
-        </Grid>
+          </Tabs.Panel>
+
+          {visibleTabs.biography && identity.description && (
+            <Tabs.Panel value="biography" pt="lg">
+              <Paper withBorder radius="md" p="md">
+                <MailMessageViewer
+                  content={sanitizeFormattedEveString(identity.description)}
+                />
+              </Paper>
+            </Tabs.Panel>
+          )}
+
+          {visibleTabs.history && (
+            <Tabs.Panel value="history" pt="lg">
+              <Stack gap="lg">
+                {employment.stints > 0 && <EmploymentSummary stints={stints} />}
+                <EmploymentHistory stints={stints} isLoading={historyLoading} />
+              </Stack>
+            </Tabs.Panel>
+          )}
+
+          {visibleTabs.agent && agent && (
+            <Tabs.Panel value="agent" pt="lg">
+              <AgentPanel agent={agent} />
+            </Tabs.Panel>
+          )}
+
+          {visibleTabs.killboard && (
+            <Tabs.Panel value="killboard" pt="lg">
+              <KillboardTab
+                entity={zkillEntity}
+                stats={zkill.data}
+                isLoading={zkill.isLoading}
+                isError={zkill.isError}
+              />
+            </Tabs.Panel>
+          )}
+        </Tabs>
       </Stack>
     </Container>
+  );
+}
+
+/** Corporations, stints and tenures, from the employment history. */
+function EmploymentSummary({ stints }: Readonly<{ stints: Stint[] }>) {
+  const summary = summarizeEmployment(stints);
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<IconBriefcase size={18} />}>
+        Employment
+      </SectionHeading>
+      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
+        <StatCard
+          label="Corporations"
+          value={formatInteger(summary.corporations)}
+          sub={
+            summary.stints === summary.corporations
+              ? undefined
+              : `${formatInteger(summary.stints)} stints`
+          }
+        />
+        {summary.current && (
+          <StatCard
+            label="Current tenure"
+            value={formatDays(summary.current.days)}
+          />
+        )}
+        {summary.averageDays !== null && (
+          <StatCard
+            label="Average tenure"
+            value={formatDays(summary.averageDays)}
+          />
+        )}
+        {summary.longest && (
+          <StatCard
+            label="Longest stint"
+            value={formatDays(summary.longest.days)}
+            sub={
+              <CorporationAnchor
+                corporationId={summary.longest.corporationId}
+                size="xs"
+              >
+                <CorporationName
+                  span
+                  inherit
+                  corporationId={summary.longest.corporationId}
+                />
+              </CorporationAnchor>
+            }
+          />
+        )}
+      </SimpleGrid>
+    </Stack>
   );
 }
