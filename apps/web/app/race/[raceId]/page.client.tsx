@@ -78,8 +78,7 @@ import type {
 import { DataTable } from "~/components/DataTable";
 import {
   CorporationLink,
-  formatCount,
-  formatCountOf,
+  HeroCard,
   HeroStat,
   LocationTrail,
   SectionHeading,
@@ -90,6 +89,7 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
 import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
+import { formatInteger as formatCount, formatCountOf } from "~/lib/format";
 import { EntityHistory } from "../../history/EntityHistory";
 import { CHARACTER_ATTRIBUTES } from "./constants";
 import { DEFAULT_RACE_PAGE_TAB, isRacePageTab, RACE_PAGE_TABS } from "./tabs";
@@ -1574,99 +1574,70 @@ export default function RacePage(race: Readonly<PageProps>) {
   return (
     <Container size="lg" py="md">
       <Stack gap="lg">
-        {/* Hero */}
-        <Paper withBorder radius="md" p="lg">
-          <Group align="flex-start" gap="xl" wrap="wrap">
-            <Box
-              style={{
-                width: 170,
-                height: 170,
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
-                borderRadius: 8,
-                border: "1px solid rgba(108, 132, 151, 0.28)",
-                background:
-                  "radial-gradient(circle at 50% 35%, rgba(44, 66, 88, 0.4), rgba(6, 9, 15, 0.92))",
-              }}
-            >
-              <HeroImage race={race} factionId={factionId} />
-            </Box>
+        <HeroCard artwork={<HeroImage race={race} factionId={factionId} />}>
+          <Text size="sm" c="dimmed">
+            Race
+          </Text>
+          <Group gap="sm" align="center">
+            <Title order={2}>{race.name}</Title>
+            {isPlayable && (
+              <Badge color="teal" variant="light">
+                Playable
+              </Badge>
+            )}
+          </Group>
+          {hasDescription && (
+            <Text fs="italic" c="dimmed">
+              {firstSentence(description)}
+            </Text>
+          )}
 
-            <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <Text size="sm" c="dimmed">
-                Race
-              </Text>
-              <Group gap="sm" align="center">
-                <Title order={2}>{race.name}</Title>
-                {isPlayable && (
-                  <Badge color="teal" variant="light">
-                    Playable
-                  </Badge>
-                )}
-              </Group>
-              {hasDescription && (
-                <Text fs="italic" c="dimmed">
-                  {firstSentence(description)}
-                </Text>
-              )}
-
-              {(race.faction !== null || race.starterShip !== null) && (
-                <Group gap="xl">
-                  {race.faction && (
-                    <Group gap="xs" wrap="nowrap">
-                      <Text size="sm" c="dimmed">
-                        Faction
-                      </Text>
-                      <FactionAvatar factionId={race.faction.id} size="sm" />
-                      <FactionAnchor factionId={race.faction.id}>
-                        {race.faction.name}
-                      </FactionAnchor>
-                    </Group>
-                  )}
-                  {race.starterShip && (
-                    <Group gap="xs" wrap="nowrap">
-                      <Text size="sm" c="dimmed">
-                        Starter ship
-                      </Text>
-                      <TypeLink
-                        typeId={race.starterShip.id}
-                        name={race.starterShip.name}
-                      />
-                    </Group>
-                  )}
+          {(race.faction !== null || race.starterShip !== null) && (
+            <Group gap="xl">
+              {race.faction && (
+                <Group gap="xs" wrap="nowrap">
+                  <Text size="sm" c="dimmed">
+                    Faction
+                  </Text>
+                  <FactionAvatar factionId={race.faction.id} size="sm" />
+                  <FactionAnchor factionId={race.faction.id}>
+                    {race.faction.name}
+                  </FactionAnchor>
                 </Group>
               )}
+              {race.starterShip && (
+                <Group gap="xs" wrap="nowrap">
+                  <Text size="sm" c="dimmed">
+                    Starter ship
+                  </Text>
+                  <TypeLink
+                    typeId={race.starterShip.id}
+                    name={race.starterShip.name}
+                  />
+                </Group>
+              )}
+            </Group>
+          )}
 
-              <Group gap="xl">
-                {race.bloodlines.length > 0 && (
-                  <HeroStat
-                    label="Bloodlines"
-                    value={formatCount(race.bloodlines.length)}
-                  />
-                )}
-                {publishedShips > 0 && (
-                  <HeroStat label="Ships" value={formatCount(publishedShips)} />
-                )}
-                <HeroStat label="Items" value={formatCount(counts.items)} />
-                {counts.stations > 0 && (
-                  <HeroStat
-                    label="Stations"
-                    value={formatCount(counts.stations)}
-                  />
-                )}
-                {race.agents.total > 0 && (
-                  <HeroStat
-                    label="Agents"
-                    value={formatCount(race.agents.total)}
-                  />
-                )}
-              </Group>
-            </Stack>
+          <Group gap="xl">
+            {race.bloodlines.length > 0 && (
+              <HeroStat
+                label="Bloodlines"
+                value={formatCount(race.bloodlines.length)}
+              />
+            )}
+            {publishedShips > 0 && (
+              <HeroStat label="Ships" value={formatCount(publishedShips)} />
+            )}
+            <HeroStat label="Items" value={formatCount(counts.items)} />
+            {counts.stations > 0 && (
+              <HeroStat label="Stations" value={formatCount(counts.stations)} />
+            )}
+            {race.agents.total > 0 && (
+              <HeroStat label="Agents" value={formatCount(race.agents.total)} />
+            )}
           </Group>
-        </Paper>
+        </HeroCard>
 
         {failedTable && (
           <Alert color="red" variant="light">

@@ -239,6 +239,7 @@ describe("LP Store index page (client)", () => {
       hasToken: true,
       loyaltyPointsMap: { 1000035: 500 },
       isLoading: false,
+      data: { data: [{ corporation_id: 1000035, loyalty_points: 500 }] },
     });
 
     renderPage();
@@ -305,10 +306,36 @@ describe("LP Store index page (client)", () => {
       );
     });
 
-    it("is disabled until the balances have loaded", () => {
+    it("can be turned on (and off) while the balances load", async () => {
       signIn({ loyaltyPointsMap: {}, isLoading: true, data: undefined });
       renderPage();
-      expect(toggle()).toBeDisabled();
+      expect(toggle()).toBeEnabled();
+      expect(toggle()).not.toHaveAttribute("aria-describedby");
+      fireEvent.click(toggle());
+      expect(toggle()).toBeChecked();
+      // Held as a skeleton until the balances arrive.
+      expect(
+        await screen.findByRole("status", {
+          name: "Loading your loyalty points",
+        }),
+      ).toBeInTheDocument();
+      fireEvent.click(toggle());
+      expect(toggle()).not.toBeChecked();
+      expect(screen.getByText("Federation Navy")).toBeInTheDocument();
+    });
+
+    it("shows no balances, rather than zeroes, when they failed to load", () => {
+      signIn({ loyaltyPointsMap: {}, isError: true, data: undefined });
+      renderPage();
+      expect(screen.queryByText("0 LP")).toBeNull();
+    });
+
+    it("asks for character 0, not any character, when none is selected", () => {
+      mockUseSelectedCharacter.mockReturnValue(null);
+      renderPage();
+      expect(mockUseCharacterLoyaltyPoints).toHaveBeenLastCalledWith(0, {
+        enabled: true,
+      });
     });
 
     it("keeps filtering on the last balances when a refetch fails", async () => {

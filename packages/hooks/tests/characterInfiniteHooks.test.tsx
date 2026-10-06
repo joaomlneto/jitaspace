@@ -250,6 +250,7 @@ describe("useCharacterAssets", () => {
     expect(result.current.assets[1]).toMatchObject({ item_id: 1 });
     expect(result.current.locations[60]?.items).toEqual([1, 2]);
     expect(result.current.hasToken).toBe(true);
+    expect(result.current.hasData).toBe(true);
 
     // x-pages drives paging: page 2 of 3 exists, page 3 of 3 is the end.
     expect(nextPageParam(page([], "3"), [page([])])).toBe(2);
@@ -258,6 +259,28 @@ describe("useCharacterAssets", () => {
     ).toBeUndefined();
     // A missing header means one page.
     expect(nextPageParam(page([]), [page([])])).toBeUndefined();
+  });
+
+  it("holds the walk when not enabled, but still reports the token", () => {
+    driveInfinite(mockAssetsInfinite, infiniteResult([], false));
+
+    const { result, rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) =>
+        useCharacterAssets(CHARACTER_ID, { enabled }),
+      { initialProps: { enabled: false } },
+    );
+
+    const queryEnabled = () =>
+      (
+        mockAssetsInfinite.mock.calls.at(-1)?.[3] as {
+          query: { enabled: boolean };
+        }
+      ).query.enabled;
+    expect(queryEnabled()).toBe(false);
+    expect(result.current.hasToken).toBe(true);
+
+    rerender({ enabled: true });
+    expect(queryEnabled()).toBe(true);
   });
 
   it("reports no token when the character has not granted the scope", () => {
@@ -285,6 +308,8 @@ describe("useCharacterAssets", () => {
     expect(result.current.assets).toEqual({});
     expect(result.current.locations).toEqual({});
     expect(result.current.isLoading).toBe(true);
+    // Empty assets, but not "owns nothing": no page has arrived yet.
+    expect(result.current.hasData).toBe(false);
   });
 });
 

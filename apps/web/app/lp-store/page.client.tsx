@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useId, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   Anchor,
@@ -11,44 +11,34 @@ import {
   SimpleGrid,
   Skeleton,
   Stack,
-  Switch,
   Text,
   TextInput,
   Title,
-  Tooltip,
   useMantineTheme,
-  VisuallyHidden,
 } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
 import { IconSearch } from "@tabler/icons-react";
 import posthog from "posthog-js";
 
 import { LPStoreIcon } from "@jitaspace/eve-icons";
-import {
-  useCharacterLoyaltyPoints,
-  useSelectedCharacter,
-} from "@jitaspace/hooks";
 import { CorporationAvatar, FactionAvatar } from "@jitaspace/ui";
 
 import type { LPStoreGroup } from "./groups";
+// The modules themselves, not the `~/components/LPStore` barrel, which would
+// pull the offers table and its data-table engines into this page.
+import { useLoyaltyPointsResource } from "~/components/LPStore/characterResources";
+import {
+  personalFilter,
+  useStoredToggle,
+} from "~/components/LPStore/personalFilter";
+import { PersonalFilterSwitch } from "~/components/LPStore/PersonalFilterSwitch";
 import { lpStorePath } from "~/lib/lpStorePath";
 import { filterLPStoreGroups } from "./groups";
 
 /** Where the "only corporations I have LP with" toggle is remembered. */
 const ONLY_WITH_LP_STORAGE_KEY = "jitaspace/lp-store-only-with-lp";
 
-/** Why the switch is disabled, when it is for a reason other than loading. */
-function getUnavailableHint(
-  hasToken: boolean,
-  balancesLoaded: boolean,
-  isLoading: boolean,
-): string | null {
-  if (!hasToken) {
-    return "Sign in with a character that has granted access to its loyalty points";
-  }
-  if (!balancesLoaded && !isLoading) return "Couldn't load your loyalty points";
-  return null;
-}
+/** No balances to show: a stable empty map. */
+const NO_BALANCES: Readonly<Record<number, number>> = {};
 
 export interface LPStorePageProps {
   /** Corporations grouped by faction, in display order. */
@@ -57,50 +47,39 @@ export interface LPStorePageProps {
 
 export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
   const theme = useMantineTheme();
-  const character = useSelectedCharacter();
-  const {
-    hasToken,
-    loyaltyPointsMap,
-    isLoading,
-    data: loyaltyPointsResponse,
-  } = useCharacterLoyaltyPoints(character?.characterId ?? 0);
+  // Always fetched: the page shows every balance, filter on or off.
+  const loyaltyPoints = useLoyaltyPointsResource(true);
+  const loyaltyPointsMap =
+    loyaltyPoints.status === "ready" ? loyaltyPoints.value : NO_BALANCES;
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
-  const [onlyWithLp, setOnlyWithLp] = useLocalStorage<boolean>({
-    key: ONLY_WITH_LP_STORAGE_KEY,
-    defaultValue: false,
-  });
-  // Only once the balances have loaded: filtering on an empty map while they
-  // load (or after the first request failed) would hide every corporation. A
-  // failed *re*fetch keeps the last balances, so it keeps the filter too.
-  const balancesLoaded = hasToken && loyaltyPointsResponse !== undefined;
-  const lpFilterActive = onlyWithLp && balancesLoaded;
+  const [onlyWithLp, setOnlyWithLp] = useStoredToggle(ONLY_WITH_LP_STORAGE_KEY);
+  const lpFilter = personalFilter(onlyWithLp, setOnlyWithLp, loyaltyPoints);
+  const lpFilterActive = lpFilter.value !== undefined;
   // With the toggle on, hold the list while the balances load rather than
   // showing every corporation only to remove most of them a moment later.
-  const awaitingBalances = onlyWithLp && hasToken && isLoading;
-  const unavailableHint = getUnavailableHint(
-    hasToken,
-    balancesLoaded,
-    isLoading,
-  );
-  const unavailableHintId = useId();
+  const awaitingBalances = lpFilter.awaiting;
   const corporationIdsWithLp = useMemo(
     () =>
-      new Set(
-        Object.entries(loyaltyPointsMap)
-          .filter(([, loyaltyPoints]) => loyaltyPoints > 0)
-          .map(([corporationId]) => Number(corporationId)),
-      ),
-    [loyaltyPointsMap],
+      lpFilter.value === undefined
+        ? undefined
+        : new Set(
+            Object.entries(lpFilter.value)
+              .filter(([, balance]) => balance > 0)
+              .map(([corporationId]) => Number(corporationId)),
+          ),
+    [lpFilter.value],
   );
   const visibleGroups = useMemo(
     () =>
       filterLPStoreGroups(
         groups,
         deferredQuery,
-        lpFilterActive ? { onlyCorporationIds: corporationIdsWithLp } : {},
+        corporationIdsWithLp
+          ? { onlyCorporationIds: corporationIdsWithLp }
+          : {},
       ),
-    [groups, deferredQuery, lpFilterActive, corporationIdsWithLp],
+    [groups, deferredQuery, corporationIdsWithLp],
   );
   const trimmedQuery = deferredQuery.trim();
 
@@ -137,38 +116,10 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
           />
-          {/* Always rendered, so its row exists in the prerendered page too:
-              the auth store rehydrates only on the client, and a switch that
-              appeared then would wrap onto its own row on a phone and push the
-              whole list down. */}
-          <Tooltip
-            label={unavailableHint}
-            disabled={unavailableHint === null}
-            events={{ hover: true, focus: true, touch: true }}
-            multiline
-            w={260}
-          >
-            <div>
-              <Switch
-                label="Only corporations I have LP with"
-                // The saved preference shows only where it takes effect, so a
-                // disabled switch is never drawn ON next to an unfiltered list.
-                checked={onlyWithLp && (balancesLoaded || awaitingBalances)}
-                disabled={!balancesLoaded}
-                // The tooltip cannot be reached by keyboard (a disabled input
-                // takes no focus), so the reason is also exposed this way.
-                aria-describedby={
-                  unavailableHint === null ? undefined : unavailableHintId
-                }
-                onChange={(event) => setOnlyWithLp(event.currentTarget.checked)}
-              />
-              {unavailableHint !== null && (
-                <VisuallyHidden id={unavailableHintId}>
-                  {unavailableHint}
-                </VisuallyHidden>
-              )}
-            </div>
-          </Tooltip>
+          <PersonalFilterSwitch
+            label="Only corporations I have LP with"
+            {...lpFilter.switchProps}
+          />
         </Group>
         {!awaitingBalances &&
           visibleGroups.length === 0 &&
@@ -233,7 +184,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
               </Group>
               <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 4 }}>
                 {group.corporations.map((corporation) => {
-                  const loyaltyPoints =
+                  const balance =
                     loyaltyPointsMap[corporation.corporationId] ?? 0;
                   return (
                     <Anchor
@@ -254,22 +205,18 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
                         />
                         <Stack gap={0}>
                           <Text>{corporation.name}</Text>
-                          {hasToken &&
-                            (isLoading ? (
-                              <Skeleton height={12} mt={4} width={70} />
-                            ) : (
-                              <Text
-                                c={
-                                  loyaltyPoints > 0
-                                    ? theme.primaryColor
-                                    : "dimmed"
-                                }
-                                fw={loyaltyPoints > 0 ? 600 : undefined}
-                                size="xs"
-                              >
-                                {loyaltyPoints.toLocaleString()} LP
-                              </Text>
-                            ))}
+                          {loyaltyPoints.status === "loading" && (
+                            <Skeleton height={12} mt={4} width={70} />
+                          )}
+                          {loyaltyPoints.status === "ready" && (
+                            <Text
+                              c={balance > 0 ? theme.primaryColor : "dimmed"}
+                              fw={balance > 0 ? 600 : undefined}
+                              size="xs"
+                            >
+                              {balance.toLocaleString()} LP
+                            </Text>
+                          )}
                         </Stack>
                       </Group>
                     </Anchor>

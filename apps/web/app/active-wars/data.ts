@@ -5,9 +5,9 @@ import type {
   WarRoomData,
   WarRoomStats,
   WarRoomWar,
-  WarStatus,
 } from "~/components/Wars/WarRoom/types";
 import { prisma } from "~/lib/db";
+import { deriveOngoingWarStatus } from "~/lib/warStatus";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -32,16 +32,8 @@ interface RawWar {
   updatedAt: Date;
 }
 
-function deriveStatus(war: RawWar, now: number): WarStatus {
-  const started = war.startedDate?.getTime();
-  if (started === undefined || started > now) return "pending";
-  const retracted = war.retractedDate?.getTime();
-  if (retracted !== undefined && retracted <= now) return "retracting";
-  return "active";
-}
-
 function enrichWar(war: RawWar, now: number): WarRoomWar {
-  const status = deriveStatus(war, now);
+  const status = deriveOngoingWarStatus(war, now);
   const totalIskDestroyed =
     war.aggressorIskDestroyed + war.defenderIskDestroyed;
   const totalShipsKilled = war.aggressorShipsKilled + war.defenderShipsKilled;

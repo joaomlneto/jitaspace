@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 
+// Type-only, so erased: the modules themselves load lazily below, after the
+// mocks are registered.
+import type * as WalletBalanceModule from "../src/hooks/character/useCharacterWalletBalance";
+import type * as LoyaltyPointsModule from "../src/hooks/loyalty/useCharacterLoyaltyPoints";
+
 // useCharacterLocation and useEsiCharacterNotifications are thin wrappers:
 // ask for a token with the endpoint's scope for THIS character, sign the
 // request with it, and stay disabled until there is one. These tests pin that
@@ -12,6 +17,8 @@ import { renderHook } from "@testing-library/react";
 const mockUseAccessToken = jest.fn();
 const mockLocation = jest.fn();
 const mockNotifications = jest.fn();
+const mockWallet = jest.fn();
+const mockLoyaltyPoints = jest.fn();
 
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
@@ -19,6 +26,10 @@ jest.mock("@jitaspace/esi-client", () => ({
     mockLocation(...args),
   useGetCharactersCharacterIdNotifications: (...args: unknown[]) =>
     mockNotifications(...args),
+  useGetCharactersCharacterIdWallet: (...args: unknown[]) =>
+    mockWallet(...args),
+  useGetCharactersCharacterIdLoyaltyPoints: (...args: unknown[]) =>
+    mockLoyaltyPoints(...args),
 }));
 
 jest.mock("../src/hooks/auth", () => ({
@@ -30,6 +41,10 @@ const { useCharacterLocation } =
   require("../src/hooks/location/useCharacterLocation") as typeof import("../src/hooks/location/useCharacterLocation");
 const { useEsiCharacterNotifications } =
   require("../src/hooks/character/useEsiCharacterNotifications") as typeof import("../src/hooks/character/useEsiCharacterNotifications");
+const { useCharacterWalletBalance } =
+  require("../src/hooks/character/useCharacterWalletBalance") as typeof WalletBalanceModule;
+const { useCharacterLoyaltyPoints } =
+  require("../src/hooks/loyalty/useCharacterLoyaltyPoints") as typeof LoyaltyPointsModule;
 
 const CHARACTER_ID = 90000001;
 const HEADERS = { Authorization: "Bearer token" };
@@ -45,6 +60,8 @@ beforeEach(() => {
   mockUseAccessToken.mockReset();
   mockLocation.mockReset();
   mockNotifications.mockReset();
+  mockWallet.mockReset().mockReturnValue({});
+  mockLoyaltyPoints.mockReset().mockReturnValue({});
 });
 
 describe("useCharacterLocation", () => {
@@ -107,5 +124,55 @@ describe("useEsiCharacterNotifications", () => {
 
     expect(mockNotifications.mock.calls.at(-1)?.[0]).toBe(0);
     expect(enabledFrom(mockNotifications)).toBe(false);
+  });
+});
+
+// Both take an `enabled` option so a caller can offer a feature (and know
+// whether the scope is there) before fetching what it needs.
+describe.each([
+  {
+    name: "useCharacterWalletBalance",
+    render: (enabled?: boolean) =>
+      useCharacterWalletBalance(
+        CHARACTER_ID,
+        enabled === undefined ? undefined : { enabled },
+      ).isAllowed,
+    mock: mockWallet,
+    scope: "esi-wallet.read_character_wallet.v1",
+  },
+  {
+    name: "useCharacterLoyaltyPoints",
+    render: (enabled?: boolean) =>
+      useCharacterLoyaltyPoints(
+        CHARACTER_ID,
+        enabled === undefined ? undefined : { enabled },
+      ).hasToken,
+    mock: mockLoyaltyPoints,
+    scope: "esi-characters.read_loyalty.v1",
+  },
+])("$name", ({ render, mock, scope }) => {
+  it("asks for its scope and fetches by default", () => {
+    mockUseAccessToken.mockReturnValue(withToken);
+    const { result } = renderHook(() => render());
+    expect(mockUseAccessToken).toHaveBeenCalledWith({
+      characterId: CHARACTER_ID,
+      scopes: [scope],
+    });
+    expect(enabledFrom(mock)).toBe(true);
+    expect(result.current).toBe(true);
+  });
+
+  it("holds the request when not enabled, but still reports the token", () => {
+    mockUseAccessToken.mockReturnValue(withToken);
+    const { result } = renderHook(() => render(false));
+    expect(enabledFrom(mock)).toBe(false);
+    expect(result.current).toBe(true);
+  });
+
+  it("stays disabled without a token, even when enabled", () => {
+    mockUseAccessToken.mockReturnValue(withoutToken);
+    const { result } = renderHook(() => render(true));
+    expect(enabledFrom(mock)).toBe(false);
+    expect(result.current).toBe(false);
   });
 });
