@@ -4,7 +4,9 @@ import "@eve-online-tools/eve-ship-tree/styles.css";
 
 import type {
   FactionIdentifier,
+  ShipPrices,
   SkillsInput,
+  SkillTraining,
 } from "@eve-online-tools/eve-ship-tree";
 import type { BoxProps } from "@mantine/core";
 import {
@@ -30,6 +32,16 @@ export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
    * every ship reads as untrained.
    */
   skills?: SkillsInput;
+  /**
+   * The skill in training and the level it trains to. Group tooltips highlight
+   * it. See `getSkillInTraining` for deriving it from ESI's skill queue.
+   */
+  training?: SkillTraining;
+  /**
+   * Ship prices in ISK, as a `{ [typeId]: isk }` map or a lookup. Ship tooltips
+   * show an estimated price for every ship this prices; the rest show none.
+   */
+  prices?: ShipPrices;
   /**
    * Draw the tree for an Omega clone. Off, it marks where Omega-only ships
    * begin; on, it plays those markers down.
@@ -64,6 +76,8 @@ export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
 export function ShipTreeView({
   faction,
   skills = NO_SKILLS,
+  training,
+  prices,
   isOmega = false,
   dataBaseUrl = SHIP_TREE_DATA_BASE_URL,
   fetch,
@@ -76,11 +90,16 @@ export function ShipTreeView({
 
   return (
     <Box h={h} mih={mih} {...boxProps}>
-      <SkillsProvider skills={skills}>
+      <SkillsProvider skills={skills} training={training}>
         <DataProvider baseUrl={dataBaseUrl} fetch={fetch}>
           {/* Keyed so each faction gets a fresh pan/zoom fit; the data above
               stays loaded. */}
-          <ShipTree key={faction} faction={faction} isOmega={isOmega}>
+          <ShipTree
+            key={faction}
+            faction={faction}
+            isOmega={isOmega}
+            prices={prices}
+          >
             <Grid
               topLabel={name}
               versionLabel=""

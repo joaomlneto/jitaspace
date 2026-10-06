@@ -13,8 +13,9 @@ import { ALL_TABLE_FILES, byName, createFakeFetch, fileName } from "./helpers";
 // still render the real thing, so the same tests can also look at real output.
 const mockSeen = {
   skills: [] as unknown[],
+  training: [] as unknown[],
   dataProps: [] as { baseUrl: unknown; hasFetch: boolean }[],
-  shipTree: [] as { faction: unknown; isOmega: unknown }[],
+  shipTree: [] as { faction: unknown; isOmega: unknown; prices: unknown }[],
   grid: [] as Record<string, unknown>[],
 };
 
@@ -33,9 +34,10 @@ jest.mock("@eve-online-tools/eve-ship-tree", () => {
 
   return {
     ...actual,
-    SkillsProvider: wrap(actual.SkillsProvider, (p) =>
-      mockSeen.skills.push(p.skills),
-    ),
+    SkillsProvider: wrap(actual.SkillsProvider, (p) => {
+      mockSeen.skills.push(p.skills);
+      mockSeen.training.push(p.training);
+    }),
     DataProvider: wrap(actual.DataProvider, (p) =>
       mockSeen.dataProps.push({
         baseUrl: p.baseUrl,
@@ -44,7 +46,12 @@ jest.mock("@eve-online-tools/eve-ship-tree", () => {
     ),
     ShipTree: wrap(
       actual.ShipTree,
-      (p) => mockSeen.shipTree.push({ faction: p.faction, isOmega: p.isOmega }),
+      (p) =>
+        mockSeen.shipTree.push({
+          faction: p.faction,
+          isOmega: p.isOmega,
+          prices: p.prices,
+        }),
       actual.ShipTree,
     ),
     Grid: wrap(actual.Grid, (p) => mockSeen.grid.push(p)),
@@ -60,6 +67,7 @@ const READY = { timeout: 15_000 };
 describe("ShipTreeView", () => {
   beforeEach(() => {
     mockSeen.skills.length = 0;
+    mockSeen.training.length = 0;
     mockSeen.dataProps.length = 0;
     mockSeen.shipTree.length = 0;
     mockSeen.grid.length = 0;
@@ -168,6 +176,32 @@ describe("ShipTreeView", () => {
     );
 
     expect(mockSeen.shipTree.map((s) => s.isOmega)).toEqual([false, true]);
+  });
+
+  it("passes the skill in training and the ship prices through", () => {
+    const { fetch } = createFakeFetch();
+    const prices = (typeId: number) => (typeId === 603 ? 512_345 : undefined);
+
+    renderView(
+      <ShipTreeView
+        faction={500001}
+        fetch={fetch}
+        training={{ skillId: 3330, level: 4 }}
+        prices={prices}
+      />,
+    );
+
+    expect(mockSeen.training.at(-1)).toEqual({ skillId: 3330, level: 4 });
+    expect(mockSeen.shipTree.at(-1)?.prices).toBe(prices);
+  });
+
+  it("passes neither by default", () => {
+    const { fetch } = createFakeFetch();
+
+    renderView(<ShipTreeView faction={500001} fetch={fetch} />);
+
+    expect(mockSeen.training.at(-1)).toBeUndefined();
+    expect(mockSeen.shipTree.at(-1)?.prices).toBeUndefined();
   });
 
   it("keeps the loaded data when the faction changes", async () => {

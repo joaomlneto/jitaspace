@@ -17,6 +17,8 @@ import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 const mockUseSelectedCharacter = jest.fn();
 const mockUseAuthStoreHasHydrated = jest.fn();
 const mockUseCharacterSkills = jest.fn();
+const mockUseCharacterSkillQueue = jest.fn();
+const mockUseMarketPrices = jest.fn();
 const mockLoginWithEveOnline = jest.fn();
 const mockShipTreeView = jest.fn();
 
@@ -24,6 +26,9 @@ jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
   useAuthStoreHasHydrated: () => mockUseAuthStoreHasHydrated(),
   useCharacterSkills: (...args: unknown[]) => mockUseCharacterSkills(...args),
+  useCharacterSkillQueue: (...args: unknown[]) =>
+    mockUseCharacterSkillQueue(...args),
+  useMarketPrices: () => mockUseMarketPrices(),
 }));
 jest.mock("@jitaspace/ui", () => ({
   LoginWithEveOnlineButton: ({ onClick }: { onClick: () => void }) => (
@@ -98,6 +103,8 @@ describe("/ship-tree page", () => {
     mockUseSelectedCharacter.mockReset().mockReturnValue(null);
     mockUseAuthStoreHasHydrated.mockReset().mockReturnValue(true);
     mockUseCharacterSkills.mockReset().mockReturnValue(skillsQuery());
+    mockUseCharacterSkillQueue.mockReset().mockReturnValue({ data: undefined });
+    mockUseMarketPrices.mockReset().mockReturnValue({ data: {} });
     mockLoginWithEveOnline.mockReset();
     mockShipTreeView.mockReset();
   });
@@ -205,7 +212,7 @@ describe("/ship-tree page", () => {
       expect(screen.getByTestId("ship-tree-view")).toBeInTheDocument();
     });
 
-    it("invites an anonymous visitor to log in, asking only for the skills scope", () => {
+    it("invites an anonymous visitor to log in, asking only for the skill scopes", () => {
       renderPage();
 
       expect(
@@ -216,6 +223,7 @@ describe("/ship-tree page", () => {
       fireEvent.click(screen.getByText("log in with eve"));
       expect(mockLoginWithEveOnline).toHaveBeenCalledWith([
         "esi-skills.read_skills.v1",
+        "esi-skills.read_skillqueue.v1",
       ]);
     });
 
@@ -236,6 +244,7 @@ describe("/ship-tree page", () => {
       expect(mockLoginWithEveOnline).toHaveBeenCalledWith([
         "esi-mail.read_mail.v1",
         "esi-skills.read_skills.v1",
+        "esi-skills.read_skillqueue.v1",
       ]);
     });
 
@@ -278,6 +287,96 @@ describe("/ship-tree page", () => {
 
       expect(screen.getByText(/Couldn't load skills for/)).toBeInTheDocument();
       expect(screen.getByTestId("ship-tree-view")).toBeInTheDocument();
+    });
+  });
+  describe("tooltips", () => {
+    const QUEUE_CHARACTER = {
+      characterId: CHARACTER.characterId,
+      accessTokenPayload: {
+        scp: ["esi-skills.read_skills.v1", "esi-skills.read_skillqueue.v1"],
+      },
+    };
+
+    it("prices ships at ESI's market average, and leaves unpriced ones out", () => {
+      mockUseMarketPrices.mockReturnValue({
+        data: { 603: { type_id: 603, average_price: 512_345.6 } },
+      });
+
+      renderPage();
+
+      const prices = lastViewProps().prices as (id: number) => unknown;
+      expect(prices(603)).toBe(512_345.6);
+      expect(prices(999_999)).toBeUndefined();
+    });
+
+    it("highlights the first queued level the character has not trained yet", () => {
+      mockUseSelectedCharacter.mockReturnValue(QUEUE_CHARACTER);
+      mockUseCharacterSkills.mockReturnValue(
+        skillsQuery({
+          hasToken: true,
+          data: {
+            data: {
+              skills: [
+                {
+                  skill_id: 3330,
+                  active_skill_level: 3,
+                  trained_skill_level: 3,
+                },
+              ],
+            },
+          },
+        }),
+      );
+      // ESI keeps a finished entry at the head until the client syncs.
+      mockUseCharacterSkillQueue.mockReturnValue({
+        data: {
+          data: [
+            {
+              skill_id: 3330,
+              finished_level: 4,
+              queue_position: 1,
+              finish_date: "2026-10-09T12:00:00Z",
+            },
+            {
+              skill_id: 3330,
+              finished_level: 3,
+              queue_position: 0,
+              finish_date: "2026-10-07T12:00:00Z",
+            },
+          ],
+        },
+      });
+
+      renderPage();
+
+      expect(mockUseCharacterSkillQueue).toHaveBeenCalledWith(
+        CHARACTER.characterId,
+      );
+      expect(lastViewProps().training).toEqual({ skillId: 3330, level: 4 });
+      expect(
+        screen.queryByText("Show the skill in training"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("highlights nothing without the queue", () => {
+      renderPage();
+
+      expect(lastViewProps().training).toBeUndefined();
+    });
+
+    it("asks a character with skills but no queue access for it", () => {
+      mockUseSelectedCharacter.mockReturnValue(CHARACTER);
+      mockUseCharacterSkills.mockReturnValue(
+        skillsQuery({ hasToken: true, data: { data: { skills: [SKILL] } } }),
+      );
+
+      renderPage();
+
+      fireEvent.click(screen.getByText("Show the skill in training"));
+      expect(mockLoginWithEveOnline).toHaveBeenCalledWith([
+        "esi-mail.read_mail.v1",
+        "esi-skills.read_skillqueue.v1",
+      ]);
     });
   });
 });

@@ -10,6 +10,7 @@ The web app imports this package, never the library directly.
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `ShipTreeView`                               | One component: faction, optional skills, optional Omega. Loads the data once, sizes itself, hides the library's decorative footer |
 | `SHIP_TREE_FACTIONS` and lookups             | The 17 factions with URL-safe slugs, for pickers and `?faction=`                                                                  |
+| `getSkillInTraining`                         | The skill in training, from ESI's skill queue and skills, for `ShipTreeView`'s `training`                                         |
 | `SHIP_TREE_DATA_*`, `isShipTreeDataFileName` | The data tables the library fetches, and where we serve them                                                                      |
 | `@jitaspace/ship-tree/server`                | `readShipTreeDataFile`: reads a table out of the installed library (Node only)                                                    |
 | `@jitaspace/ship-tree/postcss`               | PostCSS plugin that makes the library's stylesheet importable (see below)                                                         |
@@ -21,6 +22,11 @@ import { ShipTreeView } from "@jitaspace/ship-tree";
 ```
 
 `skills` takes the array ESI returns from `/characters/{id}/skills/` as it is.
+
+The library's tooltips are on by default. Two optional props feed them:
+
+- `training` (`{ skillId, level }`) highlights the skill in training in group tooltips. `getSkillInTraining(queue, skills)` derives it from ESI's `/characters/{id}/skillqueue/` and `/skills/`, skipping the finished entries ESI keeps at the head of the queue until the game client syncs.
+- `prices` (`{ [typeId]: isk }` or a lookup) adds an estimated price to ship tooltips. The SDE has no prices; the web app passes ESI's market average from `/markets/prices/`.
 
 ## Things to know
 

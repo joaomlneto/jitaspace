@@ -23,6 +23,8 @@ jest.mock("@jitaspace/hooks", () => ({
     isLoading: false,
     isError: false,
   }),
+  useCharacterSkillQueue: () => ({ data: undefined }),
+  useMarketPrices: () => ({ data: {} }),
 }));
 jest.mock("@jitaspace/ui", () => ({
   LoginWithEveOnlineButton: () => (
