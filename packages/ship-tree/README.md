@@ -9,6 +9,7 @@ The web app imports this package, never the library directly.
 | Export                                       | What                                                                                                                              |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `ShipTreeView`                               | One component: faction, optional skills, optional Omega. Loads the data once, sizes itself, hides the library's decorative footer |
+| `ShipTreeFactionSelector`                    | The library's faction picker (a grid of logos), listing `SHIP_TREE_FACTIONS` in their alphabetical order                          |
 | `SHIP_TREE_FACTIONS` and lookups             | The 17 factions with URL-safe slugs, for pickers and `?faction=`                                                                  |
 | `getSkillInTraining`                         | The skill in training, from ESI's skill queue and skills, for `ShipTreeView`'s `training`                                         |
 | `SHIP_TREE_DATA_*`, `isShipTreeDataFileName` | The data tables the library fetches, and where we serve them                                                                      |

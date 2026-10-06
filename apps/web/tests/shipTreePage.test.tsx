@@ -2,16 +2,15 @@ import "@testing-library/jest-dom/jest-globals";
 
 import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import type { ReactElement } from "react";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 const mockUseSelectedCharacter = jest.fn();
@@ -57,6 +56,40 @@ jest.mock("../../../packages/ship-tree/ShipTreeView", () => ({
   },
 }));
 
+// The real picker is the tree library's, which loads its stylesheet; the
+// adapter's own tests cover it. Here it is a radiogroup with the same contract.
+jest.mock("../../../packages/ship-tree/ShipTreeFactionSelector", () => {
+  const { SHIP_TREE_FACTIONS } = jest.requireActual<{
+    SHIP_TREE_FACTIONS: readonly { id: number; name: string }[];
+  }>("../../../packages/ship-tree/factions");
+  return {
+    ShipTreeFactionSelector: ({
+      value,
+      onChange,
+      onHoverChange,
+    }: {
+      value: number;
+      onChange: (id: number) => void;
+      onHoverChange?: (id: number | null) => void;
+    }) => (
+      <div role="radiogroup" aria-label="Faction">
+        {SHIP_TREE_FACTIONS.map(({ id, name }) => (
+          <button
+            key={id}
+            type="button"
+            role="radio"
+            aria-label={name}
+            aria-checked={id === value}
+            onClick={() => onChange(id)}
+            onPointerEnter={() => onHoverChange?.(id)}
+            onPointerLeave={() => onHoverChange?.(null)}
+          />
+        ))}
+      </div>
+    ),
+  };
+});
+
 const ShipTreePage = require("../app/ship-tree/page.client").default;
 
 const SKILL = { skill_id: 3330, active_skill_level: 4 };
@@ -94,12 +127,7 @@ const lastViewProps = () =>
   mockShipTreeView.mock.calls.at(-1)?.[0] as Record<string, any>;
 
 describe("/ship-tree page", () => {
-  // jsdom has no scrollIntoView, which Mantine's combobox calls on the selected
-  // option as it opens.
-  const hadScrollIntoView = "scrollIntoView" in Element.prototype;
-
   beforeEach(() => {
-    Element.prototype.scrollIntoView = jest.fn();
     mockUseSelectedCharacter.mockReset().mockReturnValue(null);
     mockUseAuthStoreHasHydrated.mockReset().mockReturnValue(true);
     mockUseCharacterSkills.mockReset().mockReturnValue(skillsQuery());
@@ -107,12 +135,6 @@ describe("/ship-tree page", () => {
     mockUseMarketPrices.mockReset().mockReturnValue({ data: {} });
     mockLoginWithEveOnline.mockReset();
     mockShipTreeView.mockReset();
-  });
-
-  afterEach(() => {
-    if (!hadScrollIntoView) {
-      delete (Element.prototype as Partial<Element>).scrollIntoView;
-    }
   });
 
   describe("the tree", () => {
@@ -132,9 +154,8 @@ describe("/ship-tree page", () => {
 
       expect(lastViewProps().faction).toBe(500003);
       expect(lastViewProps().isOmega).toBe(true);
-      expect(screen.getByRole("combobox", { name: "Faction" })).toHaveValue(
-        "Amarr Empire",
-      );
+      expect(screen.getByRole("radio", { name: "Amarr Empire" })).toBeChecked();
+      expect(screen.getByText("Faction: Amarr Empire")).toBeInTheDocument();
       expect(screen.getByRole("switch", { name: "Omega clone" })).toBeChecked();
     });
 
@@ -148,19 +169,17 @@ describe("/ship-tree page", () => {
     it("offers all seventeen factions", () => {
       renderPage();
 
-      fireEvent.click(screen.getByRole("combobox", { name: "Faction" }));
-
-      expect(screen.getAllByRole("option")).toHaveLength(17);
+      const picker = screen.getByRole("radiogroup", { name: "Faction" });
+      expect(within(picker).getAllByRole("radio")).toHaveLength(17);
       expect(
-        screen.getByRole("option", { name: "Triglavian Collective" }),
+        within(picker).getByRole("radio", { name: "Triglavian Collective" }),
       ).toBeInTheDocument();
     });
 
     it("writes the chosen faction to the URL", async () => {
       const { onUrlUpdate } = renderPage();
 
-      fireEvent.click(screen.getByRole("combobox", { name: "Faction" }));
-      fireEvent.click(screen.getByRole("option", { name: "Guristas Pirates" }));
+      fireEvent.click(screen.getByRole("radio", { name: "Guristas Pirates" }));
 
       // nuqs batches URL writes, so they land a tick later.
       await waitFor(() =>
@@ -169,6 +188,21 @@ describe("/ship-tree page", () => {
         ).toBe("guristas"),
       );
       expect(lastViewProps().faction).toBe(500010);
+    });
+
+    it("names the chosen faction, and previews the one under the pointer", () => {
+      renderPage();
+
+      expect(screen.getByText("Faction: Caldari State")).toBeInTheDocument();
+
+      const serpentis = screen.getByRole("radio", { name: "Serpentis" });
+      fireEvent.pointerEnter(serpentis);
+      expect(screen.getByText("Faction: Serpentis")).toBeInTheDocument();
+      // Only a preview: the tree stays on the chosen faction.
+      expect(lastViewProps().faction).toBe(500001);
+
+      fireEvent.pointerLeave(serpentis);
+      expect(screen.getByText("Faction: Caldari State")).toBeInTheDocument();
     });
 
     it("writes the clone type to the URL", async () => {

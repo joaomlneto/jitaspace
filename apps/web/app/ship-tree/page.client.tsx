@@ -1,23 +1,21 @@
 "use client";
 
-import { Container, Group, Select, Stack, Switch, Title } from "@mantine/core";
+import { useState } from "react";
+import { Container, Group, Stack, Switch, Text, Title } from "@mantine/core";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
+import type { FactionIdentifier } from "@jitaspace/ship-tree";
 import { ShipsIcon } from "@jitaspace/eve-icons";
 import {
   DEFAULT_SHIP_TREE_FACTION_SLUG,
+  getShipTreeFaction,
   getShipTreeFactionBySlug,
   isShipTreeFactionSlug,
   SHIP_TREE_FACTION_SLUGS,
-  SHIP_TREE_FACTIONS,
+  ShipTreeFactionSelector,
 } from "@jitaspace/ship-tree";
 
 import { ShipTreePanel } from "~/components/ShipTree";
-
-const FACTION_OPTIONS = SHIP_TREE_FACTIONS.map(({ slug, name }) => ({
-  value: slug,
-  label: name,
-}));
 
 export default function ShipTreePage() {
   // Both survive a reload and can be shared as a link. `parseAsStringLiteral`
@@ -33,6 +31,11 @@ export default function ShipTreePage() {
     parseAsBoolean.withDefault(false),
   );
   const faction = getShipTreeFactionBySlug(factionSlug);
+  // The picker shows logos only; the label names the faction under the
+  // pointer, or the chosen one.
+  const [hovered, setHovered] = useState<FactionIdentifier | null>(null);
+  const shownName =
+    hovered === null ? faction.name : getShipTreeFaction(hovered).name;
 
   return (
     <Container size="xl">
@@ -47,18 +50,19 @@ export default function ShipTreePage() {
           isOmega={isOmega}
           controls={
             <Group align="flex-end">
-              <Select
-                label="Faction"
-                data={FACTION_OPTIONS}
-                value={factionSlug}
-                allowDeselect={false}
-                onChange={(value) => {
-                  if (value !== null && isShipTreeFactionSlug(value)) {
-                    void setFactionSlug(value);
-                  }
-                }}
-                w={260}
-              />
+              <Stack gap={4}>
+                <Text size="sm" fw={500}>
+                  Faction: {shownName}
+                </Text>
+                <ShipTreeFactionSelector
+                  value={faction.id}
+                  onChange={(id) => {
+                    const { slug } = getShipTreeFaction(id);
+                    if (isShipTreeFactionSlug(slug)) void setFactionSlug(slug);
+                  }}
+                  onHoverChange={setHovered}
+                />
+              </Stack>
               <Switch
                 label="Omega clone"
                 checked={isOmega}
@@ -71,7 +75,9 @@ export default function ShipTreePage() {
           }
           // On a phone the tree fits to the width and is only ~200px tall, so
           // a full-height viewport would be mostly empty; leave room to pan.
-          h={{ base: 360, sm: "calc(100dvh - 280px)" }}
+          // Elsewhere it fills what the header, the four-row faction grid and
+          // the footer leave.
+          h={{ base: 360, sm: "calc(100dvh - 450px)" }}
           mih={{ base: 360, sm: 480 }}
         />
       </Stack>

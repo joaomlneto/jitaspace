@@ -1,5 +1,7 @@
 export { ShipTreeView } from "./ShipTreeView";
 export type { ShipTreeViewProps } from "./ShipTreeView";
+export { ShipTreeFactionSelector } from "./ShipTreeFactionSelector";
+export type { ShipTreeFactionSelectorProps } from "./ShipTreeFactionSelector";
 export * from "./data";
 export * from "./factions";
 export * from "./training";
