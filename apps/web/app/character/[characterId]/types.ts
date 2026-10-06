@@ -1,3 +1,5 @@
+import type { NamedRef } from "~/lib/namedRef";
+
 /**
  * What the character page reads on the server: ESI's public card for the
  * character, and what our database knows (the SDE's NPC characters and
@@ -5,10 +7,7 @@
  * the client as plain, serializable props; dates are ISO strings.
  */
 
-export interface NamedRef {
-  id: number;
-  name: string | null;
-}
+export type { NamedRef } from "~/lib/namedRef";
 
 /** ESI's public character sheet, with its corporation and alliance named. */
 export interface EsiCharacterCard {

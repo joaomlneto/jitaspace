@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
@@ -36,8 +35,6 @@ import {
   AllianceName,
   CharacterOnlineIndicator,
   CorporationName,
-  FactionAnchor,
-  FactionName,
   RegionAnchor,
   SolarSystemAnchor,
   StationAnchor,
@@ -54,19 +51,16 @@ import {
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAnchor,
-  AllianceAvatar,
   BloodlineAnchor,
   CharacterAvatar,
   CorporationAnchor,
-  CorporationAvatar,
   DungeonAnchor,
-  FactionAvatar,
   ISKAmount,
   RaceAnchor,
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
-import type { Stint } from "./employment";
+import type { EmploymentSummary as EmploymentSummaryData } from "./employment";
 import type { CharacterPageTab } from "./tabs";
 import type {
   AgentDetails,
@@ -80,6 +74,10 @@ import {
   CharacterSkillTrainingCard,
 } from "~/components/Card";
 import {
+  AllianceLine,
+  CorporationLine,
+  EntityLine,
+  FactionLine,
   HeroCard,
   HeroStat,
   SectionHeading,
@@ -99,6 +97,7 @@ import {
   formatInteger,
   formatPercent,
 } from "~/lib/format";
+import { named } from "~/lib/namedRef";
 import { formatDays, summarizeEmployment, toStints } from "./employment";
 import { EmploymentHistory } from "./EmploymentHistory";
 import {
@@ -140,14 +139,42 @@ const subscribeToNothing = () => () => undefined;
 const getClientNow = () => (clientNow ??= new Date().toISOString());
 const getServerNow = () => null;
 
-/** A reference by id, named from `stored` when its id agrees. */
-function named(
-  id: number | null | undefined,
-  ...stored: (NamedRef | null | undefined)[]
-): NamedRef | null {
-  if (id == null) return null;
-  const match = stored.find((candidate) => candidate?.id === id);
-  return { id, name: match?.name ?? null };
+/**
+ * The sheet fields ESI omits when they are unset: alliance, militia, security
+ * status, title, biography. Taken whole from the newest source, so a field ESI
+ * stopped sending (a character who left an alliance or Faction Warfare) is
+ * gone, rather than filled back in from an older one.
+ */
+function optionalFields(
+  live: CharactersDetail | undefined,
+  card: EsiCharacterCard | null,
+  record: CharacterRecord | null,
+) {
+  if (live) {
+    return {
+      allianceId: live.alliance_id,
+      factionId: live.faction_id ?? null,
+      securityStatus: live.security_status ?? null,
+      title: live.corporation_title ?? null,
+      description: live.description ?? null,
+    };
+  }
+  if (card) {
+    return {
+      allianceId: card.alliance?.id,
+      factionId: card.factionId,
+      securityStatus: card.securityStatus,
+      title: card.title,
+      description: card.description,
+    };
+  }
+  return {
+    allianceId: undefined,
+    factionId: record?.faction?.id ?? null,
+    securityStatus: record?.securityStatus ?? null,
+    title: record?.title ?? null,
+    description: record?.description ?? null,
+  };
 }
 
 /**
@@ -162,10 +189,9 @@ function resolveIdentity(
 ) {
   const corporationId =
     live?.corporation_id ?? card?.corporation.id ?? record?.corporation.id;
-  const allianceId = live ? live.alliance_id : card?.alliance?.id;
-  const securityStatus =
-    live?.security_status ?? card?.securityStatus ?? record?.securityStatus;
+  const { allianceId, ...optional } = optionalFields(live, card, record);
   return {
+    ...optional,
     name: live?.name ?? card?.name ?? record?.name,
     birthday: live?.birthday ?? card?.birthday ?? null,
     gender: live?.gender ?? card?.gender ?? record?.gender,
@@ -174,60 +200,8 @@ function resolveIdentity(
       live?.bloodline_id ?? card?.bloodlineId ?? record?.bloodline.id,
     corporation: named(corporationId, card?.corporation, record?.corporation),
     alliance: named(allianceId, card?.alliance),
-    factionId:
-      live?.faction_id ?? card?.factionId ?? record?.faction?.id ?? null,
-    securityStatus: securityStatus ?? null,
-    title: live?.corporation_title ?? card?.title ?? record?.title ?? null,
-    description:
-      live?.description ?? card?.description ?? record?.description ?? null,
     achievementScore: live?.achievement_score ?? card?.achievementScore ?? null,
   };
-}
-
-function EntityLine({
-  avatar,
-  children,
-}: Readonly<{ avatar: ReactNode; children: ReactNode }>) {
-  return (
-    <Group gap="xs" wrap="nowrap">
-      {avatar}
-      {children}
-    </Group>
-  );
-}
-
-function CorporationLine({ corporation }: Readonly<{ corporation: NamedRef }>) {
-  return (
-    <EntityLine
-      avatar={<CorporationAvatar corporationId={corporation.id} size="sm" />}
-    >
-      <CorporationAnchor corporationId={corporation.id}>
-        {corporation.name ?? (
-          <CorporationName span corporationId={corporation.id} />
-        )}
-      </CorporationAnchor>
-    </EntityLine>
-  );
-}
-
-function AllianceLine({ alliance }: Readonly<{ alliance: NamedRef }>) {
-  return (
-    <EntityLine avatar={<AllianceAvatar allianceId={alliance.id} size="sm" />}>
-      <AllianceAnchor allianceId={alliance.id}>
-        {alliance.name ?? <AllianceName span allianceId={alliance.id} />}
-      </AllianceAnchor>
-    </EntityLine>
-  );
-}
-
-function FactionLine({ factionId }: Readonly<{ factionId: number }>) {
-  return (
-    <EntityLine avatar={<FactionAvatar factionId={factionId} size="sm" />}>
-      <FactionAnchor factionId={factionId}>
-        <FactionName span factionId={factionId} />
-      </FactionAnchor>
-    </EntityLine>
-  );
 }
 
 function CorporationList({
@@ -749,7 +723,11 @@ export default function CharacterPage({
                   {identity.factionId !== null && (
                     <StatCard
                       label="Faction"
-                      value={<FactionLine factionId={identity.factionId} />}
+                      value={
+                        <FactionLine
+                          faction={{ id: identity.factionId, name: null }}
+                        />
+                      }
                     />
                   )}
                   {ceoOf.length > 0 && (
@@ -767,7 +745,9 @@ export default function CharacterPage({
                 </SimpleGrid>
               </Stack>
 
-              {employment.stints > 0 && <EmploymentSummary stints={stints} />}
+              {employment.stints > 0 && (
+                <EmploymentSummary summary={employment} />
+              )}
 
               {agent && (
                 <Stack gap="sm">
@@ -828,7 +808,9 @@ export default function CharacterPage({
           {visibleTabs.history && (
             <Tabs.Panel value="history" pt="lg">
               <Stack gap="lg">
-                {employment.stints > 0 && <EmploymentSummary stints={stints} />}
+                {employment.stints > 0 && (
+                  <EmploymentSummary summary={employment} />
+                )}
                 <EmploymentHistory stints={stints} isLoading={historyLoading} />
               </Stack>
             </Tabs.Panel>
@@ -857,8 +839,9 @@ export default function CharacterPage({
 }
 
 /** Corporations, stints and tenures, from the employment history. */
-function EmploymentSummary({ stints }: Readonly<{ stints: Stint[] }>) {
-  const summary = summarizeEmployment(stints);
+function EmploymentSummary({
+  summary,
+}: Readonly<{ summary: EmploymentSummaryData }>) {
   return (
     <Stack gap="sm">
       <SectionHeading icon={<IconBriefcase size={18} />}>

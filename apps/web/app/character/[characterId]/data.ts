@@ -1,8 +1,9 @@
 import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 
 import type { AgentDetails, CharacterRecord, NamedRef } from "./types";
 import { prisma } from "~/lib/db";
-import { cacheSdeRead } from "~/lib/sdeCache";
+import { SDE_CACHE_TAG } from "~/lib/sdeCache";
 
 const ref = (
   id: number | null | undefined,
@@ -146,15 +147,19 @@ async function toAgentDetails(row: CharacterRow): Promise<AgentDetails | null> {
  * which is most players: the table holds the SDE's NPC characters and the
  * players our scrapes met (corporation CEOs and founders).
  *
- * The rows are SDE data or change rarely, so the read is cached until the next
- * SDE ingest. Nothing here catches: a database failure throws, and the
- * uncached caller degrades, so a blip is never what gets cached.
+ * It reads SDE data (NPC characters, agents) and data our ESI scrapes write
+ * (player rows, who is CEO of what), so it keeps its own `cacheLife` and adds
+ * the SDE tag, which the next ingest refreshes. See CLAUDE.md → "SDE reads are
+ * cached until the next ingest". Nothing here catches: a database failure
+ * throws, and the uncached caller degrades, so a blip is never what gets
+ * cached.
  */
 export async function readCharacterRecord(
   characterId: number,
 ): Promise<CharacterRecord | null> {
   "use cache";
-  cacheSdeRead();
+  cacheLife("hours");
+  cacheTag(SDE_CACHE_TAG);
 
   const row = await findCharacter(characterId);
   if (row === null) return null;

@@ -303,6 +303,9 @@ describe("character page — player", () => {
     ).toBeGreaterThan(0);
     expect(screen.getByText("Not in an alliance")).toBeInTheDocument();
     expect(screen.getByText("-2.0")).toBeInTheDocument();
+    // Live ESI sends no title or biography: the card's old ones are gone.
+    expect(screen.queryByText("Director")).toBeNull();
+    expect(screen.queryByRole("tab", { name: /Biography/ })).toBeNull();
   });
 
   it("shows the viewer's own wallet, skill points and cards", () => {
@@ -446,7 +449,20 @@ describe("character page server wrapper", () => {
       achievementScore: 5,
     });
     expect(element.props.record).toBeNull();
-    expect(mockConnection).not.toHaveBeenCalled();
+    // The alliance's name failed: the browser fills it in, and this render
+    // stays out of the cache rather than caching a nameless card.
+    expect(mockConnection).toHaveBeenCalledTimes(1);
+  });
+
+  it("404s an id ESI cannot name a character with (422)", async () => {
+    mockGetCharactersDetail.mockRejectedValue(
+      Object.assign(new Error("Unprocessable"), {
+        isAxiosError: true,
+        response: { status: 422 },
+      }),
+    );
+    mockLoadCharacterRecord.mockResolvedValue({ ok: true, record: null });
+    await expect(runWrapper("2")).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
   it("404s a character neither ESI nor our database knows", async () => {

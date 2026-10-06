@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMemo } from "react";
 import Link from "next/link";
 import {
@@ -38,9 +37,7 @@ import {
   AllianceName,
   CharacterAnchor,
   CharacterName,
-  CorporationName,
   FactionAnchor,
-  FactionName,
   RegionAnchor,
   SolarSystemAnchor,
   StationAnchor,
@@ -50,18 +47,14 @@ import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAnchor,
-  AllianceAvatar,
-  CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
-  FactionAvatar,
   ISKAmount,
   RaceAnchor,
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
 import type { CorporationPageTab } from "./tabs";
-import type { CorporationPageData, NamedRef } from "./types";
+import type { CorporationPageData } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
 import {
@@ -73,6 +66,10 @@ import {
   useCorporationPaletteVars,
 } from "~/components/CorporationPalette";
 import {
+  AllianceLine,
+  CharacterLine,
+  CorporationLine,
+  FactionLine,
   HeroCard,
   HeroStat,
   SectionHeading,
@@ -99,6 +96,7 @@ import {
   formatPercent,
 } from "~/lib/format";
 import { lpStorePath } from "~/lib/lpStorePath";
+import { named } from "~/lib/namedRef";
 import { EconomyTab } from "./EconomyTab";
 import { isNpcCorporationId } from "./ids";
 import { StationsTab } from "./StationsTab";
@@ -140,73 +138,6 @@ const EXTENT_LABELS: Record<string, string> = {
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
-
-function EntityLine({
-  avatar,
-  children,
-}: Readonly<{ avatar: ReactNode; children: ReactNode }>) {
-  return (
-    <Group gap="xs" wrap="nowrap">
-      {avatar}
-      {children}
-    </Group>
-  );
-}
-
-function CharacterLine({ character }: Readonly<{ character: NamedRef }>) {
-  return (
-    <EntityLine
-      avatar={<CharacterAvatar characterId={character.id} size="sm" />}
-    >
-      <CharacterAnchor characterId={character.id}>
-        {character.name ?? <CharacterName span characterId={character.id} />}
-      </CharacterAnchor>
-    </EntityLine>
-  );
-}
-
-function CorporationLine({ corporation }: Readonly<{ corporation: NamedRef }>) {
-  return (
-    <EntityLine
-      avatar={<CorporationAvatar corporationId={corporation.id} size="sm" />}
-    >
-      <CorporationAnchor corporationId={corporation.id}>
-        {corporation.name ?? (
-          <CorporationName span corporationId={corporation.id} />
-        )}
-      </CorporationAnchor>
-    </EntityLine>
-  );
-}
-
-function AllianceLine({ alliance }: Readonly<{ alliance: NamedRef }>) {
-  return (
-    <EntityLine avatar={<AllianceAvatar allianceId={alliance.id} size="sm" />}>
-      <AllianceAnchor allianceId={alliance.id}>
-        {alliance.name ?? <AllianceName span allianceId={alliance.id} />}
-      </AllianceAnchor>
-    </EntityLine>
-  );
-}
-
-function FactionLine({ faction }: Readonly<{ faction: NamedRef }>) {
-  return (
-    <EntityLine avatar={<FactionAvatar factionId={faction.id} size="sm" />}>
-      <FactionAnchor factionId={faction.id}>
-        {faction.name ?? <FactionName span factionId={faction.id} />}
-      </FactionAnchor>
-    </EntityLine>
-  );
-}
-
-/** A reference ESI gave by id, named from our row when the ids agree. */
-function named(
-  id: number | null | undefined,
-  stored: NamedRef | null | undefined,
-): NamedRef | null {
-  if (id == null) return null;
-  return { id, name: stored?.id === id ? stored.name : null };
-}
 
 /**
  * Who the corporation is. ESI wins once it answers: members, CEO, alliance and
