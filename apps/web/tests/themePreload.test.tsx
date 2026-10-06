@@ -83,12 +83,15 @@ describe("THEME_PRELOAD", () => {
 
   it.each(selectable)("matches the %s theme", (name) => {
     const theme = mergeMantineTheme(DEFAULT_THEME, themes[name]);
-    // The body colour is dark[7] for as long as the resolver says so.
-    expect(v8CssVariablesResolver(theme).dark["--mantine-color-body"]).toBe(
+    // The body colour is the theme's white (light) and dark[7] (dark) for as
+    // long as the resolver says so.
+    const resolved = v8CssVariablesResolver(theme);
+    expect(resolved.light["--mantine-color-body"]).toBe(theme.white);
+    expect(resolved.dark["--mantine-color-body"]).toBe(
       "var(--mantine-color-dark-7)",
     );
     expect(THEME_PRELOAD[name]).toEqual({
-      body: theme.colors.dark[7],
+      body: `light-dark(${theme.white}, ${theme.colors.dark[7]})`,
       background: theme.other.appBackground,
       backgroundMobile: theme.other.appBackgroundMobile,
     });
@@ -100,7 +103,9 @@ describe("THEME_PRELOAD_SCRIPT", () => {
     store(JSON.stringify({ state: { appTheme: "caldari" }, version: 0 }));
     runScript();
     expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("caldari");
-    expect(html.style.getPropertyValue("--app-pending-body")).toBe("#111111");
+    expect(html.style.getPropertyValue("--app-pending-body")).toBe(
+      "light-dark(#f2f7fb, #111111)",
+    );
     expect(html.style.getPropertyValue("--app-pending-background")).toBe(
       THEME_PRELOAD.caldari.background,
     );

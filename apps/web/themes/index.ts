@@ -17,6 +17,7 @@ import {
 
 import { colors } from "./colors";
 import { eveV2Theme } from "./eve-v2";
+import { evePanelSurface, lightDark } from "./lightDark";
 import { WALLPAPERS } from "./wallpapers";
 
 declare module "@mantine/core" {
@@ -40,16 +41,29 @@ const baseTheme = createTheme({
   },
 });
 
+// These themes were designed for the dark scheme. Their surfaces and default
+// text colours carry a light counterpart (`lightDark`), so the light scheme
+// gets pale panels with dark text rather than dark panels with dark text.
 const whpdPanelStyles = {
   position: "relative",
   overflow: "hidden",
-  backgroundColor: "rgba(0, 1, 8, 0.97)",
-  backgroundImage:
-    "linear-gradient(180deg, rgba(4, 8, 22, 0.97) 0%, rgba(1, 3, 14, 0.99) 58%, rgba(0, 0, 5, 1) 100%)",
+  backgroundColor: lightDark(
+    "rgba(245, 247, 255, 0.97)",
+    "rgba(0, 1, 8, 0.97)",
+  ),
+  backgroundImage: `linear-gradient(180deg, ${lightDark(
+    "rgba(250, 251, 255, 0.97)",
+    "rgba(4, 8, 22, 0.97)",
+  )} 0%, ${lightDark("rgba(240, 244, 255, 0.99)", "rgba(1, 3, 14, 0.99)")} 58%, ${lightDark(
+    "rgba(232, 238, 255, 1)",
+    "rgba(0, 0, 5, 1)",
+  )} 100%)`,
   borderColor: "rgba(43, 92, 255, 0.32)",
   borderTopColor: "rgba(85, 127, 255, 0.52)",
-  boxShadow:
-    "inset 0 1px 0 rgba(100, 150, 255, 0.14), inset 0 -10px 18px rgba(0, 0, 15, 0.6), 0 0 28px rgba(43, 92, 255, 0.1)",
+  boxShadow: `inset 0 1px 0 rgba(100, 150, 255, 0.14), inset 0 -10px 18px ${lightDark(
+    "rgba(43, 92, 255, 0.06)",
+    "rgba(0, 0, 15, 0.6)",
+  )}, 0 0 28px rgba(43, 92, 255, 0.1)`,
   "&::before": {
     content: '""',
     position: "absolute",
@@ -63,13 +77,11 @@ const whpdPanelStyles = {
 const evePanelStyles = {
   position: "relative",
   overflow: "hidden",
-  backgroundColor: "rgba(8, 11, 17, 0.88)",
-  backgroundImage:
-    "linear-gradient(180deg, rgba(26, 33, 45, 0.9) 0%, rgba(13, 18, 28, 0.93) 58%, rgba(8, 11, 18, 0.96) 100%)",
-  borderColor: "rgba(108, 132, 151, 0.28)",
-  borderTopColor: "rgba(147, 214, 224, 0.46)",
-  boxShadow:
-    "inset 0 1px 0 rgba(182, 210, 230, 0.12), inset 0 -10px 18px rgba(2, 8, 16, 0.35), 0 10px 22px rgba(0, 0, 0, 0.36)",
+  backgroundColor: evePanelSurface.backgroundColor,
+  backgroundImage: evePanelSurface.backgroundImage,
+  borderColor: evePanelSurface.borderColor,
+  borderTopColor: evePanelSurface.borderTopColor,
+  boxShadow: evePanelSurface.boxShadow,
   "&::before": {
     content: '""',
     position: "absolute",
@@ -192,7 +204,7 @@ const eveTheme = mergeThemeOverrides(
       }),
       Card: Card.extend({
         defaultProps: {
-          bg: "#070b11",
+          bg: evePanelSurface.bg,
           radius: "xs",
           shadow: "xs",
           withBorder: true,
@@ -210,7 +222,7 @@ const eveTheme = mergeThemeOverrides(
       }),
       Paper: Paper.extend({
         defaultProps: {
-          bg: "#070b11",
+          bg: evePanelSurface.bg,
           radius: "xs",
           shadow: "xs",
           withBorder: true,
@@ -223,12 +235,15 @@ const eveTheme = mergeThemeOverrides(
       }),
       Text: Text.extend({
         defaultProps: {
-          c: "eve.1",
+          c: lightDark(
+            "var(--mantine-color-eve-9)",
+            "var(--mantine-color-eve-1)",
+          ),
         },
       }),
       Title: Title.extend({
         defaultProps: {
-          c: "gray.0",
+          c: "bright",
           order: 2,
           tt: "uppercase",
           style: {
@@ -320,7 +335,10 @@ export const themes = {
     createTheme({
       // Spelled out: other.* deep-merges over eveTheme, so leaving the mobile
       // one unset would show eveTheme's wallpaper on phones over this black.
-      other: { appBackground: "#000", appBackgroundMobile: "#000" },
+      other: {
+        appBackground: lightDark("#eef2ff", "#000"),
+        appBackgroundMobile: lightDark("#eef2ff", "#000"),
+      },
       black: "#000002",
       white: "#eef2ff",
       primaryColor: "whpd_primary",
@@ -406,7 +424,7 @@ export const themes = {
         }),
         Card: Card.extend({
           defaultProps: {
-            bg: "#000104",
+            bg: lightDark("#f5f7ff", "#000104"),
             radius: "xs",
             shadow: "xs",
             withBorder: true,
@@ -424,7 +442,7 @@ export const themes = {
         }),
         Paper: Paper.extend({
           defaultProps: {
-            bg: "#000104",
+            bg: lightDark("#f5f7ff", "#000104"),
             radius: "xs",
             shadow: "xs",
             withBorder: true,
@@ -437,12 +455,15 @@ export const themes = {
         }),
         Text: Text.extend({
           defaultProps: {
-            c: "whpd_primary.1",
+            c: lightDark(
+              "var(--mantine-color-whpd_primary-9)",
+              "var(--mantine-color-whpd_primary-1)",
+            ),
           },
         }),
         Title: Title.extend({
           defaultProps: {
-            c: "gray.0",
+            c: "bright",
             order: 2,
             tt: "uppercase",
             style: {

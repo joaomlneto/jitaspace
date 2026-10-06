@@ -327,7 +327,7 @@ function TopList({
         <Text
           fw={700}
           size="sm"
-          c="gray.0"
+          c="bright"
           tt="uppercase"
           style={{ letterSpacing: "0.04em" }}
         >
