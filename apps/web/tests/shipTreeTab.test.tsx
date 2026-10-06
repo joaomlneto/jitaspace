@@ -23,6 +23,8 @@ jest.mock("@jitaspace/hooks", () => ({
     isLoading: false,
     isError: false,
   }),
+  useCharacterSkillQueue: () => ({ data: undefined }),
+  useMarketPrices: () => ({ data: {} }),
 }));
 jest.mock("@jitaspace/ui", () => ({
   LoginWithEveOnlineButton: () => (
@@ -40,6 +42,10 @@ jest.mock("../../../packages/ship-tree/ShipTreeView", () => ({
     mockShipTreeView(props);
     return <div data-testid="ship-tree-view" />;
   },
+}));
+
+jest.mock("../../../packages/ship-tree/ShipTreeFactionSelector", () => ({
+  ShipTreeFactionSelector: () => null,
 }));
 
 const ShipTreeTab = require("~/components/ShipTree/ShipTreeTab")
