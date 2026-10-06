@@ -95,11 +95,10 @@ export function MarketGroupsNavigation() {
     groupsUnavailable = <Loader />;
   }
 
-  const rootMarketGroupIds = !data
-    ? []
-    : filter
-      ? data.rootMarketGroupIds.filter((id) => filter.visibleGroupIds.has(id))
-      : data.rootMarketGroupIds;
+  const allRootMarketGroupIds = data?.rootMarketGroupIds ?? [];
+  const rootMarketGroupIds = filter
+    ? allRootMarketGroupIds.filter((id) => filter.visibleGroupIds.has(id))
+    : allRootMarketGroupIds;
   const autoExpand =
     filter !== null && filter.matchCount <= MAX_AUTO_EXPAND_MATCHES;
 
