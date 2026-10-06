@@ -177,9 +177,17 @@ describe("Avatar wrappers", () => {
     expect(screen.getByTestId("ui-planet-avatar")).toBeInTheDocument();
   });
 
-  it("RaceAvatar passes the faction id as a string (off race.faction_id)", () => {
-    // The wrapper destructures `data: race`, so the faction lives under `.data`.
-    mockUseRace.mockReturnValue({ data: { faction_id: 500001 } });
+  it("RaceAvatar passes the race's faction id as a string (ESI's alliance_id)", () => {
+    // ESI's race record names the race's faction `alliance_id`; there is no
+    // `faction_id`, and reading one left the avatar blank on every page.
+    mockUseRace.mockReturnValue({
+      data: {
+        race_id: 1,
+        name: "Caldari",
+        description: "",
+        alliance_id: 500001,
+      },
+    });
 
     const { RaceAvatar } = require("~/components/Avatar");
     renderWithProvider(<RaceAvatar raceId={1} />);

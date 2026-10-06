@@ -110,7 +110,7 @@ jest.mock("~/components/EveMail", () => ({
 }));
 
 // The real tab loads the ship tree library and its stylesheet.
-jest.mock("~/app/faction/[factionId]/FactionShipTree", () => ({
+jest.mock("~/components/ShipTree/ShipTreeTab", () => ({
   __esModule: true,
   default: ({ faction }: { faction: number }) => (
     <div data-testid="faction-ship-tree">{`ship tree of ${faction}`}</div>

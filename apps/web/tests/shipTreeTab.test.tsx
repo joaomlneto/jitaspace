@@ -7,9 +7,9 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 // ---------------------------------------------------------------------------
-// The faction page's Ship Tree tab: the shared ShipTreePanel with an Omega
-// clone switch whose state lives in the URL. The page tests mock this module
-// away (it loads the tree library); these exercise it directly.
+// The faction and race pages' Ship Tree tab: the shared ShipTreePanel with an
+// Omega clone switch whose state lives in the URL. The page tests mock this
+// module away (it loads the tree library); these exercise it directly.
 // ---------------------------------------------------------------------------
 
 const mockShipTreeView = jest.fn();
@@ -42,7 +42,7 @@ jest.mock("../../../packages/ship-tree/ShipTreeView", () => ({
   },
 }));
 
-const FactionShipTree = require("~/app/faction/[factionId]/FactionShipTree")
+const ShipTreeTab = require("~/components/ShipTree/ShipTreeTab")
   .default as (props: { faction: number }) => React.JSX.Element;
 
 const CALDARI = 500001;
@@ -51,7 +51,7 @@ function renderTab(searchParams = "") {
   const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
   const result = render(
     <MantineProvider>
-      <FactionShipTree faction={CALDARI} />
+      <ShipTreeTab faction={CALDARI} />
     </MantineProvider>,
     { wrapper: withNuqsTestingAdapter({ searchParams, onUrlUpdate }) },
   );
@@ -61,12 +61,12 @@ function renderTab(searchParams = "") {
 const lastViewProps = () =>
   mockShipTreeView.mock.calls.at(-1)?.[0] as Record<string, unknown>;
 
-describe("faction page Ship Tree tab", () => {
+describe("Ship Tree tab", () => {
   beforeEach(() => {
     mockShipTreeView.mockReset();
   });
 
-  it("draws the page's faction as an alpha clone by default", () => {
+  it("draws the faction it is given as an alpha clone by default", () => {
     renderTab();
 
     expect(screen.getByTestId("ship-tree-view")).toBeInTheDocument();

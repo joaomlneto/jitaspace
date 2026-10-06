@@ -5,19 +5,20 @@ import { parseAsBoolean, useQueryState } from "nuqs";
 
 import type { FactionIdentifier } from "@jitaspace/ship-tree";
 
-import { ShipTreePanel } from "~/components/ShipTree";
 import {
   SHIP_TREE_OMEGA_PARAM,
   SHIP_TREE_TAB_HEIGHT,
   SHIP_TREE_TAB_MIN_HEIGHT,
 } from "./constants";
+import { ShipTreePanel } from "./ShipTreePanel";
 
 /**
- * The faction page's Ship Tree tab. Its own module so the page can load it
- * lazily: the tree library and its stylesheet only reach the browser when the
- * tab is opened, and never the page's cached HTML.
+ * The Ship Tree tab of the faction and race pages. Its own module so a page can
+ * load it lazily, through `LazyShipTreeTab`: the tree library and its
+ * stylesheet only reach the browser when the tab is opened, and never the
+ * page's cached HTML.
  */
-export default function FactionShipTree({
+export default function ShipTreeTab({
   faction,
 }: Readonly<{ faction: FactionIdentifier }>) {
   // In the URL, as on /ship-tree, so a link keeps the clone state. The page

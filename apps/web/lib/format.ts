@@ -17,6 +17,9 @@ const percentFormat = new Intl.NumberFormat("en-US", {
 
 /** `12345` → `12,345`. */
 export const formatInteger = (value: number) => integerFormat.format(value);
+/** "1 epic arc", "2 epic arcs". */
+export const formatCountOf = (value: number, one: string, many: string) =>
+  `${formatInteger(value)} ${value === 1 ? one : many}`;
 /** `3.14159` → `3.1`. */
 export const formatDecimal = (value: number) => decimalFormat.format(value);
 /** `0.123` → `12.3%`. */

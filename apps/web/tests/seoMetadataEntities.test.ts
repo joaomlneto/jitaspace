@@ -163,15 +163,28 @@ describe("race/[raceId] generateMetadata", () => {
     mockRaceFindUnique.mockReset();
   });
 
+  const raceRow = (overrides: Record<string, unknown> = {}) => ({
+    name: "Caldari",
+    description: "Industrialists.",
+    shipTypeId: null,
+    isDeleted: false,
+    faction: { name: "Caldari State" },
+    _count: { bloodlines: 3 },
+    ...overrides,
+  });
+
   it("returns race name and description", async () => {
-    mockRaceFindUnique.mockResolvedValue({
-      name: "Caldari",
-      description: "Industrialists.",
-    });
+    mockRaceFindUnique.mockResolvedValue(raceRow());
     const { generateMetadata } = await import("~/app/race/[raceId]/page");
     const result = await generateMetadata({ params: rp({ raceId: "1" }) });
     expect(result.title).toBe("Caldari");
     expect(result.description).toBe("Industrialists.");
+  });
+
+  it("returns empty for a race the ingest soft-deleted", async () => {
+    mockRaceFindUnique.mockResolvedValue(raceRow({ isDeleted: true }));
+    const { generateMetadata } = await import("~/app/race/[raceId]/page");
+    expect(await generateMetadata({ params: rp({ raceId: "1" }) })).toEqual({});
   });
 
   it("returns empty when race not found", async () => {
@@ -193,17 +206,20 @@ describe("race/[raceId] generateMetadata", () => {
     );
   });
 
-  it("returns empty when Prisma throws", async () => {
+  it("throws when Prisma throws, so the cached page keeps its metadata", async () => {
+    // The route is cached whole (ISR): generic metadata from a failed read
+    // would be stored for a day.
     mockRaceFindUnique.mockRejectedValue(new Error("db error"));
     const { generateMetadata } = await import("~/app/race/[raceId]/page");
-    expect(await generateMetadata({ params: rp({ raceId: "1" }) })).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ raceId: "1" }) }),
+    ).rejects.toThrow("db error");
   });
 
   it("truncates long description to 200 chars", async () => {
-    mockRaceFindUnique.mockResolvedValue({
-      name: "Caldari",
-      description: "x".repeat(300),
-    });
+    mockRaceFindUnique.mockResolvedValue(
+      raceRow({ description: "x".repeat(300) }),
+    );
     const { generateMetadata } = await import("~/app/race/[raceId]/page");
     const result = await generateMetadata({ params: rp({ raceId: "1" }) });
     expect((result.description ?? "").length).toBe(200);

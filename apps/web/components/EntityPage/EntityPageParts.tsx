@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import { Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Badge, Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
 
 /**
  * The building blocks of the entity detail pages that share the item page's
@@ -138,5 +138,14 @@ export function HeroStat({
         {value}
       </Text>
     </Stack>
+  );
+}
+
+/** "Yes" in teal or "No" in red. */
+export function YesNoBadge({ value }: Readonly<{ value: boolean }>) {
+  return (
+    <Badge color={value ? "teal" : "red"} variant="light">
+      {value ? "Yes" : "No"}
+    </Badge>
   );
 }

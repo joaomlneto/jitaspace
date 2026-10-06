@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   Alert,
@@ -15,7 +14,6 @@ import {
   Paper,
   Progress,
   SimpleGrid,
-  Skeleton,
   Stack,
   Table,
   Tabs,
@@ -38,7 +36,6 @@ import {
   IconTarget,
   IconUsersGroup,
 } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -63,8 +60,6 @@ import {
   AllianceAnchor,
   AllianceAvatar,
   CategoryAnchor,
-  CorporationAnchor,
-  CorporationAvatar,
   EveIconAvatar,
   FactionAvatar,
   formatSecurityStatus,
@@ -87,20 +82,21 @@ import type {
 } from "./types";
 import { DataTable } from "~/components/DataTable";
 import {
+  CorporationLink,
   HeroCard,
   HeroStat,
+  LocationTrail,
   SectionHeading,
   StatCard,
+  useEntityTable,
+  YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
-import { formatInteger as formatCount } from "~/lib/format";
+import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
+import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
+import { formatInteger as formatCount, formatCountOf } from "~/lib/format";
 import { EntityHistory } from "../../history/EntityHistory";
-import {
-  ENLISTED_CORPORATIONS_SHOWN,
-  SHIP_TREE_OMEGA_PARAM,
-  SHIP_TREE_TAB_HEIGHT,
-  SHIP_TREE_TAB_MIN_HEIGHT,
-} from "./constants";
+import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
 import {
   DEFAULT_FACTION_PAGE_TAB,
   FACTION_PAGE_TABS,
@@ -108,26 +104,6 @@ import {
 } from "./tabs";
 
 export type PageProps = FactionPageData;
-
-// Browser-only and on demand: the ship tree library and its stylesheet load
-// when the tab opens, and stay out of the page's cached HTML.
-const FactionShipTree = dynamic(() => import("./FactionShipTree"), {
-  ssr: false,
-  // The panel's own shape (controls, tree, credit line), so nothing below it
-  // moves when the tree arrives.
-  loading: () => (
-    <Stack gap="md" data-testid="ship-tree-placeholder">
-      {/* Measured: the controls row with the logged-out skills prompt. */}
-      <Skeleton h={56} radius="sm" />
-      <Skeleton
-        h={SHIP_TREE_TAB_HEIGHT}
-        mih={SHIP_TREE_TAB_MIN_HEIGHT}
-        radius="md"
-      />
-      <Skeleton h={17} w="60%" radius="sm" />
-    </Stack>
-  ),
-});
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
@@ -144,23 +120,9 @@ const TABLE_TABS = new Set<string>([
 
 /** The faction's table rows, from the CDN-cached `/api/faction/[factionId]`. */
 function useFactionTables(factionId: number, enabled: boolean) {
-  return useQuery({
-    queryKey: ["faction-tables", factionId],
-    queryFn: async (): Promise<FactionTables> => {
-      const response = await fetch(`/api/faction/${factionId}`);
-      if (!response.ok) {
-        throw new Error(`Faction ${factionId}: HTTP ${response.status}`);
-      }
-      return (await response.json()) as FactionTables;
-    },
-    enabled,
-    staleTime: Infinity,
-  });
+  return useEntityTable<FactionTables>(`/api/faction/${factionId}`, enabled);
 }
 
-/** "1 epic arc", "2 epic arcs". */
-const formatCountOf = (value: number, one: string, many: string) =>
-  `${formatCount(value)} ${value === 1 ? one : many}`;
 const formatPercent = (value: number) =>
   `${(value * 100).toLocaleString("en-US", { maximumFractionDigits: 2 })}%`;
 /**
@@ -182,14 +144,6 @@ const CONTESTED_COLORS: Record<string, string> = {
   captured: "red",
 };
 
-function YesNoBadge({ value }: Readonly<{ value: boolean }>) {
-  return (
-    <Badge color={value ? "teal" : "red"} variant="light">
-      {value ? "Yes" : "No"}
-    </Badge>
-  );
-}
-
 function SystemLink({
   location,
 }: Readonly<{
@@ -199,35 +153,6 @@ function SystemLink({
     <SolarSystemAnchor solarSystemId={location.solarSystemId}>
       {location.name}
     </SolarSystemAnchor>
-  );
-}
-
-/** "Jita · Kimotoro · The Forge", each part linked. */
-function LocationTrail({ location }: Readonly<{ location: FactionLocation }>) {
-  return (
-    <Group gap={6} wrap="wrap" component="span">
-      <SolarSystemSecurityStatusBadge
-        securityStatus={location.securityStatus}
-        size="sm"
-      />
-      <SystemLink location={location} />
-      <Text span c="dimmed">
-        ·
-      </Text>
-      <ConstellationAnchor constellationId={location.constellationId}>
-        {location.constellationName}
-      </ConstellationAnchor>
-      {location.regionId !== null && (
-        <>
-          <Text span c="dimmed">
-            ·
-          </Text>
-          <RegionAnchor regionId={location.regionId}>
-            {location.regionName}
-          </RegionAnchor>
-        </>
-      )}
-    </Group>
   );
 }
 
@@ -483,14 +408,7 @@ function TerritoryPanel({
 // ---------------------------------------------------------------------------
 
 function corporationNameCell(row: { corporationId: number; name: string }) {
-  return (
-    <Group gap="xs" wrap="nowrap">
-      <CorporationAvatar corporationId={row.corporationId} size="sm" />
-      <CorporationAnchor corporationId={row.corporationId}>
-        {row.name}
-      </CorporationAnchor>
-    </Group>
-  );
+  return <CorporationLink corporationId={row.corporationId} name={row.name} />;
 }
 
 const corporationColumns: DataTableColumn<FactionCorporationRow>[] = [
@@ -1467,7 +1385,7 @@ export default function FactionPage({
           {/* Ship tree */}
           {shipTreeFaction && (
             <Tabs.Panel value="ship-tree" pt="lg">
-              <FactionShipTree faction={shipTreeFaction.id} />
+              <LazyShipTreeTab faction={shipTreeFaction.id} />
             </Tabs.Panel>
           )}
 
