@@ -430,7 +430,8 @@ export default function CharacterPage({
     zkill.data?.iskLost,
   );
 
-  const badge = npcBadgeLabel(record, isNpcCharacterId(characterId));
+  const isNpc = isNpcCharacterId(characterId);
+  const badge = npcBadgeLabel(record, isNpc);
   const agent = record?.agent ?? null;
   const ceoOf = record?.ceoOf ?? [];
   const founded = record?.founded ?? [];
@@ -438,9 +439,9 @@ export default function CharacterPage({
   const visibleTabs: Record<CharacterPageTab, boolean> = {
     overview: true,
     biography: Boolean(identity.description),
-    history: !isNpcCharacterId(characterId),
+    history: !isNpc,
     agent: agent !== null,
-    killboard: !isNpcCharacterId(characterId),
+    killboard: !isNpc,
   };
   const selectedTab = visibleTabs[activeTab]
     ? activeTab
@@ -535,19 +536,18 @@ export default function CharacterPage({
             {agent && <HeroStat label="Agent level" value={agent.level} />}
             {/* zKillboard loads in the browser: hold the slot while it does,
                 so the stat row does not shift when it arrives. */}
-            {!isNpcCharacterId(characterId) &&
-              (zkill.isLoading || killEfficiency !== null) && (
-                <HeroStat
-                  label="ISK efficiency"
-                  value={
-                    killEfficiency === null ? (
-                      <Skeleton h="1.2em" w="5ch" />
-                    ) : (
-                      formatPercent(killEfficiency)
-                    )
-                  }
-                />
-              )}
+            {!isNpc && (zkill.isLoading || killEfficiency !== null) && (
+              <HeroStat
+                label="ISK efficiency"
+                value={
+                  killEfficiency === null ? (
+                    <Skeleton h="1.2em" w="5ch" />
+                  ) : (
+                    formatPercent(killEfficiency)
+                  )
+                }
+              />
+            )}
           </Group>
 
           <Group gap="xs">
@@ -772,7 +772,7 @@ export default function CharacterPage({
                 </Stack>
               )}
 
-              {!isNpcCharacterId(characterId) && (
+              {!isNpc && (
                 <Stack gap="sm">
                   <SectionHeading icon={<IconSkull size={18} />}>
                     Killboard

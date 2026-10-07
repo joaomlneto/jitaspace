@@ -400,15 +400,16 @@ export async function readCorporationProfile(
   if (corporation === null) return null;
 
   const now = Date.now();
+  const isNpc = isNpcCorporationId(corporationId);
   const [npc, stations, agents, trades, warRecord] = await Promise.all([
-    isNpcCorporationId(corporationId) ? readNpcDetails(corporation) : null,
-    isNpcCorporationId(corporationId) ? readStations(corporationId) : [],
-    isNpcCorporationId(corporationId)
+    isNpc ? readNpcDetails(corporation) : null,
+    isNpc ? readStations(corporationId) : [],
+    isNpc
       ? readAgents(corporationId)
       : { agents: [], agentTypes: [], agentDivisions: [] },
-    isNpcCorporationId(corporationId) ? readTrades(corporationId) : [],
+    isNpc ? readTrades(corporationId) : [],
     // NPC corporations do not go to war; skip the queries.
-    isNpcCorporationId(corporationId)
+    isNpc
       ? null
       : readWarRecord({ kind: "corporation", id: corporationId }, now),
   ]);
