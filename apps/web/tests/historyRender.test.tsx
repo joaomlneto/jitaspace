@@ -465,6 +465,7 @@ describe("EntityHistory", () => {
               ownerID: 1_000_035,
               descriptionID: 7,
               nameID: 8,
+              quoteID: 9,
             },
           },
           {
@@ -486,7 +487,10 @@ describe("EntityHistory", () => {
           // The inventory category of the same id must not be used.
           category: { 2: "Charge" },
         },
-        messages: { 7: "A <b>busy</b><br>station <scr<i>ipt>." },
+        messages: {
+          7: "A <b>busy</b><br>station <scr<i>ipt>.",
+          9: "Range < 50 km",
+        },
       },
     };
     wrap(<EntityHistory history={station} />);
@@ -495,9 +499,11 @@ describe("EntityHistory", () => {
       document.querySelector(`a[href="${path}"]`)?.textContent;
     expect(href("/system/30000142")).toBe("Jita");
     expect(href("/corporation/1000035")).toBe("Caldari Navy");
-    // A message reads as its text (markup stripped until none is left),
-    // linked to its history.
-    expect(href("/string/7")).toBe("A busy station .");
+    // A message reads as its text (markup stripped, without re-joining a
+    // tag split around another), linked to its history.
+    expect(href("/string/7")).toBe("A busy station ipt>.");
+    // An unclosed "<" is text, not the start of a tag.
+    expect(href("/string/9")).toBe("Range < 50 km");
     // One the strings history never recorded stays an id, unlinked.
     expect(screen.getByText("#8").closest("a")).toBeNull();
     // The station's own id links nowhere.

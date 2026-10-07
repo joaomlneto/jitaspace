@@ -364,19 +364,32 @@ export function EntityLabel({
 }
 
 /**
- * EVE's markup (`<a href=showinfo:…>`, `<br>`, …) as the plain text it reads.
- * Tags are stripped until none is left, since one pass can join the halves of
- * a tag split around another (`<scr<b>ipt>`). The result is rendered as text,
- * never as HTML, so this is for legibility, not safety.
+ * EVE's markup (`<a href=showinfo:…>`, `<br>`, …) as the plain text it reads:
+ * one linear pass that drops each `<…>` tag (a `<br>` becomes a space), keeps
+ * an unclosed `<` as text, and collapses whitespace. No regular expressions,
+ * so no backtracking, and nothing is re-joined into a new tag. The result is
+ * rendered as a text node, never as HTML, so this is for legibility, not
+ * safety.
  */
 function plainText(html: string): string {
-  let text = html.replaceAll(/<br\s*\/?>/gi, " ");
-  let previous;
-  do {
-    previous = text;
-    text = text.replaceAll(/<[^<>]*>/g, "");
-  } while (text !== previous);
-  return text.replaceAll(/\s+/g, " ").trim();
+  let out = "";
+  let i = 0;
+  while (i < html.length) {
+    const end = html[i] === "<" ? html.indexOf(">", i + 1) : -1;
+    if (end === -1) {
+      out += html[i];
+      i++;
+      continue;
+    }
+    const tag = html
+      .slice(i + 1, end)
+      .trim()
+      .toLowerCase();
+    if (tag === "br" || tag.startsWith("br ") || tag.startsWith("br/"))
+      out += " ";
+    i = end + 1;
+  }
+  return out.split(/\s+/).filter(Boolean).join(" ");
 }
 
 /**
