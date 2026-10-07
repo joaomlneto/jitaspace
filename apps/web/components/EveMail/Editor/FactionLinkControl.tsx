@@ -6,7 +6,8 @@ import { useDisclosure, useInputState } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { EsiSearchSelect } from "@jitaspace/eve-components";
-import { Systems2Icon } from "@jitaspace/eve-icons";
+import { FactionalWarfareIcon } from "@jitaspace/eve-icons";
+import { FactionAvatar } from "@jitaspace/ui";
 
 import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
@@ -18,15 +19,13 @@ export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorCo
   popoverProps?: Partial<PopoverProps>;
 }
 
-const ConstellationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
-  size,
-}) => (
+const FactionLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
   <div style={{ position: "relative", width: size, height: size }}>
-    <Systems2Icon fill alt="" />
+    <FactionalWarfareIcon fill alt="" />
   </div>
 );
 
-export const ConstellationLinkControl = forwardRef<
+export const FactionLinkControl = forwardRef<
   HTMLButtonElement,
   RichTextEditorLinkControlProps
 >((props, ref) => {
@@ -35,23 +34,23 @@ export const ConstellationLinkControl = forwardRef<
   const theme = useMantineTheme();
   const { editor, unstyled } = useRichTextEditorContext();
 
-  const [constellationId, setConstellationId] = useInputState("");
+  const [factionId, setFactionId] = useInputState("");
   const [opened, { open, close }] = useDisclosure(false);
 
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    setConstellationId(getLinkedEntityId(linkData?.href, ["constellation"]));
+    setFactionId(getLinkedEntityId(linkData?.href, ["faction"]));
   };
 
   const handleClose = () => {
     close();
-    setConstellationId("");
+    setFactionId("");
   };
 
   const setLink = () => {
     handleClose();
-    if (constellationId === "") {
+    if (factionId === "") {
       editor?.chain().focus().extendMarkRange("link").unsetLink().run();
     } else {
       editor
@@ -59,7 +58,7 @@ export const ConstellationLinkControl = forwardRef<
         .focus()
         .extendMarkRange("link")
         .setLink({
-          href: `showinfo:4//${constellationId}`,
+          href: `showinfo:30//${factionId}`,
         })
         .run();
     }
@@ -85,9 +84,9 @@ export const ConstellationLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon ?? ConstellationLinkIcon}
-          aria-label="Link Constellation"
-          title="Link Constellation"
+          icon={icon ?? FactionLinkIcon}
+          aria-label="Link Faction"
+          title="Link Faction"
           onClick={handleOpen}
           active={editor?.isActive("link")}
           {...others}
@@ -102,15 +101,16 @@ export const ConstellationLinkControl = forwardRef<
       >
         <div className={classes.linkEditor}>
           <EsiSearchSelect
-            categories={["constellation"]}
-            placeholder="Search Constellation"
+            categories={["faction"]}
+            placeholder="Search Faction"
             type="url"
-            value={constellationId}
-            onChange={setConstellationId}
+            value={factionId}
+            onChange={setFactionId}
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
             comboboxProps={{ withinPortal: false }}
+            leftSection={<FactionAvatar size={24} factionId={factionId} />}
           />
 
           <Button
@@ -126,4 +126,4 @@ export const ConstellationLinkControl = forwardRef<
     </Popover>
   );
 });
-ConstellationLinkControl.displayName = "ConstellationLinkControl";
+FactionLinkControl.displayName = "FactionLinkControl";

@@ -2,7 +2,7 @@ import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
 import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
-import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
+import { useDisclosure, useInputState } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
@@ -12,6 +12,7 @@ import { StationIcon } from "@jitaspace/eve-icons";
 import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { StationAvatar } from "~/components/Avatar";
 import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
+import { getLinkedEntityId } from "~/components/EveMail/Editor/linkedEntityId";
 import classes from "./LinkControl.module.css";
 
 export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
@@ -45,8 +46,7 @@ export const StationLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    const href = typeof linkData?.href === "string" ? linkData.href : "";
-    setStationId(href);
+    setStationId(getLinkedEntityId(linkData?.href, ["station", "structure"]));
   };
 
   const handleClose = () => {
@@ -80,8 +80,6 @@ export const StationLinkControl = forwardRef<
       setLink();
     }
   };
-
-  useWindowEvent("edit-link", handleOpen, false);
 
   return (
     <Popover

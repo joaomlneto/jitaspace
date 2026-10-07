@@ -8,6 +8,7 @@ import { AllianceLinkControl } from "~/components/EveMail/Editor/AllianceLinkCon
 import { CharacterLinkControl } from "~/components/EveMail/Editor/CharacterLinkControl";
 import { ConstellationLinkControl } from "~/components/EveMail/Editor/ConstellationLinkControl";
 import { CorporationLinkControl } from "~/components/EveMail/Editor/CorporationLinkControl";
+import { FactionLinkControl } from "~/components/EveMail/Editor/FactionLinkControl";
 import { ItemTypeLinkControl } from "~/components/EveMail/Editor/ItemTypeLinkControl";
 import { RegionLinkControl } from "~/components/EveMail/Editor/RegionLinkControl";
 import { SolarSystemLinkControl } from "~/components/EveMail/Editor/SolarSystemLinkControl";
@@ -53,6 +54,7 @@ export function MailMessageEditor({
             <CharacterLinkControl />
             <CorporationLinkControl />
             <AllianceLinkControl />
+            <FactionLinkControl />
             <RegionLinkControl />
             <ConstellationLinkControl />
             <SolarSystemLinkControl />
