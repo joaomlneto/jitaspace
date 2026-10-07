@@ -5,6 +5,7 @@ import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -215,6 +216,30 @@ describe("/ship-tree page", () => {
       fireEvent.pointerLeave(serpentis);
       expect(screen.getByText("Faction: Caldari State")).toBeInTheDocument();
       expect(lastViewProps().summaryFaction).toBe(500001);
+    });
+
+    it("pins the same picker in the tree's corner", async () => {
+      const { onUrlUpdate } = renderPage();
+
+      const corner = lastViewProps().cornerControls as {
+        props: {
+          value: number;
+          onChange: (id: number) => void;
+          onHoverChange: (id: number | null) => void;
+        };
+      };
+      expect(corner.props.value).toBe(500001);
+
+      act(() => corner.props.onHoverChange(500020));
+      expect(lastViewProps().summaryFaction).toBe(500020);
+
+      act(() => corner.props.onChange(500003));
+      await waitFor(() =>
+        expect(
+          onUrlUpdate.mock.calls.at(-1)?.[0].searchParams.get("faction"),
+        ).toBe("amarr"),
+      );
+      expect(lastViewProps().faction).toBe(500003);
     });
 
     it("writes the clone type to the URL", async () => {
