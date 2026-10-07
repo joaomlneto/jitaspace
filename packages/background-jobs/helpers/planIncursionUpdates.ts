@@ -188,6 +188,95 @@ export const diffSnapshots = (
   return events;
 };
 
+type Planned<K extends "created" | "matched" | "ended"> =
+  IncursionUpdatePlan[K][number];
+
+/**
+ * The rows a poll can match, by key: the active ones (the oldest for a key,
+ * any other being an extra that must end) and those that ended within
+ * {@link RESUME_WINDOW_MS} (the most recently ended for a key).
+ */
+const indexTracked = (tracked: readonly TrackedIncursion[], now: Date) => {
+  const active = new Map<string, TrackedIncursion>();
+  const extraActive: TrackedIncursion[] = [];
+  const recentlyEnded = new Map<string, TrackedIncursion>();
+  for (const row of tracked) {
+    const key = keyOf(row);
+    if (row.endedAt === null) {
+      // One constellation hosts one incursion: keep the oldest row, and end
+      // any other, which would otherwise never match nor end.
+      const existing = active.get(key);
+      const [kept, extra] =
+        existing && existing.incursionId < row.incursionId
+          ? [existing, row]
+          : [row, existing];
+      active.set(key, kept);
+      if (extra) extraActive.push(extra);
+    } else if (now.getTime() - row.endedAt.getTime() <= RESUME_WINDOW_MS) {
+      const existing = recentlyEnded.get(key);
+      if (!existing?.endedAt || existing.endedAt < row.endedAt) {
+        recentlyEnded.set(key, row);
+      }
+    }
+  }
+  return { active, extraActive, recentlyEnded };
+};
+
+const planCreated = (
+  snapshot: IncursionSnapshot,
+  now: Date,
+): Planned<"created"> => ({
+  snapshot,
+  stateTimestamps: { [STATE_TIMESTAMP[snapshot.state]]: now },
+  events: [
+    {
+      kind: "appeared",
+      state: snapshot.state,
+      influence: snapshot.influence,
+      hasBoss: snapshot.hasBoss,
+      stagingSolarSystemId: snapshot.stagingSolarSystemId,
+    },
+  ],
+});
+
+const planMatched = (
+  row: TrackedIncursion,
+  snapshot: IncursionSnapshot,
+  now: Date,
+): Planned<"matched"> => {
+  const resumed = row.endedAt !== null;
+  const stateTimestamp = STATE_TIMESTAMP[snapshot.state];
+  const changes = diffSnapshots(row, snapshot);
+  const systemsOf = (kind: IncursionEventKind) =>
+    changes.flatMap((event) =>
+      event.kind === kind && event.solarSystemId !== undefined
+        ? [event.solarSystemId]
+        : [],
+    );
+  return {
+    incursionId: row.incursionId,
+    snapshot,
+    resumed,
+    stateTimestamps: row[stateTimestamp] ? {} : { [stateTimestamp]: now },
+    addedSolarSystemIds: systemsOf("system_added"),
+    removedSolarSystemIds: systemsOf("system_removed"),
+    events: [...(resumed ? [{ kind: "resumed" as const }] : []), ...changes],
+    typeChanged: row.type !== snapshot.type,
+  };
+};
+
+const planEnded = (row: TrackedIncursion): Planned<"ended"> => ({
+  incursionId: row.incursionId,
+  events: [
+    {
+      kind: "ended",
+      state: row.state,
+      influence: row.influence,
+      hasBoss: row.hasBoss,
+    },
+  ],
+});
+
 /**
  * Diffs one poll of ESI against the rows that can still match it: every
  * active incursion, plus those that ended within {@link RESUME_WINDOW_MS}.
@@ -208,36 +297,7 @@ export function planIncursionUpdates({
     duplicates: [],
     emptyResponseIgnored: false,
   };
-
-  const endedEvent = (row: TrackedIncursion): IncursionEventDraft => ({
-    kind: "ended",
-    state: row.state,
-    influence: row.influence,
-    hasBoss: row.hasBoss,
-  });
-
-  const active = new Map<string, TrackedIncursion>();
-  const extraActive: TrackedIncursion[] = [];
-  const recentlyEnded = new Map<string, TrackedIncursion>();
-  for (const row of tracked) {
-    if (row.endedAt === null) {
-      // One constellation hosts one incursion: keep the oldest row, and end
-      // any other, which would otherwise never match nor end.
-      const existing = active.get(keyOf(row));
-      if (existing && existing.incursionId < row.incursionId) {
-        extraActive.push(row);
-      } else {
-        if (existing) extraActive.push(existing);
-        active.set(keyOf(row), row);
-      }
-    } else if (now.getTime() - row.endedAt.getTime() <= RESUME_WINDOW_MS) {
-      // Most recently ended first, should a constellation have two.
-      const existing = recentlyEnded.get(keyOf(row));
-      if (!existing?.endedAt || existing.endedAt < row.endedAt) {
-        recentlyEnded.set(keyOf(row), row);
-      }
-    }
-  }
+  const { active, extraActive, recentlyEnded } = indexTracked(tracked, now);
 
   if (esiIncursions.length === 0 && active.size > 0) {
     // Incursions never all end at once: this is a failed response.
@@ -253,60 +313,15 @@ export function planIncursionUpdates({
       continue;
     }
     seen.add(key);
-
     const row = active.get(key) ?? recentlyEnded.get(key);
-    if (!row) {
-      plan.created.push({
-        snapshot,
-        stateTimestamps: { [STATE_TIMESTAMP[snapshot.state]]: now },
-        events: [
-          {
-            kind: "appeared",
-            state: snapshot.state,
-            influence: snapshot.influence,
-            hasBoss: snapshot.hasBoss,
-            stagingSolarSystemId: snapshot.stagingSolarSystemId,
-          },
-        ],
-      });
-      continue;
-    }
-
-    const resumed = row.endedAt !== null;
-    const stateTimestamp = STATE_TIMESTAMP[snapshot.state];
-    const changes = diffSnapshots(row, snapshot);
-    const systemsOf = (kind: IncursionEventKind) =>
-      changes.flatMap((event) =>
-        event.kind === kind && event.solarSystemId !== undefined
-          ? [event.solarSystemId]
-          : [],
-      );
-    plan.matched.push({
-      incursionId: row.incursionId,
-      snapshot,
-      resumed,
-      stateTimestamps: row[stateTimestamp] ? {} : { [stateTimestamp]: now },
-      addedSolarSystemIds: systemsOf("system_added"),
-      removedSolarSystemIds: systemsOf("system_removed"),
-      events: [...(resumed ? [{ kind: "resumed" as const }] : []), ...changes],
-      typeChanged: row.type !== snapshot.type,
-    });
+    if (row) plan.matched.push(planMatched(row, snapshot, now));
+    else plan.created.push(planCreated(snapshot, now));
   }
 
   for (const [key, row] of active) {
-    if (!seen.has(key)) {
-      plan.ended.push({
-        incursionId: row.incursionId,
-        events: [endedEvent(row)],
-      });
-    }
+    if (!seen.has(key)) plan.ended.push(planEnded(row));
   }
-  for (const row of extraActive) {
-    plan.ended.push({
-      incursionId: row.incursionId,
-      events: [endedEvent(row)],
-    });
-  }
+  plan.ended.push(...extraActive.map(planEnded));
 
   return plan;
 }

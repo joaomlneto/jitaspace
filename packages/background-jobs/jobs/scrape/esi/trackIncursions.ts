@@ -125,29 +125,31 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
           ).map((row) => [row.solarSystemId, row]),
         );
 
+        // The writes below run one at a time on purpose: the transaction holds
+        // a single connection, and concurrent queries on it are what pg
+        // deprecates. A poll touches about five incursions.
         for (const { snapshot, stateTimestamps, events } of plan.created) {
           const { infestedSolarSystemIds, ...columns } = snapshot;
-          await tx.incursion.create({
-            data: {
-              ...columns,
-              ...stateTimestamps,
-              stagingSovereigntyAllianceId:
-                stagingSovereignty.get(columns.stagingSolarSystemId)
-                  ?.allianceId ?? null,
-              stagingSovereigntyFactionId:
-                stagingSovereignty.get(columns.stagingSolarSystemId)
-                  ?.factionId ?? null,
-              firstSeenAt: now,
-              lastSeenAt: now,
-              isObservedFromStart: observedFromStart,
-              infestedSolarSystems: {
-                create: infestedSolarSystemIds.map((solarSystemId) => ({
-                  solarSystemId,
-                })),
-              },
-              events: { create: toEventRows(events) },
+          const data = {
+            ...columns,
+            ...stateTimestamps,
+            stagingSovereigntyAllianceId:
+              stagingSovereignty.get(columns.stagingSolarSystemId)
+                ?.allianceId ?? null,
+            stagingSovereigntyFactionId:
+              stagingSovereignty.get(columns.stagingSolarSystemId)?.factionId ??
+              null,
+            firstSeenAt: now,
+            lastSeenAt: now,
+            isObservedFromStart: observedFromStart,
+            infestedSolarSystems: {
+              create: infestedSolarSystemIds.map((solarSystemId) => ({
+                solarSystemId,
+              })),
             },
-          });
+            events: { create: toEventRows(events) },
+          };
+          await tx.incursion.create({ data }); // NOSONAR: one at a time, see above
         }
 
         // Unchanged incursions only need to be marked as still listed.
@@ -166,34 +168,31 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
         for (const match of plan.matched) {
           if (isUnchanged(match)) continue;
           const { infestedSolarSystemIds: _, ...columns } = match.snapshot;
-          await tx.incursion.update({
-            where: { incursionId: match.incursionId },
-            data: {
-              ...columns,
-              ...match.stateTimestamps,
-              lastSeenAt: now,
-              ...(match.resumed ? { endedAt: null } : {}),
-              infestedSolarSystems: {
-                create: match.addedSolarSystemIds.map((solarSystemId) => ({
-                  solarSystemId,
-                })),
-                deleteMany: {
-                  solarSystemId: { in: match.removedSolarSystemIds },
-                },
+          const data = {
+            ...columns,
+            ...match.stateTimestamps,
+            lastSeenAt: now,
+            ...(match.resumed ? { endedAt: null } : {}),
+            infestedSolarSystems: {
+              create: match.addedSolarSystemIds.map((solarSystemId) => ({
+                solarSystemId,
+              })),
+              deleteMany: {
+                solarSystemId: { in: match.removedSolarSystemIds },
               },
-              events: { create: toEventRows(match.events) },
             },
-          });
+            events: { create: toEventRows(match.events) },
+          };
+          const where = { incursionId: match.incursionId };
+          await tx.incursion.update({ where, data }); // NOSONAR: one at a time, see above
         }
 
         for (const { incursionId, events } of plan.ended) {
-          await tx.incursion.update({
-            where: { incursionId },
-            data: {
-              endedAt: now,
-              events: { create: toEventRows(events) },
-            },
-          });
+          const data = {
+            endedAt: now,
+            events: { create: toEventRows(events) },
+          };
+          await tx.incursion.update({ where: { incursionId }, data }); // NOSONAR: one at a time, see above
         }
 
         return plan;
