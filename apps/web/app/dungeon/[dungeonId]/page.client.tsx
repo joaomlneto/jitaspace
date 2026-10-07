@@ -518,8 +518,10 @@ function DungeonReferencesAlert({
   return (
     <Alert variant="light" color="gray" icon={<IconInfoCircle />}>
       The Static Data Export does not describe this dungeon — it is known only
-      because {reasons.join(", and ")}. Its name, layout and description live
-      only in the game client.
+      because {reasons.join(", and ")}.{" "}
+      {dungeon.name === null
+        ? "Its name, layout and description live only in the game client."
+        : "Its name is read from the game client, where its layout and description live."}
     </Alert>
   );
 }

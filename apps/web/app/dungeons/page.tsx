@@ -1,5 +1,6 @@
 import type { DungeonIndexRow, DungeonsIndex } from "./page.client";
 import { prisma } from "~/lib/db";
+import { loadStoredDungeonNames } from "~/lib/dungeon-names";
 import { pageMetadata } from "~/lib/metadata";
 import { cacheSdeRead } from "~/lib/sdeCache";
 import DungeonsPage from "./page.client";
@@ -13,6 +14,20 @@ export const metadata = pageMetadata({
 });
 
 export default async function Page() {
+  const [index, storedNames] = await Promise.all([
+    readDungeonsIndex(),
+    loadStoredDungeonNames(),
+  ]);
+  // Name the pockets dungeons.yaml only refers to from the game client's names.
+  const dungeons = index.dungeons.map((dungeon) => {
+    const name = dungeon.name ?? storedNames.get(dungeon.dungeonId);
+    return name === undefined ? dungeon : { ...dungeon, name };
+  });
+  return <DungeonsPage index={{ ...index, dungeons }} />;
+}
+
+/** Every dungeon the SDE knows of, with the lookup tables beside them. */
+async function readDungeonsIndex(): Promise<DungeonsIndex> {
   "use cache";
   cacheSdeRead();
   // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
@@ -125,5 +140,5 @@ export default async function Page() {
     index.factions[faction.factionId] = faction.name;
   }
 
-  return <DungeonsPage index={index} />;
+  return index;
 }

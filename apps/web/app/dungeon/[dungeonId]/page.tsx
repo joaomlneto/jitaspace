@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
 import type { DungeonDetail } from "./data";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, toDescription } from "~/lib/metadata";
@@ -12,11 +13,29 @@ import { parsePositiveEntityId } from "~/lib/routeParams";
 import { getDungeon } from "./data";
 import DungeonPage from "./page.client";
 
+/**
+ * The dungeon, named from its history when the SDE leaves it unnamed. Most
+ * mission pockets are named only in the game client, and the build-history
+ * database reads their names from it (`Entity.name`, via the history's own
+ * name lookup).
+ */
+function withHistoryName(
+  dungeon: DungeonDetail,
+  history: EntityHistoryData | null,
+): DungeonDetail {
+  if (dungeon.name !== null || !history?.name) return dungeon;
+  return { ...dungeon, name: history.name };
+}
+
 /** The description of a dungeon whose own text is missing. */
 function fallbackDescription(dungeon: DungeonDetail, name: string): string {
   if (!dungeon.described) {
     const missions = dungeon.missions.length === 1 ? "mission" : "missions";
-    return `EVE Online dungeon ${dungeon.dungeonId} — the ${missions} and agents that use it.`;
+    const subject =
+      dungeon.name === null
+        ? `EVE Online dungeon ${dungeon.dungeonId}`
+        : `${dungeon.name}, an EVE Online dungeon`;
+    return `${subject} — the ${missions} and agents that use it.`;
   }
   // Archetype titles are category names, singular or plural ("Combat Sites",
   // "Escalation"), so they are quoted rather than declined. Archetype 43 is
@@ -37,8 +56,15 @@ export async function generateMetadata({
 
   // Uncaught, like the page body: this route is cached whole, so a database
   // failure must throw rather than store generic metadata.
-  const dungeon = await getDungeon(dungeonId);
-  if (dungeon === null) return {};
+  const sdeDungeon = await getDungeon(dungeonId);
+  if (sdeDungeon === null) return {};
+  // The page body reads the same cached history, so this costs no extra query.
+  const dungeon = withHistoryName(
+    sdeDungeon,
+    sdeDungeon.name === null
+      ? await loadEntityHistory("dungeon", dungeonId)
+      : null,
+  );
   const name = dungeonDisplayName(dungeon);
   const text = dungeon.description ?? dungeon.gameplayDescription;
   return pageMetadata({
@@ -89,7 +115,10 @@ async function PageContent({
   // apps/web/CLAUDE.md → "URL-synced filter state".
   return (
     <NuqsAdapter>
-      <DungeonPage dungeon={dungeon} history={history} />
+      <DungeonPage
+        dungeon={withHistoryName(dungeon, history)}
+        history={history}
+      />
     </NuqsAdapter>
   );
 }
