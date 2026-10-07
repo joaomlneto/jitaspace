@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // ---------------------------------------------------------------------------
@@ -56,6 +56,7 @@ jest.mock("@jitaspace/eve-icons", () => ({
   MapIcon: icon,
   SystemsIcon: icon,
   ItemsIcon: icon,
+  FactionalWarfareIcon: icon,
 }));
 
 const avatar = () => <span>avatar</span>;
@@ -63,6 +64,7 @@ jest.mock("@jitaspace/ui", () => ({
   CharacterAvatar: avatar,
   AllianceAvatar: avatar,
   CorporationAvatar: avatar,
+  FactionAvatar: avatar,
 }));
 
 const withProvider = (node: React.ReactNode) =>
@@ -97,6 +99,13 @@ const CONTROLS: ControlCase[] = [
     placeholder: "Search Corporation",
     sampleId: "98000001",
     expectedHref: "showinfo:2//98000001",
+  },
+  {
+    name: "FactionLinkControl",
+    label: "Link Faction",
+    placeholder: "Search Faction",
+    sampleId: "500003",
+    expectedHref: "showinfo:30//500003",
   },
   {
     name: "ConstellationLinkControl",
@@ -206,6 +215,64 @@ describe("EveMail editor LinkControls", () => {
       );
 
       expect(mockChain.setLink).toHaveBeenCalledWith({ href: expectedHref });
+    },
+  );
+
+  it.each(CONTROLS)(
+    "$name shows the linked id, not the raw href, when reopened on its link",
+    async ({ name, label, placeholder, sampleId, expectedHref }) => {
+      mockEditor.getAttributes.mockReturnValue({ href: expectedHref });
+      const user = userEvent.setup();
+      const Control = load(name);
+      withProvider(<Control />);
+
+      await user.click(screen.getByRole("button", { name: label }));
+
+      expect(screen.getByPlaceholderText(placeholder)).toHaveValue(sampleId);
+    },
+  );
+
+  it.each(
+    CONTROLS.flatMap((control) =>
+      ["https://www.jita.space", "killReport:123"].map((href) => ({
+        ...control,
+        href,
+      })),
+    ),
+  )(
+    "$name starts empty when reopened on a $href link",
+    async ({ name, label, placeholder, href }) => {
+      mockEditor.getAttributes.mockReturnValue({ href });
+      const user = userEvent.setup();
+      const Control = load(name);
+      withProvider(<Control />);
+
+      await user.click(screen.getByRole("button", { name: label }));
+
+      expect(screen.getByPlaceholderText(placeholder)).toHaveValue("");
+    },
+  );
+
+  // Mantine's Mod-K shortcut fires a window-wide "edit-link" event. Every
+  // control used to listen for it, so one keystroke would open all of them at
+  // once; only Mantine's own generic Link control should react.
+  it.each(CONTROLS)(
+    "$name ignores the window-wide edit-link event",
+    async ({ name, label }) => {
+      const user = userEvent.setup();
+      const Control = load(name);
+      withProvider(<Control />);
+      const button = screen.getByRole("button", { name: label });
+
+      // The dropdown mounts after a transition, so assert on the trigger's
+      // aria-expanded, which Mantine sets as soon as the popover opens.
+      act(() => {
+        window.dispatchEvent(new Event("edit-link"));
+      });
+      expect(button).toHaveAttribute("aria-expanded", "false");
+
+      await user.click(button);
+      expect(button).toHaveAttribute("aria-expanded", "true");
     },
   );
 });

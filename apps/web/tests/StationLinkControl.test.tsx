@@ -97,6 +97,28 @@ describe("StationLinkControl", () => {
     expect(screen.getByText("Save")).toBeInTheDocument();
   });
 
+  it.each([
+    ["station", "showinfo:52678//60003760", "60003760"],
+    ["structure", "showinfo:35832//1035466617946", "1035466617946"],
+    ["character", "showinfo:1373//93345033", ""],
+  ])(
+    "prefills the search with the linked id when reopened on a %s link",
+    async (_kind, href, expected) => {
+      mockEditor.getAttributes.mockReturnValue({ href });
+      const user = userEvent.setup();
+      const {
+        StationLinkControl,
+      } = require("~/components/EveMail/Editor/StationLinkControl");
+      withProvider(<StationLinkControl />);
+
+      await user.click(screen.getByRole("button", { name: "Link Station" }));
+
+      expect(screen.getByPlaceholderText("Search Station")).toHaveValue(
+        expected,
+      );
+    },
+  );
+
   it("looks up the station and sets a showinfo link when Save is clicked", async () => {
     const user = userEvent.setup();
     const {

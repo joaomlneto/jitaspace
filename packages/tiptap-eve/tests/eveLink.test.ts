@@ -52,6 +52,7 @@ describe("renderEveHref", () => {
         "/constellation/20000020",
       ],
       ["solar systems (type 5)", "showinfo:5//30000142", "/system/30000142"],
+      ["factions (type 30)", "showinfo:30//500003", "/faction/500003"],
       [
         "alliances (type 16159)",
         "showinfo:16159//498125261",
@@ -209,6 +210,7 @@ describe("renderEveHref", () => {
       // Without "//", type 2 is treated as a generic inventory type, not a corporation
       expect(renderEveHref("showinfo:2")).toBe("/type/2");
       expect(renderEveHref("showinfo:5")).toBe("/type/5");
+      expect(renderEveHref("showinfo:30")).toBe("/type/30");
       expect(renderEveHref("showinfo:1373")).toBe("/type/1373");
       expect(renderEveHref("showinfo:16159")).toBe("/type/16159");
     });
@@ -308,6 +310,7 @@ describe("EveLink protocol configuration", () => {
       "showinfo:3//10000002", // region
       "showinfo:4//20000020", // constellation
       "showinfo:5//30000142", // solar system
+      "showinfo:30//500003", // faction
       "showinfo:16159//498125261", // alliance
       "showinfo:1373//93345033", // character
       "showinfo:1529//60004588", // station

@@ -38,6 +38,8 @@ const resolveShowInfoHref = (targetType: string[]): string | undefined => {
 
   if (targetType[0] === "5") return `/system/${targetType[1]}`;
 
+  if (targetType[0] === "30") return `/faction/${targetType[1]}`;
+
   if (targetType[0] === "16159") return `/alliance/${targetType[1]}`;
 
   if (CHARACTER_TYPE_IDS.has(Number.parseInt(targetType[0] ?? "", 10)))
