@@ -1644,8 +1644,10 @@ model Incursion {
   /// minutes (an outage, a deploy). Its `firstSeenAt` and earlier state
   /// timestamps are then not its real ones.
   isObservedFromStart          Boolean
-  /// The first poll that saw it in each state; null if it never was, or was
-  /// already past that state when tracking began.
+  /// The first poll that saw it in each state; null if it never was, or if no
+  /// poll saw it in that state (it was already past it when tracking began,
+  /// or entered and left it during a gap between polls). A state entered
+  /// during a gap gets the first poll after the gap, not its real start.
   establishedAt                DateTime?
   mobilizingAt                 DateTime?
   withdrawingAt                DateTime?
@@ -1685,7 +1687,8 @@ enum IncursionEventKind {
   staging_system_changed
   system_added
   system_removed
-  /// No longer listed. Carries the state and influence it was last seen with.
+  /// No longer listed. Carries the state, influence and boss flag it was last
+  /// seen with.
   ended
 }
 
