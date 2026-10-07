@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 
 import { SHIP_TREE_DATA_BASE_URL } from "../data";
 import { ShipTreeView } from "../ShipTreeView";
@@ -223,6 +223,36 @@ describe("ShipTreeView", () => {
     expect(summary).toHaveAttribute("aria-label", "Amarr Empire");
   });
 
+  it("pins corner controls above the summary, outside the tree", async () => {
+    const { fetch } = createFakeFetch();
+
+    renderView(
+      <ShipTreeView
+        faction={500001}
+        fetch={fetch}
+        summaryFaction={500001}
+        cornerControls={<button type="button">picker</button>}
+      />,
+    );
+
+    await screen.findByTestId("ship-tree-content", {}, READY);
+    const corner = screen.getByTestId("ship-tree-corner");
+    const picker = within(corner).getByRole("button", { name: "picker" });
+    const summary = corner.querySelector("section[data-faction]");
+    expect(summary).not.toBeNull();
+    // Picker first, summary below it, as in the game.
+    expect(
+      picker.compareDocumentPosition(summary!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // Not inside the pan-and-zoom content.
+    expect(
+      within(screen.getByTestId("ship-tree-content")).queryByRole("button", {
+        name: "picker",
+      }),
+    ).toBeNull();
+  });
+
   it("shows no summary unless asked", async () => {
     const { fetch } = createFakeFetch();
 
@@ -232,6 +262,7 @@ describe("ShipTreeView", () => {
 
     await screen.findByTestId("ship-tree-content", {}, READY);
     expect(container.querySelector("section[data-faction]")).toBeNull();
+    expect(screen.queryByTestId("ship-tree-corner")).toBeNull();
   });
 
   it("passes the rendering options through, and leaves the library's defaults alone otherwise", async () => {

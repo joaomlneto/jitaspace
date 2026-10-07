@@ -40,6 +40,8 @@ export interface ShipTreePanelProps {
   mih?: ShipTreeViewProps["mih"];
   /** The faction whose summary bubble to pin over the tree; none if omitted. */
   summaryFaction?: ShipTreeViewProps["summaryFaction"];
+  /** Pinned to the tree's top-left corner, above the summary; see `ShipTreeView`. */
+  cornerControls?: ShipTreeViewProps["cornerControls"];
 }
 
 /**
@@ -53,6 +55,7 @@ export function ShipTreePanel({
   h,
   mih,
   summaryFaction,
+  cornerControls,
 }: Readonly<ShipTreePanelProps>) {
   const hasHydrated = useAuthStoreHasHydrated();
   const character = useSelectedCharacter();
@@ -126,6 +129,7 @@ export function ShipTreePanel({
         h={h}
         mih={mih}
         summaryFaction={summaryFaction}
+        cornerControls={cornerControls}
       />
 
       <Text size="xs" c="dimmed">

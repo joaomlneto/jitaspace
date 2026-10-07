@@ -10,6 +10,7 @@ import type {
   SkillTraining,
 } from "@eve-online-tools/eve-ship-tree";
 import type { BoxProps } from "@mantine/core";
+import type { ReactNode } from "react";
 import {
   DataProvider,
   FactionSummary,
@@ -25,8 +26,8 @@ import { getShipTreeFaction } from "./factions";
 
 const NO_SKILLS: SkillsInput = {};
 
-/** Clears the frame's top border and label, as the game places the bubble. */
-const SUMMARY_INSET = 40;
+/** Clears the frame's top border and label, as the game places its corner. */
+const CORNER_INSET = 40;
 
 export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
   /** Whose tree to draw. See `SHIP_TREE_FACTIONS` for the ids on offer. */
@@ -64,10 +65,19 @@ export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
   /**
    * Shows the game's faction summary for this faction (logo, name, its
    * strengths as icons, and a one-line description) pinned to the tree's
-   * top-left corner, outside its pan and zoom. Pass the faction under the
-   * pointer to preview it. Hidden on phones, where it would cover the tree.
+   * top-left corner, outside its pan and zoom, below `cornerControls`. Pass
+   * the faction under the pointer to preview it.
    */
   summaryFaction?: FactionIdentifier;
+  /**
+   * Pinned to the tree's top-left corner, above the summary, outside its pan
+   * and zoom: where the game puts its faction picker
+   * (`ShipTreeFactionSelector`).
+   *
+   * The corner is hidden on phones, where it would cover most of the tree, so
+   * a page that relies on these controls has to offer them there itself.
+   */
+  cornerControls?: ReactNode;
   /**
    * Number format for tooltip prices and bonuses, as a BCP 47 tag. Defaults to
    * the reader's browser locale.
@@ -114,6 +124,7 @@ export function ShipTreeView({
   fetch,
   disclaimer = null,
   summaryFaction,
+  cornerControls,
   locale,
   goldenCapsule,
   strictMode,
@@ -156,15 +167,19 @@ export function ShipTreeView({
               />
             </Grid>
           </ShipTree>
-          {summaryFaction !== undefined && (
+          {(cornerControls !== undefined || summaryFaction !== undefined) && (
             <Box
               visibleFrom="sm"
               pos="absolute"
-              top={SUMMARY_INSET}
-              left={SUMMARY_INSET}
+              top={CORNER_INSET}
+              left={CORNER_INSET}
               style={{ zIndex: 1 }}
+              data-testid="ship-tree-corner"
             >
-              <FactionSummary faction={summaryFaction} />
+              {cornerControls}
+              {summaryFaction !== undefined && (
+                <FactionSummary faction={summaryFaction} />
+              )}
             </Box>
           )}
         </DataProvider>
