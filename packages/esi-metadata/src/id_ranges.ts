@@ -24,3 +24,6 @@ export const stationRanges: [number, number][] = [[60000000, 70000000]];
 
 export const isIdInRanges = (id: number, ranges: [number, number][]) =>
   ranges.some(([min, max]) => id >= min && id <= max);
+
+/** Whether `id` is a station's: NPC stations and the stations built from player outposts. Upwell structures are numbered far above. */
+export const isStationId = (id: number) => isIdInRanges(id, stationRanges);

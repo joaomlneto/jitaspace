@@ -9,7 +9,7 @@ import {
   getUniverseStationsStationId,
   getUniverseStructuresStructureId,
 } from "@jitaspace/esi-client";
-import { isIdInRanges, stationRanges } from "@jitaspace/esi-metadata";
+import { isStationId } from "@jitaspace/esi-metadata";
 import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { StationIcon } from "@jitaspace/eve-icons";
 import { useAccessToken } from "@jitaspace/hooks";
@@ -24,9 +24,6 @@ export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorCo
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
-
-// Anything outside the station ID ranges is an Upwell structure.
-const isStationId = (id: number) => isIdInRanges(id, stationRanges);
 
 const StationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
   <div style={{ position: "relative", width: size, height: size }}>
