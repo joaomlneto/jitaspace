@@ -59,7 +59,8 @@ export async function getCachedEntityHistory(
   // so an old entity's own name message (its `typeNameID`, `nameID`, …) may be
   // missing from it, while the entity is named all the same.
   if (name !== null)
-    for (const id of ownNameMessageIds(timeline)) labels.messages[id] ??= name;
+    for (const id of currentNameMessageIds(timeline))
+      labels.messages[id] ??= name;
   return { entityType, entityId, name, timeline, labels };
 }
 
@@ -107,25 +108,30 @@ export async function loadEntityHistory(
 export const HISTORY_TIMEOUT_MS = 10_000;
 
 /**
- * The message ids an entity's own records name it by: its top-level
- * `…NameID` / `nameID` / `displayNameID` fields, in any event.
+ * The message ids an entity is named by now: the latest value of each of its
+ * top-level `…NameID` / `nameID` fields across the timeline. Only these may be
+ * filled in with the entity's current name; a name message it had earlier
+ * named it something else.
  */
-function ownNameMessageIds(timeline: EntityTimeline | null): number[] {
-  const ids = new Set<number>();
+function currentNameMessageIds(timeline: EntityTimeline | null): number[] {
+  const current = new Map<string, unknown>();
   const isName = (field: string) =>
     field.endsWith("NameID") || field === "nameID";
   for (const event of timeline?.events ?? []) {
-    const fields: [string, unknown][] =
-      event.kind === "modified"
-        ? Object.entries(event.fields).flatMap(([f, d]) => [
-            [f, d.from],
-            [f, d.to],
-          ])
-        : Object.entries(event.values ?? {});
-    for (const [field, value] of fields)
-      if (isName(field) && typeof value === "number") ids.add(value);
+    if (event.kind === "added") {
+      for (const [field, value] of Object.entries(event.values ?? {}))
+        if (isName(field)) current.set(field, value);
+    } else if (event.kind === "modified") {
+      for (const [field, delta] of Object.entries(event.fields)) {
+        if (!isName(field)) continue;
+        if ("to" in delta) current.set(field, delta.to);
+        else current.delete(field);
+      }
+    }
   }
-  return [...ids];
+  return [...current.values()].filter(
+    (id): id is number => typeof id === "number",
+  );
 }
 
 /** How deep a market group's parent chain is followed. */

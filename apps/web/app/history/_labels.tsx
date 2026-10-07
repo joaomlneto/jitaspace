@@ -363,13 +363,21 @@ export function EntityLabel({
   );
 }
 
-/** EVE's markup (`<a href=showinfo:…>`, `<br>`, …) as the plain text it reads. */
-const plainText = (html: string) =>
-  html
-    .replaceAll(/<br\s*\/?>/gi, " ")
-    .replaceAll(/<[^>]*>/g, "")
-    .replaceAll(/\s+/g, " ")
-    .trim();
+/**
+ * EVE's markup (`<a href=showinfo:…>`, `<br>`, …) as the plain text it reads.
+ * Tags are stripped until none is left, since one pass can join the halves of
+ * a tag split around another (`<scr<b>ipt>`). The result is rendered as text,
+ * never as HTML, so this is for legibility, not safety.
+ */
+function plainText(html: string): string {
+  let text = html.replaceAll(/<br\s*\/?>/gi, " ");
+  let previous;
+  do {
+    previous = text;
+    text = text.replaceAll(/<[^<>]*>/g, "");
+  } while (text !== previous);
+  return text.replaceAll(/\s+/g, " ").trim();
+}
 
 /**
  * A localization message, shown as its English text and linked to its own

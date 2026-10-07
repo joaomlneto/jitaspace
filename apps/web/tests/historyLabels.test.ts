@@ -371,6 +371,28 @@ describe("readHistoryLabels messages", () => {
 });
 
 describe("getCachedEntityHistory", () => {
+  it("fills in only the name message the entity is named by now", async () => {
+    mockTimeline = timeline(
+      {
+        build: 90,
+        kind: "added",
+        collection: "types",
+        values: { typeNameID: 100 },
+      },
+      {
+        build: 95,
+        kind: "modified",
+        collection: "types",
+        fields: { typeNameID: { from: 100, to: 200 } },
+      },
+    );
+
+    const { labels } = await getCachedEntityHistory("type", 587);
+
+    // 200 is its name now; 100 named it something else, so it stays unknown.
+    expect(labels.messages).toEqual({ 200: "type 587" });
+  });
+
   it("names its own name message after the entity when no string recorded it", async () => {
     mockTimeline = timeline({
       build: 90,
