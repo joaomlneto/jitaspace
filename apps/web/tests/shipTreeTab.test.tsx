@@ -25,6 +25,7 @@ jest.mock("@jitaspace/hooks", () => ({
   }),
   useCharacterSkillQueue: () => ({ data: undefined }),
   useMarketPrices: () => ({ data: {} }),
+  useEsiAcceptLanguage: () => "en",
 }));
 jest.mock("@jitaspace/ui", () => ({
   LoginWithEveOnlineButton: () => (

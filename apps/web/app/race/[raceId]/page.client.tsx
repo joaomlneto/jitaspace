@@ -89,7 +89,10 @@ import {
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
-import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
+import {
+  LazyShipTreeTab,
+  preloadShipTreeTab,
+} from "~/components/ShipTree/LazyShipTreeTab";
 import { formatInteger as formatCount, formatCountOf } from "~/lib/format";
 import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import { CHARACTER_ATTRIBUTES } from "./constants";
@@ -1558,10 +1561,19 @@ export default function RacePage(race: Readonly<PageProps>) {
   // Only the open tab's tables: a failure elsewhere is that tab's to show.
   const failedTable = [...fetched].some((table) => tables[table].isError);
 
-  const tab = (value: string, icon: ReactNode, label: string, count?: number) =>
+  const tab = (
+    value: string,
+    icon: ReactNode,
+    label: string,
+    count?: number,
+    /** Runs when the tab is about to be opened: on hover or focus. */
+    onIntent?: () => void,
+  ) =>
     visibleTabs.has(value) && (
       <Tabs.Tab
         value={value}
+        onPointerEnter={onIntent}
+        onFocus={onIntent}
         leftSection={icon}
         rightSection={
           count === undefined ? undefined : (
@@ -1678,7 +1690,13 @@ export default function RacePage(race: Readonly<PageProps>) {
             )}
             {tab("skills", <IconListCheck size={16} />, "Skills")}
             {tab("ships", <IconRocket size={16} />, "Ships", publishedShips)}
-            {tab("ship-tree", <IconHierarchy3 size={16} />, "Ship Tree")}
+            {tab(
+              "ship-tree",
+              <IconHierarchy3 size={16} />,
+              "Ship Tree",
+              undefined,
+              preloadShipTreeTab,
+            )}
             {tab("items", <IconPackage size={16} />, "Items", counts.items)}
             {tab(
               "corporations",

@@ -204,7 +204,8 @@ describe("SettingsCard", () => {
     expect(screen.queryByText("New data tables")).not.toBeInTheDocument();
   });
 
-  it("shows that there are no experimental features right now", () => {
+  it("turns the Ship Tree debug mode on and off from the Experimental tab", () => {
+    usePreferencesStore.setState({ shipTreeDebugMode: false });
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
@@ -214,10 +215,17 @@ describe("SettingsCard", () => {
     );
 
     fireEvent.click(screen.getByRole("tab", { name: "Experimental" }));
+    const toggle = screen.getByRole("switch", { name: "Ship Tree debug mode" });
+    expect(toggle).not.toBeChecked();
 
-    expect(
-      screen.getByText("No experimental features right now — stay tuned!"),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(usePreferencesStore.getState().shipTreeDebugMode).toBe(true);
+    const stored = JSON.parse(
+      window.localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "{}",
+    );
+    expect(stored.state?.shipTreeDebugMode).toBe(true);
+
+    fireEvent.click(toggle);
+    expect(usePreferencesStore.getState().shipTreeDebugMode).toBe(false);
   });
 });

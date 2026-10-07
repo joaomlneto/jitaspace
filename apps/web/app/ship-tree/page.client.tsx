@@ -31,11 +31,10 @@ export default function ShipTreePage() {
     parseAsBoolean.withDefault(false),
   );
   const faction = getShipTreeFactionBySlug(factionSlug);
-  // The picker shows logos only; the label names the faction under the
-  // pointer, or the chosen one.
+  // The picker shows logos only. The summary bubble over the tree (or, on a
+  // phone, the label) describes the faction under the pointer, or the chosen one.
   const [hovered, setHovered] = useState<FactionIdentifier | null>(null);
-  const shownName =
-    hovered === null ? faction.name : getShipTreeFaction(hovered).name;
+  const shownFaction = hovered ?? faction.id;
 
   return (
     <Container size="xl">
@@ -51,8 +50,8 @@ export default function ShipTreePage() {
           controls={
             <Group align="flex-end">
               <Stack gap={4}>
-                <Text size="sm" fw={500}>
-                  Faction: {shownName}
+                <Text size="sm" fw={500} hiddenFrom="sm">
+                  Faction: {getShipTreeFaction(shownFaction).name}
                 </Text>
                 <ShipTreeFactionSelector
                   value={faction.id}
@@ -77,8 +76,9 @@ export default function ShipTreePage() {
           // a full-height viewport would be mostly empty; leave room to pan.
           // Elsewhere it fills what the header, the four-row faction grid and
           // the footer leave.
-          h={{ base: 360, sm: "calc(100dvh - 450px)" }}
+          h={{ base: 360, sm: "calc(100dvh - 430px)" }}
           mih={{ base: 360, sm: 480 }}
+          summaryFaction={shownFaction}
         />
       </Stack>
     </Container>

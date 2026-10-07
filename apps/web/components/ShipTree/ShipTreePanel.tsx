@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Anchor, Group, Stack, Text } from "@mantine/core";
 
 import type {
@@ -13,6 +13,7 @@ import {
   useAuthStoreHasHydrated,
   useCharacterSkillQueue,
   useCharacterSkills,
+  useEsiAcceptLanguage,
   useMarketPrices,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
@@ -20,6 +21,12 @@ import { getSkillInTraining, ShipTreeView } from "@jitaspace/ship-tree";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
+import { usePreferencesStore } from "~/lib/preferences";
+import {
+  DEFAULT_SHIP_TREE_DEBUG_OPTIONS,
+  ShipTreeDebugControls,
+  shipTreeDebugViewProps,
+} from "./ShipTreeDebugControls";
 
 const SKILLS_SCOPE = "esi-skills.read_skills.v1";
 const SKILL_QUEUE_SCOPE = "esi-skills.read_skillqueue.v1";
@@ -31,6 +38,8 @@ export interface ShipTreePanelProps {
   controls?: ReactNode;
   h?: ShipTreeViewProps["h"];
   mih?: ShipTreeViewProps["mih"];
+  /** The faction whose summary bubble to pin over the tree; none if omitted. */
+  summaryFaction?: ShipTreeViewProps["summaryFaction"];
 }
 
 /**
@@ -43,6 +52,7 @@ export function ShipTreePanel({
   controls,
   h,
   mih,
+  summaryFaction,
 }: Readonly<ShipTreePanelProps>) {
   const hasHydrated = useAuthStoreHasHydrated();
   const character = useSelectedCharacter();
@@ -66,6 +76,22 @@ export function ShipTreePanel({
     [marketPrices],
   );
 
+  // Number format for tooltip prices and bonuses: the language chosen in
+  // Settings, which is also what ESI answers in.
+  const locale = useEsiAcceptLanguage();
+
+  // Settings → Experimental. Off, the tree keeps the library's defaults.
+  const debugMode = usePreferencesStore((state) => state.shipTreeDebugMode);
+  const [debugOptions, setDebugOptions] = useState(
+    DEFAULT_SHIP_TREE_DEBUG_OPTIONS,
+  );
+  const debugViewProps = useMemo(
+    () => (debugMode ? shipTreeDebugViewProps(debugOptions) : {}),
+    [debugMode, debugOptions],
+  );
+  const showPrices = !debugMode || debugOptions.prices;
+  const showTraining = !debugMode || debugOptions.training;
+
   return (
     <Stack gap="md">
       <Group align="flex-end" justify="space-between">
@@ -82,14 +108,24 @@ export function ShipTreePanel({
         )}
       </Group>
 
+      {debugMode && (
+        <ShipTreeDebugControls
+          value={debugOptions}
+          onChange={setDebugOptions}
+        />
+      )}
+
       <ShipTreeView
         faction={faction}
         skills={skills}
-        training={training}
-        prices={prices}
+        training={showTraining ? training : undefined}
+        prices={showPrices ? prices : undefined}
+        locale={locale}
+        {...debugViewProps}
         isOmega={isOmega}
         h={h}
         mih={mih}
+        summaryFaction={summaryFaction}
       />
 
       <Text size="xs" c="dimmed">

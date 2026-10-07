@@ -15,7 +15,8 @@ const mockSeen = {
   skills: [] as unknown[],
   training: [] as unknown[],
   dataProps: [] as { baseUrl: unknown; hasFetch: boolean }[],
-  shipTree: [] as { faction: unknown; isOmega: unknown; prices: unknown }[],
+  shipTree: [] as Record<string, unknown>[],
+  treeDisplay: [] as Record<string, unknown>[],
   grid: [] as Record<string, unknown>[],
 };
 
@@ -46,15 +47,11 @@ jest.mock("@eve-online-tools/eve-ship-tree", () => {
     ),
     ShipTree: wrap(
       actual.ShipTree,
-      (p) =>
-        mockSeen.shipTree.push({
-          faction: p.faction,
-          isOmega: p.isOmega,
-          prices: p.prices,
-        }),
+      (p) => mockSeen.shipTree.push(p),
       actual.ShipTree,
     ),
     Grid: wrap(actual.Grid, (p) => mockSeen.grid.push(p)),
+    TreeDisplay: wrap(actual.TreeDisplay, (p) => mockSeen.treeDisplay.push(p)),
   };
 });
 
@@ -71,6 +68,7 @@ describe("ShipTreeView", () => {
     mockSeen.dataProps.length = 0;
     mockSeen.shipTree.length = 0;
     mockSeen.grid.length = 0;
+    mockSeen.treeDisplay.length = 0;
   });
 
   it("draws the chosen faction's tree from the data tables", async () => {
@@ -202,6 +200,86 @@ describe("ShipTreeView", () => {
 
     expect(mockSeen.training.at(-1)).toBeUndefined();
     expect(mockSeen.shipTree.at(-1)?.prices).toBeUndefined();
+  });
+
+  it("pins the summary of the faction it is given, with the tree's data", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { container } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} summaryFaction={500003} />,
+    );
+
+    // The description comes from the shipTreeFactions table: only there once
+    // the summary reads the tree's DataProvider.
+    expect(
+      await screen.findByText(
+        /Excel at engagements using Energy Turrets/,
+        {},
+        READY,
+      ),
+    ).toBeInTheDocument();
+    const summary = container.querySelector("section[data-faction]");
+    expect(summary).toHaveAttribute("data-faction", "500003");
+    expect(summary).toHaveAttribute("aria-label", "Amarr Empire");
+  });
+
+  it("shows no summary unless asked", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { container } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} />,
+    );
+
+    await screen.findByTestId("ship-tree-content", {}, READY);
+    expect(container.querySelector("section[data-faction]")).toBeNull();
+  });
+
+  it("passes the rendering options through, and leaves the library's defaults alone otherwise", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { rerender } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} />,
+    );
+    // The tree, and with it TreeDisplay, mounts once the data has loaded.
+    await screen.findByTestId("ship-tree-content", {}, READY);
+    expect(mockSeen.shipTree.at(-1)).toMatchObject({
+      locale: undefined,
+      goldenCapsule: undefined,
+      strictMode: undefined,
+      panZoom: undefined,
+      backgroundColor: undefined,
+    });
+    expect(mockSeen.treeDisplay.at(-1)).toMatchObject({
+      groupTooltip: undefined,
+      shipTooltip: undefined,
+    });
+
+    rerender(
+      <MantineProvider>
+        <ShipTreeView
+          faction={500001}
+          fetch={fetch}
+          locale="de"
+          goldenCapsule
+          strictMode
+          panZoom={{ wheelZoom: false }}
+          backgroundColor="#102030"
+          groupTooltip={false}
+          shipTooltip={false}
+        />
+      </MantineProvider>,
+    );
+    expect(mockSeen.shipTree.at(-1)).toMatchObject({
+      locale: "de",
+      goldenCapsule: true,
+      strictMode: true,
+      panZoom: { wheelZoom: false },
+      backgroundColor: "#102030",
+    });
+    expect(mockSeen.treeDisplay.at(-1)).toMatchObject({
+      groupTooltip: false,
+      shipTooltip: false,
+    });
   });
 
   it("keeps the loaded data when the faction changes", async () => {

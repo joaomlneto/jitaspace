@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Group, Menu, Tabs, Text, UnstyledButton } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Menu,
+  Switch,
+  Tabs,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import {
   IconChevronDown,
@@ -32,6 +40,12 @@ export function SettingsCard() {
   );
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
   const dataTableEngine = usePreferencesStore((state) => state.dataTableEngine);
+  const shipTreeDebugMode = usePreferencesStore(
+    (state) => state.shipTreeDebugMode,
+  );
+  const setShipTreeDebugMode = usePreferencesStore(
+    (state) => state.setShipTreeDebugMode,
+  );
   const setSelectedAcceptLanguage = usePreferencesStore(
     (state) => state.setEsiAcceptLanguage,
   );
@@ -277,9 +291,28 @@ export function SettingsCard() {
       </Tabs.Panel>
 
       <Tabs.Panel value="experimental">
-        <Text size="sm" c="dimmed" ta="center" py="md">
-          No experimental features right now — stay tuned!
-        </Text>
+        <Group
+          justify="space-between"
+          className={classes.item}
+          wrap="nowrap"
+          gap="xl"
+        >
+          <div>
+            <Text>Ship Tree debug mode</Text>
+            <Text size="xs" c="dimmed">
+              Shows the ship tree&apos;s rendering options above the tree:
+              golden capsule, strict mode, pan and zoom, tooltips and more.
+            </Text>
+          </div>
+
+          <Switch
+            aria-label="Ship Tree debug mode"
+            checked={shipTreeDebugMode}
+            onChange={(event) => {
+              setShipTreeDebugMode(event.currentTarget.checked);
+            }}
+          />
+        </Group>
       </Tabs.Panel>
 
       <Tabs.Panel value="reset">
