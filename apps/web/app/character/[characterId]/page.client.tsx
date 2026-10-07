@@ -30,7 +30,7 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CharactersDetail } from "@jitaspace/esi-client";
 import { useGetCharactersCharacterIdCorporationhistory } from "@jitaspace/esi-client";
-import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
+import { isNpcCharacterId } from "@jitaspace/esi-metadata";
 import {
   AllianceName,
   CharacterOnlineIndicator,
@@ -430,7 +430,7 @@ export default function CharacterPage({
     zkill.data?.iskLost,
   );
 
-  const isNpc = isIdInRanges(characterId, npcCharacterIdRanges);
+  const isNpc = isNpcCharacterId(characterId);
   const badge = npcBadgeLabel(record, isNpc);
   const agent = record?.agent ?? null;
   const ceoOf = record?.ceoOf ?? [];

@@ -1,6 +1,8 @@
 import { cache } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 
+import { isNpcCorporationId } from "@jitaspace/esi-metadata";
+
 import type {
   CorporationProfile,
   CorporationStation,
@@ -10,7 +12,7 @@ import type {
 import { prisma } from "~/lib/db";
 import { readWarRecord } from "~/lib/readWarRecord";
 import { SDE_CACHE_TAG } from "~/lib/sdeCache";
-import { corporationCacheTag, isNpcCorporationId } from "./ids";
+import { corporationCacheTag } from "./ids";
 
 const ref = (
   id: number | null | undefined,

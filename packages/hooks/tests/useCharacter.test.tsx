@@ -16,8 +16,7 @@ jest.mock("@jitaspace/esi-client", () => ({
 
 jest.mock("@jitaspace/esi-metadata", () => ({
   __esModule: true,
-  isIdInRanges: () => false,
-  npcCharacterIdRanges: [],
+  isNpcCharacterId: () => false,
 }));
 
 jest.mock("../src/hooks/character/useEsiCharacter", () => ({
