@@ -21,5 +21,6 @@ export * from "./scrapeEsiStargates";
 export * from "./scrapeEsiStations";
 export * from "./scrapeEsiTypes";
 export * from "./scrapeEsiWars";
+export * from "./trackIncursions";
 export * from "./updateWars.ts";
 export * from "./updateAlliances.ts";

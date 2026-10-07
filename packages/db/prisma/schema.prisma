@@ -1572,6 +1572,143 @@ model War {
   @@index([finishedDate])
 }
 
+/// An incursion's stage, as ESI's GET /incursions reports it. An incursion
+/// spawns established, then mobilizes, then withdraws.
+enum IncursionState {
+  established
+  mobilizing
+  withdrawing
+}
+
+/// Where an Incursion row came from.
+enum IncursionSource {
+  /// Our own `esi-track-incursions` job.
+  esi
+  /// Imported from eve-incursions.de's history (2015-02 to 2023-10, as EVE
+  /// Ref archived it), which recorded states and influence but not staging or
+  /// infested systems, nor the boss.
+  eve_incursions_de
+  /// Replayed from EVE Ref's archive of GET /incursions responses (every 5
+  /// minutes since 2022-12): the same data our job records, from before it
+  /// began.
+  everef
+}
+
+/// One incursion, from the first poll that saw it to the first that did not.
+/// Kept current by the `esi-track-incursions` job, which polls GET /incursions
+/// every 5 minutes (ESI caches it for 300s). Rows are never deleted: an
+/// incursion ESI stops listing gets `endedAt` and stays as history. Older
+/// incursions are imported from other trackers (`source`).
+///
+/// ESI gives incursions no id, so one is identified by its constellation and
+/// attacking faction while it is listed; `incursionId` is ours. Not foreign
+/// keys to the SDE tables: an incursion's history must survive a system or
+/// constellation the SDE has not caught up with, or has dropped.
+model Incursion {
+  incursionId                  Int                    @id @default(sequence())
+  constellationId              Int
+  factionId                    Int
+  /// ESI's `type`; "Incursion" for every incursion seen so far.
+  type                         String
+  /// Null only for an imported incursion whose source did not record it.
+  stagingSolarSystemId         Int?
+  /// Who held sovereignty over the staging system when the incursion
+  /// appeared (an alliance in null-sec, the empire or pirate faction
+  /// elsewhere), copied from SolarSystemSovereignty so history keeps the
+  /// holder of the time. Both null when nobody did, or the table had no row.
+  stagingSovereigntyAllianceId Int?
+  stagingSovereigntyFactionId  Int?
+  state                        IncursionState
+  /// 0 to 1, as ESI reports it. Null only for an imported incursion whose
+  /// source never recorded it.
+  influence                    Float?
+  /// Null only for an imported incursion whose source did not record it.
+  hasBoss                      Boolean?
+  source                       IncursionSource        @default(esi)
+  /// The incursion's id in `source`, for an imported one; makes re-running
+  /// an import skip what it already wrote.
+  sourceId                     String?
+  infestedSolarSystems         IncursionSolarSystem[] @relation("IncursionSolarSystems")
+  events                       IncursionEvent[]       @relation("IncursionEvents")
+  /// The first poll that listed it. For incursions already running when
+  /// tracking began, that is later than its real start (see
+  /// `isObservedFromStart`).
+  firstSeenAt                  DateTime
+  /// The most recent poll that listed it.
+  lastSeenAt                   DateTime
+  /// The first poll that no longer listed it; null while it is active. It
+  /// ended somewhere between `lastSeenAt` and this.
+  endedAt                      DateTime?
+  /// False for the incursions already running on the job's first run, whose
+  /// `firstSeenAt` and earlier state timestamps are not their real ones.
+  isObservedFromStart          Boolean
+  /// The first poll that saw it in each state; null if it never was, or was
+  /// already past that state when tracking began.
+  establishedAt                DateTime?
+  mobilizingAt                 DateTime?
+  withdrawingAt                DateTime?
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime               @updatedAt()
+
+  @@unique([source, sourceId])
+  @@index([endedAt])
+  @@index([constellationId])
+  @@index([factionId])
+}
+
+/// A solar system an incursion currently infests (ESI's
+/// `infested_solar_systems`). Changes are recorded as IncursionEvents.
+model IncursionSolarSystem {
+  incursionId   Int
+  incursion     Incursion @relation("IncursionSolarSystems", fields: [incursionId], references: [incursionId], onDelete: Cascade)
+  solarSystemId Int
+  createdAt     DateTime  @default(now())
+
+  @@id([incursionId, solarSystemId])
+  @@index([solarSystemId])
+}
+
+/// What changed about the incursions between two polls of GET /incursions.
+enum IncursionEventKind {
+  /// First listed. Carries the state, influence, boss flag and staging system it was seen with.
+  appeared
+  /// Listed again within an hour of being marked ended (a missed poll).
+  resumed
+  state_changed
+  influence_changed
+  boss_appeared
+  boss_disappeared
+  staging_system_changed
+  system_added
+  system_removed
+  /// No longer listed. Carries the state and influence it was last seen with.
+  ended
+}
+
+/// One change to one incursion, observed by the `esi-track-incursions` job.
+/// The columns a kind does not use are null.
+model IncursionEvent {
+  eventId                      Int                @id @default(sequence())
+  incursionId                  Int
+  incursion                    Incursion          @relation("IncursionEvents", fields: [incursionId], references: [incursionId], onDelete: Cascade)
+  /// When the poll that saw the change ran.
+  observedAt                   DateTime
+  kind                         IncursionEventKind
+  previousState                IncursionState?
+  state                        IncursionState?
+  previousInfluence            Float?
+  influence                    Float?
+  hasBoss                      Boolean?
+  previousStagingSolarSystemId Int?
+  stagingSolarSystemId         Int?
+  /// The system added or removed (`system_added`, `system_removed`).
+  solarSystemId                Int?
+  createdAt                    DateTime           @default(now())
+
+  @@index([incursionId, observedAt])
+  @@index([observedAt])
+}
+
 model AllianceWarAlly {
   warId      Int
   allianceId Int
