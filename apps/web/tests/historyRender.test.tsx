@@ -195,6 +195,7 @@ const ENTITY_HISTORY: EntityHistoryData = {
       11: { unitId: 2, highIsGood: true },
     },
     unitSymbols: { 1: "HP", 2: "MW" },
+    messages: {},
   },
 };
 
@@ -440,6 +441,69 @@ describe("EntityHistory", () => {
     expect(screen.getByText("350 HP")).toBeTruthy();
     expect(screen.getByText("40 MW")).toBeTruthy();
     expect(mockUseQuery).not.toHaveBeenCalled();
+  });
+
+  it("shows messages as their text, links places, and leaves the entity's own id plain", async () => {
+    const { EntityHistory } = await import("~/app/history/EntityHistory");
+    const station: EntityHistoryData = {
+      entityType: "npcStation",
+      entityId: 60_003_760,
+      name: "Jita IV - Moon 4 - Caldari Navy Assembly Plant",
+      timeline: {
+        entityType: "npcStation",
+        entityId: 60_003_760,
+        events: [
+          {
+            build: 100,
+            date: "2025-01-01",
+            collection: "npcStations",
+            v: 1,
+            kind: "added",
+            values: {
+              stationID: 60_003_760,
+              solarSystemID: 30_000_142,
+              ownerID: 1_000_035,
+              descriptionID: 7,
+              nameID: 8,
+            },
+          },
+          {
+            build: 101,
+            date: "2025-02-01",
+            collection: "dogmaAttributes",
+            v: 1,
+            kind: "modified",
+            fields: { categoryID: { from: 1, to: 2 } },
+          },
+        ],
+      },
+      labels: {
+        ...ENTITY_HISTORY.labels,
+        names: {
+          solarSystem: { 30_000_142: "Jita" },
+          npcCorporation: { 1_000_035: "Caldari Navy" },
+          dogmaAttributeCategory: { 1: "Fitting", 2: "Shield" },
+          // The inventory category of the same id must not be used.
+          category: { 2: "Charge" },
+        },
+        messages: { 7: "A <b>busy</b> station." },
+      },
+    };
+    wrap(<EntityHistory history={station} />);
+
+    const href = (path: string) =>
+      document.querySelector(`a[href="${path}"]`)?.textContent;
+    expect(href("/system/30000142")).toBe("Jita");
+    expect(href("/corporation/1000035")).toBe("Caldari Navy");
+    // A message reads as its text (markup stripped), linked to its history.
+    expect(href("/string/7")).toBe("A busy station.");
+    // One the strings history never recorded stays an id, unlinked.
+    expect(screen.getByText("#8").closest("a")).toBeNull();
+    // The station's own id links nowhere.
+    expect(document.querySelector('a[href="/station/60003760"]')).toBeNull();
+    // A dogma attribute's categoryID is its attribute category.
+    expect(screen.getByText("Shield")).toBeTruthy();
+    expect(screen.queryByText("Charge")).toBeNull();
   });
 
   it("shows an id the labels do not name as #id", async () => {

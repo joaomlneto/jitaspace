@@ -619,7 +619,7 @@ function nameFrom(
 }
 
 /** The latest English text of each message id, at or before `atBuild`. */
-async function readMessages(
+export async function readMessages(
   ids: readonly number[],
   atBuild: number,
 ): Promise<Map<number, string>> {

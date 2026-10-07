@@ -60,10 +60,13 @@ function FieldRow({
 export function EventContent({
   event,
   entityType,
+  entityId,
 }: Readonly<{
   event: TimelineEvent;
   entityType: string;
+  entityId: number;
 }>) {
+  const context = { entityType, entityId, collection: event.collection };
   const isTypes = (event.collection ?? "types") === "types";
   // In requiredSkillsForTypes the field names themselves are skill typeIDs.
   const fieldLabel = (field: string) =>
@@ -89,7 +92,7 @@ export function EventContent({
       <FieldsTable>
         {entries.map(([field, value]) => (
           <FieldRow key={field} label={fieldLabel(field)}>
-            {entityValueFor(field, value, entityType, event.collection) ?? (
+            {entityValueFor(field, value, context) ?? (
               <RichValue value={value} />
             )}
           </FieldRow>
@@ -117,12 +120,9 @@ export function EventContent({
               {lastValues.map(([field, value]) => (
                 <FieldRow key={field} label={fieldLabel(field)}>
                   <span style={{ opacity: 0.6 }}>
-                    {entityValueFor(
-                      field,
-                      value,
-                      entityType,
-                      event.collection,
-                    ) ?? <RichValue value={value} />}
+                    {entityValueFor(field, value, context) ?? (
+                      <RichValue value={value} />
+                    )}
                   </span>
                 </FieldRow>
               ))}
@@ -156,8 +156,7 @@ export function EventContent({
               field={field}
               delta={delta}
               kind={kind}
-              entityType={entityType}
-              collection={event.collection}
+              context={context}
             />
           </FieldRow>
         );

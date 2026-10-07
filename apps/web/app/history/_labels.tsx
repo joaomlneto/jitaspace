@@ -316,3 +316,86 @@ export function SubKeyLabel({
     </Text>
   );
 }
+
+/** Where each kind with a page of its own links to. */
+const ENTITY_PAGE: Partial<Record<string, (id: number) => string>> = {
+  type: (id) => `/type/${id}`,
+  group: (id) => `/group/${id}`,
+  category: (id) => `/category/${id}`,
+  race: (id) => `/race/${id}`,
+  bloodline: (id) => `/bloodline/${id}`,
+  faction: (id) => `/faction/${id}`,
+  npcCorporation: (id) => `/corporation/${id}`,
+  npcCharacter: (id) => `/character/${id}`,
+  dogmaAttribute: (id) => `/dogma/attribute/${id}`,
+  dogmaEffect: (id) => `/dogma/effect/${id}`,
+  region: (id) => `/region/${id}`,
+  constellation: (id) => `/constellation/${id}`,
+  solarSystem: (id) => `/system/${id}`,
+  planet: (id) => `/planet/${id}`,
+  npcStation: (id) => `/station/${id}`,
+  typeList: (id) => `/type-list/${id}`,
+  dungeon: (id) => `/dungeon/${id}`,
+  mission: (id) => `/mission/${id}`,
+  epicArc: (id) => `/epic-arc/${id}`,
+  skin: (id) => `/history/skin/${id}`,
+  skinMaterial: (id) => `/history/skinMaterial/${id}`,
+};
+
+/**
+ * Any entity, named and linked to its page when it has one. Types, groups and
+ * market groups keep their breadcrumbs.
+ */
+export function EntityLabel({
+  kind,
+  id,
+  size = "xs",
+}: Readonly<{ kind: string; id: number; size?: LabelSize }>) {
+  if (kind === "type") return <TypeLabel id={id} size={size} />;
+  if (kind === "group") return <GroupLabel id={id} size={size} />;
+  if (kind === "marketGroup") return <MarketGroupLabel id={id} size={size} />;
+  const href = ENTITY_PAGE[kind]?.(id);
+  if (!href) return <PlainLabel kind={kind} id={id} size={size} />;
+  return (
+    <Anchor component={Link} href={href} size={size} prefetch={false}>
+      <NameText kind={kind} id={id} size={size} />
+    </Anchor>
+  );
+}
+
+/** EVE's markup (`<a href=showinfo:…>`, `<br>`, …) as the plain text it reads. */
+const plainText = (html: string) =>
+  html
+    .replaceAll(/<br\s*\/?>/gi, " ")
+    .replaceAll(/<[^>]*>/g, "")
+    .replaceAll(/\s+/g, " ")
+    .trim();
+
+/**
+ * A localization message, shown as its English text and linked to its own
+ * change history. A message the strings history never recorded shows as `#id`:
+ * it holds only the messages that changed since it began.
+ */
+export function MessageLabel({
+  id,
+  size = "xs",
+}: Readonly<{ id: number; size?: LabelSize }>) {
+  const text = useHistoryLabels().messages[id];
+  if (text === undefined)
+    return (
+      <Text span size={size} c="dimmed">
+        #{id}
+      </Text>
+    );
+  return (
+    <Anchor
+      component={Link}
+      href={`/string/${id}`}
+      size={size}
+      prefetch={false}
+      lineClamp={3}
+    >
+      {plainText(text)}
+    </Anchor>
+  );
+}
