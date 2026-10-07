@@ -107,6 +107,27 @@ export async function loadEntityHistory(
 /** How long a host page waits for an entity's history before going without. */
 export const HISTORY_TIMEOUT_MS = 10_000;
 
+/** Whether `field` holds one of an entity's own name messages. */
+const isNameField = (field: string) =>
+  field.endsWith("NameID") || field === "nameID";
+
+/**
+ * What one event does to an entity's name fields: `[field, value]` for each it
+ * sets, `[field, undefined]` for each it removes. A removal's pre-image sets
+ * nothing: the entity was gone, not renamed.
+ */
+function nameFieldUpdates(
+  event: EntityTimeline["events"][number],
+): [string, unknown][] {
+  if (event.kind === "added")
+    return Object.entries(event.values ?? {}).filter(([f]) => isNameField(f));
+  if (event.kind === "modified")
+    return Object.entries(event.fields)
+      .filter(([f]) => isNameField(f))
+      .map(([f, delta]) => [f, "to" in delta ? delta.to : undefined]);
+  return [];
+}
+
 /**
  * The message ids an entity is named by now: the latest value of each of its
  * top-level `…NameID` / `nameID` fields across the timeline. Only these may be
@@ -115,20 +136,10 @@ export const HISTORY_TIMEOUT_MS = 10_000;
  */
 function currentNameMessageIds(timeline: EntityTimeline | null): number[] {
   const current = new Map<string, unknown>();
-  const isName = (field: string) =>
-    field.endsWith("NameID") || field === "nameID";
-  for (const event of timeline?.events ?? []) {
-    if (event.kind === "added") {
-      for (const [field, value] of Object.entries(event.values ?? {}))
-        if (isName(field)) current.set(field, value);
-    } else if (event.kind === "modified") {
-      for (const [field, delta] of Object.entries(event.fields)) {
-        if (!isName(field)) continue;
-        if ("to" in delta) current.set(field, delta.to);
-        else current.delete(field);
-      }
-    }
-  }
+  for (const event of timeline?.events ?? [])
+    for (const [field, value] of nameFieldUpdates(event))
+      if (value === undefined) current.delete(field);
+      else current.set(field, value);
   return [...current.values()].filter(
     (id): id is number => typeof id === "number",
   );
