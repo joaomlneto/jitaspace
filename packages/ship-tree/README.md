@@ -24,7 +24,7 @@ import { ShipTreeView } from "@jitaspace/ship-tree";
 
 `skills` takes the array ESI returns from `/characters/{id}/skills/` as it is.
 
-`summaryFaction` pins the game's faction summary (logo, name, strengths as icons, a one-line description) to the tree's top-left corner, outside its pan and zoom; pass the hovered faction to preview it. It has to render inside the tree's `DataProvider` to get its description and icons, which is why it is a prop rather than a separate component. Hidden on phones.
+`summaryFaction` pins the game's faction summary (logo, name, strengths as icons, a one-line description) to the tree's top-left corner, outside its pan and zoom; pass the hovered faction to preview it. It has to render inside the tree's `DataProvider` to get its description and icons, which is why it is a prop rather than a separate component. `cornerControls` goes in the same corner, above the summary: the web app puts `ShipTreeFactionSelector` there, as the game does. The corner is hidden on phones, where it would cover the tree, so a page has to offer those controls itself there.
 
 Rendering options pass straight through to the library, which keeps its defaults for any left out: `locale` (number format in tooltips; the web app passes the Settings language), `goldenCapsule`, `strictMode` (hide the skill bars of locked groups), `panZoom` (`false`, or which gestures), `backgroundColor`, and `groupTooltip`/`shipTooltip` (`false` turns them off). The web app exposes all of them under Settings → Experimental → Ship Tree debug mode.
 

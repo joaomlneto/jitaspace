@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type * as RouteModule from "../app/api/corporation/[corporationId]/route";
 import type * as DataModule from "../app/corporation/[corporationId]/data";
-import { isNpcCorporationId } from "~/app/corporation/[corporationId]/ids";
 import { splitCorporationProfile } from "~/app/corporation/[corporationId]/split";
 
 const mockCacheLife = jest.fn();
@@ -107,14 +106,6 @@ beforeEach(() => {
   }
   mockCacheLife.mockReset();
   mockCacheTag.mockReset();
-});
-
-describe("isNpcCorporationId", () => {
-  it("knows the NPC id range", () => {
-    expect(isNpcCorporationId(1000035)).toBe(true);
-    expect(isNpcCorporationId(999999)).toBe(false);
-    expect(isNpcCorporationId(98000001)).toBe(false);
-  });
 });
 
 describe("readCorporationProfile", () => {

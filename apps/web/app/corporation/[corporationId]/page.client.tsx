@@ -33,6 +33,7 @@ import {
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CorporationsDetail } from "@jitaspace/esi-client";
+import { isNpcCorporationId } from "@jitaspace/esi-metadata";
 import {
   AllianceName,
   CharacterAnchor,
@@ -98,7 +99,6 @@ import {
 import { lpStorePath } from "~/lib/lpStorePath";
 import { named } from "~/lib/namedRef";
 import { EconomyTab } from "./EconomyTab";
-import { isNpcCorporationId } from "./ids";
 import { StationsTab } from "./StationsTab";
 import { useCorporationTables } from "./tables";
 import {
