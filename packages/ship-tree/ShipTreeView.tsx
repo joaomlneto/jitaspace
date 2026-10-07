@@ -27,7 +27,12 @@ import { getShipTreeFaction } from "./factions";
 const NO_SKILLS: SkillsInput = {};
 
 /** Clears the frame's top border and label. Our choice, not a client value. */
-const CORNER_INSET = 40;
+const CORNER_TOP = 40;
+/**
+ * About the client's: measured by eye from a client screenshot of the Ship
+ * Tree window (eve-online-tools/node-packages#72).
+ */
+const CORNER_LEFT = 25;
 
 export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
   /** Whose tree to draw. See `SHIP_TREE_FACTIONS` for the ids on offer. */
@@ -171,8 +176,8 @@ export function ShipTreeView({
             <Box
               visibleFrom="sm"
               pos="absolute"
-              top={CORNER_INSET}
-              left={CORNER_INSET}
+              top={CORNER_TOP}
+              left={CORNER_LEFT}
               style={{ zIndex: 1 }}
               data-testid="ship-tree-corner"
             >
