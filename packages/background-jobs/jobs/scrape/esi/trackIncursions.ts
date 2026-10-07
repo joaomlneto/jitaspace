@@ -1,6 +1,9 @@
 import { getIncursions } from "@jitaspace/esi-client";
 
-import type { IncursionEventDraft } from "../../../helpers/planIncursionUpdates.ts";
+import type {
+  IncursionEventDraft,
+  IncursionUpdatePlan,
+} from "../../../helpers/planIncursionUpdates.ts";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
@@ -12,6 +15,10 @@ import {
 
 /** A hung ESI request fails fast, so a retry runs before the next poll. */
 const ESI_TIMEOUT_MS = 30_000;
+
+/** Nothing to write but `lastSeenAt`: no event, and no change of `type`. */
+const isUnchanged = (match: IncursionUpdatePlan["matched"][number]) =>
+  match.events.length === 0 && !match.typeChanged;
 
 export interface TrackIncursionsEventPayload {
   data: Record<string, never>;
@@ -55,17 +62,18 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
             ],
           },
         });
-        // The previous poll that listed anything. After a gap (or on the
-        // first poll ever) a new incursion may have spawned unseen, so its
+        // The previous poll that listed anything: whatever it listed is active
+        // or ended within the hour, so among these rows. After a gap (or on
+        // the first poll ever) a new incursion may have spawned unseen, so its
         // `firstSeenAt` is not its start.
-        const previousPoll = await tx.incursion.aggregate({
-          _max: { lastSeenAt: true },
-          where: { source: "esi" },
-        });
-        const observedFromStart = isObservedFromStart(
-          previousPoll._max.lastSeenAt,
-          now,
+        const previousPollAt = trackedRows.reduce<Date | null>(
+          (latest, row) =>
+            latest === null || row.lastSeenAt > latest
+              ? row.lastSeenAt
+              : latest,
+          null,
         );
+        const observedFromStart = isObservedFromStart(previousPollAt, now);
 
         // The columns only an imported incursion leaves null are always set
         // on ours; one that is not cannot be matched, so say so.
@@ -153,8 +161,6 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
         }
 
         // Unchanged incursions only need to be marked as still listed.
-        const isUnchanged = (match: (typeof plan.matched)[number]) =>
-          match.events.length === 0 && !match.typeChanged;
         const unchangedIds = plan.matched
           .filter(isUnchanged)
           .map((match) => match.incursionId);
@@ -213,7 +219,7 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
       });
     }
 
-    const changed = result.matched.filter((m) => m.events.length > 0);
+    const changed = result.matched.filter((m) => !isUnchanged(m));
     return {
       stats: {
         active: esiIncursions.length - result.duplicates.length,

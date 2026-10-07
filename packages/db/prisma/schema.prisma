@@ -1631,16 +1631,18 @@ model Incursion {
   infestedSolarSystems         IncursionSolarSystem[] @relation("IncursionSolarSystems")
   events                       IncursionEvent[]       @relation("IncursionEvents")
   /// The first poll that listed it. For incursions already running when
-  /// tracking began, that is later than its real start (see
-  /// `isObservedFromStart`).
+  /// tracking began, or first listed after a gap between polls, that is
+  /// later than its real start (see `isObservedFromStart`).
   firstSeenAt                  DateTime
   /// The most recent poll that listed it.
   lastSeenAt                   DateTime
   /// The first poll that no longer listed it; null while it is active. It
   /// ended somewhere between `lastSeenAt` and this.
   endedAt                      DateTime?
-  /// False for the incursions already running on the job's first run, whose
-  /// `firstSeenAt` and earlier state timestamps are not their real ones.
+  /// False when the incursion may have spawned unseen: it was listed on the
+  /// job's first poll, or on the first poll after a gap of more than 30
+  /// minutes (an outage, a deploy). Its `firstSeenAt` and earlier state
+  /// timestamps are then not its real ones.
   isObservedFromStart          Boolean
   /// The first poll that saw it in each state; null if it never was, or was
   /// already past that state when tracking began.

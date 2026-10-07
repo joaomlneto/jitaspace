@@ -26,7 +26,6 @@ jest.mock("@jitaspace/esi-client", () => ({
 
 type Row = Record<string, unknown>;
 const findMany = jest.fn<(a?: unknown) => Promise<Row[]>>();
-const aggregate = jest.fn<(a?: unknown) => Promise<Row>>();
 const create = jest.fn((_a: unknown) => Promise.resolve({}));
 const update = jest.fn((_a: unknown) => Promise.resolve({}));
 const updateMany = jest.fn((_a: unknown) => Promise.resolve({ count: 0 }));
@@ -34,7 +33,6 @@ const sovFindMany = jest.fn<(a?: unknown) => Promise<Row[]>>();
 const tx = {
   incursion: {
     findMany: (a?: unknown) => findMany(a),
-    aggregate: (a?: unknown) => aggregate(a),
     create: (a: unknown) => create(a),
     update: (a: unknown) => update(a),
     updateMany: (a: unknown) => updateMany(a),
@@ -85,6 +83,8 @@ const row = (overrides: Row = {}): Row => ({
   state: "established",
   influence: 1,
   hasBoss: false,
+  // Listed by the previous poll, five minutes ago.
+  lastSeenAt: minutesAgo(5),
   endedAt: null,
   establishedAt: new Date("2026-10-05T08:10:00Z"),
   mobilizingAt: null,
@@ -102,7 +102,6 @@ beforeEach(() => {
   jest.clearAllMocks();
   esiIncursions = [esi()];
   findMany.mockResolvedValue([]);
-  aggregate.mockResolvedValue({ _max: { lastSeenAt: minutesAgo(5) } });
   sovFindMany.mockResolvedValue([]);
 });
 
@@ -114,6 +113,11 @@ describe("trackIncursions", () => {
   });
 
   it("creates a new incursion with its systems, sovereignty and appearance", async () => {
+    // Another incursion, listed by the previous poll five minutes ago.
+    esiIncursions = [esi({ constellation_id: 20000001 }), esi()];
+    findMany.mockResolvedValue([
+      row({ incursionId: 2, constellationId: 20000001 }),
+    ]);
     sovFindMany.mockResolvedValue([
       { solarSystemId: 30002708, allianceId: null, factionId: 500004 },
     ]);
@@ -137,7 +141,15 @@ describe("trackIncursions", () => {
   });
 
   it("does not claim to have seen the start of one first listed after a gap", async () => {
-    aggregate.mockResolvedValue({ _max: { lastSeenAt: minutesAgo(24 * 60) } });
+    // The previous poll listed this other incursion a day ago.
+    esiIncursions = [esi({ constellation_id: 20000001 }), esi()];
+    findMany.mockResolvedValue([
+      row({
+        incursionId: 2,
+        constellationId: 20000001,
+        lastSeenAt: minutesAgo(24 * 60),
+      }),
+    ]);
     await run();
     expect(create.mock.calls[0]?.[0]).toMatchObject({
       data: { isObservedFromStart: false },
@@ -157,7 +169,8 @@ describe("trackIncursions", () => {
   it("stores a type-only change through the full update", async () => {
     esiIncursions = [esi({ type: "Incursion II" })];
     findMany.mockResolvedValue([row()]);
-    await run();
+    const result = (await run()) as { stats: Record<string, number> };
+    expect(result.stats).toMatchObject({ changed: 1, events: 0 });
     expect(updateMany).not.toHaveBeenCalled();
     expect(update.mock.calls[0]?.[0]).toMatchObject({
       where: { incursionId: 1 },
