@@ -50,7 +50,7 @@ export default function ShipTreePage() {
   );
 
   return (
-    <Container size="xl">
+    <Container fluid>
       <Stack gap="md">
         <Group>
           <ShipsIcon width={48} />

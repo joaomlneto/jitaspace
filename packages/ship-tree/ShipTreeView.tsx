@@ -26,7 +26,7 @@ import { getShipTreeFaction } from "./factions";
 
 const NO_SKILLS: SkillsInput = {};
 
-/** Clears the frame's top border and label, as the game places its corner. */
+/** Clears the frame's top border and label. Our choice, not a client value. */
 const CORNER_INSET = 40;
 
 export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
