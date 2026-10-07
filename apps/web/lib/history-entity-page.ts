@@ -5,8 +5,8 @@ import type { EntityTimeline } from "~/lib/history";
 import type { EntityRef, HistoryLabels } from "~/lib/history-labels";
 import { prisma } from "~/lib/db";
 import { getCachedEntityTimeline } from "~/lib/history-cache";
-import { readEntityNames } from "~/lib/history-entity-names";
-import { collectLabelRefs } from "~/lib/history-labels";
+import { readEntityNames, readMessages } from "~/lib/history-entity-names";
+import { collectLabelRefs, MESSAGE_KIND } from "~/lib/history-labels";
 import { SDE_CACHE_TAG } from "~/lib/sdeCache";
 
 /**
@@ -54,13 +54,14 @@ export async function getCachedEntityHistory(
     [self, ...collectLabelRefs(timeline)],
     atBuild,
   );
-  return {
-    entityType,
-    entityId,
-    name: labels.names[entityType]?.[entityId] ?? null,
-    timeline,
-    labels,
-  };
+  const name = labels.names[entityType]?.[entityId] ?? null;
+  // The strings history holds only the messages that changed since it began,
+  // so an old entity's own name message (its `typeNameID`, `nameID`, …) may be
+  // missing from it, while the entity is named all the same.
+  if (name !== null)
+    for (const id of currentNameMessageIds(timeline))
+      labels.messages[id] ??= name;
+  return { entityType, entityId, name, timeline, labels };
 }
 
 /**
@@ -106,6 +107,44 @@ export async function loadEntityHistory(
 /** How long a host page waits for an entity's history before going without. */
 export const HISTORY_TIMEOUT_MS = 10_000;
 
+/** Whether `field` holds one of an entity's own name messages. */
+const isNameField = (field: string) =>
+  field.endsWith("NameID") || field === "nameID";
+
+/**
+ * What one event does to an entity's name fields: `[field, value]` for each it
+ * sets, `[field, undefined]` for each it removes. A removal's pre-image sets
+ * nothing: the entity was gone, not renamed.
+ */
+function nameFieldUpdates(
+  event: EntityTimeline["events"][number],
+): [string, unknown][] {
+  if (event.kind === "added")
+    return Object.entries(event.values ?? {}).filter(([f]) => isNameField(f));
+  if (event.kind === "modified")
+    return Object.entries(event.fields)
+      .filter(([f]) => isNameField(f))
+      .map(([f, delta]) => [f, "to" in delta ? delta.to : undefined]);
+  return [];
+}
+
+/**
+ * The message ids an entity is named by now: the latest value of each of its
+ * top-level `…NameID` / `nameID` fields across the timeline. Only these may be
+ * filled in with the entity's current name; a name message it had earlier
+ * named it something else.
+ */
+function currentNameMessageIds(timeline: EntityTimeline | null): number[] {
+  const current = new Map<string, unknown>();
+  for (const event of timeline?.events ?? [])
+    for (const [field, value] of nameFieldUpdates(event))
+      if (value === undefined) current.delete(field);
+      else current.set(field, value);
+  return [...current.values()].filter(
+    (id): id is number => typeof id === "number",
+  );
+}
+
 /** How deep a market group's parent chain is followed. */
 const MAX_MARKET_GROUP_DEPTH = 12;
 
@@ -116,11 +155,15 @@ const MAX_MARKET_GROUP_DEPTH = 12;
  * root, and each dogma attribute's unit and direction.
  */
 export async function readHistoryLabels(
-  refs: readonly EntityRef[],
+  allRefs: readonly EntityRef[],
   atBuild?: number,
 ): Promise<HistoryLabels> {
+  const refs = allRefs.filter((r) => r.kind !== MESSAGE_KIND);
   const ids = (kind: string) => [
     ...new Set(refs.filter((r) => r.kind === kind).map((r) => r.id)),
+  ];
+  const messageIds = [
+    ...new Set(allRefs.filter((r) => r.kind === MESSAGE_KIND).map((r) => r.id)),
   ];
 
   const [types, attributes] = await Promise.all([
@@ -142,7 +185,7 @@ export async function readHistoryLabels(
       ...attributes.flatMap((a) => (a.unitId === null ? [] : [a.unitId])),
     ]),
   ];
-  const [groups, units, marketGroupParents] = await Promise.all([
+  const [groups, units, marketGroupParents, messages] = await Promise.all([
     prisma.group.findMany({
       where: { groupId: { in: groupIds } },
       select: { groupId: true, categoryId: true },
@@ -152,6 +195,7 @@ export async function readHistoryLabels(
       select: { unitId: true, displayName: true, name: true },
     }),
     readMarketGroupParents(ids("marketGroup")),
+    readMessages(messageIds, atBuild ?? Number.MAX_SAFE_INTEGER),
   ]);
 
   const all: EntityRef[] = [
@@ -188,6 +232,7 @@ export async function readHistoryLabels(
       ]),
     ),
     unitSymbols,
+    messages: Object.fromEntries(messages),
   };
 }
 

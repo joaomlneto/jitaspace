@@ -101,6 +101,65 @@ describe("collectLabelRefs", () => {
     ).toEqual(["certificate 117", "certificate 96", "type 3300", "type 3327"]);
   });
 
+  it("reads a field by what it means in its collection", () => {
+    expect(
+      refs(
+        timeline(
+          // A dogma attribute's categoryID is its attribute category…
+          {
+            kind: "added",
+            collection: "dogmaAttributes",
+            values: { categoryID: 7, unitID: 1 },
+          },
+          // …a group's is an inventory category.
+          { kind: "added", collection: "groups", values: { categoryID: 6 } },
+        ),
+      ),
+    ).toEqual(["category 6", "dogmaAttributeCategory 7", "dogmaUnit 1"]);
+  });
+
+  it("collects the places, owners and lists a record points at", () => {
+    expect(
+      refs(
+        timeline({
+          kind: "added",
+          collection: "npcStations",
+          values: {
+            solarSystemID: 30_000_142,
+            ownerID: 1_000_035,
+            operationID: 26,
+            graphicID: 1932,
+            includedTypeIDs: [587],
+            constellationIDs: [20_000_020],
+          },
+        }),
+      ),
+    ).toEqual([
+      "constellation 20000020",
+      "graphic 1932",
+      "npcCorporation 1000035",
+      "solarSystem 30000142",
+      "stationOperation 26",
+      "type 587",
+    ]);
+  });
+
+  it("collects localization messages under their own kind", () => {
+    expect(
+      refs(
+        timeline({
+          kind: "added",
+          collection: "types",
+          values: {
+            typeNameID: 1_048_545,
+            descriptionID: 1_048_547,
+            quoteID: 9,
+          },
+        }),
+      ),
+    ).toEqual(["message 1048545", "message 1048547", "message 9"]);
+  });
+
   it("ignores what is not an integer id, and a missing timeline", () => {
     expect(
       refs(
@@ -158,11 +217,23 @@ jest.mock("~/lib/db", () => ({
     },
   ),
 }));
+let mockMessages: Record<number, string> = {};
+const mockReadMessages = jest.fn((ids: number[], _atBuild: number) =>
+  Promise.resolve(
+    new Map(
+      ids.flatMap((id) =>
+        mockMessages[id] === undefined ? [] : [[id, mockMessages[id]] as const],
+      ),
+    ),
+  ),
+);
 jest.mock("~/lib/history-entity-names", () => ({
   readEntityNames: (
     changes: { entityType?: string; entityId: number }[],
     atBuild?: number,
   ) => mockReadEntityNames(changes, atBuild),
+  readMessages: (ids: number[], atBuild: number) =>
+    mockReadMessages(ids, atBuild),
 }));
 jest.mock("~/lib/history-cache", () => ({
   getCachedEntityTimeline: () => {
@@ -192,6 +263,8 @@ beforeEach(() => {
   mockTimelineError = null;
   mockTimelineHang = false;
   mockReadEntityNames.mockClear();
+  mockReadMessages.mockClear();
+  mockMessages = {};
   mockCapture.mockClear();
   mockConnection.mockClear();
 });
@@ -269,7 +342,74 @@ describe("readHistoryLabels", () => {
   });
 });
 
+describe("readHistoryLabels messages", () => {
+  it("reads each message's text as of the build", async () => {
+    mockMessages = { 1_048_545: "Akoman", 1_048_547: "A Triglavian hull." };
+    const labels = await readHistoryLabels(
+      [
+        { kind: "message", id: 1_048_545 },
+        { kind: "message", id: 1_048_547 },
+        { kind: "message", id: 5 },
+      ],
+      3_579_973,
+    );
+    expect(labels.messages).toEqual({
+      1_048_545: "Akoman",
+      1_048_547: "A Triglavian hull.",
+    });
+    expect(mockReadMessages.mock.calls[0]).toEqual([
+      [1_048_545, 1_048_547, 5],
+      3_579_973,
+    ]);
+    // Messages are not entities: none is looked up by name.
+    expect(
+      mockReadEntityNames.mock.calls[0]?.[0].some(
+        (c) => c.entityType === "message",
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("getCachedEntityHistory", () => {
+  it("fills in only the name message the entity is named by now", async () => {
+    mockTimeline = timeline(
+      {
+        build: 90,
+        kind: "added",
+        collection: "types",
+        values: { typeNameID: 100 },
+      },
+      {
+        build: 95,
+        kind: "modified",
+        collection: "types",
+        fields: { typeNameID: { from: 100, to: 200 } },
+      },
+    );
+
+    const { labels } = await getCachedEntityHistory("type", 587);
+
+    // 200 is its name now; 100 named it something else, so it stays unknown.
+    expect(labels.messages).toEqual({ 200: "type 587" });
+  });
+
+  it("names its own name message after the entity when no string recorded it", async () => {
+    mockTimeline = timeline({
+      build: 90,
+      kind: "added",
+      collection: "types",
+      values: { typeNameID: 4242, descriptionID: 4343 },
+    });
+    mockMessages = { 4343: "Fast and cheap." };
+
+    const { labels } = await getCachedEntityHistory("type", 587);
+
+    expect(labels.messages).toEqual({
+      4242: "type 587",
+      4343: "Fast and cheap.",
+    });
+  });
+
   it("names the entity and every id in its timeline, as of its latest build", async () => {
     mockTimeline = timeline(
       {

@@ -7,6 +7,12 @@ import type { SubRow } from "./_diff";
 import type { FieldDelta } from "~/lib/history";
 import { formatValue } from "~/lib/history";
 import {
+  ID_LIST_COLLECTION_KIND,
+  ID_LIST_FIELD_KIND,
+  idFieldKind,
+  isMessageField,
+} from "~/lib/history-labels";
+import {
   arrayKeyOf,
   diffLeaves,
   isPlainObject,
@@ -17,54 +23,28 @@ import {
 } from "./_diff";
 import {
   AttributeValueChange,
-  CategoryLabel,
-  CorporationLabel,
   DogmaValue,
-  FactionLabel,
-  GroupLabel,
-  MarketGroupLabel,
-  PlainLabel,
-  RaceLabel,
-  SkinMaterialLabel,
+  EntityLabel,
+  MessageLabel,
   SubKeyLabel,
-  TypeLabel,
 } from "./_labels";
 import { ISKAmount } from "./_sde-ui";
 
 /**
- * The kind of entity each id is in a field holding a list of ids, or null when
- * the field's list is not one: a skin's applicable ship `types`, a type's
- * `designerIDs` (corporations), and each level of its `masteries`
- * (certificates).
+ * The kind of entity each id is in a field holding a list of ids, or undefined
+ * when the field's list is not one: the lists of {@link ID_LIST_FIELD_KIND}
+ * (a skin's ship `types`, a type's `designerIDs`, a type list's includes and
+ * excludes, …) and each level of a type's `masteries` (certificates).
  */
 function idListKind(
   field: string,
   collection: string | undefined,
-): "type" | "npcCorporation" | "certificate" | null {
-  if (field === "types") return "type";
-  if (field === "designerIDs") return "npcCorporation";
-  if (collection === "masteries") return "certificate";
-  return null;
-}
-
-/** One id of an {@link idListKind} list, named and linked by its kind. */
-function IdListItem({
-  kind,
-  id,
-}: Readonly<{ kind: NonNullable<ReturnType<typeof idListKind>>; id: number }>) {
-  if (kind === "type") return <TypeLabel id={id} />;
-  if (kind === "npcCorporation") return <CorporationLabel id={id} />;
-  return <PlainLabel kind={kind} id={id} />;
+): string | undefined {
+  return ID_LIST_FIELD_KIND[field] ?? ID_LIST_COLLECTION_KIND[collection ?? ""];
 }
 
 /** A capped, one-per-line list of labels (a skin's ships, a mastery's certificates). */
-function LabelList({
-  ids,
-  kind,
-}: Readonly<{
-  ids: number[];
-  kind: NonNullable<ReturnType<typeof idListKind>>;
-}>) {
+function LabelList({ ids, kind }: Readonly<{ ids: number[]; kind: string }>) {
   return (
     <Spoiler
       maxHeight={SPOILER_MAX_HEIGHT}
@@ -75,7 +55,7 @@ function LabelList({
       <Stack gap={1}>
         {ids.map((id) => (
           <Group gap={4} key={id}>
-            <IdListItem kind={kind} id={id} />
+            <EntityLabel kind={kind} id={id} />
           </Group>
         ))}
       </Stack>
@@ -88,20 +68,25 @@ const isIdList = (value: unknown): value is number[] =>
   value.length > 0 &&
   value.every((v) => typeof v === "number");
 
+/** Where a value sits: the entity being viewed, and the collection. */
+export interface ValueContext {
+  entityType?: string;
+  entityId?: number;
+  collection?: string;
+}
+
 /**
- * Entity-aware rendering for fields whose value is another entity's id
- * (groupID, raceID, wreckTypeID, designerIDs, …; the fields the server reads
- * labels for, `ID_FIELD_KIND` in `~/lib/history-labels`). Returns null when the
- * field has no special meaning — and deliberately leaves `typeID` plain: it is
- * the page's own id. `entityType` is the kind of entity being viewed, used to
- * avoid self-linking its own id field; `collection` names the dataset, for the
- * ones whose fields are positional (`masteries`).
+ * Entity-aware rendering for fields whose value is another entity's id, or a
+ * localization message (the fields the server reads labels for: `idFieldKind`,
+ * `ID_LIST_FIELD_KIND` and `isMessageField` in `~/lib/history-labels`).
+ * Returns null when the field has no special meaning, and for a field holding
+ * the viewed entity's own id (a type's `typeID`), which would only link the
+ * page to itself.
  */
 export function entityValueFor(
   field: string,
   value: unknown,
-  entityType?: string,
-  collection?: string,
+  { entityType, entityId, collection }: ValueContext = {},
 ): ReactNode | null {
   const listKind = idListKind(field, collection);
   // Link each id, so the list reads as named entities rather than a
@@ -109,36 +94,11 @@ export function entityValueFor(
   if (listKind && isIdList(value))
     return <LabelList ids={value} kind={listKind} />;
   if (typeof value !== "number") return null;
-  switch (field) {
-    case "wreckTypeID":
-    case "variationParentTypeID":
-      return <TypeLabel id={value} size="sm" />;
-    case "groupID":
-      return <GroupLabel id={value} size="sm" />;
-    case "categoryID":
-      return <CategoryLabel id={value} size="sm" />;
-    case "marketGroupID":
-    case "parentGroupID":
-      return <MarketGroupLabel id={value} size="sm" />;
-    case "metaGroupID":
-      return <PlainLabel kind="metaGroup" id={value} size="sm" />;
-    case "unitID":
-      return <PlainLabel kind="dogmaUnit" id={value} size="sm" />;
-    case "raceID":
-      return <RaceLabel id={value} size="sm" />;
-    case "factionID":
-      return <FactionLabel id={value} size="sm" />;
-    case "basePrice":
-      return <ISKAmount span size="sm" amount={value} />;
-    case "skinMaterialID":
-      // cross-link to the material's own timeline — but not on the material's
-      // own page, where this is its identity field (cf. typeID above).
-      return entityType === "skinMaterial" ? null : (
-        <SkinMaterialLabel id={value} size="sm" />
-      );
-    default:
-      return null;
-  }
+  if (field === "basePrice") return <ISKAmount span size="sm" amount={value} />;
+  if (isMessageField(field)) return <MessageLabel id={value} size="sm" />;
+  const kind = idFieldKind(field, collection);
+  if (!kind || (kind === entityType && value === entityId)) return null;
+  return <EntityLabel kind={kind} id={value} size="sm" />;
 }
 
 /**
@@ -353,7 +313,7 @@ function PrimitiveArrayDiff({
 }: Readonly<{
   from: unknown[];
   to: unknown[];
-  listKind?: ReturnType<typeof idListKind>;
+  listKind?: string;
 }>) {
   const fromSet = new Set(from.map(keyLabel));
   const toSet = new Set(to.map(keyLabel));
@@ -362,7 +322,7 @@ function PrimitiveArrayDiff({
       ? {
           key: v,
           kind,
-          label: <IdListItem kind={listKind} id={Number(v)} />,
+          label: <EntityLabel kind={listKind} id={Number(v)} />,
           text: "",
         }
       : { key: v, kind, text: v };
@@ -422,7 +382,7 @@ function SmartChanged({
   listKind,
 }: Readonly<{
   delta: FieldDelta;
-  listKind?: ReturnType<typeof idListKind>;
+  listKind?: string;
 }>) {
   const { from, to } = delta;
   if (Array.isArray(from) && Array.isArray(to)) {
@@ -456,25 +416,26 @@ export function DeltaValue({
   field,
   delta,
   kind,
-  entityType,
-  collection,
+  context = {},
 }: Readonly<{
   field: string;
   delta: FieldDelta;
   kind: "added" | "removed" | "changed";
-  entityType?: string;
-  collection?: string;
+  context?: ValueContext;
 }>) {
   if (kind === "changed") {
     // Arrays diff better element-wise (added/removed entries) than as two whole
     // renders joined by an arrow — keep them on the SmartChanged path.
     if (Array.isArray(delta.from) || Array.isArray(delta.to)) {
       return (
-        <SmartChanged delta={delta} listKind={idListKind(field, collection)} />
+        <SmartChanged
+          delta={delta}
+          listKind={idListKind(field, context.collection)}
+        />
       );
     }
-    const fromNode = entityValueFor(field, delta.from, entityType, collection);
-    const toNode = entityValueFor(field, delta.to, entityType, collection);
+    const fromNode = entityValueFor(field, delta.from, context);
+    const toNode = entityValueFor(field, delta.to, context);
     if (fromNode && toNode) {
       return (
         <Group gap={6} wrap="nowrap">
@@ -490,13 +451,11 @@ export function DeltaValue({
   }
   if (kind === "added") {
     return (
-      entityValueFor(field, delta.to, entityType, collection) ?? (
-        <RichValue value={delta.to} />
-      )
+      entityValueFor(field, delta.to, context) ?? <RichValue value={delta.to} />
     );
   }
   // removed
-  const node = entityValueFor(field, delta.from, entityType, collection);
+  const node = entityValueFor(field, delta.from, context);
   if (node) {
     return (
       <span style={{ textDecoration: "line-through", opacity: 0.65 }}>

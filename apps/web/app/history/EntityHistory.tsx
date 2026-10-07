@@ -255,7 +255,11 @@ function EntityTimelineView({
                             {event.kind}
                           </Badge>
                         </Group>
-                        <EventContent event={event} entityType={entityType} />
+                        <EventContent
+                          event={event}
+                          entityType={entityType}
+                          entityId={history.entityId}
+                        />
                       </div>
                     );
                   })}
