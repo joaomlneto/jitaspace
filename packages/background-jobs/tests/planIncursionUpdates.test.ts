@@ -7,6 +7,7 @@ import type {
   TrackedIncursion,
 } from "../helpers/planIncursionUpdates";
 import {
+  isObservedFromStart,
   planIncursionUpdates,
   RESUME_WINDOW_MS,
   toIncursionSnapshot,
@@ -109,6 +110,7 @@ describe("planIncursionUpdates", () => {
         addedSolarSystemIds: [],
         removedSolarSystemIds: [],
         events: [],
+        typeChanged: false,
       },
     ]);
   });
@@ -171,7 +173,7 @@ describe("planIncursionUpdates", () => {
 
   it("ends an active incursion ESI no longer lists, recording its last state", () => {
     const plan = planIncursionUpdates({
-      esiIncursions: [],
+      esiIncursions: [snapshot({ constellationId: 20000001 })],
       tracked: [tracked({ state: "withdrawing", influence: 0.1 })],
       now: NOW,
     });
@@ -244,5 +246,58 @@ describe("planIncursionUpdates", () => {
     expect(plan.created).toHaveLength(1);
     expect(plan.created[0]?.snapshot.influence).toBe(1);
     expect(plan.duplicates).toEqual([snapshot({ influence: 0.5 })]);
+  });
+
+  it("ignores a response listing nothing while incursions are active", () => {
+    const plan = planIncursionUpdates({
+      esiIncursions: [],
+      tracked: [tracked()],
+      now: NOW,
+    });
+    expect(plan.emptyResponseIgnored).toBe(true);
+    expect(plan.ended).toEqual([]);
+    expect(plan.created).toEqual([]);
+  });
+
+  it("ends the newer of two active rows for one constellation", () => {
+    const plan = planIncursionUpdates({
+      esiIncursions: [snapshot()],
+      tracked: [tracked({ incursionId: 7 }), tracked({ incursionId: 3 })],
+      now: NOW,
+    });
+    expect(plan.matched.map((m) => m.incursionId)).toEqual([3]);
+    expect(plan.ended).toEqual([
+      {
+        incursionId: 7,
+        events: [
+          { kind: "ended", state: "established", influence: 1, hasBoss: false },
+        ],
+      },
+    ]);
+  });
+
+  it("flags a change of type, which no event records", () => {
+    const plan = planIncursionUpdates({
+      esiIncursions: [snapshot({ type: "Incursion II" })],
+      tracked: [tracked()],
+      now: NOW,
+    });
+    expect(plan.matched[0]?.events).toEqual([]);
+    expect(plan.matched[0]?.typeChanged).toBe(true);
+  });
+});
+
+describe("isObservedFromStart", () => {
+  const minutes = (n: number) => new Date(NOW.getTime() - n * 60_000);
+
+  it("is true right after the previous poll", () => {
+    expect(isObservedFromStart(minutes(5), NOW)).toBe(true);
+    expect(isObservedFromStart(minutes(30), NOW)).toBe(true);
+  });
+
+  it("is false on the first poll ever, and after a gap", () => {
+    expect(isObservedFromStart(null, NOW)).toBe(false);
+    expect(isObservedFromStart(minutes(31), NOW)).toBe(false);
+    expect(isObservedFromStart(minutes(24 * 60), NOW)).toBe(false);
   });
 });

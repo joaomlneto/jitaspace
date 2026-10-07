@@ -1656,8 +1656,10 @@ model Incursion {
   @@index([factionId])
 }
 
-/// A solar system an incursion currently infests (ESI's
-/// `infested_solar_systems`). Changes are recorded as IncursionEvents.
+/// A solar system an incursion infests (ESI's `infested_solar_systems`), as of
+/// the last poll that listed it: the rows stay after the incursion ends, so
+/// "under incursion now" also needs `Incursion.endedAt` to be null. Changes
+/// are recorded as IncursionEvents.
 model IncursionSolarSystem {
   incursionId   Int
   incursion     Incursion @relation("IncursionSolarSystems", fields: [incursionId], references: [incursionId], onDelete: Cascade)
@@ -1685,8 +1687,9 @@ enum IncursionEventKind {
   ended
 }
 
-/// One change to one incursion, observed by the `esi-track-incursions` job.
-/// The columns a kind does not use are null.
+/// One change to one incursion, as a poll observed it: our
+/// `esi-track-incursions` job's, or, for an imported incursion (see
+/// `IncursionSource`), its source's. The columns a kind does not use are null.
 model IncursionEvent {
   eventId                      Int                @id @default(sequence())
   incursionId                  Int

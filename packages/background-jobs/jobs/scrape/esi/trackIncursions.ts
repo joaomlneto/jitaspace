@@ -4,10 +4,14 @@ import type { IncursionEventDraft } from "../../../helpers/planIncursionUpdates.
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
+  isObservedFromStart,
   planIncursionUpdates,
   RESUME_WINDOW_MS,
   toIncursionSnapshot,
 } from "../../../helpers/planIncursionUpdates.ts";
+
+/** A hung ESI request fails fast, so a retry runs before the next poll. */
+const ESI_TIMEOUT_MS = 30_000;
 
 export interface TrackIncursionsEventPayload {
   data: Record<string, never>;
@@ -26,54 +30,73 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
   description:
     "Poll ESI's active incursions, record what changed since the last poll, and keep ended incursions as history",
   handler: async (ctx) => {
-    const esiIncursions = (await getIncursions()).data.map(toIncursionSnapshot);
+    const esiIncursions = (
+      await getIncursions(undefined, {
+        signal: AbortSignal.timeout(ESI_TIMEOUT_MS),
+      })
+    ).data.map(toIncursionSnapshot);
     const now = new Date();
 
     const result = await prisma.$transaction(
       async (tx) => {
-        const [trackedRows, everTracked] = await Promise.all([
-          tx.incursion.findMany({
-            include: {
-              infestedSolarSystems: { select: { solarSystemId: true } },
-            },
-            // Only ours: imported incursions all ended years ago.
-            where: {
-              source: "esi",
-              OR: [
-                { endedAt: null },
-                {
-                  endedAt: { gte: new Date(now.getTime() - RESUME_WINDOW_MS) },
-                },
-              ],
-            },
-          }),
-          tx.incursion.count({ where: { source: "esi" } }),
-        ]);
-        // On the very first run every incursion is already under way, so its
-        // `firstSeenAt` is when tracking began, not when it spawned.
-        const isObservedFromStart = everTracked > 0;
+        // One query at a time: a transaction holds a single connection.
+        const trackedRows = await tx.incursion.findMany({
+          include: {
+            infestedSolarSystems: { select: { solarSystemId: true } },
+          },
+          // Only ours: imported incursions all ended years ago.
+          where: {
+            source: "esi",
+            OR: [
+              { endedAt: null },
+              {
+                endedAt: { gte: new Date(now.getTime() - RESUME_WINDOW_MS) },
+              },
+            ],
+          },
+        });
+        // The previous poll that listed anything. After a gap (or on the
+        // first poll ever) a new incursion may have spawned unseen, so its
+        // `firstSeenAt` is not its start.
+        const previousPoll = await tx.incursion.aggregate({
+          _max: { lastSeenAt: true },
+          where: { source: "esi" },
+        });
+        const observedFromStart = isObservedFromStart(
+          previousPoll._max.lastSeenAt,
+          now,
+        );
+
+        // The columns only an imported incursion leaves null are always set
+        // on ours; one that is not cannot be matched, so say so.
+        const complete = trackedRows.filter(
+          (
+            row,
+          ): row is typeof row & {
+            stagingSolarSystemId: number;
+            influence: number;
+            hasBoss: boolean;
+          } =>
+            row.stagingSolarSystemId !== null &&
+            row.influence !== null &&
+            row.hasBoss !== null,
+        );
+        if (complete.length < trackedRows.length) {
+          ctx.logger.warn("Skipped incursions missing ESI's fields", {
+            incursionIds: trackedRows
+              .map((row) => row.incursionId)
+              .filter((id) => !complete.some((row) => row.incursionId === id)),
+          });
+        }
 
         const plan = planIncursionUpdates({
           esiIncursions,
-          // The columns only an imported incursion leaves null are always
-          // set on ours.
-          tracked: trackedRows.flatMap(({ infestedSolarSystems, ...row }) =>
-            row.stagingSolarSystemId === null ||
-            row.influence === null ||
-            row.hasBoss === null
-              ? []
-              : [
-                  {
-                    ...row,
-                    stagingSolarSystemId: row.stagingSolarSystemId,
-                    influence: row.influence,
-                    hasBoss: row.hasBoss,
-                    infestedSolarSystemIds: infestedSolarSystems
-                      .map((system) => system.solarSystemId)
-                      .sort((a, b) => a - b),
-                  },
-                ],
-          ),
+          tracked: complete.map(({ infestedSolarSystems, ...row }) => ({
+            ...row,
+            infestedSolarSystemIds: infestedSolarSystems
+              .map((system) => system.solarSystemId)
+              .sort((a, b) => a - b),
+          })),
           now,
         });
 
@@ -116,7 +139,7 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
                   ?.factionId ?? null,
               firstSeenAt: now,
               lastSeenAt: now,
-              isObservedFromStart,
+              isObservedFromStart: observedFromStart,
               infestedSolarSystems: {
                 create: infestedSolarSystemIds.map((solarSystemId) => ({
                   solarSystemId,
@@ -128,8 +151,10 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
         }
 
         // Unchanged incursions only need to be marked as still listed.
+        const isUnchanged = (match: (typeof plan.matched)[number]) =>
+          match.events.length === 0 && !match.typeChanged;
         const unchangedIds = plan.matched
-          .filter((match) => match.events.length === 0)
+          .filter(isUnchanged)
           .map((match) => match.incursionId);
         if (unchangedIds.length > 0) {
           await tx.incursion.updateMany({
@@ -139,7 +164,7 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
         }
 
         for (const match of plan.matched) {
-          if (match.events.length === 0) continue;
+          if (isUnchanged(match)) continue;
           const { infestedSolarSystemIds: _, ...columns } = match.snapshot;
           await tx.incursion.update({
             where: { incursionId: match.incursionId },
@@ -178,6 +203,11 @@ export const trackIncursions = defineJob<TrackIncursionsEventPayload["data"]>({
       { maxWait: 10_000, timeout: 30_000 },
     );
 
+    if (result.emptyResponseIgnored) {
+      ctx.logger.warn(
+        "ESI listed no incursions while some are active; ignored it as a failed response",
+      );
+    }
     if (result.duplicates.length > 0) {
       ctx.logger.warn("ESI listed a constellation twice; kept the first", {
         duplicates: result.duplicates,

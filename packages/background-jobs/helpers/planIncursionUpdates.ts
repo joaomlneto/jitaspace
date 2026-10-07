@@ -77,11 +77,21 @@ export interface IncursionUpdatePlan {
     addedSolarSystemIds: number[];
     removedSolarSystemIds: number[];
     events: IncursionEventDraft[];
+    /** ESI's `type` changed: no event kind records it, but the row must. */
+    typeChanged: boolean;
   }[];
-  /** Active rows ESI no longer lists. */
+  /**
+   * Active rows ESI no longer lists, and any extra active row for a key that
+   * already has one (only the oldest can match).
+   */
   ended: { incursionId: number; events: IncursionEventDraft[] }[];
   /** ESI entries dropped because an earlier entry had the same key. */
   duplicates: IncursionSnapshot[];
+  /**
+   * ESI listed nothing while incursions were active: taken as a failed
+   * response, so the plan changes nothing.
+   */
+  emptyResponseIgnored: boolean;
 }
 
 /**
@@ -91,6 +101,18 @@ export interface IncursionUpdatePlan {
  * constellation it just left.
  */
 export const RESUME_WINDOW_MS = 60 * 60 * 1000;
+
+/**
+ * The longest a gap between polls can be for a newly listed incursion to count
+ * as seen from its start. After a longer one (the first poll ever, an outage,
+ * a deploy) it may have spawned during the gap.
+ */
+export const MAX_POLL_GAP_MS = 30 * 60 * 1000;
+
+/** Whether an incursion first listed `now` was listed from its start. */
+export const isObservedFromStart = (previousPollAt: Date | null, now: Date) =>
+  previousPollAt !== null &&
+  now.getTime() - previousPollAt.getTime() <= MAX_POLL_GAP_MS;
 
 const STATE_TIMESTAMP = {
   established: "establishedAt",
@@ -184,13 +206,30 @@ export function planIncursionUpdates({
     matched: [],
     ended: [],
     duplicates: [],
+    emptyResponseIgnored: false,
   };
 
+  const endedEvent = (row: TrackedIncursion): IncursionEventDraft => ({
+    kind: "ended",
+    state: row.state,
+    influence: row.influence,
+    hasBoss: row.hasBoss,
+  });
+
   const active = new Map<string, TrackedIncursion>();
+  const extraActive: TrackedIncursion[] = [];
   const recentlyEnded = new Map<string, TrackedIncursion>();
   for (const row of tracked) {
     if (row.endedAt === null) {
-      active.set(keyOf(row), row);
+      // One constellation hosts one incursion: keep the oldest row, and end
+      // any other, which would otherwise never match nor end.
+      const existing = active.get(keyOf(row));
+      if (existing && existing.incursionId < row.incursionId) {
+        extraActive.push(row);
+      } else {
+        if (existing) extraActive.push(existing);
+        active.set(keyOf(row), row);
+      }
     } else if (now.getTime() - row.endedAt.getTime() <= RESUME_WINDOW_MS) {
       // Most recently ended first, should a constellation have two.
       const existing = recentlyEnded.get(keyOf(row));
@@ -198,6 +237,12 @@ export function planIncursionUpdates({
         recentlyEnded.set(keyOf(row), row);
       }
     }
+  }
+
+  if (esiIncursions.length === 0 && active.size > 0) {
+    // Incursions never all end at once: this is a failed response.
+    plan.emptyResponseIgnored = true;
+    return plan;
   }
 
   const seen = new Set<string>();
@@ -229,23 +274,22 @@ export function planIncursionUpdates({
 
     const resumed = row.endedAt !== null;
     const stateTimestamp = STATE_TIMESTAMP[snapshot.state];
-    const beforeSystems = new Set(row.infestedSolarSystemIds);
-    const afterSystems = new Set(snapshot.infestedSolarSystemIds);
+    const changes = diffSnapshots(row, snapshot);
+    const systemsOf = (kind: IncursionEventKind) =>
+      changes.flatMap((event) =>
+        event.kind === kind && event.solarSystemId !== undefined
+          ? [event.solarSystemId]
+          : [],
+      );
     plan.matched.push({
       incursionId: row.incursionId,
       snapshot,
       resumed,
       stateTimestamps: row[stateTimestamp] ? {} : { [stateTimestamp]: now },
-      addedSolarSystemIds: snapshot.infestedSolarSystemIds.filter(
-        (id) => !beforeSystems.has(id),
-      ),
-      removedSolarSystemIds: row.infestedSolarSystemIds.filter(
-        (id) => !afterSystems.has(id),
-      ),
-      events: [
-        ...(resumed ? [{ kind: "resumed" as const }] : []),
-        ...diffSnapshots(row, snapshot),
-      ],
+      addedSolarSystemIds: systemsOf("system_added"),
+      removedSolarSystemIds: systemsOf("system_removed"),
+      events: [...(resumed ? [{ kind: "resumed" as const }] : []), ...changes],
+      typeChanged: row.type !== snapshot.type,
     });
   }
 
@@ -253,16 +297,15 @@ export function planIncursionUpdates({
     if (!seen.has(key)) {
       plan.ended.push({
         incursionId: row.incursionId,
-        events: [
-          {
-            kind: "ended",
-            state: row.state,
-            influence: row.influence,
-            hasBoss: row.hasBoss,
-          },
-        ],
+        events: [endedEvent(row)],
       });
     }
+  }
+  for (const row of extraActive) {
+    plan.ended.push({
+      incursionId: row.incursionId,
+      events: [endedEvent(row)],
+    });
   }
 
   return plan;
