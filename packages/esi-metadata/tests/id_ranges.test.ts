@@ -4,6 +4,7 @@ import {
   constellationIdRanges,
   corporationIdRanges,
   isIdInRanges,
+  isStationId,
   npcCharacterIdRanges,
   regionIdRanges,
   solarSystemRanges,
@@ -340,5 +341,26 @@ describe("stationRanges", () => {
 
   it("rejects 70000001 (one above station range max)", () => {
     expect(isIdInRanges(70000001, stationRanges)).toBe(false);
+  });
+});
+
+describe("isStationId", () => {
+  it.each([
+    ["an NPC station", 60003760],
+    ["a station built from an outpost", 61000001],
+    ["the lowest station id", 60000000],
+    ["the highest station id", 70000000],
+  ])("is true for %s", (_name, id) => {
+    expect(isStationId(id)).toBe(true);
+  });
+
+  it.each([
+    ["an Upwell structure", 1035466617946],
+    ["a stargate", 50000001],
+    ["a solar system", 30000142],
+    ["the id just below the range", 59999999],
+    ["the id just above the range", 70000001],
+  ])("is false for %s", (_name, id) => {
+    expect(isStationId(id)).toBe(false);
   });
 });

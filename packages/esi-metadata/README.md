@@ -28,6 +28,7 @@ Provides TypeScript constants and types describing ESI entity ID ranges and OAut
 | `endpointScopes`                                                                                                                                                                          | Mapping of ESI endpoints to the scopes they require         |
 | `characterIdRanges`, `corporationIdRanges`, `allianceIdRanges`, `regionIdRanges`, `constellationIdRanges`, `solarSystemRanges`, `stargateRanges`, `stationRanges`, `npcCharacterIdRanges` | Min/max numeric ID boundaries for EVE entity types          |
 | `isIdInRanges(id, ranges)`                                                                                                                                                                | Helper to test whether an ID falls within a set of ranges   |
+| `isStationId(id)`                                                                                                                                                                         | Whether an ID is a station's (stations' ID range)           |
 
 ## Usage
 

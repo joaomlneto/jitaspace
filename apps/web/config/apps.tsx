@@ -72,6 +72,12 @@ export const characterApps: Record<string, JitaApp> = {
           scopes: ["esi-mail.send_mail.v1", "esi-search.search_structures.v1"],
         },
         {
+          reason: "Link structures",
+          description:
+            "Link player-owned structures you can see in the mails you write.",
+          scopes: ["esi-universe.read_structures.v1"],
+        },
+        {
           reason: "Lookup recipient in contacts",
           description: "Lookup recipient in contacts when sending email.",
           scopes: ["esi-characters.read_contacts.v1"],
