@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // ---------------------------------------------------------------------------
@@ -33,9 +33,22 @@ const mockGetUniverseStation = jest.fn((..._args: unknown[]) =>
   Promise.resolve({ data: { type_id: 52678 } }),
 );
 
+const mockGetUniverseStructure = jest.fn(
+  (..._args: unknown[]): Promise<{ data: { type_id?: number } }> =>
+    Promise.resolve({ data: { type_id: 35832 } }),
+);
+
 jest.mock("@jitaspace/esi-client", () => ({
   getUniverseStationsStationId: (...args: unknown[]) =>
     mockGetUniverseStation(...args),
+  getUniverseStructuresStructureId: (...args: unknown[]) =>
+    mockGetUniverseStructure(...args),
+}));
+
+jest.mock("@jitaspace/hooks", () => ({
+  useAccessToken: () => ({
+    authHeaders: { Authorization: "Bearer test-token" },
+  }),
 }));
 
 jest.mock("@jitaspace/eve-icons", () => ({
@@ -48,18 +61,25 @@ jest.mock("@jitaspace/eve-components", () => ({
     value?: string;
     onChange?: (v: string) => void;
     onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    error?: string | null;
+    leftSection?: React.ReactNode;
   }) => (
-    <input
-      placeholder={props.placeholder}
-      value={props.value}
-      onChange={(e) => props.onChange?.(e.target.value)}
-      onKeyDown={props.onKeyDown}
-    />
+    <>
+      {props.leftSection}
+      <input
+        placeholder={props.placeholder}
+        value={props.value}
+        onChange={(e) => props.onChange?.(e.target.value)}
+        onKeyDown={props.onKeyDown}
+      />
+      {props.error && <span>{props.error}</span>}
+    </>
   ),
 }));
 
 jest.mock("~/components/Avatar", () => ({
   StationAvatar: () => <span>StationAvatar</span>,
+  StructureAvatar: () => <span>StructureAvatar</span>,
 }));
 
 function withProvider(node: React.ReactNode) {
@@ -132,13 +152,98 @@ describe("StationLinkControl", () => {
     await user.click(screen.getByText("Save"));
 
     expect(mockGetUniverseStation).toHaveBeenCalledWith(60003760);
-    // wait for the promise chain inside setLink to resolve
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(mockSetLinkChain.setLink).toHaveBeenCalledWith({
-      href: "showinfo:52678//60003760",
-    });
+    await waitFor(() =>
+      expect(mockSetLinkChain.setLink).toHaveBeenCalledWith({
+        href: "showinfo:52678//60003760",
+      }),
+    );
     expect(mockChainRun).toHaveBeenCalled();
+    expect(mockGetUniverseStructure).not.toHaveBeenCalled();
+  });
+
+  it("looks up a structure with the character's token and links it with its own type", async () => {
+    const user = userEvent.setup();
+    const {
+      StationLinkControl,
+    } = require("~/components/EveMail/Editor/StationLinkControl");
+    withProvider(<StationLinkControl />);
+
+    await user.click(screen.getByRole("button", { name: "Link Station" }));
+    await user.type(
+      screen.getByPlaceholderText("Search Station"),
+      "1035466617946",
+    );
+    await user.click(screen.getByText("Save"));
+
+    expect(mockGetUniverseStructure).toHaveBeenCalledWith(1035466617946, {
+      Authorization: "Bearer test-token",
+    });
+    expect(mockGetUniverseStation).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(mockSetLinkChain.setLink).toHaveBeenCalledWith({
+        href: "showinfo:35832//1035466617946",
+      }),
+    );
+  });
+
+  it.each([
+    [
+      "the structure lookup fails",
+      "1035466617946",
+      () => mockGetUniverseStructure.mockRejectedValueOnce(new Error("403")),
+      "Couldn't look up this structure. Log in with a character that can see it.",
+    ],
+    [
+      "ESI returns the structure without a type",
+      "1035466617946",
+      () => mockGetUniverseStructure.mockResolvedValueOnce({ data: {} }),
+      "Couldn't look up this structure. Log in with a character that can see it.",
+    ],
+    [
+      "the station lookup fails",
+      "60003760",
+      () => mockGetUniverseStation.mockRejectedValueOnce(new Error("503")),
+      "Couldn't look up this station. Try again.",
+    ],
+  ])(
+    "keeps the popover open with an error, and writes no link, when %s",
+    async (_case, id, arrange, message) => {
+      arrange();
+      const user = userEvent.setup();
+      const {
+        StationLinkControl,
+      } = require("~/components/EveMail/Editor/StationLinkControl");
+      withProvider(<StationLinkControl />);
+
+      await user.click(screen.getByRole("button", { name: "Link Station" }));
+      const input = screen.getByPlaceholderText("Search Station");
+      await user.type(input, id);
+      await user.click(screen.getByText("Save"));
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(mockSetLinkChain.setLink).not.toHaveBeenCalled();
+      expect(input).toHaveValue(id);
+
+      // Editing the selection clears the error.
+      await user.type(input, "1");
+      expect(screen.queryByText(message)).not.toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    ["station", "60003760", "StationAvatar"],
+    ["structure", "1035466617946", "StructureAvatar"],
+  ])("shows the %s avatar for a %s id", async (_kind, id, avatar) => {
+    const user = userEvent.setup();
+    const {
+      StationLinkControl,
+    } = require("~/components/EveMail/Editor/StationLinkControl");
+    withProvider(<StationLinkControl />);
+
+    await user.click(screen.getByRole("button", { name: "Link Station" }));
+    await user.type(screen.getByPlaceholderText("Search Station"), id);
+
+    expect(screen.getByText(avatar)).toBeInTheDocument();
   });
 
   it("unsets the link when Save is clicked with an empty station id", async () => {
@@ -151,10 +256,11 @@ describe("StationLinkControl", () => {
     await user.click(screen.getByRole("button", { name: "Link Station" }));
     await user.click(screen.getByText("Save"));
 
-    expect(mockGetUniverseStation).toHaveBeenCalledWith(NaN);
-    await Promise.resolve();
-    await Promise.resolve();
+    // An empty id means "remove the link": nothing to look up. (This used to
+    // call ESI with NaN, which fails, so the link was never removed.)
     expect(mockSetLinkChain.unsetLink).toHaveBeenCalled();
+    expect(mockGetUniverseStation).not.toHaveBeenCalled();
+    expect(mockGetUniverseStructure).not.toHaveBeenCalled();
   });
 
   it("triggers the link lookup when Enter is pressed in the search input", async () => {
