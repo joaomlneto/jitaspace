@@ -368,10 +368,9 @@ export default function CorporationPage({
     () => resolveIdentity(profile, esiCorporation?.data),
     [profile, esiCorporation?.data],
   );
-  const isNpc = isNpcCorporationId(corporationId);
   const visibleTabs = visibleTabsFor(
     profile,
-    isNpc,
+    isNpcCorporationId(corporationId),
     Boolean(identity.description),
   );
   // `?tab=wars` on a corporation with none would select a tab that is not
@@ -452,7 +451,7 @@ export default function CorporationPage({
                 size="lg"
               />
             )}
-            {isNpc && (
+            {isNpcCorporationId(corporationId) && (
               <Badge color="grape" variant="light">
                 NPC
               </Badge>

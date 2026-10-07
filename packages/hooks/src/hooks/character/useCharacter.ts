@@ -84,8 +84,6 @@ export const useCharacter = (
 } => {
   const esiCharacter = useEsiCharacter(characterId);
 
-  const isNpc = useMemo(() => isNpcCharacterId(characterId), [characterId]);
-
   const birthday = esiCharacter.data?.data.birthday;
   const characterBirthdayDate = useMemo(
     () => (birthday ? new Date(birthday) : null),
@@ -131,7 +129,7 @@ export const useCharacter = (
       agentData && esiCharacter.data
         ? {
             type: "agent",
-            isNpc,
+            isNpc: isNpcCharacterId(characterId),
             agentTypeId: agentData.agentTypeId,
             agentDivisionId: agentData.agentDivisionId,
             birthday: characterBirthdayDate,
@@ -155,7 +153,7 @@ export const useCharacter = (
       agentData,
       researchAgentData,
       agentInSpaceData,
-      isNpc,
+      characterId,
       esiCharacter.data,
       characterBirthdayDate,
     ],
@@ -168,7 +166,7 @@ export const useCharacter = (
       esiCharacter.data
         ? {
             type: "player",
-            isNpc,
+            isNpc: isNpcCharacterId(characterId),
             birthday: characterBirthdayDate,
             bloodlineId: esiCharacter.data.data.bloodline_id,
             corporationId: esiCharacter.data.data.corporation_id,
@@ -182,7 +180,7 @@ export const useCharacter = (
             title: esiCharacter.data.data.corporation_title,
           }
         : null,
-    [esiCharacter.data, isNpc],
+    [esiCharacter.data, characterId],
   );
 
   // The agent half arrives pre-resolved from the server, so ESI is the only
