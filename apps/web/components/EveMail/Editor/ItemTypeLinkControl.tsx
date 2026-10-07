@@ -76,7 +76,7 @@ export const ItemTypeLinkControl = forwardRef<
       shadow="md"
       withinPortal
       opened={opened}
-      onClose={handleClose}
+      onDismiss={handleClose}
       offset={-44}
       zIndex={10000}
       unstyled={unstyled}

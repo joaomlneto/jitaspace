@@ -9,6 +9,7 @@ import {
   getUniverseStationsStationId,
   getUniverseStructuresStructureId,
 } from "@jitaspace/esi-client";
+import { isIdInRanges, stationRanges } from "@jitaspace/esi-metadata";
 import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { StationIcon } from "@jitaspace/eve-icons";
 import { useAccessToken } from "@jitaspace/hooks";
@@ -24,9 +25,8 @@ export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorCo
   popoverProps?: Partial<PopoverProps>;
 }
 
-// CCP's documented ID ranges: NPC stations sit between 60,000,000 and
-// 64,000,000; Upwell structures are player-owned items, numbered far above.
-const isNpcStationId = (id: number) => id >= 60_000_000 && id < 64_000_000;
+// Anything outside the station ID ranges is an Upwell structure.
+const isStationId = (id: number) => isIdInRanges(id, stationRanges);
 
 const StationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
   <div style={{ position: "relative", width: size, height: size }}>
@@ -43,7 +43,7 @@ export const StationLinkControl = forwardRef<
   const theme = useMantineTheme();
   const { editor, unstyled } = useRichTextEditorContext();
 
-  const [stationId, setStationId] = useInputState("");
+  const [locationId, setLocationId] = useInputState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [opened, { open, close }] = useDisclosure(false);
   // ESI only describes a structure to a character allowed to see it.
@@ -54,23 +54,26 @@ export const StationLinkControl = forwardRef<
   // `EsiSearchSelect` holds its value as a string; the avatar takes a numeric
   // id, and has nothing to show before one is picked.
   const selectedId =
-    stationId === "" ? undefined : Number.parseInt(stationId, 10);
+    locationId === "" ? undefined : Number.parseInt(locationId, 10);
 
   const handleOpen = () => {
     open();
+    // A lookup that failed after the popover closed must not greet the next
+    // open with its error.
+    setLookupError(null);
     const linkData = editor?.getAttributes("link");
-    setStationId(getLinkedEntityId(linkData?.href, ["station", "structure"]));
+    setLocationId(getLinkedEntityId(linkData?.href, ["station", "structure"]));
   };
 
   const handleClose = () => {
     close();
-    setStationId("");
+    setLocationId("");
     setLookupError(null);
   };
 
   // A `showinfo:` link names the location's type as well as its id.
   const fetchTypeId = async (id: number): Promise<number | undefined> => {
-    if (isNpcStationId(id)) {
+    if (isStationId(id)) {
       return (await getUniverseStationsStationId(id)).data.type_id;
     }
     return (await getUniverseStructuresStructureId(id, { ...authHeaders })).data
@@ -78,16 +81,16 @@ export const StationLinkControl = forwardRef<
   };
 
   const setLink = async () => {
-    if (stationId === "") {
+    if (locationId === "") {
       handleClose();
       editor?.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
-    const id = Number.parseInt(stationId, 10);
+    const id = Number.parseInt(locationId, 10);
     const typeId = await fetchTypeId(id).catch(() => undefined);
     if (typeId === undefined) {
       setLookupError(
-        isNpcStationId(id)
+        isStationId(id)
           ? "Couldn't look up this station. Try again."
           : "Couldn't look up this structure. Log in with a character that can see it.",
       );
@@ -115,7 +118,7 @@ export const StationLinkControl = forwardRef<
       shadow="md"
       withinPortal
       opened={opened}
-      onClose={handleClose}
+      onDismiss={handleClose}
       offset={-44}
       zIndex={10000}
       unstyled={unstyled}
@@ -142,10 +145,10 @@ export const StationLinkControl = forwardRef<
             categories={["station", "structure"]}
             placeholder="Search Station"
             type="url"
-            value={stationId}
+            value={locationId}
             onChange={(value) => {
               setLookupError(null);
-              setStationId(value);
+              setLocationId(value);
             }}
             error={lookupError}
             classNames={{ input: classes.linkEditorInput }}
@@ -153,7 +156,7 @@ export const StationLinkControl = forwardRef<
             unstyled={unstyled}
             comboboxProps={{ withinPortal: false }}
             leftSection={
-              selectedId !== undefined && !isNpcStationId(selectedId) ? (
+              selectedId !== undefined && !isStationId(selectedId) ? (
                 <StructureAvatar size={24} structureId={selectedId} />
               ) : (
                 <StationAvatar size={24} stationId={selectedId} />

@@ -275,4 +275,30 @@ describe("EveMail editor LinkControls", () => {
       expect(button).toHaveAttribute("aria-expanded", "true");
     },
   );
+
+  // Mantine's controlled Popover only reports a dismissal; `onClose` waits for
+  // `opened` to turn false, so a control listening there never closed.
+  it.each(
+    CONTROLS.flatMap((control) => [
+      { ...control, how: "clicking outside" },
+      { ...control, how: "pressing Escape" },
+    ]),
+  )("$name closes by $how", async ({ name, label, placeholder, how }) => {
+    const user = userEvent.setup();
+    const Control = load(name);
+    withProvider(<Control />);
+    const button = screen.getByRole("button", { name: label });
+
+    await user.click(button);
+    expect(button).toHaveAttribute("aria-expanded", "true");
+
+    if (how === "clicking outside") {
+      await user.click(document.body);
+    } else {
+      await user.click(screen.getByPlaceholderText(placeholder));
+      await user.keyboard("{Escape}");
+    }
+
+    expect(button).toHaveAttribute("aria-expanded", "false");
+  });
 });

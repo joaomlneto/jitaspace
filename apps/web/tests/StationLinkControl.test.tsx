@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // ---------------------------------------------------------------------------
@@ -229,6 +229,42 @@ describe("StationLinkControl", () => {
       expect(screen.queryByText(message)).not.toBeInTheDocument();
     },
   );
+
+  it("does not show a stale error from a lookup that failed after the popover closed", async () => {
+    let rejectLookup: (reason: Error) => void = () => undefined;
+    mockGetUniverseStructure.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectLookup = reject;
+        }),
+    );
+    const user = userEvent.setup();
+    const {
+      StationLinkControl,
+    } = require("~/components/EveMail/Editor/StationLinkControl");
+    withProvider(<StationLinkControl />);
+    const button = screen.getByRole("button", { name: "Link Station" });
+
+    await user.click(button);
+    await user.type(
+      screen.getByPlaceholderText("Search Station"),
+      "1035466617946",
+    );
+    await user.click(screen.getByText("Save"));
+    await user.click(document.body);
+    expect(button).toHaveAttribute("aria-expanded", "false");
+
+    await act(async () => {
+      rejectLookup(new Error("403"));
+      await Promise.resolve();
+    });
+    await user.click(button);
+
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(
+      screen.queryByText(/Couldn't look up this structure/),
+    ).not.toBeInTheDocument();
+  });
 
   it.each([
     ["station", "60003760", "StationAvatar"],
