@@ -15,6 +15,7 @@ import {
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
+  IncursionsIcon,
   ItemsIcon,
   JournalIcon,
   LPStoreIcon,
@@ -305,6 +306,14 @@ export const universeApps: Record<string, JitaApp> = {
     description: "View all active wars.",
     url: "/active-wars",
     Icon: (props) => <WarsIcon {...props} />,
+    scopes: {},
+  },
+  incursions: {
+    name: "Incursions",
+    description:
+      "Track active Sansha incursions, and every change since they appeared.",
+    url: "/incursions",
+    Icon: (props) => <IncursionsIcon {...props} />,
     scopes: {},
   },
   alliances: {

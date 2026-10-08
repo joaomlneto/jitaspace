@@ -171,8 +171,8 @@ export interface DataTableProps<TData extends object> {
   withTableBorder?: boolean;
   /** Draw borders between columns. */
   withColumnBorders?: boolean;
-  /** Vertical cell padding. Default: `"sm"`. */
-  verticalSpacing?: DataTableSize;
+  /** Vertical cell padding: a size, or pixels for a denser table. Default: `"sm"`. */
+  verticalSpacing?: DataTableSize | number;
   /** Base font size. */
   fontSize?: DataTableSize;
 }

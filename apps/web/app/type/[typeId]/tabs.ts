@@ -1,6 +1,7 @@
 /** Tab identifiers for the type detail page, in display order. */
 export const TYPE_PAGE_TABS = [
   "overview",
+  "combat",
   "attributes",
   "variations",
   "market",
