@@ -377,6 +377,147 @@ interface HistoryTableRow extends IncursionRow {
   durationMs: number;
 }
 
+/** The change list's columns; they name things through `names`. */
+const eventColumnsFor = (names: Names): DataTableColumn<EventTableRow>[] => [
+  {
+    id: "observedAt",
+    header: "Time (EVE)",
+    accessor: "observedAt",
+    sortable: true,
+    width: 150,
+    cell: (row) => <EveTime iso={row.observedAt} />,
+  },
+  {
+    id: "constellation",
+    header: "Constellation",
+    accessor: "constellationName",
+    sortable: true,
+    filter: { type: "multi-select" },
+    cell: (row) =>
+      row.constellationId === null ? (
+        row.constellationName
+      ) : (
+        <ConstellationLink
+          constellationId={row.constellationId}
+          names={names}
+        />
+      ),
+  },
+  {
+    id: "kind",
+    header: "Change",
+    accessor: "kindLabel",
+    sortable: true,
+    filter: { type: "multi-select" },
+  },
+  {
+    id: "detail",
+    header: "Detail",
+    cell: (row) => <EventDetail event={row} names={names} />,
+  },
+];
+
+/** The past incursions' columns. */
+const historyColumnsFor = (
+  names: Names,
+  data: IncursionsData,
+): DataTableColumn<HistoryTableRow>[] => [
+  {
+    id: "constellation",
+    header: "Constellation",
+    accessor: "constellationName",
+    sortable: true,
+    filter: { type: "text" },
+    cell: (row) => (
+      <ConstellationLink constellationId={row.constellationId} names={names} />
+    ),
+  },
+  {
+    id: "region",
+    header: "Region",
+    accessor: "regionName",
+    sortable: true,
+    filter: { type: "multi-select" },
+  },
+  {
+    id: "staging",
+    header: "Staging",
+    cell: (row) => (
+      <StagingCell solarSystemId={row.stagingSolarSystemId} names={names} />
+    ),
+  },
+  {
+    id: "sovereignty",
+    header: "Sov. holder",
+    accessor: "sovereigntyName",
+    sortable: true,
+    filter: { type: "multi-select" },
+    cell: (row) => (
+      <SovereigntyHolderLabel
+        holder={sovereigntyOf(row, data)}
+        names={names}
+        size="xs"
+      />
+    ),
+  },
+  {
+    id: "systems",
+    header: "Systems",
+    // Imported incursions never recorded their systems.
+    accessor: (row) =>
+      row.source === "esi" ? row.infestedSolarSystemIds.length : null,
+    sortable: true,
+    align: "right",
+  },
+  {
+    id: "firstSeenAt",
+    header: "First seen (EVE)",
+    accessor: "firstSeenAt",
+    sortable: true,
+    cell: (row) => (
+      <Text
+        span
+        size="sm"
+        c={row.isObservedFromStart ? undefined : "dimmed"}
+        style={{ whiteSpace: "nowrap" }}
+      >
+        <EveTime iso={row.firstSeenAt} />
+        {!row.isObservedFromStart && " *"}
+      </Text>
+    ),
+  },
+  {
+    id: "endedAt",
+    header: "Ended (EVE)",
+    accessor: "endedAt",
+    sortable: true,
+    cell: (row) => (row.endedAt ? <EveTime iso={row.endedAt} /> : null),
+  },
+  {
+    id: "duration",
+    header: "Duration",
+    accessor: "durationMs",
+    sortable: true,
+    align: "right",
+    cell: (row) => formatDuration(row.durationMs),
+  },
+  {
+    id: "state",
+    header: "Last state",
+    accessor: "stateLabel",
+    sortable: true,
+    filter: { type: "multi-select" },
+    cell: (row) => <StateBadge state={row.state} />,
+  },
+  {
+    id: "source",
+    header: "Source",
+    accessor: "sourceLabel",
+    sortable: true,
+    filter: { type: "multi-select" },
+  },
+];
+
 export function HistoryTab({ data }: Readonly<{ data: IncursionsData }>) {
   const archive = useIncursionHistory();
   const names = useNames(
@@ -432,149 +573,11 @@ export function HistoryTab({ data }: Readonly<{ data: IncursionsData }>) {
     [data.events, byId, names],
   );
 
-  const eventColumns = useMemo<DataTableColumn<EventTableRow>[]>(
-    () => [
-      {
-        id: "observedAt",
-        header: "Time (EVE)",
-        accessor: "observedAt",
-        sortable: true,
-        width: 150,
-        cell: (row) => <EveTime iso={row.observedAt} />,
-      },
-      {
-        id: "constellation",
-        header: "Constellation",
-        accessor: "constellationName",
-        sortable: true,
-        filter: { type: "multi-select" },
-        cell: (row) =>
-          row.constellationId === null ? (
-            row.constellationName
-          ) : (
-            <ConstellationLink
-              constellationId={row.constellationId}
-              names={names}
-            />
-          ),
-      },
-      {
-        id: "kind",
-        header: "Change",
-        accessor: "kindLabel",
-        sortable: true,
-        filter: { type: "multi-select" },
-      },
-      {
-        id: "detail",
-        header: "Detail",
-        cell: (row) => <EventDetail event={row} names={names} />,
-      },
-    ],
-    [names],
-  );
+  const eventColumns = useMemo(() => eventColumnsFor(names), [names]);
 
-  const historyColumns = useMemo<DataTableColumn<HistoryTableRow>[]>(
-    () => [
-      {
-        id: "constellation",
-        header: "Constellation",
-        accessor: "constellationName",
-        sortable: true,
-        filter: { type: "text" },
-        cell: (row) => (
-          <ConstellationLink
-            constellationId={row.constellationId}
-            names={names}
-          />
-        ),
-      },
-      {
-        id: "region",
-        header: "Region",
-        accessor: "regionName",
-        sortable: true,
-        filter: { type: "multi-select" },
-      },
-      {
-        id: "staging",
-        header: "Staging",
-        cell: (row) => (
-          <StagingCell solarSystemId={row.stagingSolarSystemId} names={names} />
-        ),
-      },
-      {
-        id: "sovereignty",
-        header: "Sov. holder",
-        accessor: "sovereigntyName",
-        sortable: true,
-        filter: { type: "multi-select" },
-        cell: (row) => (
-          <SovereigntyHolderLabel
-            holder={sovereigntyOf(row, data)}
-            names={names}
-            size="xs"
-          />
-        ),
-      },
-      {
-        id: "systems",
-        header: "Systems",
-        // Imported incursions never recorded their systems.
-        accessor: (row) =>
-          row.source === "esi" ? row.infestedSolarSystemIds.length : null,
-        sortable: true,
-        align: "right",
-      },
-      {
-        id: "firstSeenAt",
-        header: "First seen (EVE)",
-        accessor: "firstSeenAt",
-        sortable: true,
-        cell: (row) => (
-          <Text
-            span
-            size="sm"
-            c={row.isObservedFromStart ? undefined : "dimmed"}
-            style={{ whiteSpace: "nowrap" }}
-          >
-            <EveTime iso={row.firstSeenAt} />
-            {!row.isObservedFromStart && " *"}
-          </Text>
-        ),
-      },
-      {
-        id: "endedAt",
-        header: "Ended (EVE)",
-        accessor: "endedAt",
-        sortable: true,
-        cell: (row) => (row.endedAt ? <EveTime iso={row.endedAt} /> : null),
-      },
-      {
-        id: "duration",
-        header: "Duration",
-        accessor: "durationMs",
-        sortable: true,
-        align: "right",
-        cell: (row) => formatDuration(row.durationMs),
-      },
-      {
-        id: "state",
-        header: "Last state",
-        accessor: "stateLabel",
-        sortable: true,
-        filter: { type: "multi-select" },
-        cell: (row) => <StateBadge state={row.state} />,
-      },
-      {
-        id: "source",
-        header: "Source",
-        accessor: "sourceLabel",
-        sortable: true,
-        filter: { type: "multi-select" },
-      },
-    ],
-    [data, names],
+  const historyColumns = useMemo(
+    () => historyColumnsFor(names, data),
+    [names, data],
   );
 
   return (

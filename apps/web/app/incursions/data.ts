@@ -260,10 +260,9 @@ export async function readIncursionsData(): Promise<IncursionsData> {
   const influence: IncursionsData["influence"] = {};
   for (const event of [...influenceBefore, ...influenceEvents]) {
     if (event.influence === null) continue;
-    (influence[event.incursionId] ??= []).push([
-      event.observedAt.getTime(),
-      event.influence,
-    ]);
+    const readings = influence[event.incursionId] ?? [];
+    readings.push([event.observedAt.getTime(), event.influence]);
+    influence[event.incursionId] = readings;
   }
 
   const eventIncursions = eventOnly.map(toRow);

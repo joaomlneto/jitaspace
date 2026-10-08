@@ -127,10 +127,121 @@ function ResistCell({
 }
 
 /** A measurement with its unit, or a dash. */
-const measure = (value: number | undefined, unit: string, scale = 1) =>
-  value === undefined
-    ? "—"
-    : `${number(value / scale, scale === 1 ? 0 : 1)} ${unit}`;
+const measure = (value: number | undefined, unit: string, scale = 1) => {
+  if (value === undefined) return "—";
+  // Scaled units (km) keep a decimal; plain ones (m, m/s) are whole.
+  const digits = scale === 1 ? 0 : 1;
+  return `${number(value / scale, digits)} ${unit}`;
+};
+
+/** The columns depend on nothing but the row, so they are built once. */
+const COLUMNS: DataTableColumn<RatRow>[] = [
+  {
+    id: "name",
+    header: "Rat",
+    accessor: "name",
+    sortable: true,
+    filter: { type: "text" },
+    cell: (row) => (
+      <Group gap={6} wrap="nowrap">
+        <TypeAvatar typeId={row.typeId} size={20} radius="sm" />
+        <Anchor
+          component={Link}
+          href={`/type/${row.typeId}?tab=combat`}
+          size="xs"
+          fw={600}
+          style={{ whiteSpace: "nowrap" }}
+        >
+          {row.name}
+        </Anchor>
+        <Group gap={2} wrap="nowrap">
+          <NpcEwarIcons ewar={row.stats.ewar} />
+        </Group>
+      </Group>
+    ),
+  },
+  {
+    id: "class",
+    header: "Class",
+    accessor: "className",
+    sortable: true,
+    sortAccessor: (row) => row.classOrder,
+    filter: { type: "multi-select" },
+    cell: (row) => (
+      <Text span size="xs" style={{ whiteSpace: "nowrap" }}>
+        {row.className}
+      </Text>
+    ),
+  },
+  {
+    id: "dps",
+    header: "DPS",
+    accessor: "dps",
+    sortable: true,
+    align: "right",
+    cell: (row) => <DamageCell damage={row.stats.dps} unit="DPS" />,
+  },
+  {
+    id: "alpha",
+    header: "Alpha",
+    accessor: "alpha",
+    sortable: true,
+    align: "right",
+    cell: (row) => <DamageCell damage={row.stats.alpha} unit="damage" />,
+  },
+  {
+    id: "ehp",
+    header: "EHP",
+    accessor: "ehp",
+    sortable: true,
+    align: "right",
+    cell: (row) => (
+      <Text span size="xs" fw={600}>
+        {number(row.ehp)}
+      </Text>
+    ),
+  },
+  {
+    id: "shield",
+    header: "Shield resists",
+    sortable: true,
+    sortAccessor: (row) => row.stats.shield.ehp,
+    align: "right",
+    cell: (row) => <ResistCell layer={row.stats.shield} label="Shield" />,
+  },
+  {
+    id: "armor",
+    header: "Armor resists",
+    sortable: true,
+    sortAccessor: (row) => row.stats.armor.ehp,
+    align: "right",
+    cell: (row) => <ResistCell layer={row.stats.armor} label="Armor" />,
+  },
+  {
+    id: "range",
+    header: "Range",
+    accessor: (row) => row.stats.attackRange,
+    sortable: true,
+    align: "right",
+    cell: (row) => measure(row.stats.attackRange, "km", 1000),
+  },
+  {
+    id: "orbit",
+    header: "Orbit",
+    accessor: (row) => row.stats.orbitSpeed,
+    sortable: true,
+    align: "right",
+    cell: (row) => measure(row.stats.orbitSpeed, "m/s"),
+  },
+  {
+    id: "signature",
+    header: "Sig.",
+    accessor: (row) => row.stats.signatureRadius,
+    sortable: true,
+    align: "right",
+    cell: (row) => measure(row.stats.signatureRadius, "m"),
+  },
+];
 
 export function RatsTab({ rats }: Readonly<{ rats: IncursionRatGroup[] }>) {
   const rows = useMemo<RatRow[]>(
@@ -151,117 +262,6 @@ export function RatsTab({ rats }: Readonly<{ rats: IncursionRatGroup[] }>) {
     [rats],
   );
 
-  const columns = useMemo<DataTableColumn<RatRow>[]>(
-    () => [
-      {
-        id: "name",
-        header: "Rat",
-        accessor: "name",
-        sortable: true,
-        filter: { type: "text" },
-        cell: (row) => (
-          <Group gap={6} wrap="nowrap">
-            <TypeAvatar typeId={row.typeId} size={20} radius="sm" />
-            <Anchor
-              component={Link}
-              href={`/type/${row.typeId}?tab=combat`}
-              size="xs"
-              fw={600}
-              style={{ whiteSpace: "nowrap" }}
-            >
-              {row.name}
-            </Anchor>
-            <Group gap={2} wrap="nowrap">
-              <NpcEwarIcons ewar={row.stats.ewar} />
-            </Group>
-          </Group>
-        ),
-      },
-      {
-        id: "class",
-        header: "Class",
-        accessor: "className",
-        sortable: true,
-        sortAccessor: (row) => row.classOrder,
-        filter: { type: "multi-select" },
-        cell: (row) => (
-          <Text span size="xs" style={{ whiteSpace: "nowrap" }}>
-            {row.className}
-          </Text>
-        ),
-      },
-      {
-        id: "dps",
-        header: "DPS",
-        accessor: "dps",
-        sortable: true,
-        align: "right",
-        cell: (row) => <DamageCell damage={row.stats.dps} unit="DPS" />,
-      },
-      {
-        id: "alpha",
-        header: "Alpha",
-        accessor: "alpha",
-        sortable: true,
-        align: "right",
-        cell: (row) => <DamageCell damage={row.stats.alpha} unit="damage" />,
-      },
-      {
-        id: "ehp",
-        header: "EHP",
-        accessor: "ehp",
-        sortable: true,
-        align: "right",
-        cell: (row) => (
-          <Text span size="xs" fw={600}>
-            {number(row.ehp)}
-          </Text>
-        ),
-      },
-      {
-        id: "shield",
-        header: "Shield resists",
-        sortable: true,
-        sortAccessor: (row) => row.stats.shield.ehp,
-        align: "right",
-        cell: (row) => <ResistCell layer={row.stats.shield} label="Shield" />,
-      },
-      {
-        id: "armor",
-        header: "Armor resists",
-        sortable: true,
-        sortAccessor: (row) => row.stats.armor.ehp,
-        align: "right",
-        cell: (row) => <ResistCell layer={row.stats.armor} label="Armor" />,
-      },
-      {
-        id: "range",
-        header: "Range",
-        accessor: (row) => row.stats.attackRange,
-        sortable: true,
-        align: "right",
-        cell: (row) => measure(row.stats.attackRange, "km", 1000),
-      },
-      {
-        id: "orbit",
-        header: "Orbit",
-        accessor: (row) => row.stats.orbitSpeed,
-        sortable: true,
-        align: "right",
-        cell: (row) => measure(row.stats.orbitSpeed, "m/s"),
-      },
-      {
-        id: "signature",
-        header: "Sig.",
-        accessor: (row) => row.stats.signatureRadius,
-        sortable: true,
-        align: "right",
-        cell: (row) => measure(row.stats.signatureRadius, "m"),
-      },
-    ],
-    [],
-  );
-
   return (
     <Stack gap="sm">
       <Group justify="space-between" gap="xs">
@@ -272,7 +272,7 @@ export function RatsTab({ rats }: Readonly<{ rats: IncursionRatGroup[] }>) {
       </Group>
       <DataTable
         data={rows}
-        columns={columns}
+        columns={COLUMNS}
         rowId={(row) => row.typeId}
         emptyText="No incursion NPCs found."
         initialSort={{ columnId: "class", direction: "asc" }}

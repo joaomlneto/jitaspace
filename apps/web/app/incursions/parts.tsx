@@ -46,7 +46,7 @@ export const eveTime = (iso: string | number) => {
 export const percent = (influence: number) => `${Math.round(influence * 100)}%`;
 
 const dotlanName = (name: string) =>
-  encodeURIComponent(name.replace(/ /g, "_"));
+  encodeURIComponent(name.replaceAll(" ", "_"));
 
 // A clock shared by every live timer on the page, ticking once a second while
 // anything listens. The server snapshot is null, so a prerender and the

@@ -321,69 +321,59 @@ const EWAR: EwarSpec[] = [
   },
 ];
 
-/**
- * An NPC's or drone's combat figures. Turret damage sits on the type itself;
- * missile damage on the missile it launches, so pass that missile's
- * attributes. Pass its dogma effects for what drones do besides shooting.
- */
-export function computeNpcStats(
+/** The NPC's turrets, if it has any that do damage. */
+function turretWeapon(attributes: Attributes): NpcWeapon | undefined {
+  const rateOfFire = attributes.get(ATTR.turretRateOfFire);
+  if (!rateOfFire) return undefined;
+  const volley = volleyOf(
+    attributes,
+    attributes.get(ATTR.turretDamageMultiplier) ?? 1,
+  );
+  if (sumDamage(volley) <= 0) return undefined;
+  return {
+    kind: "turret",
+    volley,
+    cycleSeconds: rateOfFire / 1000,
+    optimalRange: attributes.get(ATTR.turretOptimalRange),
+    falloff: attributes.get(ATTR.turretFalloff),
+    trackingSpeed: attributes.get(ATTR.turretTrackingSpeed),
+  };
+}
+
+/** The NPC's missile launchers; damage comes from the missile's attributes. */
+function missileWeapon(
   attributes: Attributes,
-  missileAttributes?: Attributes,
-  effects: Effects = new Set(),
-): NpcStats {
-  const weapons: NpcWeapon[] = [];
-
-  const turretRateOfFire = attributes.get(ATTR.turretRateOfFire);
-  if (turretRateOfFire) {
-    const volley = volleyOf(
-      attributes,
-      attributes.get(ATTR.turretDamageMultiplier) ?? 1,
-    );
-    if (sumDamage(volley) > 0) {
-      weapons.push({
-        kind: "turret",
-        volley,
-        cycleSeconds: turretRateOfFire / 1000,
-        optimalRange: attributes.get(ATTR.turretOptimalRange),
-        falloff: attributes.get(ATTR.turretFalloff),
-        trackingSpeed: attributes.get(ATTR.turretTrackingSpeed),
-      });
-    }
-  }
-
+  missileAttributes: Attributes | undefined,
+): NpcWeapon | undefined {
   const missileTypeId = attributes.get(ATTR.missileTypeId);
-  const missileRateOfFire = attributes.get(ATTR.missileRateOfFire);
-  if (missileTypeId && missileRateOfFire && missileAttributes) {
-    const volley = volleyOf(
-      missileAttributes,
-      attributes.get(ATTR.missileDamageMultiplier) ?? 1,
-    );
-    if (sumDamage(volley) > 0) {
-      weapons.push({
-        kind: "missile",
-        volley,
-        cycleSeconds: missileRateOfFire / 1000,
-        missileTypeId,
-      });
-    }
-  }
+  const rateOfFire = attributes.get(ATTR.missileRateOfFire);
+  if (!missileTypeId || !rateOfFire || !missileAttributes) return undefined;
+  const volley = volleyOf(
+    missileAttributes,
+    attributes.get(ATTR.missileDamageMultiplier) ?? 1,
+  );
+  if (sumDamage(volley) <= 0) return undefined;
+  return {
+    kind: "missile",
+    volley,
+    cycleSeconds: rateOfFire / 1000,
+    missileTypeId,
+  };
+}
 
-  const alpha =
-    weapons.length === 0
-      ? undefined
-      : perType((type) =>
-          weapons.reduce((sum, weapon) => sum + weapon.volley[type], 0),
-        );
-  const dps =
-    weapons.length === 0
-      ? undefined
-      : perType((type) =>
-          weapons.reduce(
-            (sum, weapon) => sum + weapon.volley[type] / weapon.cycleSeconds,
-            0,
-          ),
-        );
+/** Per damage type, summed over the weapons; undefined without any. */
+const sumOverWeapons = (
+  weapons: readonly NpcWeapon[],
+  perWeapon: (weapon: NpcWeapon, type: DamageType) => number,
+): PerDamageType | undefined =>
+  weapons.length === 0
+    ? undefined
+    : perType((type) =>
+        weapons.reduce((sum, weapon) => sum + perWeapon(weapon, type), 0),
+      );
 
+/** What the NPC does besides shooting: e-war, repairs, mining. */
+function ewarOf(attributes: Attributes, effects: Effects): NpcEwar[] {
   const ewar: NpcEwar[] = [];
   for (const spec of EWAR) {
     if (spec.effectId !== undefined && !effects.has(spec.effectId)) continue;
@@ -404,6 +394,29 @@ export function computeNpcStats(
       ewar.push({ iconTypeId: spec.iconTypeId, label: spec.label, values });
     }
   }
+  return ewar;
+}
+
+/**
+ * An NPC's or drone's combat figures. Turret damage sits on the type itself;
+ * missile damage on the missile it launches, so pass that missile's
+ * attributes. Pass its dogma effects for what drones do besides shooting.
+ */
+export function computeNpcStats(
+  attributes: Attributes,
+  missileAttributes?: Attributes,
+  effects: Effects = new Set(),
+): NpcStats {
+  const weapons = [
+    turretWeapon(attributes),
+    missileWeapon(attributes, missileAttributes),
+  ].filter((weapon): weapon is NpcWeapon => weapon !== undefined);
+  const alpha = sumOverWeapons(weapons, (weapon, type) => weapon.volley[type]);
+  const dps = sumOverWeapons(
+    weapons,
+    (weapon, type) => weapon.volley[type] / weapon.cycleSeconds,
+  );
+  const ewar = ewarOf(attributes, effects);
 
   return {
     weapons,
