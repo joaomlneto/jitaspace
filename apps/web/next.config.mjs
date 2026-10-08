@@ -55,9 +55,11 @@ if (!process.env.SKIP_ENV_VALIDATION) {
  *              Tycoon / Fuzzwork market APIs, and the zKillboard killmail API),
  *              `images.evetech.net` (also fetched as JSON to choose an image
  *              variant, so it's in `connect-src` as well as `img-src`), Google
- *              Analytics, and the same-origin Sentry (`/monitoring`) and PostHog
- *              (`/ingest`) proxies. (`report-uri` is exempt from
- *              `connect-src`, so the Sentry ingest host isn't listed here.)
+ *              Analytics. The same-origin Sentry (`/monitoring`) and PostHog
+ *              (`/ingest`) proxies are covered by `'self'` — a CSP source can't
+ *              be a bare path (browsers ignore it with a console error), so
+ *              they aren't listed. (`report-uri` is exempt from `connect-src`,
+ *              so the Sentry ingest host isn't listed here either.)
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -87,11 +89,13 @@ const contentSecurityPolicy = [
   // and so needs connect-src in addition to img-src. Then Google Analytics
   // (incl. regional `*.google-analytics.com` collectors, plus the Google tag's
   // `www.googletagmanager.com/td` requests, sent as fetch/beacon calls and so
-  // needing connect-src as well as img-src) and the same-origin Sentry/PostHog
-  // proxies. Static EVE reference data is no longer fetched from
+  // needing connect-src as well as img-src). The same-origin Sentry
+  // (`/monitoring`) and PostHog (`/ingest`) proxies are covered by 'self'; don't
+  // list them as bare paths, which aren't valid CSP sources and are ignored with
+  // a console error on every page load. Static EVE reference data is no longer fetched from
   // the self-hosted SDE service: it is resolved from our own database, on the
   // server or through same-origin server actions, both covered by 'self'.
-  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://www.google.com /monitoring /ingest",
+  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://www.google.com",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
