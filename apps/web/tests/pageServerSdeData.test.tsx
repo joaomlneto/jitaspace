@@ -21,6 +21,12 @@ const metaGroupFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeListEntryFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const dogmaEffectFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const dogmaEffectModifierFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const dogmaAttributeFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -33,6 +39,11 @@ jest.mock("~/lib/db", () => ({
     typeEffect: { findMany: (a?: unknown) => typeEffectFindMany(a) },
     metaGroup: { findMany: (a?: unknown) => metaGroupFindMany(a) },
     typeListEntry: { findMany: (a?: unknown) => typeListEntryFindMany(a) },
+    dogmaEffect: { findMany: (a?: unknown) => dogmaEffectFindMany(a) },
+    dogmaEffectModifier: {
+      findMany: (a?: unknown) => dogmaEffectModifierFindMany(a),
+    },
+    dogmaAttribute: { findMany: (a?: unknown) => dogmaAttributeFindMany(a) },
   },
 }));
 
@@ -96,6 +107,9 @@ beforeEach(() => {
   typeEffectFindMany.mockReset().mockResolvedValue([]);
   metaGroupFindMany.mockReset().mockResolvedValue([]);
   typeListEntryFindMany.mockReset().mockResolvedValue([]);
+  dogmaEffectFindMany.mockReset().mockResolvedValue([]);
+  dogmaEffectModifierFindMany.mockReset().mockResolvedValue([]);
+  dogmaAttributeFindMany.mockReset().mockResolvedValue([]);
   globalThis.fetch = jest.fn(() =>
     Promise.resolve({ status: 200, json: () => Promise.resolve([]) }),
   ) as unknown as typeof globalThis.fetch;
@@ -605,6 +619,19 @@ describe("type route NPC combat stats", () => {
       );
     });
     typeEffectFindMany.mockResolvedValue([{ typeId: 23536, effectId: 6690 }]);
+    // What the SDE says the web effect reads: a drone's generic range and
+    // duration.
+    dogmaEffectFindMany.mockResolvedValue([
+      {
+        effectId: 6690,
+        name: "remoteWebifierEntity",
+        isOffensive: true,
+        isAssistance: false,
+        rangeAttributeId: 54,
+        falloffAttributeId: null,
+        durationAttributeId: 73,
+      },
+    ]);
 
     const props = await runRoute("~/app/type/[typeId]/page", {
       typeId: "23536",

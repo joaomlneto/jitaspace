@@ -8,14 +8,17 @@ import {
   Stack,
   Table,
   Text,
+  ThemeIcon,
   Tooltip,
 } from "@mantine/core";
+import { IconBolt } from "@tabler/icons-react";
 
-import { TypeAvatar } from "@jitaspace/ui";
+import { formatDogmaAttributeValue, TypeAvatar } from "@jitaspace/ui";
 
 import type {
   DamageType,
   NpcEwar,
+  NpcEwarValue,
   NpcLayer,
   NpcStats,
   PerDamageType,
@@ -171,13 +174,34 @@ function Stat({
   );
 }
 
+/** An ability's value as the EVE client writes it: "20,000 m", "5 s", "-60%". */
+const abilityValueText = (v: NpcEwarValue) =>
+  formatDogmaAttributeValue(v.value, {
+    unitId: v.unitId,
+    symbol: v.unitSymbol,
+  });
+
+/** A module that does the same, or a generic icon for an unknown effect. */
+function AbilityIcon({
+  ability,
+  size,
+}: Readonly<{ ability: NpcEwar; size: number }>) {
+  return ability.iconTypeId === undefined ? (
+    <ThemeIcon size={size} radius="sm" variant="light" color="gray">
+      <IconBolt size={size * 0.7} />
+    </ThemeIcon>
+  ) : (
+    <TypeAvatar typeId={ability.iconTypeId} size={size} radius="sm" />
+  );
+}
+
 /** Each ability (electronic warfare, repair, mining) as a module icon, its figures on hover. */
 export function NpcEwarIcons({ ewar }: Readonly<{ ewar: NpcEwar[] }>) {
   return (
     <>
       {ewar.map((effect) => (
         <Tooltip
-          key={effect.label}
+          key={effect.effectId}
           multiline
           label={
             <Stack gap={0}>
@@ -186,14 +210,14 @@ export function NpcEwarIcons({ ewar }: Readonly<{ ewar: NpcEwar[] }>) {
               </Text>
               {effect.values.map((v) => (
                 <Text key={v.label} size="xs">
-                  {v.label}: {number(v.value)} {v.unit}
+                  {v.label}: {abilityValueText(v)}
                 </Text>
               ))}
             </Stack>
           }
         >
           <span aria-label={effect.label}>
-            <TypeAvatar typeId={effect.iconTypeId} size={22} radius="sm" />
+            <AbilityIcon ability={effect} size={22} />
           </span>
         </Tooltip>
       ))}
@@ -207,9 +231,9 @@ export function NpcEwarTable({ ewar }: Readonly<{ ewar: NpcEwar[] }>) {
     <Table verticalSpacing={6} withRowBorders>
       <Table.Tbody>
         {ewar.map((effect) => (
-          <Table.Tr key={effect.label}>
+          <Table.Tr key={effect.effectId}>
             <Table.Td w={1}>
-              <TypeAvatar typeId={effect.iconTypeId} size={28} radius="sm" />
+              <AbilityIcon ability={effect} size={28} />
             </Table.Td>
             <Table.Td>
               <Text size="sm" fw={600}>
@@ -223,7 +247,7 @@ export function NpcEwarTable({ ewar }: Readonly<{ ewar: NpcEwar[] }>) {
                     <Text span c="dimmed" inherit>
                       {v.label}
                     </Text>{" "}
-                    {number(v.value)} {v.unit}
+                    {abilityValueText(v)}
                   </Text>
                 ))}
               </Group>

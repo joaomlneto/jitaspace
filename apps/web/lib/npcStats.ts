@@ -39,7 +39,6 @@ const ATTR = {
 } as const;
 
 export type Attributes = ReadonlyMap<number, number>;
-export type Effects = ReadonlySet<number>;
 
 export type PerDamageType = Record<DamageType, number>;
 
@@ -65,18 +64,66 @@ export interface NpcLayer {
   ehp: number;
 }
 
+/** A raw dogma value and its unit; the client formats it for display. */
 export interface NpcEwarValue {
   label: string;
   value: number;
-  unit: string;
+  unitId?: number;
+  unitSymbol?: string;
 }
 
+/** Something an NPC does besides shooting: e-war, repairs, mining. */
 export interface NpcEwar {
-  /** A module that does the same, for its icon. */
-  iconTypeId: number;
+  /** The dogma effect it comes from. */
+  effectId: number;
   label: string;
+  /** A module that does the same, for its icon; none for an unknown effect. */
+  iconTypeId?: number;
   values: NpcEwarValue[];
 }
+
+/** What the SDE says about a dogma effect: the attributes it reads. */
+export interface DogmaEffectInfo {
+  effectId: number;
+  /** Its internal name ("remoteWebifierEntity"): a label of last resort. */
+  name: string;
+  isOffensive: boolean;
+  isAssistance: boolean;
+  rangeAttributeId: number | null;
+  falloffAttributeId: number | null;
+  durationAttributeId: number | null;
+  /** The attributes its modifiers apply: how hard it hits. */
+  modifyingAttributeIds: readonly number[];
+}
+
+/** What the SDE says about a dogma attribute, for its label and unit. */
+export interface DogmaAttributeInfo {
+  name: string;
+  displayName: string | null;
+  unitId: number | null;
+  unitSymbol: string | null;
+}
+
+/** The dogma a type's abilities are read from: its effects, and attribute names. */
+export interface NpcDogma {
+  /** The effects the type carries. */
+  effects: readonly DogmaEffectInfo[];
+  /** {@link INFERRED_EFFECT_IDS}, for types that lack them but act on them. */
+  inferableEffects?: readonly DogmaEffectInfo[];
+  attributeInfo: ReadonlyMap<number, DogmaAttributeInfo>;
+}
+
+const NO_DOGMA: NpcDogma = { effects: [], attributeInfo: new Map() };
+
+/**
+ * Old-style ("entity") NPC electronic warfare the game drives from the
+ * attributes alone: some NPCs that use it in space do not carry the effect
+ * (Lirsautton Parichaya jams with no ECM effect). Such a type counts as having
+ * the effect when it has every attribute the effect points at, none of them 0.
+ */
+export const INFERRED_EFFECT_IDS: readonly number[] = [
+  563, 575, 1879, 3855, 4656, 4686, 6691, 6695,
+];
 
 export interface NpcStats {
   weapons: NpcWeapon[];
@@ -127,199 +174,243 @@ const layer = (
   };
 };
 
-interface EwarSpec {
-  iconTypeId: number;
+interface AbilitySpec {
   label: string;
+  iconTypeId: number;
   /**
-   * Only for a type with this dogma effect. Drones (and newer NPCs) describe
-   * what they do with generic attributes, such as range 54 and duration 73,
-   * that a turret NPC also carries, so the effect is what says which applies.
+   * How hard it hits, for an effect the game implements in code: its
+   * modifiers do not say. The label and unit come from the attribute unless
+   * given here.
    */
-  effectId?: number;
-  /**
-   * Only for a type with at least one of these attributes: keeps out an
-   * effect that only has a stray one (speedFactor alone is on many NPCs that
-   * never web).
-   */
-  requires?: number[];
-  values: {
+  strengths?: readonly {
     attributeId: number;
-    label: string;
-    unit: string;
-    scale?: number;
+    label?: string;
+    unitId?: number;
+    unitSymbol?: string;
   }[];
 }
 
-const MS = 1 / 1000;
-const rangeAndDuration = [
-  { attributeId: 54, label: "Range", unit: "m" },
-  { attributeId: 73, label: "Duration", unit: "s", scale: MS },
+const WEB = { label: "Stasis Webifier", iconTypeId: 526 };
+const SCRAMBLER = { label: "Warp Scrambler", iconTypeId: 447 };
+const DISRUPTOR = { label: "Warp Disruptor", iconTypeId: 3242 };
+const NEUTRALIZER = { label: "Energy Neutralizer", iconTypeId: 533 };
+const PAINTER = { label: "Target Painter", iconTypeId: 12709 };
+const DAMPENER = { label: "Sensor Dampener", iconTypeId: 1968 };
+const TRACKING_DISRUPTOR = { label: "Tracking Disruptor", iconTypeId: 2108 };
+const ECM = {
+  label: "ECM Jammer",
+  iconTypeId: 1957,
+  strengths: [2822, 238, 239, 240, 241].map((attributeId) => ({ attributeId })),
+};
+const REMOTE_ARMOR = { label: "Remote Armor Repair", iconTypeId: 11355 };
+const REMOTE_SHIELD = { label: "Remote Shield Repair", iconTypeId: 3586 };
+const MINING = { label: "Mining", iconTypeId: 483 };
+/** The code-implemented NPC remote repairs keep their amount and range here. */
+const NPC_REPAIR_STRENGTHS = (amountAttributeId: number) => [
+  { attributeId: 1464, label: "Range", unitId: 1, unitSymbol: "m" },
+  { attributeId: amountAttributeId, label: "Amount", unitSymbol: "HP" },
 ];
 
 /**
- * Electronic warfare and support, each with the attributes that describe it.
- * The first entries are the attributes NPCs have long used; the effect-keyed
- * ones after them are what drones (and newer NPCs) use.
+ * Names and icons for the effects NPCs and drones use: the SDE gives most of
+ * them neither (their names are internal, like "remoteWebifierEntity"). What
+ * each does, and how far and how long, comes from the effect itself. An
+ * offensive or assisting effect missing here still shows, by its own name.
  */
-const EWAR: EwarSpec[] = [
-  {
-    iconTypeId: 526,
-    label: "Stasis Webifier",
-    requires: [513, 514],
-    values: [
-      { attributeId: 514, label: "Range", unit: "m" },
-      { attributeId: 513, label: "Duration", unit: "s", scale: MS },
-      { attributeId: 20, label: "Velocity", unit: "%" },
-    ],
+const ABILITIES: Partial<Record<number, AbilitySpec>> = {
+  575: WEB,
+  3714: WEB,
+  6743: WEB,
+  6690: { ...WEB, strengths: [{ attributeId: 20 }] },
+  563: SCRAMBLER,
+  2481: SCRAMBLER,
+  3713: SCRAMBLER,
+  5928: SCRAMBLER,
+  6745: SCRAMBLER,
+  39: DISRUPTOR,
+  6744: DISRUPTOR,
+  6691: { ...NEUTRALIZER, strengths: [{ attributeId: 97 }] },
+  6187: { ...NEUTRALIZER, strengths: [{ attributeId: 97 }] },
+  6756: { ...NEUTRALIZER, strengths: [{ attributeId: 97 }] },
+  6882: { label: "Energy Nosferatu", iconTypeId: 530 },
+  1879: PAINTER,
+  6754: PAINTER,
+  6692: { ...PAINTER, strengths: [{ attributeId: 554 }] },
+  1878: DAMPENER,
+  6755: DAMPENER,
+  6693: {
+    ...DAMPENER,
+    strengths: [{ attributeId: 309 }, { attributeId: 566 }],
   },
-  {
-    iconTypeId: 447,
-    label: "Warp Scrambler",
-    values: [
-      { attributeId: 103, label: "Range", unit: "m" },
-      { attributeId: 505, label: "Duration", unit: "s", scale: MS },
-      { attributeId: 105, label: "Strength", unit: "" },
-    ],
-  },
-  {
-    iconTypeId: 533,
-    label: "Energy Neutralizer",
-    values: [
-      { attributeId: 98, label: "Range", unit: "m" },
-      { attributeId: 942, label: "Duration", unit: "s", scale: MS },
-      { attributeId: 97, label: "Amount", unit: "GJ" },
-    ],
-  },
-  {
-    iconTypeId: 12709,
-    label: "Target Painter",
-    values: [
-      { attributeId: 941, label: "Range", unit: "m" },
-      { attributeId: 954, label: "Falloff", unit: "m" },
-      { attributeId: 945, label: "Duration", unit: "s", scale: MS },
-    ],
-  },
-  {
-    iconTypeId: 1957,
-    label: "ECM Jammer",
-    requires: [929, 936],
-    values: [
-      { attributeId: 936, label: "Range", unit: "m" },
-      { attributeId: 929, label: "Duration", unit: "s", scale: MS },
-      { attributeId: 2822, label: "Jam duration", unit: "s", scale: MS },
-      { attributeId: 238, label: "Gravimetric strength", unit: "" },
-      { attributeId: 239, label: "Ladar strength", unit: "" },
-      { attributeId: 240, label: "Magnetometric strength", unit: "" },
-      { attributeId: 241, label: "Radar strength", unit: "" },
-    ],
-  },
-  {
-    iconTypeId: 27678,
-    label: "Remote ECM Burst",
-    values: [
-      { attributeId: 1658, label: "Duration", unit: "s", scale: MS },
-      { attributeId: 1659, label: "Min. duration", unit: "s", scale: MS },
-    ],
-  },
-  {
-    iconTypeId: 3586,
-    label: "Remote Shield Repair",
-    values: [
-      { attributeId: 1464, label: "Range", unit: "m" },
-      { attributeId: 1460, label: "Amount", unit: "HP" },
-      { attributeId: 1458, label: "Duration", unit: "s", scale: MS },
-    ],
-  },
-  {
-    iconTypeId: 20124,
-    label: "Fleet Shield Resistance Bonus",
-    values: [{ attributeId: 1671, label: "Bonus", unit: "%" }],
-  },
-  {
-    iconTypeId: 526,
-    label: "Stasis Webifier",
-    effectId: 6690,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 20, label: "Velocity", unit: "%" },
-    ],
-  },
-  {
-    iconTypeId: 12709,
-    label: "Target Painter",
-    effectId: 6692,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 554, label: "Signature radius", unit: "%" },
-    ],
-  },
-  {
-    iconTypeId: 1968,
-    label: "Sensor Dampener",
-    effectId: 6693,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 309, label: "Lock range", unit: "%" },
-      { attributeId: 566, label: "Scan resolution", unit: "%" },
-    ],
-  },
-  {
-    iconTypeId: 2108,
+  6747: TRACKING_DISRUPTOR,
+  6846: TRACKING_DISRUPTOR,
+  6694: {
     label: "Weapon Disruptor",
-    effectId: 6694,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 351, label: "Optimal range", unit: "%" },
-      { attributeId: 349, label: "Falloff", unit: "%" },
-      { attributeId: 767, label: "Tracking", unit: "%" },
+    iconTypeId: 2108,
+    strengths: [
+      { attributeId: 351 },
+      { attributeId: 349 },
+      { attributeId: 767 },
     ],
   },
-  {
-    iconTypeId: 11355,
-    label: "Remote Armor Repair",
-    effectId: 6687,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 84, label: "Amount", unit: "HP" },
-    ],
+  6746: { label: "Guidance Disruptor", iconTypeId: 37543 },
+  6695: ECM,
+  3710: ECM,
+  6757: ECM,
+  4656: {
+    label: "Remote ECM Burst",
+    iconTypeId: 27678,
+    strengths: [{ attributeId: 1659, label: "Min. duration", unitId: 101 }],
   },
-  {
-    iconTypeId: 3586,
-    label: "Remote Shield Booster",
-    effectId: 6688,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 68, label: "Amount", unit: "HP" },
-    ],
-  },
-  {
-    iconTypeId: 27932,
+  592: REMOTE_ARMOR,
+  6741: REMOTE_ARMOR,
+  6687: { ...REMOTE_ARMOR, strengths: [{ attributeId: 84 }] },
+  3852: { ...REMOTE_ARMOR, strengths: NPC_REPAIR_STRENGTHS(1455) },
+  6165: { ...REMOTE_ARMOR, strengths: NPC_REPAIR_STRENGTHS(1455) },
+  6742: REMOTE_SHIELD,
+  6688: { ...REMOTE_SHIELD, strengths: [{ attributeId: 68 }] },
+  3855: { ...REMOTE_SHIELD, strengths: NPC_REPAIR_STRENGTHS(1460) },
+  6689: {
     label: "Remote Hull Repair",
-    effectId: 6689,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 83, label: "Amount", unit: "HP" },
-    ],
+    iconTypeId: 27932,
+    strengths: [{ attributeId: 83 }],
   },
-  {
-    iconTypeId: 483,
-    label: "Mining",
-    effectId: 17,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 77, label: "Amount", unit: "m³" },
-    ],
+  12073: { label: "Remote Capacitor Transmitter", iconTypeId: 529 },
+  4686: {
+    label: "Fleet Shield Resistance Bonus",
+    iconTypeId: 42529,
+    // A plain percentage, though its unit says multiplier: -20, not 0.8.
+    strengths: [{ attributeId: 1671, unitSymbol: "%" }],
   },
-  {
-    iconTypeId: 25861,
+  4687: { label: "Fleet Speed Bonus", iconTypeId: 42530 },
+  4688: { label: "Fleet Propulsion Jamming Bonus", iconTypeId: 42530 },
+  4689: { label: "Fleet Armor Resistance Bonus", iconTypeId: 42526 },
+  17: { ...MINING, strengths: [{ attributeId: 77 }] },
+  6901: MINING,
+  5163: {
     label: "Salvaging",
-    effectId: 5163,
-    values: [
-      ...rangeAndDuration,
-      { attributeId: 902, label: "Access difficulty bonus", unit: "%" },
-    ],
+    iconTypeId: 25861,
+    strengths: [{ attributeId: 902 }],
   },
-];
+  7188: { label: "Smart Bomb", iconTypeId: 1563 },
+};
+
+/** Weapons and superweapons: the damage model covers them, not the abilities. */
+const WEAPON_EFFECT_IDS = new Set([10, 569, 6042, 6995, 8088, 11716]);
+
+const RANGE_UNIT = { unitId: 1, unitSymbol: "m" };
+/** Every NPC duration is in milliseconds, whatever unit its attribute claims. */
+const DURATION_UNIT = { unitId: 101 };
+
+/** A value with only the unit fields it has. */
+const valueOf = (
+  label: string,
+  value: number,
+  unit: { unitId?: number; unitSymbol?: string },
+): NpcEwarValue => ({
+  label,
+  value,
+  ...(unit.unitId === undefined ? {} : { unitId: unit.unitId }),
+  ...(unit.unitSymbol ? { unitSymbol: unit.unitSymbol } : {}),
+});
+
+/** "behaviorWarpScrambleStrength" → "Warp scramble strength". */
+const humanize = (name: string) => {
+  const words = name
+    .replace(/^(behavior|entity|npc)(?=[A-Z])/i, "")
+    .replaceAll(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
+/** An ability's range, falloff and duration, then how hard it hits. */
+function abilityValues(
+  effect: DogmaEffectInfo,
+  spec: AbilitySpec | undefined,
+  attributes: Attributes,
+  attributeInfo: NpcDogma["attributeInfo"],
+): NpcEwarValue[] {
+  const values: NpcEwarValue[] = [];
+  const roles = [
+    ["Range", effect.rangeAttributeId, RANGE_UNIT],
+    ["Falloff", effect.falloffAttributeId, RANGE_UNIT],
+    ["Duration", effect.durationAttributeId, DURATION_UNIT],
+  ] as const;
+  for (const [label, attributeId, unit] of roles) {
+    const value =
+      attributeId === null ? undefined : attributes.get(attributeId);
+    // A range, falloff or duration of 0 says nothing ("Falloff 0 m").
+    if (value) values.push(valueOf(label, value, unit));
+  }
+  const shown = new Set<number>(
+    roles.flatMap(([, id]) => (id === null ? [] : [id])),
+  );
+  const strengths: NonNullable<AbilitySpec["strengths"]> = [
+    ...effect.modifyingAttributeIds.map((attributeId) => ({ attributeId })),
+    ...(spec?.strengths ?? []),
+  ];
+  for (const strength of strengths) {
+    const value = attributes.get(strength.attributeId);
+    if (value === undefined || shown.has(strength.attributeId)) continue;
+    shown.add(strength.attributeId);
+    const info = attributeInfo.get(strength.attributeId);
+    // Many NPC attributes have an empty display name, not a missing one.
+    const displayName =
+      info?.displayName === "" ? undefined : info?.displayName;
+    const label =
+      strength.label ??
+      displayName ??
+      humanize(info?.name ?? `attribute ${strength.attributeId}`);
+    const unit =
+      strength.unitId !== undefined || strength.unitSymbol !== undefined
+        ? strength
+        : {
+            unitId: info?.unitId ?? undefined,
+            unitSymbol: info?.unitSymbol ?? undefined,
+          };
+    values.push(valueOf(label, value, unit));
+  }
+  return values;
+}
+
+/**
+ * What the NPC does besides shooting: every effect it carries that is in
+ * {@link ABILITIES}, or that the SDE marks offensive or assisting, with the
+ * values it has. Two effects doing the same thing show once.
+ */
+function abilitiesOf(attributes: Attributes, dogma: NpcDogma): NpcEwar[] {
+  const abilities: NpcEwar[] = [];
+  const carried = new Set(dogma.effects.map((effect) => effect.effectId));
+  const inferred = (dogma.inferableEffects ?? []).filter((effect) => {
+    if (carried.has(effect.effectId)) return false;
+    const pointers = [
+      effect.rangeAttributeId,
+      effect.falloffAttributeId,
+      effect.durationAttributeId,
+    ].filter((id) => id !== null);
+    return pointers.length > 0 && pointers.every((id) => !!attributes.get(id));
+  });
+  const effects = [...dogma.effects, ...inferred].sort(
+    (a, b) => a.effectId - b.effectId,
+  );
+  for (const effect of effects) {
+    if (WEAPON_EFFECT_IDS.has(effect.effectId)) continue;
+    const spec = ABILITIES[effect.effectId];
+    if (!spec && !effect.isOffensive && !effect.isAssistance) continue;
+    const label = spec?.label ?? humanize(effect.name);
+    if (abilities.some((ability) => ability.label === label)) continue;
+    const values = abilityValues(effect, spec, attributes, dogma.attributeInfo);
+    if (values.length > 0) {
+      abilities.push({
+        effectId: effect.effectId,
+        label,
+        iconTypeId: spec?.iconTypeId,
+        values,
+      });
+    }
+  }
+  return abilities;
+}
 
 /** The NPC's turrets, if it has any that do damage. */
 function turretWeapon(attributes: Attributes): NpcWeapon | undefined {
@@ -372,31 +463,6 @@ const sumOverWeapons = (
         weapons.reduce((sum, weapon) => sum + perWeapon(weapon, type), 0),
       );
 
-/** What the NPC does besides shooting: e-war, repairs, mining. */
-function ewarOf(attributes: Attributes, effects: Effects): NpcEwar[] {
-  const ewar: NpcEwar[] = [];
-  for (const spec of EWAR) {
-    if (spec.effectId !== undefined && !effects.has(spec.effectId)) continue;
-    if (spec.requires && !spec.requires.some((id) => attributes.has(id))) {
-      continue;
-    }
-    // The same effect described both ways: keep the first.
-    if (ewar.some((e) => e.label === spec.label)) continue;
-    const values = spec.values.flatMap(
-      ({ attributeId, label, unit, scale }) => {
-        const raw = attributes.get(attributeId);
-        return raw === undefined
-          ? []
-          : [{ label, unit, value: raw * (scale ?? 1) }];
-      },
-    );
-    if (values.length > 0) {
-      ewar.push({ iconTypeId: spec.iconTypeId, label: spec.label, values });
-    }
-  }
-  return ewar;
-}
-
 /**
  * An NPC's or drone's combat figures. Turret damage sits on the type itself;
  * missile damage on the missile it launches, so pass that missile's
@@ -405,7 +471,7 @@ function ewarOf(attributes: Attributes, effects: Effects): NpcEwar[] {
 export function computeNpcStats(
   attributes: Attributes,
   missileAttributes?: Attributes,
-  effects: Effects = new Set(),
+  dogma: NpcDogma = NO_DOGMA,
 ): NpcStats {
   const weapons = [
     turretWeapon(attributes),
@@ -416,7 +482,7 @@ export function computeNpcStats(
     weapons,
     (weapon, type) => weapon.volley[type] / weapon.cycleSeconds,
   );
-  const ewar = ewarOf(attributes, effects);
+  const ewar = abilitiesOf(attributes, dogma);
 
   return {
     weapons,
@@ -441,7 +507,7 @@ export const hasCombatStats = (stats: NpcStats) =>
   stats.ewar.length > 0 ||
   stats.shield.hp + stats.armor.hp + stats.structure.hp > 0;
 
-/** The attribute ids {@link computeNpcStats} reads, to query only those. */
+/** The attributes the damage, tank and navigation figures read. */
 export const NPC_STAT_ATTRIBUTE_IDS: readonly number[] = [
   ...new Set([
     ...Object.values(ATTR.damage),
@@ -465,14 +531,8 @@ export const NPC_STAT_ATTRIBUTE_IDS: readonly number[] = [
     ATTR.chaseSpeed,
     ATTR.signatureRadius,
     ATTR.scanResolution,
-    ...EWAR.flatMap((spec) => spec.values.map((v) => v.attributeId)),
   ]),
 ];
-
-/** The dogma effects {@link computeNpcStats} reads, to query only those. */
-export const NPC_STAT_EFFECT_IDS: readonly number[] = EWAR.flatMap((spec) =>
-  spec.effectId === undefined ? [] : [spec.effectId],
-);
 
 /** The attribute that names the missile an NPC launches. */
 export const MISSILE_TYPE_ATTRIBUTE_ID = ATTR.missileTypeId;

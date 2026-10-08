@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
+import type { DogmaAttributeInfo, DogmaEffectInfo } from "~/lib/npcStats";
 import {
   computeNpcStats,
   hasCombatStats,
@@ -11,6 +12,94 @@ import {
 // (2026-10-06). The expected figures are the ones eve-incursions.de showed.
 const attrs = (record: Record<number, number>) =>
   new Map(Object.entries(record).map(([k, v]) => [Number(k), v]));
+
+// The SDE's description of the effects these NPCs use (2026-10-08): the
+// attributes each reads for its range, falloff and duration, and those its
+// modifiers apply.
+const effect = (
+  effectId: number,
+  name: string,
+  pointers: { range?: number; falloff?: number; duration?: number },
+  modifyingAttributeIds: number[] = [],
+  flags: Partial<Pick<DogmaEffectInfo, "isOffensive" | "isAssistance">> = {
+    isOffensive: true,
+  },
+): DogmaEffectInfo => ({
+  effectId,
+  name,
+  isOffensive: false,
+  isAssistance: false,
+  ...flags,
+  rangeAttributeId: pointers.range ?? null,
+  falloffAttributeId: pointers.falloff ?? null,
+  durationAttributeId: pointers.duration ?? null,
+  modifyingAttributeIds,
+});
+const SCRAMBLE = effect(
+  563,
+  "warpScrambleForEntity",
+  { range: 103, duration: 505 },
+  [105],
+);
+const WEB = effect(
+  575,
+  "modifyTargetSpeed2",
+  { range: 514, duration: 513 },
+  [20],
+);
+const PAINT = effect(
+  1879,
+  "entityTargetPaint",
+  { range: 941, falloff: 954, duration: 945 },
+  [554],
+);
+const NEUT = effect(6691, "entityEnergyNeutralizerFalloff", {
+  range: 98,
+  duration: 942,
+});
+const ECM = effect(6695, "entityECMFalloff", { range: 936, duration: 929 });
+const DRONE_WEB = effect(6690, "remoteWebifierEntity", {
+  range: 54,
+  duration: 73,
+});
+const MINING = effect(17, "mining", { range: 54, duration: 73 }, [], {});
+const TARGET_ATTACK = effect(10, "targetAttack", {
+  range: 54,
+  falloff: 158,
+  duration: 51,
+});
+/** The old-style effects the game drives from attributes alone. */
+const INFERABLE = [SCRAMBLE, WEB, PAINT, NEUT, ECM];
+
+const info = (
+  name: string,
+  displayName: string | null,
+  unitId: number | null = null,
+  unitSymbol: string | null = null,
+): DogmaAttributeInfo => ({ name, displayName, unitId, unitSymbol });
+const ATTRIBUTE_INFO = new Map<number, DogmaAttributeInfo>([
+  [20, info("speedFactor", "Maximum Velocity Bonus", 124, "%")],
+  [77, info("miningAmount", "Mining amount", 9, "m3")],
+  [97, info("energyNeutralizerAmount", "Neutralization Amount", 114, "GJ")],
+  [105, info("warpScrambleStrength", "Warp Scramble Strength")],
+  [
+    238,
+    info("scanGravimetricStrengthBonus", "Gravimetric ECM Jammer Strength"),
+  ],
+  [239, info("scanLadarStrengthBonus", "Ladar ECM Jammer Strength")],
+  [
+    240,
+    info("scanMagnetometricStrengthBonus", "Magnetometric ECM Jammer Strength"),
+  ],
+  [241, info("scanRadarStrengthBonus", "RADAR ECM Jammer Strength")],
+  [554, info("signatureRadiusBonus", "Signature Radius Modifier", 124, "%")],
+  [2509, info("behaviorWarpScrambleStrength", "")],
+  [2822, info("ecmJamDuration", "Jam Duration", 101, "s")],
+]);
+const dogma = (
+  effects: DogmaEffectInfo[],
+  inferableEffects: DogmaEffectInfo[] = [],
+) => ({ effects, inferableEffects, attributeInfo: ATTRIBUTE_INFO });
 
 const CITIZEN_ASTUR = attrs({
   9: 10450,
@@ -156,26 +245,110 @@ describe("computeNpcStats", () => {
     expect(stats.dps).toBeUndefined();
   });
 
-  it("lists electronic warfare with its values in display units", () => {
-    const stats = computeNpcStats(CITIZEN_ASTUR, BANSHEE_TORPEDO);
+  it("lists each effect's range, falloff and duration, then its strength", () => {
+    const stats = computeNpcStats(
+      CITIZEN_ASTUR,
+      BANSHEE_TORPEDO,
+      dogma([SCRAMBLE, PAINT, NEUT]),
+    );
     expect(stats.ewar.map((e) => e.label)).toEqual([
       "Warp Scrambler",
-      "Energy Neutralizer",
       "Target Painter",
+      "Energy Neutralizer",
     ]);
-    expect(stats.ewar[0]?.values).toEqual([
-      { label: "Range", value: 20000, unit: "m" },
-      { label: "Duration", value: 5, unit: "s" },
-      { label: "Strength", value: 1, unit: "" },
-    ]);
+    expect(stats.ewar[0]).toEqual({
+      effectId: 563,
+      label: "Warp Scrambler",
+      iconTypeId: 447,
+      values: [
+        { label: "Range", value: 20000, unitId: 1, unitSymbol: "m" },
+        { label: "Duration", value: 5000, unitId: 101 },
+        { label: "Warp Scramble Strength", value: 1 },
+      ],
+    });
+    // The neutralizer's amount is not a modifier: it comes from the list.
+    expect(stats.ewar[2]?.values.at(-1)).toEqual({
+      label: "Neutralization Amount",
+      value: 360,
+      unitId: 114,
+      unitSymbol: "GJ",
+    });
   });
 
-  it("counts a web only with its range and duration, not a stray speed factor", () => {
-    expect(computeNpcStats(RENYN_METEN).ewar.map((e) => e.label)).toEqual([
-      "Stasis Webifier",
-    ]);
+  it("infers an old-style web from its range and duration, not a stray speed factor", () => {
+    const inferred = computeNpcStats(
+      RENYN_METEN,
+      undefined,
+      dogma([], INFERABLE),
+    );
+    expect(inferred.ewar.map((e) => e.label)).toEqual(["Stasis Webifier"]);
     expect(
-      computeNpcStats(attrs({ 20: -60 })).ewar.map((e) => e.label),
+      computeNpcStats(attrs({ 20: -60 }), undefined, dogma([], INFERABLE)).ewar,
+    ).toEqual([]);
+  });
+
+  it("infers old-style e-war only from every attribute its effect reads, none 0", () => {
+    // Lirsautton Parichaya jams in space, but carries no ECM effect.
+    const [jammer] = computeNpcStats(
+      attrs({ 929: 20000, 936: 72000, 239: 12 }),
+      undefined,
+      dogma([], INFERABLE),
+    ).ewar;
+    expect(jammer?.label).toBe("ECM Jammer");
+    expect(jammer?.values.map((v) => [v.label, v.value])).toEqual([
+      ["Range", 72000],
+      ["Duration", 20000],
+      ["Ladar ECM Jammer Strength", 12],
+    ]);
+    // A web left at 0, and a scram with no duration, are not abilities.
+    const notAbilities: Record<number, number>[] = [
+      { 513: 0, 514: 0, 20: 0 },
+      { 103: 20000, 105: 1 },
+    ];
+    for (const record of notAbilities) {
+      expect(
+        computeNpcStats(attrs(record), undefined, dogma([], INFERABLE)).ewar,
+      ).toEqual([]);
+    }
+  });
+
+  it("names an unknown offensive effect by its own name, with no icon", () => {
+    const [ability] = computeNpcStats(
+      attrs({ 73: 5000 }),
+      undefined,
+      dogma([effect(1752, "entityEwTestEffectJam", { duration: 73 })]),
+    ).ewar;
+    expect(ability).toEqual({
+      effectId: 1752,
+      label: "Ew test effect jam",
+      iconTypeId: undefined,
+      values: [{ label: "Duration", value: 5000, unitId: 101 }],
+    });
+  });
+
+  it("labels a strength with no display name from its attribute name", () => {
+    const [scrambler] = computeNpcStats(
+      attrs({ 2506: 5000, 2507: 10000, 2509: 2 }),
+      undefined,
+      dogma([
+        effect(
+          6745,
+          "behaviorWarpScramble",
+          { range: 2507, duration: 2506 },
+          [2509],
+        ),
+      ]),
+    ).ewar;
+    expect(scrambler?.label).toBe("Warp Scrambler");
+    expect(scrambler?.values.at(-1)).toEqual({
+      label: "Warp scramble strength",
+      value: 2,
+    });
+  });
+
+  it("leaves weapons to the damage model", () => {
+    expect(
+      computeNpcStats(RENYN_METEN, undefined, dogma([TARGET_ATTACK])).ewar,
     ).toEqual([]);
   });
 
@@ -191,8 +364,8 @@ describe("computeNpcStats", () => {
     });
   });
 
-  it("queries every attribute it reads", () => {
-    for (const id of [507, 212, 506, 51, 64, 263, 113, 1671, 20]) {
+  it("queries every attribute the damage, tank and navigation read", () => {
+    for (const id of [507, 212, 506, 51, 64, 263, 113, 552]) {
       expect(NPC_STAT_ATTRIBUTE_IDS).toContain(id);
     }
   });
@@ -203,7 +376,13 @@ describe("hasCombatStats", () => {
     expect(hasCombatStats(computeNpcStats(RENYN_METEN))).toBe(true);
     expect(hasCombatStats(computeNpcStats(attrs({ 9: 100 })))).toBe(true);
     expect(
-      hasCombatStats(computeNpcStats(attrs({ 103: 20000, 505: 5000 }))),
+      hasCombatStats(
+        computeNpcStats(
+          attrs({ 103: 20000, 505: 5000 }),
+          undefined,
+          dogma([], INFERABLE),
+        ),
+      ),
     ).toBe(true);
   });
 
@@ -279,7 +458,11 @@ const MINING_DRONE_II = attrs({ 9: 60, 54: 5000, 73: 60000, 77: 33 });
 
 describe("computeNpcStats for drones", () => {
   it("fires a combat drone's turret, with its optimal, falloff and tracking", () => {
-    const stats = computeNpcStats(HAMMERHEAD_II, undefined, new Set([10]));
+    const stats = computeNpcStats(
+      HAMMERHEAD_II,
+      undefined,
+      dogma([TARGET_ATTACK]),
+    );
     expect(stats.alpha?.thermal).toBeCloseTo(61.44);
     expect(sumDamage(stats.dps!)).toBeCloseTo(15.36);
     expect(stats.weapons[0]).toMatchObject({
@@ -293,51 +476,61 @@ describe("computeNpcStats for drones", () => {
 
   it("webs only with the web effect, from the generic range and duration", () => {
     expect(
-      computeNpcStats(BERSERKER_SW_900, undefined, new Set([6690])).ewar,
+      computeNpcStats(BERSERKER_SW_900, undefined, dogma([DRONE_WEB])).ewar,
     ).toEqual([
       {
+        effectId: 6690,
         iconTypeId: 526,
         label: "Stasis Webifier",
         values: [
-          { label: "Range", value: 10000, unit: "m" },
-          { label: "Duration", value: 5, unit: "s" },
-          { label: "Velocity", value: -20, unit: "%" },
+          { label: "Range", value: 10000, unitId: 1, unitSymbol: "m" },
+          { label: "Duration", value: 5000, unitId: 101 },
+          {
+            label: "Maximum Velocity Bonus",
+            value: -20,
+            unitId: 124,
+            unitSymbol: "%",
+          },
         ],
       },
     ]);
-    // The same attributes on a type without the effect are not a web.
-    expect(computeNpcStats(BERSERKER_SW_900).ewar).toEqual([]);
+    // The same attributes on a type without the effect are not a web: a
+    // drone's generic range and duration are never inferred.
+    expect(
+      computeNpcStats(BERSERKER_SW_900, undefined, dogma([], INFERABLE)).ewar,
+    ).toEqual([]);
   });
 
   it("gives an ECM drone its jam duration and strengths", () => {
     const [jammer] = computeNpcStats(
       HORNET_EC_300,
       undefined,
-      new Set([6695]),
+      dogma([ECM]),
     ).ewar;
     expect(jammer?.label).toBe("ECM Jammer");
     expect(jammer?.values.map((v) => v.label)).toEqual([
       "Range",
       "Duration",
-      "Jam duration",
-      "Gravimetric strength",
-      "Ladar strength",
-      "Magnetometric strength",
-      "Radar strength",
+      "Jam Duration",
+      "Gravimetric ECM Jammer Strength",
+      "Ladar ECM Jammer Strength",
+      "Magnetometric ECM Jammer Strength",
+      "RADAR ECM Jammer Strength",
     ]);
   });
 
   it("describes a mining drone's yield", () => {
-    const stats = computeNpcStats(MINING_DRONE_II, undefined, new Set([17]));
+    const stats = computeNpcStats(MINING_DRONE_II, undefined, dogma([MINING]));
     expect(stats.weapons).toEqual([]);
     expect(stats.ewar).toEqual([
       {
+        effectId: 17,
         iconTypeId: 483,
         label: "Mining",
         values: [
-          { label: "Range", value: 5000, unit: "m" },
-          { label: "Duration", value: 60, unit: "s" },
-          { label: "Amount", value: 33, unit: "m³" },
+          { label: "Range", value: 5000, unitId: 1, unitSymbol: "m" },
+          { label: "Duration", value: 60000, unitId: 101 },
+          { label: "Mining amount", value: 33, unitId: 9, unitSymbol: "m3" },
         ],
       },
     ]);
