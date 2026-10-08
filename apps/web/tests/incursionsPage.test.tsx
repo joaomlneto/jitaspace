@@ -329,6 +329,9 @@ describe("Incursions page", () => {
       expect(await screen.findByText("Incursion 77")).toBeVisible();
       expect(screen.getAllByText("Ended").length).toBeGreaterThan(0);
       expect(screen.getByText("Wed, 7 Oct 2026")).toBeVisible();
+      expect(
+        screen.queryByRole("columnheader", { name: "Sov. holder" }),
+      ).toBeNull();
     });
 
     it("says so when the archive cannot be loaded", async () => {

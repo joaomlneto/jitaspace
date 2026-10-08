@@ -23,7 +23,6 @@ import type {
   IncursionRow,
   IncursionsData,
   IncursionStateEventTuple,
-  SovereigntyHolder,
 } from "./types";
 import { DataTable } from "~/components/DataTable";
 import { mergeLookups, useIncursionHistory } from "./history";
@@ -31,7 +30,6 @@ import { formatDuration } from "./math";
 import {
   ConstellationLink,
   EveTime,
-  SovereigntyHolderLabel,
   StateBadge,
   SystemLink,
   useNames,
@@ -66,26 +64,6 @@ const eveDate = (iso: string) => {
   return `${WEEKDAYS[date.getUTCDay()]}, ${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 };
 
-/** Who held the staging system when the incursion appeared, or now. */
-const sovereigntyOf = (
-  incursion: IncursionRow | undefined,
-  data: IncursionsData,
-): SovereigntyHolder | undefined => {
-  if (!incursion) return undefined;
-  if (
-    incursion.stagingSovereigntyAllianceId !== null ||
-    incursion.stagingSovereigntyFactionId !== null
-  ) {
-    return {
-      allianceId: incursion.stagingSovereigntyAllianceId,
-      factionId: incursion.stagingSovereigntyFactionId,
-    };
-  }
-  return incursion.stagingSolarSystemId === null
-    ? undefined
-    : data.currentSovereignty[incursion.stagingSolarSystemId];
-};
-
 /** A staging system, or a dash for an imported incursion without one. */
 function StagingCell({
   solarSystemId,
@@ -102,12 +80,10 @@ function StagingCell({
 
 /** Appearances, state changes and ends, grouped by day, as players scan them. */
 function SpawnHistory({
-  data,
   stateEvents,
   names,
   byId,
 }: Readonly<{
-  data: IncursionsData;
   stateEvents: readonly IncursionStateEventTuple[];
   names: Names;
   byId: ReadonlyMap<number, IncursionRow>;
@@ -140,7 +116,6 @@ function SpawnHistory({
               <Table.Th>Region</Table.Th>
               <Table.Th>Staging system</Table.Th>
               <Table.Th>State</Table.Th>
-              <Table.Th>Sov. holder</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -157,7 +132,7 @@ function SpawnHistory({
                   {(index === 0 ||
                     eveDate(events[index - 1]?.observedAt ?? "") !== date) && (
                     <Table.Tr bg="var(--mantine-color-default-hover)">
-                      <Table.Td colSpan={6} py={4}>
+                      <Table.Td colSpan={5} py={4}>
                         <Text size="xs" fw={700} c="dimmed">
                           {date}
                         </Text>
@@ -203,13 +178,6 @@ function SpawnHistory({
                       )}
                     </Table.Td>
                     <Table.Td>{state && <StateBadge state={state} />}</Table.Td>
-                    <Table.Td>
-                      <SovereigntyHolderLabel
-                        holder={sovereigntyOf(incursion, data)}
-                        names={names}
-                        size="xs"
-                      />
-                    </Table.Td>
                   </Table.Tr>
                 </Fragment>
               );
@@ -357,12 +325,9 @@ export function TimelineTab({ data }: Readonly<{ data: IncursionsData }>) {
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
         Every incursion appearing, changing state and ending, most recent first.
-        The sovereignty holder is the staging system&apos;s when the incursion
-        appeared.
       </Text>
       <ArchiveState failed={archive.isError} loading={archive.isPending}>
         <SpawnHistory
-          data={data}
           stateEvents={archive.data?.stateEvents ?? []}
           names={names}
           byId={byId}
