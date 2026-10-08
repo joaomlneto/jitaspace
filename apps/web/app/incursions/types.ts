@@ -3,18 +3,6 @@ import type { NpcStats } from "~/lib/npcStats";
 
 export type { IncursionState } from "./math";
 
-export type IncursionEventKind =
-  | "appeared"
-  | "resumed"
-  | "state_changed"
-  | "influence_changed"
-  | "boss_appeared"
-  | "boss_disappeared"
-  | "staging_system_changed"
-  | "system_added"
-  | "system_removed"
-  | "ended";
-
 /** Where a row came from: our own tracking, or an imported history. */
 export type IncursionSource = "esi" | "eve_incursions_de" | "everef";
 
@@ -57,21 +45,6 @@ export const isTrackedIncursion = (
   row.influence !== null &&
   row.hasBoss !== null;
 
-export interface IncursionEventRow {
-  eventId: number;
-  incursionId: number;
-  observedAt: string;
-  kind: IncursionEventKind;
-  previousState: IncursionState | null;
-  state: IncursionState | null;
-  previousInfluence: number | null;
-  influence: number | null;
-  hasBoss: boolean | null;
-  previousStagingSolarSystemId: number | null;
-  stagingSolarSystemId: number | null;
-  solarSystemId: number | null;
-}
-
 export interface IncursionStation {
   stationId: number;
   name: string;
@@ -107,10 +80,6 @@ export interface IncursionsData extends IncursionLookups {
   readAt: string;
   /** Active incursions, then those that ended in the last 30 days. */
   incursions: IncursionRow[];
-  /** Incursions only the change list refers to (ended longer ago). */
-  eventIncursions: IncursionRow[];
-  /** The latest changes of every kind, most recent first. */
-  events: IncursionEventRow[];
   /** Each active incursion's influence readings, oldest first: `[at, influence]`. */
   influence: Record<number, [number, number][]>;
   /** Today's holder of each active incursion's staging system. */

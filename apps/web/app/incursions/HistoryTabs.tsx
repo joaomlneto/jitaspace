@@ -20,8 +20,6 @@ import { DateHoverCard } from "@jitaspace/ui";
 
 import type { Names } from "./parts";
 import type {
-  IncursionEventKind,
-  IncursionEventRow,
   IncursionRow,
   IncursionsData,
   IncursionSource,
@@ -34,27 +32,12 @@ import { formatDuration } from "./math";
 import {
   ConstellationLink,
   EveTime,
-  percent,
-  SectionTitle,
   SovereigntyHolderLabel,
   STATE_LABEL,
   StateBadge,
   SystemLink,
   useNames,
 } from "./parts";
-
-const EVENT_LABEL: Record<IncursionEventKind, string> = {
-  appeared: "Appeared",
-  resumed: "Listed again",
-  state_changed: "State",
-  influence_changed: "Influence",
-  boss_appeared: "Boss spawned",
-  boss_disappeared: "Boss gone",
-  staging_system_changed: "Staging moved",
-  system_added: "System infested",
-  system_removed: "System cleared",
-  ended: "Ended",
-};
 
 /** How many spawn-history rows show at first, and per "show more". */
 const SPAWN_HISTORY_PAGE = 50;
@@ -130,82 +113,6 @@ const holderName = (holder: SovereigntyHolder | undefined, names: Names) => {
   if (holder?.factionId != null) return names.faction(holder.factionId);
   return null;
 };
-
-function EventDetail({
-  event,
-  names,
-}: Readonly<{ event: IncursionEventRow; names: Names }>) {
-  switch (event.kind) {
-    case "appeared":
-      return (
-        <Text span size="sm">
-          {event.state && STATE_LABEL[event.state]}
-          {event.influence !== null &&
-            `, ${percent(event.influence)} influence`}
-          {event.hasBoss && ", boss present"}
-        </Text>
-      );
-    case "resumed":
-      return (
-        <Text span size="sm" c="dimmed">
-          Listed by ESI again after a poll missed it
-        </Text>
-      );
-    case "state_changed":
-      return (
-        <Group gap={6} wrap="nowrap">
-          {event.previousState && <StateBadge state={event.previousState} />}
-          <Text span size="sm">
-            →
-          </Text>
-          {event.state && <StateBadge state={event.state} />}
-        </Group>
-      );
-    case "influence_changed":
-      return (
-        <Text span size="sm">
-          {event.previousInfluence !== null && percent(event.previousInfluence)}{" "}
-          → {event.influence !== null && percent(event.influence)}
-        </Text>
-      );
-    case "boss_appeared":
-    case "boss_disappeared":
-      return null;
-    case "staging_system_changed":
-      return (
-        <Group gap={6} wrap="nowrap">
-          {event.previousStagingSolarSystemId !== null && (
-            <SystemLink
-              solarSystemId={event.previousStagingSolarSystemId}
-              names={names}
-            />
-          )}
-          <Text span size="sm">
-            →
-          </Text>
-          {event.stagingSolarSystemId !== null && (
-            <SystemLink
-              solarSystemId={event.stagingSolarSystemId}
-              names={names}
-            />
-          )}
-        </Group>
-      );
-    case "system_added":
-    case "system_removed":
-      return event.solarSystemId === null ? null : (
-        <SystemLink solarSystemId={event.solarSystemId} names={names} />
-      );
-    case "ended":
-      return (
-        <Text span size="sm">
-          Last seen {event.state && STATE_LABEL[event.state].toLowerCase()}
-          {event.influence !== null &&
-            ` at ${percent(event.influence)} influence`}
-        </Text>
-      );
-  }
-}
 
 /** Appearances, state changes and ends, grouped by day, as players scan them. */
 function SpawnHistory({
@@ -362,12 +269,6 @@ function ArchiveState({
   return children;
 }
 
-interface EventTableRow extends IncursionEventRow {
-  constellationId: number | null;
-  constellationName: string;
-  kindLabel: string;
-}
-
 interface HistoryTableRow extends IncursionRow {
   constellationName: string;
   regionName: string | null;
@@ -376,46 +277,6 @@ interface HistoryTableRow extends IncursionRow {
   stateLabel: string;
   durationMs: number;
 }
-
-/** The change list's columns; they name things through `names`. */
-const eventColumnsFor = (names: Names): DataTableColumn<EventTableRow>[] => [
-  {
-    id: "observedAt",
-    header: "Time (EVE)",
-    accessor: "observedAt",
-    sortable: true,
-    width: 150,
-    cell: (row) => <EveTime iso={row.observedAt} />,
-  },
-  {
-    id: "constellation",
-    header: "Constellation",
-    accessor: "constellationName",
-    sortable: true,
-    filter: { type: "multi-select" },
-    cell: (row) =>
-      row.constellationId === null ? (
-        row.constellationName
-      ) : (
-        <ConstellationLink
-          constellationId={row.constellationId}
-          names={names}
-        />
-      ),
-  },
-  {
-    id: "kind",
-    header: "Change",
-    accessor: "kindLabel",
-    sortable: true,
-    filter: { type: "multi-select" },
-  },
-  {
-    id: "detail",
-    header: "Detail",
-    cell: (row) => <EventDetail event={row} names={names} />,
-  },
-];
 
 /** The past incursions' columns. */
 const historyColumnsFor = (
@@ -518,23 +379,50 @@ const historyColumnsFor = (
   },
 ];
 
-export function HistoryTab({ data }: Readonly<{ data: IncursionsData }>) {
+/** The archive, and the names of everything it and the page refer to. */
+function useArchive(data: IncursionsData) {
   const archive = useIncursionHistory();
   const names = useNames(
     useMemo(() => mergeLookups(data, archive.data), [data, archive.data]),
   );
+  return { archive, names };
+}
+
+/** Appearances, state changes and ends, most recent first, by day. */
+export function TimelineTab({ data }: Readonly<{ data: IncursionsData }>) {
+  const { archive, names } = useArchive(data);
   const byId = useMemo(
     () =>
       new Map(
-        [
-          ...(archive.data?.incursions ?? []),
-          ...data.eventIncursions,
-          ...data.incursions,
-        ].map((i) => [i.incursionId, i]),
+        [...(archive.data?.incursions ?? []), ...data.incursions].map((i) => [
+          i.incursionId,
+          i,
+        ]),
       ),
-    [data.incursions, data.eventIncursions, archive.data],
+    [data.incursions, archive.data],
   );
+  return (
+    <Stack gap="sm">
+      <Text size="sm" c="dimmed">
+        Every incursion appearing, changing state and ending, most recent first.
+        The sovereignty holder is the staging system&apos;s when the incursion
+        appeared.
+      </Text>
+      <ArchiveState failed={archive.isError} loading={archive.isPending}>
+        <SpawnHistory
+          data={data}
+          stateEvents={archive.data?.stateEvents ?? []}
+          names={names}
+          byId={byId}
+        />
+      </ArchiveState>
+    </Stack>
+  );
+}
 
+/** Every incursion that has ended, ours and imported, as a table. */
+export function ArchiveTab({ data }: Readonly<{ data: IncursionsData }>) {
+  const { archive, names } = useArchive(data);
   const history = useMemo<HistoryTableRow[]>(
     () =>
       (archive.data?.incursions ?? [])
@@ -554,77 +442,33 @@ export function HistoryTab({ data }: Readonly<{ data: IncursionsData }>) {
         }),
     [archive.data, data, names],
   );
-
-  const events = useMemo<EventTableRow[]>(
-    () =>
-      data.events.map((event) => {
-        const constellationId =
-          byId.get(event.incursionId)?.constellationId ?? null;
-        return {
-          ...event,
-          constellationId,
-          constellationName:
-            constellationId === null
-              ? `Incursion ${event.incursionId}`
-              : names.constellation(constellationId),
-          kindLabel: EVENT_LABEL[event.kind],
-        };
-      }),
-    [data.events, byId, names],
-  );
-
-  const eventColumns = useMemo(() => eventColumnsFor(names), [names]);
-
   const historyColumns = useMemo(
     () => historyColumnsFor(names, data),
     [names, data],
   );
-
   return (
-    <Stack gap="lg">
-      <SectionTitle sub="Every incursion appearing, changing state and ending, most recent first. The sovereignty holder is the staging system's when the incursion appeared.">
-        Spawn history
-      </SectionTitle>
-      <ArchiveState failed={archive.isError} loading={archive.isPending}>
-        <SpawnHistory
-          data={data}
-          stateEvents={archive.data?.stateEvents ?? []}
-          names={names}
-          byId={byId}
+    <Stack gap="sm">
+      <Text size="sm" c="dimmed">
+        Every incursion that has ended, back to 2015. Before 2023-10 they come
+        from eve-incursions.de, which recorded states and influence but not
+        staging or infested systems. * Already running when tracking began: the
+        first-seen time is not when it spawned.
+      </Text>
+      <ArchiveState failed={archive.isError} loading={false}>
+        <DataTable
+          data={history}
+          isLoading={archive.isPending}
+          columns={historyColumns}
+          rowId={(row) => row.incursionId}
+          withGlobalFilter
+          withPagination
+          defaultPageSize={25}
+          initialSort={{ columnId: "endedAt", direction: "desc" }}
+          verticalSpacing="xs"
+          highlightOnHover
+          striped
         />
       </ArchiveState>
-
-      <SectionTitle sub="Every change between one poll and the next — influence, boss, systems — most recent first.">
-        All changes
-      </SectionTitle>
-      <DataTable
-        data={events}
-        columns={eventColumns}
-        rowId={(row) => row.eventId}
-        withPagination
-        defaultPageSize={25}
-        initialSort={{ columnId: "observedAt", direction: "desc" }}
-        verticalSpacing="xs"
-        highlightOnHover
-        striped
-      />
-
-      <SectionTitle sub="Before 2023-10 they come from eve-incursions.de, which recorded states and influence but not staging or infested systems. * Already running when tracking began: the first-seen time is not when it spawned.">
-        Past incursions
-      </SectionTitle>
-      <DataTable
-        data={history}
-        isLoading={archive.isPending}
-        columns={historyColumns}
-        rowId={(row) => row.incursionId}
-        withGlobalFilter
-        withPagination
-        defaultPageSize={25}
-        initialSort={{ columnId: "endedAt", direction: "desc" }}
-        verticalSpacing="xs"
-        highlightOnHover
-        striped
-      />
     </Stack>
   );
 }

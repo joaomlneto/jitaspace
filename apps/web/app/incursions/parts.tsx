@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Anchor, Badge, Group, Text, Tooltip } from "@mantine/core";
@@ -271,22 +270,4 @@ export function SovereigntyHolderLabel({
       —
     </Text>
   ) : null;
-}
-
-export function SectionTitle({
-  children,
-  sub,
-}: Readonly<{ children: ReactNode; sub?: ReactNode }>) {
-  return (
-    <div>
-      <Text component="h3" fw={700} size="lg" m={0}>
-        {children}
-      </Text>
-      {sub !== undefined && (
-        <Text size="sm" c="dimmed">
-          {sub}
-        </Text>
-      )}
-    </div>
-  );
 }

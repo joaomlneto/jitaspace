@@ -149,48 +149,10 @@ const LOOKUPS = {
   },
 };
 
-const event = (
-  eventId: number,
-  kind: IncursionsData["events"][number]["kind"],
-  overrides: Partial<IncursionsData["events"][number]> = {},
-): IncursionsData["events"][number] => ({
-  eventId,
-  incursionId: 1,
-  observedAt: hoursAgo(eventId),
-  kind,
-  previousState: null,
-  state: null,
-  previousInfluence: null,
-  influence: null,
-  hasBoss: null,
-  previousStagingSolarSystemId: null,
-  stagingSolarSystemId: null,
-  solarSystemId: null,
-  ...overrides,
-});
-
 const pageData = (incursions: IncursionRow[]): IncursionsData => ({
   ...LOOKUPS,
   readAt: READ_AT,
   incursions,
-  eventIncursions: [],
-  events: [
-    event(1, "appeared", { state: "established", influence: 0, hasBoss: true }),
-    event(2, "resumed"),
-    event(3, "state_changed", {
-      previousState: "established",
-      state: "mobilizing",
-    }),
-    event(4, "influence_changed", { previousInfluence: 0.4, influence: 0.6 }),
-    event(5, "boss_appeared"),
-    event(6, "staging_system_changed", {
-      previousStagingSolarSystemId: ADIERE,
-      stagingSolarSystemId: CLAYSSON,
-    }),
-    event(7, "system_added", { solarSystemId: ADIERE }),
-    event(8, "ended", { state: "withdrawing", influence: 0 }),
-    event(9, "system_removed", { incursionId: 99 }),
-  ],
   influence: { 1: [[Date.parse(hoursAgo(48)), 0.5]] },
   currentSovereignty: { [CLAYSSON]: { allianceId: null, factionId: 500004 } },
 });
@@ -358,37 +320,20 @@ describe("Incursions page", () => {
     });
   });
 
-  describe("History tab", () => {
-    it("loads the archive and lists spawns, changes and past incursions", async () => {
+  describe("Timeline tab", () => {
+    it("loads the archive and lists appearances, state changes and ends by day", async () => {
       renderPage([HIGH_SEC]);
-      openTab("History");
-      expect(window.location.hash).toBe("#history");
+      openTab("Timeline");
+      expect(window.location.hash).toBe("#timeline");
       expect(globalThis.fetch).toHaveBeenCalledWith("/api/incursions/history");
-
-      expect(await screen.findByText("Spawn history")).toBeVisible();
       expect(await screen.findByText("Incursion 77")).toBeVisible();
       expect(screen.getAllByText("Ended").length).toBeGreaterThan(0);
-
-      // Every change, each described its own way.
-      expect(
-        screen.getByText(/Established, 0% influence, boss present/),
-      ).toBeVisible();
-      expect(
-        screen.getByText("Listed by ESI again after a poll missed it"),
-      ).toBeVisible();
-      expect(screen.getByText(/40% → 60%/)).toBeVisible();
-      expect(
-        screen.getByText(/Last seen withdrawing at 0% influence/),
-      ).toBeVisible();
-
-      // Past incursions, with where each was recorded.
-      expect(await screen.findByText("eve-incursions.de")).toBeVisible();
-      expect(screen.getAllByText("JitaSpace").length).toBeGreaterThan(0);
+      expect(screen.getByText("Wed, 7 Oct 2026")).toBeVisible();
     });
 
     it("says so when the archive cannot be loaded", async () => {
       renderPage([HIGH_SEC], { historyOk: false });
-      openTab("History");
+      openTab("Timeline");
       expect(
         await screen.findByText(
           "The history could not be loaded. Try again in a moment.",
@@ -396,11 +341,11 @@ describe("Incursions page", () => {
       ).toBeVisible();
     });
 
-    it("opens from a link to #history", async () => {
-      window.history.replaceState(null, "", "/incursions#history");
+    it("opens from a link to #timeline", async () => {
+      window.history.replaceState(null, "", "/incursions#timeline");
       renderPage([HIGH_SEC]);
       await waitFor(() =>
-        expect(screen.getByRole("tab", { name: "History" })).toHaveAttribute(
+        expect(screen.getByRole("tab", { name: "Timeline" })).toHaveAttribute(
           "aria-selected",
           "true",
         ),
@@ -408,6 +353,36 @@ describe("Incursions page", () => {
       openTab("Status");
       expect(window.location.hash).toBe("");
     });
+  });
+
+  describe("Archive tab", () => {
+    it("lists every ended incursion with where it was recorded", async () => {
+      renderPage([HIGH_SEC]);
+      openTab("Archive");
+      expect(window.location.hash).toBe("#archive");
+      expect(await screen.findByText("eve-incursions.de")).toBeVisible();
+      expect(screen.getAllByText("JitaSpace").length).toBeGreaterThan(0);
+      // The two that ended; the active one is not in the archive.
+      expect(
+        screen.getByRole("table").querySelectorAll("tbody tr"),
+      ).toHaveLength(2);
+    });
+
+    it("says so when the archive cannot be loaded", async () => {
+      renderPage([HIGH_SEC], { historyOk: false });
+      openTab("Archive");
+      expect(
+        await screen.findByText(
+          "The history could not be loaded. Try again in a moment.",
+        ),
+      ).toBeVisible();
+    });
+  });
+
+  it("lists no change-by-change history anywhere", () => {
+    renderPage([HIGH_SEC]);
+    expect(screen.queryByRole("tab", { name: "History" })).toBeNull();
+    expect(screen.queryByText("All changes")).toBeNull();
   });
 
   describe("Rats tab", () => {

@@ -66,23 +66,6 @@ const OLD = incursion({
   infestedSolarSystems: [],
 });
 
-const event = (overrides: Row): Row => ({
-  eventId: 1,
-  incursionId: 1,
-  observedAt: at("2026-10-08T11:00:00Z"),
-  kind: "influence_changed",
-  previousState: null,
-  state: null,
-  previousInfluence: 0.9,
-  influence: 1,
-  hasBoss: null,
-  previousStagingSolarSystemId: null,
-  stagingSolarSystemId: null,
-  solarSystemId: null,
-  createdAt: at("2026-10-08T11:00:01Z"),
-  ...overrides,
-});
-
 const incursionFindMany = findMany((where) => {
   if (where?.endedAt === null) return [ACTIVE];
   const endedAt = where?.endedAt as Row | undefined;
@@ -94,18 +77,7 @@ const incursionFindMany = findMany((where) => {
   );
 });
 const incursionEventFindMany = findMany((where) => {
-  if (!where) {
-    return [
-      event({}),
-      event({
-        eventId: 2,
-        incursionId: 3,
-        kind: "system_added",
-        solarSystemId: 30000200,
-      }),
-    ];
-  }
-  const observedAt = where.observedAt as Row | undefined;
+  const observedAt = where?.observedAt as Row | undefined;
   if (observedAt && "lt" in observedAt) {
     return [
       {
@@ -267,14 +239,14 @@ describe("readIncursionsData", () => {
     });
   });
 
-  it("adds the incursions only an event names", async () => {
+  it("reads no change list, so the page never sends one", async () => {
     const data = await loadData().readIncursionsData();
-    expect(data.eventIncursions.map((i) => i.incursionId)).toEqual([3]);
-    expect(data.events[1]).toMatchObject({
-      kind: "system_added",
-      observedAt: "2026-10-08T11:00:00.000Z",
-    });
-    expect(data.events[1]).not.toHaveProperty("createdAt");
+    expect(data).not.toHaveProperty("events");
+    expect(data).not.toHaveProperty("eventIncursions");
+    // Every event read is the influence chart's: filtered to influence.
+    for (const [args] of incursionEventFindMany.mock.calls) {
+      expect(args).toMatchObject({ select: { influence: true } });
+    }
   });
 
   it("carries the influence before the chart's window and the changes in it", async () => {

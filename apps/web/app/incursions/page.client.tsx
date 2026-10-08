@@ -7,12 +7,12 @@ import { Container, Group, Stack, Tabs, Title } from "@mantine/core";
 import { IncursionsIcon } from "@jitaspace/eve-icons";
 
 import type { IncursionRatGroup, IncursionsData } from "./types";
-import { HistoryTab } from "./HistoryTab";
+import { ArchiveTab, TimelineTab } from "./HistoryTabs";
 import { useNames } from "./parts";
 import { RatsTab } from "./RatsTab";
 import { StatusTab } from "./StatusTab";
 
-const TABS = ["status", "history", "rats"] as const;
+const TABS = ["status", "timeline", "archive", "rats"] as const;
 type Tab = (typeof TABS)[number];
 const isTab = (value: string): value is Tab =>
   (TABS as readonly string[]).includes(value);
@@ -76,14 +76,18 @@ export default function IncursionsPage({
         >
           <Tabs.List mb="md">
             <Tabs.Tab value="status">Status</Tabs.Tab>
-            <Tabs.Tab value="history">History</Tabs.Tab>
+            <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
+            <Tabs.Tab value="archive">Archive</Tabs.Tab>
             <Tabs.Tab value="rats">Rats</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="status">
             <StatusTab data={data} names={names} />
           </Tabs.Panel>
-          <Tabs.Panel value="history">
-            <HistoryTab data={data} />
+          <Tabs.Panel value="timeline">
+            <TimelineTab data={data} />
+          </Tabs.Panel>
+          <Tabs.Panel value="archive">
+            <ArchiveTab data={data} />
           </Tabs.Panel>
           <Tabs.Panel value="rats">
             <RatsTab rats={rats} />

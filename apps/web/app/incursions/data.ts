@@ -3,7 +3,6 @@ import { cacheLife, cacheTag } from "next/cache";
 import type { Prisma } from "@jitaspace/db";
 
 import type {
-  IncursionEventRow,
   IncursionHistory,
   IncursionLookups,
   IncursionRatGroup,
@@ -19,11 +18,9 @@ import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
 import { longestDistanceAu } from "./math";
 import { isTrackedIncursion } from "./types";
 
-/** How many of the latest changes the page lists. */
-const EVENT_LIMIT = 200;
 /**
  * How far back the page itself carries ended incursions: enough for the
- * high-sec spawn countdown and the recent changes. The full history is
+ * high-sec spawn countdown. The full history is
  * `readIncursionHistory`, behind `/api/incursions/history`.
  */
 const RECENTLY_ENDED_MS = 30 * 24 * 60 * 60 * 1000;
@@ -77,26 +74,17 @@ const toRow = ({
   withdrawingAt: iso(incursion.withdrawingAt),
 });
 
-const toEventRow = (
-  event: Prisma.IncursionEventGetPayload<object>,
-): IncursionEventRow => {
-  const { createdAt: _, ...rest } = event;
-  return { ...rest, observedAt: event.observedAt.toISOString() };
-};
-
 /**
- * The names of everything the given incursions and solar systems refer to:
+ * The names of everything the given incursions refer to:
  * constellations and their regions, factions, sovereignty-holding alliances,
  * and solar systems with their security.
  */
 async function readLookups({
   incursions,
-  solarSystemIds = [],
   allianceIds = [],
   factionIds = [],
 }: {
   incursions: readonly IncursionRow[];
-  solarSystemIds?: readonly number[];
   allianceIds?: readonly (number | null)[];
   factionIds?: readonly (number | null)[];
 }): Promise<IncursionLookups> {
@@ -115,15 +103,14 @@ async function readLookups({
         select: { solarSystemId: true, name: true, securityStatus: true },
         where: {
           solarSystemId: {
-            in: unique([
-              ...incursions.flatMap((i) => [
+            in: unique(
+              incursions.flatMap((i) => [
                 ...(i.stagingSolarSystemId === null
                   ? []
                   : [i.stagingSolarSystemId]),
                 ...i.infestedSolarSystemIds,
               ]),
-              ...solarSystemIds,
-            ]),
+            ),
           },
         },
       }),
@@ -185,7 +172,7 @@ async function readLookups({
 /**
  * Everything the page shows up front: the active incursions, which the
  * `esi-track-incursions` job writes every 5 minutes, those that ended in the
- * last 30 days, the latest changes, and the SDE names, stations and celestials
+ * last 30 days, and the SDE names, stations and celestials
  * around them. Deliberately uncaught: see CLAUDE.md → "Never catch a database
  * error inside a `"use cache"` scope".
  */
@@ -196,7 +183,7 @@ export async function readIncursionsData(): Promise<IncursionsData> {
   cacheTag(SDE_CACHE_TAG);
 
   const readAt = new Date();
-  const [active, recentlyEnded, events] = await Promise.all([
+  const [active, recentlyEnded] = await Promise.all([
     prisma.incursion.findMany({
       select: incursionSelect,
       where: { endedAt: null },
@@ -209,32 +196,15 @@ export async function readIncursionsData(): Promise<IncursionsData> {
       },
       orderBy: { endedAt: "desc" },
     }),
-    prisma.incursionEvent.findMany({
-      orderBy: [{ observedAt: "desc" }, { eventId: "desc" }],
-      take: EVENT_LIMIT,
-    }),
   ]);
   const activeIds = active.map((i) => i.incursionId);
 
   const incursions = [...active, ...recentlyEnded].map(toRow);
-  const eventRows = events.map(toEventRow);
-
-  // Events can name incursions that ended longer ago.
-  const listedIds = new Set(incursions.map((i) => i.incursionId));
-  const missingIds = unique(eventRows.map((e) => e.incursionId)).filter(
-    (id) => !listedIds.has(id),
-  );
 
   // An incursion's influence just before the window, and every change in it.
   const windowStart = new Date(readAt.getTime() - INFLUENCE_WINDOW_MS);
   const influenceKinds = ["appeared", "resumed", "influence_changed"] as const;
-  const [eventOnly, influenceEvents, influenceBefore] = await Promise.all([
-    missingIds.length === 0
-      ? []
-      : prisma.incursion.findMany({
-          select: incursionSelect,
-          where: { incursionId: { in: missingIds } },
-        }),
+  const [influenceEvents, influenceBefore] = await Promise.all([
     prisma.incursionEvent.findMany({
       select: { incursionId: true, observedAt: true, influence: true },
       where: {
@@ -265,7 +235,6 @@ export async function readIncursionsData(): Promise<IncursionsData> {
     influence[event.incursionId] = readings;
   }
 
-  const eventIncursions = eventOnly.map(toRow);
   const activeRows = incursions
     .filter((i) => i.endedAt === null)
     .filter(isTrackedIncursion);
@@ -300,14 +269,7 @@ export async function readIncursionsData(): Promise<IncursionsData> {
 
   const [lookups, repairServices] = await Promise.all([
     readLookups({
-      incursions: [...incursions, ...eventIncursions],
-      solarSystemIds: eventRows.flatMap((e) =>
-        [
-          e.solarSystemId,
-          e.stagingSolarSystemId,
-          e.previousStagingSolarSystemId,
-        ].filter((id) => id !== null),
-      ),
+      incursions,
       allianceIds: sovereignty.map((row) => row.allianceId),
       factionIds: sovereignty.map((row) => row.factionId),
     }),
@@ -358,8 +320,6 @@ export async function readIncursionsData(): Promise<IncursionsData> {
     ...lookups,
     readAt: readAt.toISOString(),
     incursions,
-    eventIncursions,
-    events: eventRows,
     influence,
     currentSovereignty: Object.fromEntries(
       sovereignty.map((row) => [
