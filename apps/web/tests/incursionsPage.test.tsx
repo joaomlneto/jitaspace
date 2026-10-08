@@ -356,16 +356,33 @@ describe("Incursions page", () => {
   });
 
   describe("Archive tab", () => {
-    it("lists every ended incursion with where it was recorded", async () => {
+    it("lists every ended incursion with its region and staging system", async () => {
       renderPage([HIGH_SEC]);
       openTab("Archive");
       expect(window.location.hash).toBe("#archive");
-      expect(await screen.findByText("eve-incursions.de")).toBeVisible();
-      expect(screen.getAllByText("JitaSpace").length).toBeGreaterThan(0);
+      expect(
+        await screen.findByRole("link", { name: "Venal" }),
+      ).toHaveAttribute("href", "/region/10000002");
+      expect(screen.getByRole("link", { name: "Sinq Laison" })).toHaveAttribute(
+        "href",
+        "/region/10000001",
+      );
+      expect(screen.getByRole("link", { name: "Claysson" })).toBeVisible();
       // The two that ended; the active one is not in the archive.
       expect(
         screen.getByRole("table").querySelectorAll("tbody tr"),
       ).toHaveLength(2);
+      const headers = screen
+        .getAllByRole("columnheader")
+        .map((header) => header.textContent);
+      for (const removed of [
+        "Source",
+        "Last state",
+        "Sov. holder",
+        "Systems",
+      ]) {
+        expect(headers.join("|")).not.toContain(removed);
+      }
     });
 
     it("says so when the archive cannot be loaded", async () => {

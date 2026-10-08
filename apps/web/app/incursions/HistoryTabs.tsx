@@ -22,7 +22,6 @@ import type { Names } from "./parts";
 import type {
   IncursionRow,
   IncursionsData,
-  IncursionSource,
   IncursionStateEventTuple,
   SovereigntyHolder,
 } from "./types";
@@ -33,7 +32,6 @@ import {
   ConstellationLink,
   EveTime,
   SovereigntyHolderLabel,
-  STATE_LABEL,
   StateBadge,
   SystemLink,
   useNames,
@@ -88,12 +86,6 @@ const sovereigntyOf = (
     : data.currentSovereignty[incursion.stagingSolarSystemId];
 };
 
-const SOURCE_LABEL: Record<IncursionSource, string> = {
-  esi: "JitaSpace",
-  eve_incursions_de: "eve-incursions.de",
-  everef: "EVE Ref",
-};
-
 /** A staging system, or a dash for an imported incursion without one. */
 function StagingCell({
   solarSystemId,
@@ -107,12 +99,6 @@ function StagingCell({
     <SystemLink solarSystemId={solarSystemId} names={names} />
   );
 }
-
-const holderName = (holder: SovereigntyHolder | undefined, names: Names) => {
-  if (holder?.allianceId != null) return names.alliance(holder.allianceId);
-  if (holder?.factionId != null) return names.faction(holder.factionId);
-  return null;
-};
 
 /** Appearances, state changes and ends, grouped by day, as players scan them. */
 function SpawnHistory({
@@ -272,16 +258,12 @@ function ArchiveState({
 interface HistoryTableRow extends IncursionRow {
   constellationName: string;
   regionName: string | null;
-  sovereigntyName: string | null;
-  sourceLabel: string;
-  stateLabel: string;
   durationMs: number;
 }
 
 /** The past incursions' columns. */
 const historyColumnsFor = (
   names: Names,
-  data: IncursionsData,
 ): DataTableColumn<HistoryTableRow>[] => [
   {
     id: "constellation",
@@ -298,6 +280,14 @@ const historyColumnsFor = (
     header: "Region",
     accessor: "regionName",
     sortable: true,
+    cell: (row) => {
+      const region = names.region(row.constellationId);
+      return region ? (
+        <Anchor component={Link} href={`/region/${region.regionId}`} size="sm">
+          {region.name}
+        </Anchor>
+      ) : null;
+    },
     filter: { type: "multi-select" },
   },
   {
@@ -306,29 +296,6 @@ const historyColumnsFor = (
     cell: (row) => (
       <StagingCell solarSystemId={row.stagingSolarSystemId} names={names} />
     ),
-  },
-  {
-    id: "sovereignty",
-    header: "Sov. holder",
-    accessor: "sovereigntyName",
-    sortable: true,
-    filter: { type: "multi-select" },
-    cell: (row) => (
-      <SovereigntyHolderLabel
-        holder={sovereigntyOf(row, data)}
-        names={names}
-        size="xs"
-      />
-    ),
-  },
-  {
-    id: "systems",
-    header: "Systems",
-    // Imported incursions never recorded their systems.
-    accessor: (row) =>
-      row.source === "esi" ? row.infestedSolarSystemIds.length : null,
-    sortable: true,
-    align: "right",
   },
   {
     id: "firstSeenAt",
@@ -361,21 +328,6 @@ const historyColumnsFor = (
     sortable: true,
     align: "right",
     cell: (row) => formatDuration(row.durationMs),
-  },
-  {
-    id: "state",
-    header: "Last state",
-    accessor: "stateLabel",
-    sortable: true,
-    filter: { type: "multi-select" },
-    cell: (row) => <StateBadge state={row.state} />,
-  },
-  {
-    id: "source",
-    header: "Source",
-    accessor: "sourceLabel",
-    sortable: true,
-    filter: { type: "multi-select" },
   },
 ];
 
@@ -427,32 +379,23 @@ export function ArchiveTab({ data }: Readonly<{ data: IncursionsData }>) {
     () =>
       (archive.data?.incursions ?? [])
         .filter((i) => i.endedAt !== null)
-        .map((i) => {
-          const holder = sovereigntyOf(i, data);
-          return {
-            ...i,
-            constellationName: names.constellation(i.constellationId),
-            regionName: names.region(i.constellationId)?.name ?? null,
-            sovereigntyName: holderName(holder, names),
-            sourceLabel: SOURCE_LABEL[i.source],
-            stateLabel: STATE_LABEL[i.state],
-            durationMs:
-              Date.parse(i.endedAt ?? i.lastSeenAt) - Date.parse(i.firstSeenAt),
-          };
-        }),
-    [archive.data, data, names],
+        .map((i) => ({
+          ...i,
+          constellationName: names.constellation(i.constellationId),
+          regionName: names.region(i.constellationId)?.name ?? null,
+          durationMs:
+            Date.parse(i.endedAt ?? i.lastSeenAt) - Date.parse(i.firstSeenAt),
+        })),
+    [archive.data, names],
   );
-  const historyColumns = useMemo(
-    () => historyColumnsFor(names, data),
-    [names, data],
-  );
+  const historyColumns = useMemo(() => historyColumnsFor(names), [names]);
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
-        Every incursion that has ended, back to 2015. Before 2023-10 they come
-        from eve-incursions.de, which recorded states and influence but not
-        staging or infested systems. * Already running when tracking began: the
-        first-seen time is not when it spawned.
+        Every incursion that has ended, back to 2015. Most before 2023-10 come
+        from eve-incursions.de, which did not record the staging system. *
+        Already running when tracking began: the first-seen time is not when it
+        spawned.
       </Text>
       <ArchiveState failed={archive.isError} loading={false}>
         <DataTable
