@@ -78,15 +78,6 @@ const incursionFindMany = findMany((where) => {
 });
 const incursionEventFindMany = findMany((where) => {
   const observedAt = where?.observedAt as Row | undefined;
-  if (observedAt && "lt" in observedAt) {
-    return [
-      {
-        incursionId: 1,
-        observedAt: at("2026-10-01T00:00:00Z"),
-        influence: 0.5,
-      },
-    ];
-  }
   if (observedAt && "gte" in observedAt) {
     return [
       { incursionId: 1, observedAt: at("2026-10-08T11:00:00Z"), influence: 1 },
@@ -118,7 +109,22 @@ const incursionEventFindMany = findMany((where) => {
 
 const models = {
   incursion: { findMany: incursionFindMany },
-  incursionEvent: { findMany: incursionEventFindMany },
+  incursionEvent: {
+    findMany: incursionEventFindMany,
+    // The latest reading before the chart's window, per incursion.
+    findFirst: (args?: unknown) => {
+      const where = (args as { where: { incursionId: number } }).where;
+      return Promise.resolve(
+        where.incursionId === 1
+          ? {
+              incursionId: 1,
+              observedAt: at("2026-10-01T00:00:00Z"),
+              influence: 0.5,
+            }
+          : null,
+      );
+    },
+  },
   constellation: {
     findMany: findMany(() => [
       { constellationId: 20000001, name: "Agiesseson", regionId: 10000001 },

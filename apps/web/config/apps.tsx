@@ -311,7 +311,7 @@ export const universeApps: Record<string, JitaApp> = {
   incursions: {
     name: "Incursions",
     description:
-      "Track active Sansha incursions, and every change since they appeared.",
+      "Track active Sansha incursions, their spawn timeline and every past incursion since 2015.",
     url: "/incursions",
     Icon: (props) => <IncursionsIcon {...props} />,
     scopes: {},

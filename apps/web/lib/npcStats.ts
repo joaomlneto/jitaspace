@@ -390,9 +390,11 @@ function abilitiesOf(attributes: Attributes, dogma: NpcDogma): NpcEwar[] {
     ].filter((id) => id !== null);
     return pointers.length > 0 && pointers.every((id) => !!attributes.get(id));
   });
-  const effects = [...dogma.effects, ...inferred].sort(
-    (a, b) => a.effectId - b.effectId,
-  );
+  // What the type carries goes first: an inferred old-style effect only fills
+  // in an ability nothing it carries already shows.
+  const byId = (a: DogmaEffectInfo, b: DogmaEffectInfo) =>
+    a.effectId - b.effectId;
+  const effects = [...[...dogma.effects].sort(byId), ...inferred.sort(byId)];
   for (const effect of effects) {
     if (WEAPON_EFFECT_IDS.has(effect.effectId)) continue;
     const spec = ABILITIES[effect.effectId];
@@ -532,6 +534,37 @@ export const NPC_STAT_ATTRIBUTE_IDS: readonly number[] = [
     ATTR.signatureRadius,
     ATTR.scanResolution,
   ]),
+];
+
+/** The inventory category NPCs belong to ("Entity"). */
+export const NPC_CATEGORY_ID = 11;
+/** The inventory category drones belong to (not fighters, which have their own). */
+export const DRONE_CATEGORY_ID = 18;
+/**
+ * The categories whose combat figures come from their own attributes. Not
+ * ships: a ship's damage comes from the modules fitted to it.
+ */
+export const COMBAT_STATS_CATEGORY_IDS: readonly number[] = [
+  NPC_CATEGORY_ID,
+  DRONE_CATEGORY_ID,
+];
+
+/**
+ * The attributes an ability may label from the SDE: those its effect's
+ * modifiers apply, and those {@link ABILITIES} lists. Only these need a name
+ * and unit read.
+ */
+export const abilityAttributeIds = (
+  effects: readonly DogmaEffectInfo[],
+): number[] => [
+  ...new Set(
+    effects.flatMap((effect) => [
+      ...effect.modifyingAttributeIds,
+      ...(ABILITIES[effect.effectId]?.strengths ?? []).map(
+        (strength) => strength.attributeId,
+      ),
+    ]),
+  ),
 ];
 
 /** The attribute that names the missile an NPC launches. */

@@ -64,6 +64,8 @@ const subscribeToClock = (listener: () => void) => {
     if (clockListeners.size === 0 && clockTimer !== undefined) {
       clearInterval(clockTimer);
       clockTimer = undefined;
+      // Read the clock afresh next time, rather than where it last stopped.
+      clockNow = 0;
     }
   };
 };

@@ -82,8 +82,8 @@ const isHighSec = (securityStatus: number | undefined) =>
 function HighSecSpawnBanner({
   data,
   names,
-  now,
-}: Readonly<{ data: IncursionsData; names: Names; now: number }>) {
+}: Readonly<{ data: IncursionsData; names: Names }>) {
+  const now = useLiveNow(Date.parse(data.readAt));
   const stagingSecurity = (i: IncursionRow) =>
     i.stagingSolarSystemId === null
       ? undefined
@@ -126,8 +126,9 @@ function HighSecSpawnBanner({
 
 function MaxRemaining({
   incursion,
-  now,
-}: Readonly<{ incursion: TrackedIncursionRow; now: number }>) {
+  readAt,
+}: Readonly<{ incursion: TrackedIncursionRow; readAt: number }>) {
+  const now = useLiveNow(readAt);
   const enteredAt = Date.parse(
     incursion[STATE_TIMESTAMP[incursion.state]] ?? incursion.firstSeenAt,
   );
@@ -315,18 +316,34 @@ function SystemsTable({
   );
 }
 
+/** "3 days ago", ticking: only this text re-renders every second. */
+function StartedAgo({
+  incursion,
+  readAt,
+}: Readonly<{ incursion: TrackedIncursionRow; readAt: number }>) {
+  const now = useLiveNow(readAt);
+  const startedAt = Date.parse(incursion.firstSeenAt);
+  return (
+    <DateHoverCard date={new Date(startedAt)}>
+      <Text span size="sm" fw={500}>
+        {incursion.isObservedFromStart ? "" : "over "}
+        {formatDistanceStrict(startedAt, now)} ago
+      </Text>
+    </DateHoverCard>
+  );
+}
+
 /** One active incursion, as a full-width row: details, influence, systems. */
 function ActiveIncursion({
   incursion,
   data,
   names,
-  now,
 }: Readonly<{
   incursion: TrackedIncursionRow;
   data: IncursionsData;
   names: Names;
-  now: number;
 }>) {
+  const readAt = Date.parse(data.readAt);
   const region = names.region(incursion.constellationId);
   const sovereignty = data.currentSovereignty[
     incursion.stagingSolarSystemId
@@ -337,7 +354,6 @@ function ActiveIncursion({
   const stagingSecurity = names.system(
     incursion.stagingSolarSystemId,
   )?.securityStatus;
-  const startedAt = Date.parse(incursion.firstSeenAt);
   return (
     <Paper withBorder radius="md" p="md">
       <Grid gap="lg">
@@ -418,18 +434,13 @@ function ActiveIncursion({
                   : "It was already running when tracking began: this is when it was first seen, not when it spawned"
               }
             >
-              <DateHoverCard date={new Date(startedAt)}>
-                <Text span size="sm" fw={500}>
-                  {incursion.isObservedFromStart ? "" : "over "}
-                  {formatDistanceStrict(startedAt, now)} ago
-                </Text>
-              </DateHoverCard>
+              <StartedAgo incursion={incursion} readAt={readAt} />
             </InfoRow>
             <InfoRow
               label="Max. remaining"
               tooltip="The longest the incursion can still stay: up to 8 days once established, 3 once mobilizing, 1 once withdrawing"
             >
-              <MaxRemaining incursion={incursion} now={now} />
+              <MaxRemaining incursion={incursion} readAt={readAt} />
             </InfoRow>
           </Stack>
         </Grid.Col>
@@ -440,7 +451,7 @@ function ActiveIncursion({
             </Text>
             <InfluenceChart
               readings={data.influence[incursion.incursionId] ?? []}
-              now={Date.parse(data.readAt)}
+              now={readAt}
               h={190}
             />
           </Stack>
@@ -457,7 +468,6 @@ export function StatusTab({
   data,
   names,
 }: Readonly<{ data: IncursionsData; names: Names }>) {
-  const now = useLiveNow(Date.parse(data.readAt));
   // High-sec first, as players look for those first.
   const active = useMemo(
     () =>
@@ -474,7 +484,7 @@ export function StatusTab({
 
   return (
     <Stack gap="md">
-      <HighSecSpawnBanner data={data} names={names} now={now} />
+      <HighSecSpawnBanner data={data} names={names} />
       {active.length === 0 ? (
         <Paper withBorder radius="md" p="lg">
           <Text c="dimmed">No incursions are active right now.</Text>
@@ -486,7 +496,6 @@ export function StatusTab({
             incursion={incursion}
             data={data}
             names={names}
-            now={now}
           />
         ))
       )}

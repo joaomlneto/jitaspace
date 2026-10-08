@@ -215,17 +215,22 @@ export async function readIncursionsData(): Promise<IncursionsData> {
       },
       orderBy: { observedAt: "asc" },
     }),
-    prisma.incursionEvent.findMany({
-      select: { incursionId: true, observedAt: true, influence: true },
-      where: {
-        incursionId: { in: activeIds },
-        kind: { in: [...influenceKinds] },
-        influence: { not: null },
-        observedAt: { lt: windowStart },
-      },
-      orderBy: { observedAt: "desc" },
-      distinct: ["incursionId"],
-    }),
+    // One row per incursion: its latest reading before the window. (Prisma's
+    // `distinct` would fetch every earlier reading and dedupe in memory.)
+    Promise.all(
+      activeIds.map((incursionId) =>
+        prisma.incursionEvent.findFirst({
+          select: { incursionId: true, observedAt: true, influence: true },
+          where: {
+            incursionId,
+            kind: { in: [...influenceKinds] },
+            influence: { not: null },
+            observedAt: { lt: windowStart },
+          },
+          orderBy: { observedAt: "desc" },
+        }),
+      ),
+    ).then((rows) => rows.filter((row) => row !== null)),
   ]);
   const influence: IncursionsData["influence"] = {};
   for (const event of [...influenceBefore, ...influenceEvents]) {

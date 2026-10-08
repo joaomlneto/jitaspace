@@ -312,6 +312,21 @@ describe("computeNpcStats", () => {
     }
   });
 
+  it("prefers an effect the type carries over an inferred old-style one", () => {
+    // A behavior web the NPC carries, beside non-zero old-style web attributes.
+    const behaviorWeb = effect(6743, "npcBehaviorWebifier", {
+      range: 2500,
+      duration: 2499,
+    });
+    const [web] = computeNpcStats(
+      attrs({ 513: 5000, 514: 15000, 2499: 6000, 2500: 30000 }),
+      undefined,
+      dogma([behaviorWeb], INFERABLE),
+    ).ewar;
+    expect(web?.effectId).toBe(6743);
+    expect(web?.values[0]).toMatchObject({ label: "Range", value: 30000 });
+  });
+
   it("names an unknown offensive effect by its own name, with no icon", () => {
     const [ability] = computeNpcStats(
       attrs({ 73: 5000 }),

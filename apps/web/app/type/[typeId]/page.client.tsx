@@ -86,6 +86,7 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
+import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
@@ -104,9 +105,6 @@ const THE_FORGE_REGION_ID = 10000002;
 
 /** Inventory category for ship hulls — used to gate ship-only external links. */
 const SHIP_CATEGORY_ID = 6;
-
-/** Inventory category for drones: their combat figures are before skills. */
-const DRONE_CATEGORY_ID = 18;
 
 /** Image variations that look good rendered large (vs. small square icons). */
 const LARGE_IMAGE_VARIATIONS = new Set(["render", "bp", "bpc"]);

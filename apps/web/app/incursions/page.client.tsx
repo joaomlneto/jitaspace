@@ -38,7 +38,8 @@ const setHash = (tab: Tab) => {
   window.history.replaceState(
     window.history.state,
     "",
-    tab === "status" ? window.location.pathname : `#${tab}`,
+    // Keep the path and query; only the hash names the tab.
+    `${window.location.pathname}${window.location.search}${tab === "status" ? "" : `#${tab}`}`,
   );
   for (const notify of hashListeners) notify();
 };

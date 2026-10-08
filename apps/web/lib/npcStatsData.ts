@@ -5,24 +5,18 @@ import type {
 } from "~/lib/npcStats";
 import { prisma } from "~/lib/db";
 import {
+  abilityAttributeIds,
   computeNpcStats,
   INFERRED_EFFECT_IDS,
   MISSILE_TYPE_ATTRIBUTE_ID,
   NPC_STAT_ATTRIBUTE_IDS,
 } from "~/lib/npcStats";
 
-/** The inventory category NPCs belong to ("Entity"). */
-export const NPC_CATEGORY_ID = 11;
-/** The inventory category drones belong to (not fighters, which have their own). */
-export const DRONE_CATEGORY_ID = 18;
-/**
- * The categories whose combat figures come from their own attributes. Not
- * ships: a ship's damage comes from the modules fitted to it.
- */
-export const COMBAT_STATS_CATEGORY_IDS: readonly number[] = [
-  NPC_CATEGORY_ID,
+export {
+  COMBAT_STATS_CATEGORY_IDS,
   DRONE_CATEGORY_ID,
-];
+  NPC_CATEGORY_ID,
+} from "~/lib/npcStats";
 
 /** Rows grouped by type id. */
 const byType = <T, V>(
@@ -148,7 +142,7 @@ async function readEffects(typeIds: readonly number[]) {
   };
 }
 
-/** The names and units of the given attributes, to label ability values. */
+/** The names and units of the attributes ability strengths are labelled from. */
 async function readAttributeInfo(attributeIds: readonly number[]) {
   if (attributeIds.length === 0) return new Map<number, DogmaAttributeInfo>();
   const rows = await prisma.dogmaAttribute.findMany({
@@ -199,11 +193,12 @@ export async function readNpcStats(
   ];
   const [missiles, attributeInfo] = await Promise.all([
     readAttributes(missileTypeIds, NPC_STAT_ATTRIBUTE_IDS),
-    readAttributeInfo([
-      ...new Set(
-        [...attributes.values()].flatMap((attrs) => [...attrs.keys()]),
-      ),
-    ]),
+    readAttributeInfo(
+      abilityAttributeIds([
+        ...[...effects.byTypeId.values()].flat(),
+        ...effects.inferable,
+      ]),
+    ),
   ]);
   return new Map(
     [...attributes].map(([typeId, attrs]) => {

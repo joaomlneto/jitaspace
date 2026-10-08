@@ -305,6 +305,8 @@ describe("Incursions page", () => {
     ])(
       "counts down to the next high-sec spawn, %ih after the last ended",
       (hours, message) => {
+        // The countdown runs on the clock: hold it at the data's read time.
+        jest.useFakeTimers({ now: Date.parse(READ_AT) });
         renderPage([NULL_SEC, endedHighSec(hours)]);
         expect(screen.getByText(message, { exact: false })).toBeVisible();
       },
