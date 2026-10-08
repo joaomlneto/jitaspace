@@ -24,7 +24,7 @@ import {
 } from "@tabler/icons-react";
 import { formatDistanceStrict } from "date-fns";
 
-import { securityStatusBand } from "@jitaspace/ui";
+import { DateHoverCard, securityStatusBand } from "@jitaspace/ui";
 
 import type { Names } from "./parts";
 import type { IncursionSiteRole } from "./siteRoles";
@@ -133,11 +133,18 @@ function MaxRemaining({
   );
   const end = latestEnd(incursion.state, enteredAt);
   return (
-    <Tooltip label={`At the latest ${eveTime(end)}`}>
-      <Text size="sm" fw={500} ff="monospace" style={{ whiteSpace: "nowrap" }}>
+    // The latest it can end, in local and EVE time.
+    <DateHoverCard date={new Date(end)}>
+      <Text
+        span
+        size="sm"
+        fw={500}
+        ff="monospace"
+        style={{ whiteSpace: "nowrap" }}
+      >
         {formatCountdown(end - now)}
       </Text>
-    </Tooltip>
+    </DateHoverCard>
   );
 }
 
@@ -411,12 +418,12 @@ function ActiveIncursion({
                   : "It was already running when tracking began: this is when it was first seen, not when it spawned"
               }
             >
-              <Tooltip label={eveTime(incursion.firstSeenAt)}>
-                <Text size="sm" fw={500}>
+              <DateHoverCard date={new Date(startedAt)}>
+                <Text span size="sm" fw={500}>
                   {incursion.isObservedFromStart ? "" : "over "}
                   {formatDistanceStrict(startedAt, now)} ago
                 </Text>
-              </Tooltip>
+              </DateHoverCard>
             </InfoRow>
             <InfoRow
               label="Max. remaining"
