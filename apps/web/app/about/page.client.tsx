@@ -1,5 +1,6 @@
 "use client";
 
+import type { Components } from "react-markdown";
 import {
   ActionIcon,
   Anchor,
@@ -84,22 +85,19 @@ function AcknowledgementCard({
   );
 }
 
-/** Why: Markdown, its links opening in a new tab, inline in the list item. */
+/** Reasons render inline in their card, their links opening in a new tab. */
+const REASON_COMPONENTS: Components = {
+  p: ({ children }) => children,
+  a: ({ href, children }) => (
+    <Anchor inherit href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </Anchor>
+  ),
+};
+
+/** Why: the acknowledgement's reason, in Markdown. */
 function Reason({ markdown }: Readonly<{ markdown: string }>) {
-  return (
-    <Markdown
-      components={{
-        p: ({ children }) => children,
-        a: ({ href, children }) => (
-          <Anchor inherit href={href} target="_blank" rel="noopener noreferrer">
-            {children}
-          </Anchor>
-        ),
-      }}
-    >
-      {markdown}
-    </Markdown>
-  );
+  return <Markdown components={REASON_COMPONENTS}>{markdown}</Markdown>;
 }
 
 export default function PageClient() {
