@@ -268,6 +268,8 @@ describe("Incursions page", () => {
     });
 
     it("says when tracking began after an incursion spawned", () => {
+      // "3 days ago" counts from the clock: hold it at the data's read time.
+      jest.useFakeTimers({ now: Date.parse(READ_AT) });
       renderPage([NULL_SEC]);
       expect(screen.getByText(/^over 3 days ago$/)).toBeVisible();
     });

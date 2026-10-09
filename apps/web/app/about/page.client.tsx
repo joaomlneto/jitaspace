@@ -3,23 +3,104 @@
 import {
   ActionIcon,
   Anchor,
+  Avatar,
   Container,
   Group,
   List,
+  Paper,
+  SimpleGrid,
   Stack,
   Table,
   Text,
   Title,
 } from "@mantine/core";
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
+import Markdown from "react-markdown";
 import { Email } from "react-obfuscate-email";
 
 import { CharacterAnchor, CharacterName } from "@jitaspace/eve-components";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { env } from "~/env";
+import acknowledgements from "./acknowledgements.json";
 
 const MY_CHARACTER_ID = 401563624;
+
+/**
+ * Someone to thank: an EVE character (named and pictured from ESI) or anyone
+ * else by name, and why, in Markdown.
+ */
+type Acknowledgement = { reason: string } & (
+  | { characterId: number }
+  | { name: string }
+);
+
+const ACKNOWLEDGEMENTS: readonly Acknowledgement[] = acknowledgements;
+
+const PORTRAIT_SIZE = 44;
+
+/**
+ * One person to thank: their portrait and name from ESI (or initials and the
+ * plain name), and why underneath.
+ */
+function AcknowledgementCard({
+  acknowledgement,
+}: Readonly<{ acknowledgement: Acknowledgement }>) {
+  const characterId =
+    "characterId" in acknowledgement ? acknowledgement.characterId : undefined;
+  return (
+    <Paper component="li" withBorder radius="md" p="sm">
+      <Group align="flex-start" gap="sm" wrap="nowrap">
+        {characterId === undefined ? (
+          <Avatar
+            name={"name" in acknowledgement ? acknowledgement.name : undefined}
+            color="initials"
+            size={PORTRAIT_SIZE}
+          />
+        ) : (
+          <CharacterAvatar characterId={characterId} size={PORTRAIT_SIZE} />
+        )}
+        <Stack gap={2} style={{ minWidth: 0 }}>
+          {characterId === undefined ? (
+            <Text size="sm" fw={600}>
+              {"name" in acknowledgement && acknowledgement.name}
+            </Text>
+          ) : (
+            <CharacterAnchor
+              size="sm"
+              fw={600}
+              characterId={characterId}
+              target="_blank"
+            >
+              <CharacterName span inherit characterId={characterId} />
+            </CharacterAnchor>
+          )}
+          <Text size="sm" c="dimmed">
+            <Reason markdown={acknowledgement.reason} />
+          </Text>
+        </Stack>
+      </Group>
+    </Paper>
+  );
+}
+
+/** Why: Markdown, its links opening in a new tab, inline in the list item. */
+function Reason({ markdown }: Readonly<{ markdown: string }>) {
+  return (
+    <Markdown
+      components={{
+        p: ({ children }) => children,
+        a: ({ href, children }) => (
+          <Anchor inherit href={href} target="_blank" rel="noopener noreferrer">
+            {children}
+          </Anchor>
+        ),
+      }}
+    >
+      {markdown}
+    </Markdown>
+  );
+}
 
 export default function PageClient() {
   return (
@@ -154,33 +235,26 @@ export default function PageClient() {
           </Anchor>
           . Some special mentions:
         </Text>
-        <List size="sm">
-          <List.Item>
-            <CharacterAnchor inherit characterId={90506825} target="_blank">
-              Inomares
-            </CharacterAnchor>{" "}
-            for{" "}
-            <Anchor inherit href="https://www.hoboleaks.space" target="_blank">
-              Hoboleaks
-            </Anchor>{" "}
-            and his diligence in helping fellow third party developers.
-          </List.Item>
-          <List.Item>
-            Kenn from{" "}
-            <Anchor inherit href="https://everef.net" target="_blank">
-              Eve Ref
-            </Anchor>
-            , for putting up with my questions, for sharing his code, and for
-            all the invaluable tips.
-          </List.Item>
-          <List.Item>
-            <CharacterAnchor inherit characterId={2113325640} target="_blank">
-              Nyx Viliana
-            </CharacterAnchor>{" "}
-            and the The Outuni Project incursions community, for some cool ideas
-            and all the ISK.
-          </List.Item>
-        </List>
+        <SimpleGrid
+          component="ul"
+          aria-label="Special mentions"
+          cols={{ base: 1, sm: 2 }}
+          spacing="sm"
+          p={0}
+          m={0}
+          style={{ listStyle: "none" }}
+        >
+          {ACKNOWLEDGEMENTS.map((acknowledgement) => (
+            <AcknowledgementCard
+              key={
+                "characterId" in acknowledgement
+                  ? acknowledgement.characterId
+                  : acknowledgement.name
+              }
+              acknowledgement={acknowledgement}
+            />
+          ))}
+        </SimpleGrid>
         <Text size="sm">
           Written in{" "}
           <Anchor href="https://www.typescriptlang.org/" target="_blank">
