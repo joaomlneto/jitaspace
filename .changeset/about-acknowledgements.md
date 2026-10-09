@@ -2,4 +2,4 @@
 "@jitaspace/web": patch
 ---
 
-The About page now thanks MikeRoni for EVE-Incursions, and shows each acknowledged pilot's portrait next to their name.
+The About page's acknowledgements are now cards, each with the pilot's portrait, and thank MikeRoni for EVE-Incursions, Squizz Caphinator for zKillboard, Xaroth Brook for the Ship Tree, and TrueBrain.

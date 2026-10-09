@@ -3,9 +3,12 @@
 import {
   ActionIcon,
   Anchor,
+  Avatar,
   Container,
   Group,
   List,
+  Paper,
+  SimpleGrid,
   Stack,
   Table,
   Text,
@@ -34,24 +37,50 @@ type Acknowledgement = { reason: string } & (
 
 const ACKNOWLEDGEMENTS: readonly Acknowledgement[] = acknowledgements;
 
-/** The character's portrait and name, or the plain name. */
-function Acknowledged({
+const PORTRAIT_SIZE = 44;
+
+/**
+ * One person to thank: their portrait and name from ESI (or initials and the
+ * plain name), and why underneath.
+ */
+function AcknowledgementCard({
   acknowledgement,
 }: Readonly<{ acknowledgement: Acknowledgement }>) {
-  if (!("characterId" in acknowledgement)) return acknowledgement.name;
-  const { characterId } = acknowledgement;
+  const characterId =
+    "characterId" in acknowledgement ? acknowledgement.characterId : undefined;
   return (
-    <Group
-      component="span"
-      gap={6}
-      wrap="nowrap"
-      style={{ display: "inline-flex", verticalAlign: "middle" }}
-    >
-      <CharacterAvatar characterId={characterId} size={20} />
-      <CharacterAnchor inherit characterId={characterId} target="_blank">
-        <CharacterName span inherit characterId={characterId} />
-      </CharacterAnchor>
-    </Group>
+    <Paper component="li" withBorder radius="md" p="sm">
+      <Group align="flex-start" gap="sm" wrap="nowrap">
+        {characterId === undefined ? (
+          <Avatar
+            name={"name" in acknowledgement ? acknowledgement.name : undefined}
+            color="initials"
+            size={PORTRAIT_SIZE}
+          />
+        ) : (
+          <CharacterAvatar characterId={characterId} size={PORTRAIT_SIZE} />
+        )}
+        <Stack gap={2} style={{ minWidth: 0 }}>
+          {characterId === undefined ? (
+            <Text size="sm" fw={600}>
+              {"name" in acknowledgement && acknowledgement.name}
+            </Text>
+          ) : (
+            <CharacterAnchor
+              size="sm"
+              fw={600}
+              characterId={characterId}
+              target="_blank"
+            >
+              <CharacterName span inherit characterId={characterId} />
+            </CharacterAnchor>
+          )}
+          <Text size="sm" c="dimmed">
+            <Reason markdown={acknowledgement.reason} />
+          </Text>
+        </Stack>
+      </Group>
+    </Paper>
   );
 }
 
@@ -206,20 +235,26 @@ export default function PageClient() {
           </Anchor>
           . Some special mentions:
         </Text>
-        <List size="sm" spacing={4}>
+        <SimpleGrid
+          component="ul"
+          aria-label="Special mentions"
+          cols={{ base: 1, sm: 2 }}
+          spacing="sm"
+          p={0}
+          m={0}
+          style={{ listStyle: "none" }}
+        >
           {ACKNOWLEDGEMENTS.map((acknowledgement) => (
-            <List.Item
+            <AcknowledgementCard
               key={
                 "characterId" in acknowledgement
                   ? acknowledgement.characterId
                   : acknowledgement.name
               }
-            >
-              <Acknowledged acknowledgement={acknowledgement} />{" "}
-              <Reason markdown={acknowledgement.reason} />
-            </List.Item>
+              acknowledgement={acknowledgement}
+            />
           ))}
-        </List>
+        </SimpleGrid>
         <Text size="sm">
           Written in{" "}
           <Anchor href="https://www.typescriptlang.org/" target="_blank">

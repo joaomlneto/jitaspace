@@ -4,7 +4,15 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen, within } from "@testing-library/react";
 
-import acknowledgements from "~/app/about/acknowledgements.json";
+// A fixed list, so editing the real one cannot break these tests.
+const ACKNOWLEDGEMENTS = [
+  {
+    characterId: 91610578,
+    reason: "for [EVE-Incursions](https://eve-incursions.de) and its data.",
+  },
+  { name: "Someone", reason: "for being someone without a character." },
+];
+jest.mock("~/app/about/acknowledgements.json", () => ACKNOWLEDGEMENTS);
 
 jest.mock("~/env", () => ({
   env: { NEXT_PUBLIC_DISCORD_INVITE_LINK: "https://discord.gg/test" },
@@ -68,16 +76,15 @@ function renderAbout() {
       <PageClient />
     </MantineProvider>,
   );
-  const heading = screen.getByRole("heading", { name: "Acknowledgements" });
-  // The intro paragraph, then the list.
-  const list = heading.nextElementSibling?.nextElementSibling as HTMLElement;
-  return within(list);
+  return within(screen.getByRole("list", { name: "Special mentions" }));
 }
 
 describe("About page acknowledgements", () => {
-  it("lists everyone in acknowledgements.json, in order", () => {
+  it("gives everyone in acknowledgements.json a card, in order", () => {
     const list = renderAbout();
-    expect(list.getAllByRole("listitem")).toHaveLength(acknowledgements.length);
+    const cards = list.getAllByRole("listitem");
+    expect(cards).toHaveLength(ACKNOWLEDGEMENTS.length);
+    expect(cards[1]).toHaveTextContent("Someone");
   });
 
   it("pictures and links a character, named from ESI", () => {
@@ -90,10 +97,12 @@ describe("About page acknowledgements", () => {
     ).toHaveAttribute("href", "/character/91610578");
   });
 
-  it("names anyone else as written, with no portrait", () => {
+  it("names anyone else as written, with their initials for a portrait", () => {
     const list = renderAbout();
-    const kenn = list.getByText(/^Kenn/).closest("li") as HTMLElement;
-    expect(within(kenn).queryByRole("img")).toBeNull();
+    const card = list.getByText("Someone").closest("li") as HTMLElement;
+    expect(within(card).queryByRole("img")).toBeNull();
+    expect(within(card).getByText("SO")).toBeInTheDocument();
+    expect(within(card).queryByRole("link")).toBeNull();
   });
 
   it("renders a reason's Markdown links, opening in a new tab", () => {

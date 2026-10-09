@@ -4,8 +4,8 @@
     "reason": "for [Hoboleaks](https://www.hoboleaks.space) and his diligence in helping fellow third party developers."
   },
   {
-    "name": "Kenn",
-    "reason": "from [Eve Ref](https://everef.net), for putting up with my questions, for sharing his code, and for all the invaluable tips."
+    "characterId": 1452072530,
+    "reason": "Kenn from [Eve Ref](https://everef.net), for putting up with my questions, for sharing his code, and for all the invaluable tips."
   },
   {
     "characterId": 2113325640,
@@ -14,5 +14,17 @@
   {
     "characterId": 91610578,
     "reason": "for [EVE-Incursions](https://eve-incursions.de), the amazing website that served the incursion community for years, and for making its data available."
+  },
+  {
+    "characterId": 1633218082,
+    "reason": "for [zKillboard](https://zkillboard.com), the humor, and overall awesomeness."
+  },
+  {
+    "characterId": 931334939,
+    "reason": "for the [Ship Tree](https://github.com/eve-online-tools/node-packages/tree/main/packages/eve-ship-tree) and all the stroopwafels."
+  },
+  {
+    "characterId": 1926876774,
+    "reason": "TrueBrain, for all his help and his hard work for the community."
   }
 ]
