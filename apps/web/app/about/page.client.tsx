@@ -12,14 +12,66 @@ import {
   Title,
 } from "@mantine/core";
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
+import Markdown from "react-markdown";
 import { Email } from "react-obfuscate-email";
 
 import { CharacterAnchor, CharacterName } from "@jitaspace/eve-components";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { env } from "~/env";
+import acknowledgements from "./acknowledgements.json";
 
 const MY_CHARACTER_ID = 401563624;
+
+/**
+ * Someone to thank: an EVE character (named and pictured from ESI) or anyone
+ * else by name, and why, in Markdown.
+ */
+type Acknowledgement = { reason: string } & (
+  | { characterId: number }
+  | { name: string }
+);
+
+const ACKNOWLEDGEMENTS: readonly Acknowledgement[] = acknowledgements;
+
+/** The character's portrait and name, or the plain name. */
+function Acknowledged({
+  acknowledgement,
+}: Readonly<{ acknowledgement: Acknowledgement }>) {
+  if (!("characterId" in acknowledgement)) return acknowledgement.name;
+  const { characterId } = acknowledgement;
+  return (
+    <Group
+      component="span"
+      gap={6}
+      wrap="nowrap"
+      style={{ display: "inline-flex", verticalAlign: "middle" }}
+    >
+      <CharacterAvatar characterId={characterId} size={20} />
+      <CharacterAnchor inherit characterId={characterId} target="_blank">
+        <CharacterName span inherit characterId={characterId} />
+      </CharacterAnchor>
+    </Group>
+  );
+}
+
+/** Why: Markdown, its links opening in a new tab, inline in the list item. */
+function Reason({ markdown }: Readonly<{ markdown: string }>) {
+  return (
+    <Markdown
+      components={{
+        p: ({ children }) => children,
+        a: ({ href, children }) => (
+          <Anchor inherit href={href} target="_blank" rel="noopener noreferrer">
+            {children}
+          </Anchor>
+        ),
+      }}
+    >
+      {markdown}
+    </Markdown>
+  );
+}
 
 export default function PageClient() {
   return (
@@ -154,32 +206,19 @@ export default function PageClient() {
           </Anchor>
           . Some special mentions:
         </Text>
-        <List size="sm">
-          <List.Item>
-            <CharacterAnchor inherit characterId={90506825} target="_blank">
-              Inomares
-            </CharacterAnchor>{" "}
-            for{" "}
-            <Anchor inherit href="https://www.hoboleaks.space" target="_blank">
-              Hoboleaks
-            </Anchor>{" "}
-            and his diligence in helping fellow third party developers.
-          </List.Item>
-          <List.Item>
-            Kenn from{" "}
-            <Anchor inherit href="https://everef.net" target="_blank">
-              Eve Ref
-            </Anchor>
-            , for putting up with my questions, for sharing his code, and for
-            all the invaluable tips.
-          </List.Item>
-          <List.Item>
-            <CharacterAnchor inherit characterId={2113325640} target="_blank">
-              Nyx Viliana
-            </CharacterAnchor>{" "}
-            and the The Outuni Project incursions community, for some cool ideas
-            and all the ISK.
-          </List.Item>
+        <List size="sm" spacing={4}>
+          {ACKNOWLEDGEMENTS.map((acknowledgement) => (
+            <List.Item
+              key={
+                "characterId" in acknowledgement
+                  ? acknowledgement.characterId
+                  : acknowledgement.name
+              }
+            >
+              <Acknowledged acknowledgement={acknowledgement} />{" "}
+              <Reason markdown={acknowledgement.reason} />
+            </List.Item>
+          ))}
         </List>
         <Text size="sm">
           Written in{" "}
