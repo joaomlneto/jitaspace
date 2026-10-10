@@ -58,7 +58,7 @@ const HOUR = 60 * 60 * 1000;
 const hoursAgo = (hours: number) =>
   new Date(Date.parse(READ_AT) - hours * HOUR).toISOString();
 
-// 30000001 is a staging system here; 30000003 is a mapped Vanguard system.
+// 30000001 is a staging system here; 30000003 a Vanguard system.
 const CLAYSSON = 30000001;
 const ADIERE = 30000003;
 const ZD4 = 30005000;
@@ -143,6 +143,7 @@ const LOOKUPS = {
       securityStatus: 0.8,
       longestWarpAu: 58,
       stations: [],
+      siteRole: "vanguard" as const,
     },
     [ZD4]: { name: "ZD4-G9", securityStatus: -0.3, longestWarpAu: 25 },
     [IBE]: { name: "2IBE-N", securityStatus: -0.2 },

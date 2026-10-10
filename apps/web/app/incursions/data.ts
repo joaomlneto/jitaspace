@@ -16,6 +16,7 @@ import { computeNpcStats } from "~/lib/npcStats";
 import { readNpcStats } from "~/lib/npcStatsData";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
 import { longestDistanceAu } from "./math";
+import { incursionSiteRole } from "./siteRoles";
 import { isTrackedIncursion } from "./types";
 
 /**
@@ -308,6 +309,7 @@ export async function readIncursionsData(): Promise<IncursionsData> {
   for (const solarSystemId of activeSystemIds) {
     const system = systems[solarSystemId];
     if (!system) continue;
+    system.siteRole = incursionSiteRole(solarSystemId);
     system.longestWarpAu = longestDistanceAu(
       celestials.get(solarSystemId) ?? [],
     );

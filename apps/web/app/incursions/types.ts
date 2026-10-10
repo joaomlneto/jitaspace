@@ -1,4 +1,5 @@
 import type { IncursionState } from "./math";
+import type { IncursionSiteRole } from "./siteRoles";
 import type { NpcStats } from "~/lib/npcStats";
 
 export type { IncursionState } from "./math";
@@ -58,6 +59,8 @@ export interface IncursionSolarSystem {
   longestWarpAu?: number;
   /** Only for the systems of active incursions. */
   stations?: IncursionStation[];
+  /** Only for the systems of active incursions, and only if it is mapped. */
+  siteRole?: IncursionSiteRole;
 }
 
 /** Who holds a system: an alliance, or a faction. */

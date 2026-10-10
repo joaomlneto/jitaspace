@@ -33,6 +33,7 @@ import type { IncursionSiteRole } from "./siteRoles";
 import type {
   IncursionRow,
   IncursionsData,
+  IncursionSolarSystem,
   TrackedIncursionRow,
 } from "./types";
 import { InfluenceChart } from "./InfluenceChart";
@@ -55,7 +56,6 @@ import {
   SystemLink,
   useLiveNow,
 } from "./parts";
-import { incursionSiteRole } from "./siteRoles";
 import { isTrackedIncursion } from "./types";
 
 type SystemRole = "staging" | IncursionSiteRole | "unknown";
@@ -77,10 +77,11 @@ const ROLE_LABEL: Record<SystemRole, string> = {
 const roleOf = (
   solarSystemId: number,
   stagingSolarSystemId: number,
+  system: IncursionSolarSystem | undefined,
 ): SystemRole =>
   solarSystemId === stagingSolarSystemId
     ? "staging"
-    : (incursionSiteRole(solarSystemId) ?? "unknown");
+    : (system?.siteRole ?? "unknown");
 
 const isHighSec = (securityStatus: number | undefined) =>
   securityStatus !== undefined &&
@@ -304,11 +305,14 @@ function SystemsTable({
       ]),
     ];
     return ids
-      .map((solarSystemId) => ({
-        solarSystemId,
-        role: roleOf(solarSystemId, incursion.stagingSolarSystemId),
-        system: names.system(solarSystemId),
-      }))
+      .map((solarSystemId) => {
+        const system = names.system(solarSystemId);
+        return {
+          solarSystemId,
+          role: roleOf(solarSystemId, incursion.stagingSolarSystemId, system),
+          system,
+        };
+      })
       .sort(
         (a, b) =>
           ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) ||

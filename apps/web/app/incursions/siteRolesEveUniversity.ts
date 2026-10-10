@@ -9,12 +9,16 @@
  * revision 232361 of 2026-09-26), keeping only the constellations whose
  * layout checks out: every system listed is in the constellation and shares
  * its security band, the layout has one staging system and one headquarters,
- * its vanguard and assault counts follow the wiki's own rule (which stops at
- * eight such systems; past it, null-sec splits as Mekashtad and Elalan do in
- * both maps: six vanguard and three assault for nine), the row lists
+ * its vanguard and assault counts follow the wiki's own rule, the row lists
  * every system of the constellation, and where ESI has listed an incursion
  * there, its staging and infested systems match. Constellations and systems
  * lost to Pochven are left out.
+ *
+ * The wiki's rule stops at eight vanguard and assault systems. The eight
+ * null-sec constellations past it are kept on the wiki's word alone: six of
+ * them split nine systems six vanguard to three assault, as Mekashtad and
+ * Elalan do in both maps, but nothing else confirms Z-6NQ6's ten (six to four)
+ * or RFY-QB's eleven (seven to four).
  *
  * The EVE University wiki's content is licensed under the Creative Commons
  * Attribution-ShareAlike 4.0 licence

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { incursionSiteRole } from "~/app/incursions/siteRoles";
+import {
+  EVE_INCURSIONS_SYSTEMS_BY_ROLE,
+  incursionSiteRole,
+} from "~/app/incursions/siteRoles";
 import { EVE_UNIVERSITY_SYSTEMS_BY_ROLE } from "~/app/incursions/siteRolesEveUniversity";
 
 describe("incursionSiteRole", () => {
@@ -21,11 +24,24 @@ describe("incursionSiteRole", () => {
     expect(incursionSiteRole(30005296)).toBe("vanguard");
   });
 
-  it("corrects eve-incursions.de where its split breaks its own rule", () => {
-    // Oyeman (Semou): three vanguards and one assault, as elsewhere.
-    expect(incursionSiteRole(30002961)).toBe("vanguard");
-    // Intaki: high-sec in low-sec Viriette, never part of an incursion.
+  it("drops Intaki: high-sec in low-sec Viriette, never part of an incursion", () => {
     expect(incursionSiteRole(30003788)).toBeUndefined();
+  });
+
+  it.each([
+    ["Oyeman (Semou)", 30002961, "vanguard"],
+    ["Kudi (Yekti)", 30003501, "vanguard"],
+    ["Omam (Pezarba)", 30004137, "vanguard"],
+    ["Derririntel (Eustron)", 30005025, "vanguard"],
+    ["Agoze (Viriette)", 30003787, "vanguard"],
+    ["Ostingele (Viriette)", 30003792, "vanguard"],
+    ["Vey (Viriette)", 30003790, "assault"],
+    ["Arveyil (Enka)", 30003007, "vanguard"],
+    ["Nidebora (Enka)", 30003006, "vanguard"],
+    ["Faktun (Enka)", 30003002, "assault"],
+    ["Halenan (Enka)", 30003003, "assault"],
+  ])("corrects %s to the wiki's role", (_name, solarSystemId, role) => {
+    expect(incursionSiteRole(solarSystemId)).toBe(role);
   });
 
   it("leaves out what the wiki gets wrong or lost to Pochven", () => {
@@ -35,8 +51,12 @@ describe("incursionSiteRole", () => {
     expect(incursionSiteRole(30003495)).toBeUndefined();
   });
 
-  it("adds no system twice", () => {
-    const all = Object.values(EVE_UNIVERSITY_SYSTEMS_BY_ROLE).flat();
-    expect(new Set(all).size).toBe(all.length);
+  it("adds no system twice, nor one eve-incursions.de already maps", () => {
+    const wiki = Object.values(EVE_UNIVERSITY_SYSTEMS_BY_ROLE).flat();
+    expect(new Set(wiki).size).toBe(wiki.length);
+    const mapped = new Set(
+      Object.values(EVE_INCURSIONS_SYSTEMS_BY_ROLE).flat(),
+    );
+    expect(wiki.filter((id) => mapped.has(id))).toEqual([]);
   });
 });
