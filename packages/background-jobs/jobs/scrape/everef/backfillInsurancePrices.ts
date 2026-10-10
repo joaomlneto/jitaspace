@@ -64,8 +64,9 @@ async function fetchEveRef(url: string): Promise<Response | null> {
     if (!retryable || attempt >= EVEREF_ATTEMPTS) {
       throw new Error(`EVE Ref ${url}: ${response.status}`);
     }
-    await response.body?.cancel();
-    await new Promise((resolve) => setTimeout(resolve, 5_000 * attempt));
+    // Each attempt waits on the one before it: that is the backoff.
+    await response.body?.cancel(); // NOSONAR
+    await new Promise((resolve) => setTimeout(resolve, 5_000 * attempt)); // NOSONAR
   }
 }
 
@@ -134,7 +135,7 @@ export const backfillEveRefInsurancePrices =
         : EVEREF_INSURANCE_HISTORY_START;
       const to = ctx.payload.to ? new Date(ctx.payload.to) : new Date();
       if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
-        throw new Error("`from` and `to` must be ISO timestamps");
+        throw new TypeError("`from` and `to` must be ISO timestamps");
       }
 
       const files = await ctx.run("list EVE Ref files", () =>
@@ -160,10 +161,9 @@ export const backfillEveRefInsurancePrices =
       for (const [first, ...rest] of runs) {
         if (!first) continue;
         if (cached.etag !== first.etag) {
-          cached = {
-            etag: first.etag,
-            prices: await downloadPrices(first.url),
-          };
+          // One run at a time, so each list is downloaded when it is needed.
+          const prices = await downloadPrices(first.url); // NOSONAR
+          cached = { etag: first.etag, prices };
         }
         const observation = {
           observedAt: first.observedAt,

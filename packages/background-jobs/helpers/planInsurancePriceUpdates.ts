@@ -159,54 +159,53 @@ export function planInsurancePriceUpdates({
     const observed = prices.get(typeId);
     if (current && observed && pricesAreEqual(current, observed)) continue;
     plan.changedTypeIds.push(typeId);
+    if (current) plan.closeTypeIds.push(typeId);
 
-    // What N saw: its own row, or the tail of P when P runs past it.
-    let atNext: InsurancePriceRow | undefined = nextByType.get(typeId);
-    let atNextIsTailOfCurrent = false;
-
-    if (current) {
-      plan.closeTypeIds.push(typeId);
-      const runsPastNext =
-        nextObservedAt !== null &&
-        (current.validUntil === null || current.validUntil > nextObservedAt);
-      if (runsPastNext) {
-        atNext = {
-          typeId,
-          validFrom: nextObservedAt,
-          validUntil: current.validUntil,
-          ...pickValues(current),
-        };
-        atNextIsTailOfCurrent = true;
-      }
-    }
+    // What N saw: the tail of P when P runs past it, or else N's own row.
+    const tail = current && tailFromNext(current, nextObservedAt);
+    const atNext = tail ?? nextByType.get(typeId);
 
     if (!observed) {
-      if (atNextIsTailOfCurrent && atNext) plan.create.push(atNext);
-      continue;
-    }
-
-    if (atNext && pricesAreEqual(atNext, observed)) {
+      if (tail) plan.create.push(tail);
+    } else if (atNext && pricesAreEqual(atNext, observed)) {
       // N saw the same prices: one row from here through N's.
-      plan.create.push({
-        typeId,
-        validFrom: observedAt,
-        validUntil: atNext.validUntil,
-        ...pickValues(observed),
-      });
-      if (!atNextIsTailOfCurrent) plan.deleteAtNextTypeIds.push(typeId);
-      continue;
+      plan.create.push(row(typeId, observedAt, atNext.validUntil, observed));
+      if (!tail) plan.deleteAtNextTypeIds.push(typeId);
+    } else {
+      plan.create.push(row(typeId, observedAt, nextObservedAt, observed));
+      if (tail) plan.create.push(tail);
     }
-
-    plan.create.push({
-      typeId,
-      validFrom: observedAt,
-      validUntil: nextObservedAt,
-      ...pickValues(observed),
-    });
-    if (atNextIsTailOfCurrent && atNext) plan.create.push(atNext);
   }
 
   return plan;
+}
+
+const row = (
+  typeId: number,
+  validFrom: Date,
+  validUntil: Date | null,
+  values: InsurancePriceValues,
+): InsurancePriceRow => ({
+  typeId,
+  validFrom,
+  validUntil,
+  ...pickValues(values),
+});
+
+/**
+ * The part of `current` from the next observation on, as a row of its own,
+ * when `current` runs past that observation (which still saw its prices).
+ */
+function tailFromNext(
+  current: InsurancePriceRow,
+  nextObservedAt: Date | null,
+): InsurancePriceRow | undefined {
+  const runsPastNext =
+    nextObservedAt !== null &&
+    (current.validUntil === null || current.validUntil > nextObservedAt);
+  return runsPastNext
+    ? row(current.typeId, nextObservedAt, current.validUntil, current)
+    : undefined;
 }
 
 function indexByType(
