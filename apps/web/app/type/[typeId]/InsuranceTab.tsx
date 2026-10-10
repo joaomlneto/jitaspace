@@ -12,7 +12,7 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import { IconChartLine, IconShieldCheck } from "@tabler/icons-react";
+import { IconChartLine } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import {
@@ -26,6 +26,7 @@ import {
 } from "recharts";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { WindowInsuranceIcon } from "@jitaspace/eve-icons";
 
 import type {
   InsuranceChartPoint,
@@ -327,7 +328,7 @@ export function InsuranceTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconShieldCheck size={18} />}>
+        <SectionHeading icon={<WindowInsuranceIcon size={18} alt="" />}>
           {isCurrent ? "Current insurance" : "Last insurance prices"}
         </SectionHeading>
         {!isCurrent && latest.validUntil && (

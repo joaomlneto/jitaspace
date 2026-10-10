@@ -22,7 +22,6 @@ import {
 import {
   IconBook,
   IconHistory,
-  IconInfoCircle,
   IconMessages,
   IconTarget,
   IconUser,
@@ -36,6 +35,7 @@ import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
   CategoryIskIcon,
+  WindowInfoIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import {
@@ -526,7 +526,7 @@ function OptionalTypeRef({
 function MissionSummary({ mission }: Readonly<{ mission: MissionDetail }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconInfoCircle size={18} />}>
+      <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
         Mission
       </SectionHeading>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -895,7 +895,7 @@ export default function MissionPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>

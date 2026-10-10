@@ -20,7 +20,6 @@ import {
   IconCalendarStats,
   IconChartBar,
   IconClock,
-  IconMapPin,
   IconSkull,
 } from "@tabler/icons-react";
 
@@ -37,6 +36,7 @@ import {
 import {
   CategorySpaceshipCommandIcon,
   CategoryTrophyIcon,
+  WindowMapIcon,
 } from "@jitaspace/eve-icons";
 import {
   CharacterAvatar,
@@ -451,7 +451,7 @@ export function KillboardTab({
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         {locations.length > 0 && (
           <Stack gap="sm">
-            <SectionHeading icon={<IconMapPin size={18} />}>
+            <SectionHeading icon={<WindowMapIcon size={18} alt="" />}>
               Where they fight
             </SectionHeading>
             <Paper withBorder radius="md" p="sm">

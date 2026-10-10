@@ -20,9 +20,7 @@ import {
 import {
   IconGitBranch,
   IconHistory,
-  IconInfoCircle,
   IconListNumbers,
-  IconUsers,
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
@@ -30,6 +28,8 @@ import { FactionAnchor } from "@jitaspace/eve-components";
 import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
+  WindowAgentIcon,
+  WindowInfoIcon,
 } from "@jitaspace/eve-icons";
 import {
   EveIconAvatar,
@@ -175,7 +175,7 @@ function EpicArcOverview({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Epic Arc
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -336,7 +336,7 @@ export default function EpicArcPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -352,7 +352,10 @@ export default function EpicArcPage({
             >
               Missions ({arc.steps.length})
             </Tabs.Tab>
-            <Tabs.Tab value="agents" leftSection={<IconUsers size={16} />}>
+            <Tabs.Tab
+              value="agents"
+              leftSection={<WindowAgentIcon size={16} alt="" />}
+            >
               Agents
             </Tabs.Tab>
             <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>

@@ -22,10 +22,7 @@ import {
   IconChartPie,
   IconExternalLink,
   IconFileText,
-  IconHistory,
-  IconInfoCircle,
   IconSwords,
-  IconUserCircle,
   IconWorld,
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -42,7 +39,14 @@ import {
   StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
-import { CategoryLpIcon, CategorySkullIcon } from "@jitaspace/eve-icons";
+import {
+  CategoryLpIcon,
+  CategoryOngoingConflictsIcon,
+  CategorySkullIcon,
+  WindowAgentIcon,
+  WindowEmploymentHistoryIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -590,7 +594,7 @@ export default function CorporationPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -603,7 +607,10 @@ export default function CorporationPage({
               </Tabs.Tab>
             )}
             {visibleTabs.history && (
-              <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+              <Tabs.Tab
+                value="history"
+                leftSection={<WindowEmploymentHistoryIcon size={16} alt="" />}
+              >
                 Alliance History
               </Tabs.Tab>
             )}
@@ -618,7 +625,7 @@ export default function CorporationPage({
             {visibleTabs.agents && profile && (
               <Tabs.Tab
                 value="agents"
-                leftSection={<IconUserCircle size={16} />}
+                leftSection={<WindowAgentIcon size={16} alt="" />}
               >
                 Agents ({formatInteger(profile.counts.agents)})
               </Tabs.Tab>
@@ -632,7 +639,16 @@ export default function CorporationPage({
               </Tabs.Tab>
             )}
             {visibleTabs.wars && warSummary && (
-              <Tabs.Tab value="wars" leftSection={<IconSwords size={16} />}>
+              <Tabs.Tab
+                value="wars"
+                leftSection={
+                  <CategoryOngoingConflictsIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Wars ({formatInteger(warSummary.total)})
               </Tabs.Tab>
             )}
@@ -655,7 +671,7 @@ export default function CorporationPage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
                   Identity &amp; Leadership
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">

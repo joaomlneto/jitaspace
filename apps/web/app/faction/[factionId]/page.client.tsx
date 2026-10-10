@@ -24,9 +24,7 @@ import {
   IconBuildingFortress,
   IconExternalLink,
   IconFileText,
-  IconHierarchy3,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
   IconShieldHalf,
   IconUsersGroup,
@@ -58,6 +56,9 @@ import {
   CategorySolarSystemIcon,
   ControlCargoInventoryIcon,
   ControlRegionLayoutIcon,
+  SystemShipTreeIcon,
+  WindowInfoIcon,
+  WindowStandingsIcon,
 } from "@jitaspace/eve-icons";
 import { useEsiNameLookup } from "@jitaspace/hooks";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
@@ -1299,7 +1300,7 @@ export default function FactionPage({
           keepMounted={false}
         >
           <Tabs.List>
-            {tab("overview", <IconInfoCircle size={16} />, "Overview")}
+            {tab("overview", <WindowInfoIcon size={16} alt="" />, "Overview")}
             {tab("description", <IconFileText size={16} />, "Description")}
             {tab(
               "territory",
@@ -1334,7 +1335,7 @@ export default function FactionPage({
             )}
             {tab(
               "ship-tree",
-              <IconHierarchy3 size={16} />,
+              <SystemShipTreeIcon size={16} color="currentColor" alt="" />,
               "Ship Tree",
               undefined,
               preloadShipTreeTab,
@@ -1357,7 +1358,7 @@ export default function FactionPage({
             )}
             {tab(
               "standings",
-              <IconBuildingFortress size={16} />,
+              <WindowStandingsIcon size={16} alt="" />,
               "Standings",
               counts.standingRestrictions,
             )}
@@ -1573,7 +1574,7 @@ function OverviewPanel({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Identity
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">

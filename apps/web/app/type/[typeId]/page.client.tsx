@@ -24,10 +24,8 @@ import {
   IconExternalLink,
   IconFileText,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
   IconListDetails,
-  IconShieldCheck,
   IconSwords,
   IconVersions,
 } from "@tabler/icons-react";
@@ -36,7 +34,11 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
-import { CategoryIskIcon } from "@jitaspace/eve-icons";
+import {
+  CategoryIskIcon,
+  WindowInfoIcon,
+  WindowInsuranceIcon,
+} from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -576,7 +578,7 @@ export default function TypePage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -614,7 +616,7 @@ export default function TypePage({
             {insurance && (
               <Tabs.Tab
                 value="insurance"
-                leftSection={<IconShieldCheck size={16} />}
+                leftSection={<WindowInsuranceIcon size={16} alt="" />}
               >
                 Insurance
               </Tabs.Tab>
@@ -644,7 +646,7 @@ export default function TypePage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
                   Identity &amp; Classification
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">

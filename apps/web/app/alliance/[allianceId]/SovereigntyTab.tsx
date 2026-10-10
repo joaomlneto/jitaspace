@@ -24,8 +24,8 @@ import {
 import {
   CategoryOngoingConflictsIcon,
   CategorySolarSystemIcon,
-  CategorySovereigntyIcon,
   ControlRegionLayoutIcon,
+  WindowSovereigntyIcon,
 } from "@jitaspace/eve-icons";
 import {
   AllianceAnchor,
@@ -353,11 +353,7 @@ export function SovereigntyTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading
-          icon={
-            <CategorySovereigntyIcon size={18} color="currentColor" alt="" />
-          }
-        >
+        <SectionHeading icon={<WindowSovereigntyIcon size={18} alt="" />}>
           Holdings
         </SectionHeading>
         <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">

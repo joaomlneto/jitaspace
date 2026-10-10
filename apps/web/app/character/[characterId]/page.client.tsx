@@ -17,10 +17,8 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconBriefcase,
   IconExternalLink,
   IconId,
-  IconInfoCircle,
   IconMapPin,
   IconUserCircle,
   IconUsers,
@@ -40,7 +38,11 @@ import {
   TypeAnchor,
   TypeAvatar,
 } from "@jitaspace/eve-components";
-import { CategorySkullIcon } from "@jitaspace/eve-icons";
+import {
+  CategorySkullIcon,
+  WindowEmploymentHistoryIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
   useCharacterSkills,
@@ -578,7 +580,7 @@ export default function CharacterPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -593,7 +595,7 @@ export default function CharacterPage({
             {visibleTabs.history && (
               <Tabs.Tab
                 value="history"
-                leftSection={<IconBriefcase size={16} />}
+                leftSection={<WindowEmploymentHistoryIcon size={16} alt="" />}
               >
                 Employment History
                 {employment.stints > 0 &&
@@ -857,7 +859,7 @@ function EmploymentSummary({
 }: Readonly<{ summary: EmploymentSummaryData }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconBriefcase size={18} />}>
+      <SectionHeading icon={<WindowEmploymentHistoryIcon size={18} alt="" />}>
         Employment
       </SectionHeading>
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">

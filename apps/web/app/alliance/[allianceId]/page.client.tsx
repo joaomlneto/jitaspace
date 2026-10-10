@@ -19,7 +19,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconExternalLink, IconInfoCircle } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { GetAlliancesAllianceIdQueryResponse } from "@jitaspace/esi-client";
@@ -35,7 +35,8 @@ import {
   CategoryCorporationIcon,
   CategoryOngoingConflictsIcon,
   CategorySkullIcon,
-  CategorySovereigntyIcon,
+  WindowInfoIcon,
+  WindowSovereigntyIcon,
 } from "@jitaspace/eve-icons";
 import {
   useEsiAllianceInformation,
@@ -518,7 +519,7 @@ export default function AlliancePage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -538,13 +539,7 @@ export default function AlliancePage({
             {hasSovereignty && (
               <Tabs.Tab
                 value="sovereignty"
-                leftSection={
-                  <CategorySovereigntyIcon
-                    size={16}
-                    color="currentColor"
-                    alt=""
-                  />
-                }
+                leftSection={<WindowSovereigntyIcon size={16} alt="" />}
               >
                 Sovereignty ({formatInteger(sovereigntySystems)})
               </Tabs.Tab>
@@ -583,7 +578,7 @@ export default function AlliancePage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
                   Identity &amp; Leadership
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -793,13 +788,7 @@ export default function AlliancePage({
               {hasSovereignty && sovereigntySummary && (
                 <Stack gap="sm">
                   <SectionHeading
-                    icon={
-                      <CategorySovereigntyIcon
-                        size={18}
-                        color="currentColor"
-                        alt=""
-                      />
-                    }
+                    icon={<WindowSovereigntyIcon size={18} alt="" />}
                   >
                     Sovereignty
                   </SectionHeading>

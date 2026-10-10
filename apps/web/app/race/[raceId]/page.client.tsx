@@ -21,13 +21,11 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconBuildingSkyscraper,
   IconBuildingStore,
   IconDna,
   IconFileText,
   IconHierarchy3,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
   IconSchool,
   IconUsersGroup,
@@ -48,6 +46,10 @@ import {
   CategoryCorporationIcon,
   CategorySpaceshipCommandIcon,
   ControlCargoInventoryIcon,
+  SystemShipTreeIcon,
+  WindowInfoIcon,
+  WindowSkillsIcon,
+  WindowStationIcon,
 } from "@jitaspace/eve-icons";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -1101,7 +1103,7 @@ function StationsPanel({
 
       {hasStations && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconBuildingSkyscraper size={18} />}>
+          <SectionHeading icon={<WindowStationIcon size={18} alt="" />}>
             Stations
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1245,7 +1247,7 @@ function OverviewPanel({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Identity
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -1693,7 +1695,7 @@ export default function RacePage(race: Readonly<PageProps>) {
           keepMounted={false}
         >
           <Tabs.List>
-            {tab("overview", <IconInfoCircle size={16} />, "Overview")}
+            {tab("overview", <WindowInfoIcon size={16} alt="" />, "Overview")}
             {tab("description", <IconFileText size={16} />, "Description")}
             {tab(
               "bloodlines",
@@ -1707,7 +1709,7 @@ export default function RacePage(race: Readonly<PageProps>) {
               "Schools",
               race.schools.length,
             )}
-            {tab("skills", <IconListCheck size={16} />, "Skills")}
+            {tab("skills", <WindowSkillsIcon size={16} alt="" />, "Skills")}
             {tab(
               "ships",
               <CategorySpaceshipCommandIcon
@@ -1720,7 +1722,7 @@ export default function RacePage(race: Readonly<PageProps>) {
             )}
             {tab(
               "ship-tree",
-              <IconHierarchy3 size={16} />,
+              <SystemShipTreeIcon size={16} color="currentColor" alt="" />,
               "Ship Tree",
               undefined,
               preloadShipTreeTab,
@@ -1743,7 +1745,7 @@ export default function RacePage(race: Readonly<PageProps>) {
             )}
             {tab(
               "stations",
-              <IconBuildingStore size={16} />,
+              <WindowStationIcon size={16} alt="" />,
               "Stations",
               counts.stations > 0 ? counts.stations : undefined,
             )}
