@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import {
   Alert,
   Anchor,
+  Group,
+  NativeSelect,
   Paper,
   Skeleton,
   Stack,
@@ -12,6 +14,7 @@ import {
 } from "@mantine/core";
 import { IconChartLine, IconShieldCheck } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
+import { useQueryStates } from "nuqs";
 import {
   CartesianGrid,
   Line,
@@ -33,12 +36,24 @@ import type {
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading } from "~/components/EntityPage";
 import { niceTicks, tickFormatter } from "~/components/Market/priceHistory";
+import { Segmented } from "~/components/Wars/WarRoom/parts";
 import { INSURANCE_LEVELS, toInsuranceChartPoints } from "~/lib/insurance";
+import {
+  insuranceHistoryParsers,
+  insuranceHistoryUrlKeys,
+} from "./insuranceParams";
 import classes from "./InsuranceTab.module.css";
 
-/** The level the chart plots: the others are fixed multiples of it. */
-const CHARTED_LEVEL: InsuranceLevelKey = "platinum";
 const CHART_HEIGHT = 260;
+
+const VIEW_OPTIONS = [
+  { value: "chart", label: "Chart" },
+  { value: "table", label: "Table" },
+] as const;
+const TIER_OPTIONS = INSURANCE_LEVELS.map(({ key, name }) => ({
+  value: key,
+  label: name,
+}));
 
 // A fixed locale and time zone: the tab can render on the server (a
 // `?tab=insurance` link), and the client must produce the same text.
@@ -54,11 +69,18 @@ const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
   timeZone: "UTC",
 });
-const shortDate = new Intl.DateTimeFormat("en-GB", {
+const monthYear = new Intl.DateTimeFormat("en-GB", {
   month: "short",
   year: "numeric",
   timeZone: "UTC",
 });
+const dayMonth = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+/** Over a year or more, ticks are months apart; closer, several share one. */
+const LONG_SPAN_MS = 365 * 24 * 60 * 60 * 1000;
 
 /** A table cell: the column header carries the unit, and nothing wraps. */
 const cellText = (text: string) => (
@@ -155,23 +177,46 @@ export function ChartTooltip({
   );
 }
 
-function PayoutChart({ history }: Readonly<{ history: TypeInsuranceHistory }>) {
+/**
+ * One level's payout over time. The levels are fixed multiples of the same
+ * value, so one line at a time says it all; the tooltip lists every level.
+ */
+function PayoutChart({
+  history,
+  tier,
+  onTierChange,
+}: Readonly<{
+  history: TypeInsuranceHistory;
+  tier: InsuranceLevelKey;
+  onTierChange: (tier: InsuranceLevelKey) => void;
+}>) {
   const points = useMemo(
-    () =>
-      toInsuranceChartPoints(
-        history.periods,
-        history.lastObservedAt,
-        CHARTED_LEVEL,
-      ),
-    [history],
+    () => toInsuranceChartPoints(history.periods, history.lastObservedAt, tier),
+    [history, tier],
   );
   const payouts = points.flatMap((point) => point.payout ?? []);
+  const span = (points.at(-1)?.time ?? 0) - (points[0]?.time ?? 0);
+  const tickDate = span >= LONG_SPAN_MS ? monthYear : dayMonth;
   const ticks = niceTicks(Math.min(...payouts), Math.max(...payouts));
   return (
     <Paper withBorder radius="md" p="sm" className={classes.root}>
-      <Text size="sm" fw={600} mb={4}>
-        Platinum payout
-      </Text>
+      <Group justify="space-between" gap="xs" mb={4}>
+        <Text size="sm" fw={600}>
+          {INSURANCE_LEVELS.find(({ key }) => key === tier)?.name} payout
+        </Text>
+        <NativeSelect
+          size="xs"
+          aria-label="Insurance tier"
+          data={TIER_OPTIONS}
+          value={tier}
+          onChange={(event) => {
+            const value = TIER_OPTIONS.find(
+              (option) => option.value === event.currentTarget.value,
+            )?.value;
+            if (value) onTierChange(value);
+          }}
+        />
+      </Group>
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <LineChart
           data={points}
@@ -187,7 +232,7 @@ function PayoutChart({ history }: Readonly<{ history: TypeInsuranceHistory }>) {
             type="number"
             scale="time"
             domain={["dataMin", "dataMax"]}
-            tickFormatter={(time: number) => shortDate.format(time)}
+            tickFormatter={(time: number) => tickDate.format(time)}
             tickLine={false}
             axisLine={{ stroke: "var(--chart-grid)" }}
             tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
@@ -273,6 +318,10 @@ export function InsuranceTab({
   latest,
 }: Readonly<{ typeId: number; latest: InsurancePricePeriod }>) {
   const { data: history, isError } = useTypeInsuranceHistory(typeId);
+  const [{ view, tier }, setParams] = useQueryStates(insuranceHistoryParsers, {
+    urlKeys: insuranceHistoryUrlKeys,
+    history: "replace",
+  });
   const isCurrent = latest.validUntil === null;
 
   return (
@@ -301,36 +350,48 @@ export function InsuranceTab({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconChartLine size={18} />}>
-          Price history
-        </SectionHeading>
+        <Group justify="space-between" gap="xs">
+          <SectionHeading icon={<IconChartLine size={18} />}>
+            Price history
+          </SectionHeading>
+          <Segmented
+            label="Show the price history as"
+            value={view}
+            onChange={(value) => void setParams({ view: value })}
+            data={VIEW_OPTIONS}
+          />
+        </Group>
         {isError && (
           <Alert color="red">Could not load the price history.</Alert>
         )}
         {!history && !isError && (
           <Skeleton height={CHART_HEIGHT + 40} radius="md" />
         )}
-        {history && history.periods.length > 0 && (
-          <>
-            <PayoutChart history={history} />
-            <DataTable
-              data={history.periods}
-              columns={periodColumns}
-              rowId={(row) => row.validFrom}
-              withColumnVisibility
-              withPagination
-              defaultPageSize={10}
-              initialSort={{ columnId: "validFrom", direction: "desc" }}
-              verticalSpacing="xs"
-              highlightOnHover
-              striped
-            />
-          </>
+        {history && history.periods.length > 0 && view === "chart" && (
+          <PayoutChart
+            history={history}
+            tier={tier}
+            onTierChange={(value) => void setParams({ tier: value })}
+          />
+        )}
+        {history && history.periods.length > 0 && view === "table" && (
+          <DataTable
+            data={history.periods}
+            columns={periodColumns}
+            rowId={(row) => row.validFrom}
+            withColumnVisibility
+            withPagination
+            defaultPageSize={10}
+            initialSort={{ columnId: "validFrom", direction: "desc" }}
+            verticalSpacing="xs"
+            highlightOnHover
+            striped
+          />
         )}
         <Text size="xs" c="dimmed">
           Every level is a fixed multiple of the same value, so the chart shows
-          Platinum alone; hover it for the rest. Recorded hourly from ESI;
-          history before October 2026 comes from{" "}
+          one level at a time; hover it for the rest, or switch to the table.
+          Recorded hourly from ESI; history before October 2026 comes from{" "}
           <Anchor
             href="https://data.everef.net/insurance-prices/"
             target="_blank"

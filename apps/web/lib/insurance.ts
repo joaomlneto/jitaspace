@@ -16,6 +16,10 @@ export const INSURANCE_LEVELS = [
 
 export type InsuranceLevelKey = (typeof INSURANCE_LEVELS)[number]["key"];
 
+/** The levels' keys, cheapest first. */
+export const INSURANCE_LEVEL_KEYS: readonly InsuranceLevelKey[] =
+  INSURANCE_LEVELS.map(({ key }) => key);
+
 /** One level's premium (`cost`) and what a loss pays out; null if unlisted. */
 export interface InsuranceLevelPrice {
   cost: number | null;
