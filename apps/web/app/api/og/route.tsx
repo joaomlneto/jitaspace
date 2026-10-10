@@ -17,7 +17,7 @@ import { ImageResponse } from "next/og";
 import type { OgCardParams } from "~/lib/og";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, parseOgImageParams } from "~/lib/og";
 
-// Matches the app's dark chrome (`themes/index.ts` eve panel + manifest
+// Matches the app's dark chrome (`themes/eve.ts` panel + manifest
 // theme_color) so a shared link looks like the page it opens.
 const BACKGROUND = "#04070c";
 const PANEL_EDGE = "rgba(147, 214, 224, 0.28)";

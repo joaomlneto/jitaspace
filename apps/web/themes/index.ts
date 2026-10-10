@@ -16,8 +16,9 @@ import {
 } from "@mantine/core";
 
 import { colors } from "./colors";
-import { eveV2Theme } from "./eve-v2";
-import { evePanelSurface, lightDark } from "./lightDark";
+import { crimsonHarvestTheme } from "./crimson-harvest";
+import { eveTheme } from "./eve";
+import { lightDark } from "./lightDark";
 import { WALLPAPERS } from "./wallpapers";
 
 declare module "@mantine/core" {
@@ -41,9 +42,9 @@ const baseTheme = createTheme({
   },
 });
 
-// These themes were designed for the dark scheme. Their surfaces and default
-// text colours carry a light counterpart (`lightDark`), so the light scheme
-// gets pale panels with dark text rather than dark panels with dark text.
+// WHPD was designed for the dark scheme. Its surfaces and default text colours
+// carry a light counterpart (`lightDark`), so the light scheme gets pale panels
+// with dark text rather than dark panels with dark text.
 const whpdPanelStyles = {
   position: "relative",
   overflow: "hidden",
@@ -74,267 +75,85 @@ const whpdPanelStyles = {
   },
 } as const;
 
-const evePanelStyles = {
-  position: "relative",
-  overflow: "hidden",
-  backgroundColor: evePanelSurface.backgroundColor,
-  backgroundImage: evePanelSurface.backgroundImage,
-  borderColor: evePanelSurface.borderColor,
-  borderTopColor: evePanelSurface.borderTopColor,
-  boxShadow: evePanelSurface.boxShadow,
-  "&::before": {
-    content: '""',
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(110deg, rgba(84, 194, 201, 0.09) 0%, rgba(84, 194, 201, 0) 45%, rgba(130, 76, 152, 0.08) 75%, rgba(130, 76, 152, 0) 100%)",
-    pointerEvents: "none",
-  },
-} as const;
-
-const eveTheme = mergeThemeOverrides(
-  baseTheme,
-  createTheme({
-    other: {
-      ...WALLPAPERS.cradleOfWar,
-    },
-    black: "#04070c",
-    white: "#f2f7fb",
-    primaryColor: "eve_primary",
-    primaryShade: 7,
-    colors: {
-      ...colors,
-      dark: [
-        "#d5d7e0",
-        "#adb0bc",
-        "#868b9a",
-        "#5f6678",
-        "#3f485f",
-        "#30384e",
-        "#21283c",
-        "#111111",
-        "#0d0f17",
-        "#07090f",
-      ],
-    },
-    fontFamily: "Rajdhani, Inter, Segoe UI, sans-serif",
-    fontFamilyMonospace: "JetBrains Mono, SFMono-Regular, monospace",
-    headings: {
-      fontFamily: "Rajdhani, Inter, Segoe UI, sans-serif",
-      fontWeight: "600",
-    },
-    defaultRadius: "sm",
-    spacing: {
-      xs: "0.625rem",
-      sm: "0.75rem",
-      md: "1rem",
-      lg: "1.5rem",
-      xl: "2rem",
-    },
-    radius: {
-      xs: "2px",
-      sm: "4px",
-      md: "6px",
-      lg: "10px",
-      xl: "14px",
-    },
-    shadows: {
-      xs: "0 0 0 1px rgba(110, 150, 179, 0.2)",
-      sm: "0 2px 10px rgba(1, 10, 20, 0.56)",
-      md: "0 8px 24px rgba(1, 10, 20, 0.64)",
-      lg: "0 14px 36px rgba(1, 10, 20, 0.72)",
-      xl: "0 20px 52px rgba(1, 10, 20, 0.78)",
-    },
-    defaultGradient: {
-      from: "eve_primary.6",
-      to: "eve_secondary.8",
-      deg: 130,
-    },
-    components: {
-      Badge: Badge.extend({
-        defaultProps: {
-          color: "eve_accent",
-          variant: "outline",
-        },
-      }),
-      Button: Button.extend({
-        defaultProps: {
-          color: "eve_primary",
-          variant: "outline",
-          radius: "xs",
-          fw: 600,
-          tt: "uppercase",
-        },
-        styles: {
-          root: {
-            letterSpacing: "0.035em",
-            transition:
-              "background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 120ms ease",
-            "&:active": {
-              transform: "translateY(1px)",
-            },
-            "&[dataVariant='outline']": {
-              borderColor: "rgba(198, 212, 226, 0.24)",
-              backgroundImage:
-                "linear-gradient(180deg, rgba(52, 63, 79, 0.26) 0%, rgba(19, 27, 39, 0.64) 100%)",
-              color: "#e2ebf2",
-              "&:hover": {
-                borderColor: "rgba(131, 219, 227, 0.52)",
-                backgroundImage:
-                  "linear-gradient(180deg, rgba(61, 75, 94, 0.34) 0%, rgba(22, 31, 45, 0.76) 100%)",
-                boxShadow: "0 0 0 1px rgba(124, 212, 221, 0.18) inset",
-              },
-            },
-            "&[dataVariant='filled']": {
-              border: "1px solid rgba(138, 222, 229, 0.38)",
-              backgroundImage:
-                "linear-gradient(180deg, #35949d 0%, #236a74 100%)",
-              color: "#eaf8fc",
-              boxShadow:
-                "inset 0 1px 0 rgba(210, 247, 250, 0.24), 0 0 18px rgba(47, 143, 154, 0.2)",
-              "&:hover": {
-                backgroundImage:
-                  "linear-gradient(180deg, #3fa3ad 0%, #2a7983 100%)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(222, 250, 252, 0.28), 0 0 24px rgba(68, 167, 175, 0.26)",
-              },
-            },
-          },
-        },
-      }),
-      Card: Card.extend({
-        defaultProps: {
-          bg: evePanelSurface.bg,
-          radius: "xs",
-          shadow: "xs",
-          withBorder: true,
-        },
-        styles: {
-          root: {
-            ...evePanelStyles,
-          },
-        },
-      }),
-      Divider: Divider.extend({
-        defaultProps: {
-          color: "rgba(111, 146, 172, 0.34)",
-        },
-      }),
-      Paper: Paper.extend({
-        defaultProps: {
-          bg: evePanelSurface.bg,
-          radius: "xs",
-          shadow: "xs",
-          withBorder: true,
-        },
-        styles: {
-          root: {
-            ...evePanelStyles,
-          },
-        },
-      }),
-      Text: Text.extend({
-        defaultProps: {
-          c: lightDark(
-            "var(--mantine-color-eve-9)",
-            "var(--mantine-color-eve-1)",
-          ),
-        },
-      }),
-      Title: Title.extend({
-        defaultProps: {
-          c: "bright",
-          order: 2,
-          tt: "uppercase",
-          style: {
-            letterSpacing: "0.05em",
-          },
-        },
-      }),
-    },
-  }),
-);
+// EVE: the faction palettes (colors.ts) underneath, so `eve_primary`,
+// `eve_accent` & co. resolve for the app's components, with the theme's own
+// tuples (`eve`, `caldari`, `dark`, …) taking precedence over same-named ones.
+const eve = mergeThemeOverrides(baseTheme, createTheme({ colors }), eveTheme);
 
 export const themes = {
-  default: baseTheme,
-  eve: eveTheme,
-  eve_v2: mergeThemeOverrides(baseTheme, eveV2Theme),
-  carbon: mergeThemeOverrides(
-    eveTheme,
-    createTheme({
-      primaryColor: "carbon",
-      primaryShade: 6,
-      colors,
-    }),
-  ),
-  photon: mergeThemeOverrides(
-    eveTheme,
-    createTheme({
-      primaryColor: "photon",
-      primaryShade: 6,
-      colors,
-    }),
-  ),
+  // The seasonal theme everyone gets until they pick another: EVE, dressed for
+  // the current in-game event. Swap the override when the season changes.
+  default: mergeThemeOverrides(eve, crimsonHarvestTheme),
+  minimal: baseTheme,
+  eve,
   amarr: mergeThemeOverrides(
-    eveTheme,
+    eve,
     createTheme({
       other: {
         ...WALLPAPERS.amarr,
       },
       primaryColor: "amarr_primary",
       primaryShade: 6,
-      colors,
     }),
   ),
   caldari: mergeThemeOverrides(
-    eveTheme,
+    eve,
     createTheme({
       other: {
         ...WALLPAPERS.caldari,
       },
       primaryColor: "caldari_primary",
-      colors,
     }),
   ),
   gallente: mergeThemeOverrides(
-    eveTheme,
+    eve,
     createTheme({
       other: {
         ...WALLPAPERS.gallente,
       },
       primaryColor: "gallente_primary",
-      colors,
     }),
   ),
   minmatar: mergeThemeOverrides(
-    eveTheme,
+    eve,
     createTheme({
       other: {
         ...WALLPAPERS.minmatar,
       },
       primaryColor: "minmatar_primary",
-      colors,
+    }),
+  ),
+  carbon: mergeThemeOverrides(
+    eve,
+    createTheme({
+      primaryColor: "carbon",
+      primaryShade: 6,
+    }),
+  ),
+  photon: mergeThemeOverrides(
+    eve,
+    createTheme({
+      primaryColor: "photon",
+      primaryShade: 6,
     }),
   ),
   ore: mergeThemeOverrides(
-    eveTheme,
+    eve,
     createTheme({
       primaryColor: "ore_primary",
-      colors,
     }),
   ),
   sisters_of_eve: mergeThemeOverrides(
-    eveTheme,
+    eve,
     createTheme({
       primaryColor: "sisters_of_eve_primary",
-      colors,
     }),
   ),
   whpd: mergeThemeOverrides(
-    eveTheme,
+    eve,
     createTheme({
-      // Spelled out: other.* deep-merges over eveTheme, so leaving the mobile
-      // one unset would show eveTheme's wallpaper on phones over this black.
+      // Spelled out: other.* deep-merges over EVE's, so leaving the mobile
+      // one unset would show EVE's wallpaper on phones over this black.
       other: {
         appBackground: lightDark("#eef2ff", "#000"),
         appBackgroundMobile: lightDark("#eef2ff", "#000"),
@@ -344,7 +163,6 @@ export const themes = {
       primaryColor: "whpd_primary",
       primaryShade: 6,
       colors: {
-        ...colors,
         dark: [
           "#d0d4e0",
           "#a8adbf",
