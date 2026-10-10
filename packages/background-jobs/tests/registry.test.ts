@@ -82,6 +82,7 @@ describe("background-jobs registry", () => {
       "esi-track-insurance-prices",
       "esi-update-alliances",
       "esi-update-wars",
+      "everef-fill-insurance-price-gaps",
       "watch-sde",
     ]);
   });

@@ -62,15 +62,22 @@ const tx = {
           )
           .map((row) => ({ ...row })),
       ),
+    // Closes rows by primary key: `OR` of exact (typeId, validFrom) pairs.
     updateMany: ({
       where,
       data,
     }: {
-      where: Where & { typeId: { in: number[] } };
+      where: { OR: { typeId: number; validFrom: Date }[] };
       data: { validUntil: Date };
     }) => {
       for (const row of rows) {
-        if (where.typeId.in.includes(row.typeId) && containsAt(row, where)) {
+        if (
+          where.OR.some(
+            (key) =>
+              key.typeId === row.typeId &&
+              t(key.validFrom) === t(row.validFrom),
+          )
+        ) {
           row.validUntil = data.validUntil;
         }
       }
@@ -106,9 +113,21 @@ const tx = {
     },
   },
 };
+/** Write conflicts to raise before the next transactions run. */
+let conflicts = 0;
+const transaction = jest.fn((fn: (client: typeof tx) => Promise<unknown>) => {
+  if (conflicts > 0) {
+    conflicts--;
+    return Promise.reject(
+      Object.assign(new Error("write conflict"), { code: "P2034" }),
+    );
+  }
+  return fn(tx);
+});
 jest.mock("../db", () => ({
   prisma: {
-    $transaction: (fn: (client: typeof tx) => Promise<unknown>) => fn(tx),
+    $transaction: (fn: (client: typeof tx) => Promise<unknown>) =>
+      transaction(fn),
   },
 }));
 
@@ -120,6 +139,7 @@ beforeAll(async () => {
 beforeEach(() => {
   snapshots = [];
   rows = [];
+  conflicts = 0;
 });
 
 const at = (hour: number) => new Date(Date.UTC(2026, 9, 10, hour));
@@ -255,5 +275,17 @@ describe("recordInsurancePriceSnapshot", () => {
         repeatedAt: [at(3)],
       }),
     ).rejects.toThrow(/between this one and the next/);
+  });
+
+  it("retries a transaction CockroachDB aborts as a write conflict", async () => {
+    conflicts = 2;
+    await expect(record(0)).resolves.toMatchObject({ recorded: true });
+    expect(transaction).toHaveBeenCalledTimes(3);
+  });
+
+  it("gives up after three write conflicts", async () => {
+    conflicts = 3;
+    await expect(record(0)).rejects.toThrow("write conflict");
+    expect(snapshots).toHaveLength(0);
   });
 });

@@ -21,9 +21,17 @@ export function groupIntoRuns(
   recorded: readonly Date[],
 ): EveRefInsuranceFile[][] {
   const recordedTimes = new Set(recorded.map((at) => at.getTime()));
+  // One file per time: a second would land in the same run as a "repeat" of
+  // the first at its own time, which the recorder rejects.
+  const fileTimes = new Set<number>();
   const timeline = [
     ...files
-      .filter((file) => !recordedTimes.has(file.observedAt.getTime()))
+      .filter((file) => {
+        const at = file.observedAt.getTime();
+        if (recordedTimes.has(at) || fileTimes.has(at)) return false;
+        fileTimes.add(at);
+        return true;
+      })
       .map((file) => ({ at: file.observedAt.getTime(), file })),
     ...[...recordedTimes].map((at) => ({ at, file: null })),
   ].sort((a, b) => a.at - b.at);
@@ -54,4 +62,32 @@ export function dayPaths(from: Date, to: Date): string[] {
     paths.push(`${date.slice(0, 4)}/${date}`);
   }
   return paths;
+}
+
+/**
+ * Consecutive observations are about an hour apart (ESI refreshes the list
+ * hourly, EVE Ref archives it hourly), so a longer gap than this means at
+ * least one refresh went unrecorded.
+ */
+export const GAP_TO_BACKFILL_MS = 90 * 60 * 1000;
+
+/**
+ * The stretches between consecutive observations longer than
+ * {@link GAP_TO_BACKFILL_MS}, oldest first, including the one from the last
+ * observation to `now`.
+ */
+export function findObservationGaps(
+  observedAt: readonly Date[],
+  now: Date,
+): { from: Date; to: Date }[] {
+  const times = [...observedAt, now].sort((a, b) => a.getTime() - b.getTime());
+  const gaps: { from: Date; to: Date }[] = [];
+  for (let i = 1; i < times.length; i++) {
+    const from = times[i - 1];
+    const to = times[i];
+    if (from && to && to.getTime() - from.getTime() > GAP_TO_BACKFILL_MS) {
+      gaps.push({ from, to });
+    }
+  }
+  return gaps;
 }

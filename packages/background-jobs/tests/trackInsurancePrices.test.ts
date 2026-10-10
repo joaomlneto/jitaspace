@@ -107,11 +107,15 @@ describe("trackInsurancePrices", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it("does not backfill when the observation was already recorded", async () => {
+  it("still sends the backfill when a retry finds the observation recorded", async () => {
+    // The first attempt recorded it, then failed to send.
     previous = { observedAt: new Date("2026-10-10T12:00:00Z") };
     recorded = false;
     await run();
-    expect(send).not.toHaveBeenCalled();
+    expect(send).toHaveBeenCalledWith(
+      "backfill-everef-insurance-prices",
+      expect.objectContaining({ from: "2026-10-10T12:00:00.000Z" }),
+    );
   });
 
   it("fails an empty list so the run retries", async () => {

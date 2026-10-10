@@ -3,6 +3,7 @@ import { getInsurancePrices } from "@jitaspace/esi-client";
 import type { BackfillEveRefInsurancePricesPayload } from "../everef/backfillInsurancePrices.ts";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { GAP_TO_BACKFILL_MS } from "../../../helpers/insurancePriceBackfill.ts";
 import {
   observedAtFromLastModified,
   parseInsurancePriceList,
@@ -11,14 +12,6 @@ import { recordInsurancePriceSnapshot } from "../../../helpers/recordInsurancePr
 
 /** A hung ESI request fails fast, so a retry runs well before the next poll. */
 const ESI_TIMEOUT_MS = 30_000;
-
-/**
- * A gap longer than this since the last observation (an outage, failed runs,
- * the stretch between the bootstrap and the first deploy) is filled from EVE
- * Ref's hourly archive. ESI refreshes the list hourly, so consecutive
- * observations are about an hour apart, and 90 minutes means one went missing.
- */
-export const GAP_TO_BACKFILL_MS = 90 * 60 * 1000;
 
 export const trackInsurancePrices = defineJob<Record<string, never>>({
   id: "esi-track-insurance-prices",
@@ -62,11 +55,14 @@ export const trackInsurancePrices = defineJob<Record<string, never>>({
     });
 
     // Without any previous observation, the history has not been bootstrapped:
-    // that is a deliberate full backfill, not a gap.
+    // that is a deliberate full backfill, not a gap. Not gated on `recorded`:
+    // a retry after a failed send finds this observation already recorded,
+    // and must still send it. A second send finds nothing left to import.
     const gapMs = previous
       ? observedAt.getTime() - previous.observedAt.getTime()
       : 0;
-    if (result.recorded && previous && gapMs > GAP_TO_BACKFILL_MS) {
+    const hasGap = previous !== null && gapMs > GAP_TO_BACKFILL_MS;
+    if (previous && hasGap) {
       ctx.logger.warn("Gap since the last insurance price observation", {
         from: previous.observedAt.toISOString(),
         to: observedAt.toISOString(),
@@ -86,7 +82,7 @@ export const trackInsurancePrices = defineJob<Record<string, never>>({
         recorded: result.recorded,
         types: prices.size,
         changedTypes: result.changedTypes,
-        gapFilled: result.recorded && gapMs > GAP_TO_BACKFILL_MS,
+        gapFilled: hasGap,
       },
     };
   },

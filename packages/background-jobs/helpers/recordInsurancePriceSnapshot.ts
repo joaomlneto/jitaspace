@@ -32,12 +32,41 @@ const notRecorded: InsurancePriceRecordResult = {
   snapshots: 0,
 };
 
+/** Attempts at a transaction CockroachDB aborts as a write conflict. */
+const CONFLICT_ATTEMPTS = 3;
+
+/**
+ * A serializable transaction CockroachDB aborted (SQLSTATE 40001), which Prisma
+ * reports as P2034: running it again is the documented fix.
+ */
+export const isWriteConflict = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "P2034";
+
 /**
  * Record one observation of the insurance price list: its snapshot row(s), and
  * the InsurancePrice rows it starts, ends or splits. One transaction, so a
  * retry starts clean; recording the same observation twice is a no-op.
+ *
+ * The hourly job and a backfill both rewrite the current rows when prices
+ * change, so a run that overlaps the other can be aborted as a write conflict.
+ * That is retried here, rather than failing a backfill's whole attempt.
  */
-export async function recordInsurancePriceSnapshot({
+export async function recordInsurancePriceSnapshot(
+  observation: InsurancePriceObservation,
+): Promise<InsurancePriceRecordResult> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await recordOnce(observation); // NOSONAR: a retry needs the previous attempt to have failed
+    } catch (error) {
+      if (!isWriteConflict(error) || attempt >= CONFLICT_ATTEMPTS) throw error;
+    }
+  }
+}
+
+async function recordOnce({
   observedAt,
   source,
   prices,
@@ -89,13 +118,14 @@ export async function recordInsurancePriceSnapshot({
         startingAtNext,
       });
 
-      // Close before creating: a split creates a row of a closed type.
-      if (plan.closeTypeIds.length > 0) {
+      // Close before creating: a split creates a row of a closed type. By
+      // primary key: a range on `validFrom` would read every type's history.
+      const closeTypeIds = new Set(plan.closeTypeIds);
+      const closing = containing.filter((row) => closeTypeIds.has(row.typeId));
+      if (closing.length > 0) {
         await tx.insurancePrice.updateMany({
           where: {
-            typeId: { in: plan.closeTypeIds },
-            validFrom: { lte: observedAt },
-            OR: [{ validUntil: null }, { validUntil: { gt: observedAt } }],
+            OR: closing.map(({ typeId, validFrom }) => ({ typeId, validFrom })),
           },
           data: { validUntil: observedAt },
         });

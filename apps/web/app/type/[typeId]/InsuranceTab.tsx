@@ -124,7 +124,7 @@ function InsuranceLevelsTable({
   );
 }
 
-function ChartTooltip({
+export function ChartTooltip({
   active,
   payload,
 }: Readonly<{
