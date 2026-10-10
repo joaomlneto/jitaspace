@@ -56,14 +56,10 @@ export default function UserButton({
       disabled={!character.sessionExpired}
       color="red"
       size={12}
-      offset={4}
+      offset={2}
       withBorder
     >
-      <CharacterAvatar
-        characterId={characterId}
-        radius="xl"
-        size={compact ? 32 : "sm"}
-      />
+      <CharacterAvatar characterId={characterId} size={compact ? 32 : "sm"} />
     </Indicator>
   );
 
@@ -142,7 +138,7 @@ export default function UserButton({
                     disabled={!other.sessionExpired}
                     color="red"
                     size={8}
-                    offset={2}
+                    offset={1}
                     withBorder
                   >
                     <CharacterAvatar

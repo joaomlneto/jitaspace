@@ -110,7 +110,7 @@ export function AgentLabel({
 }: Readonly<{ agent: AgentRef; withLocation?: boolean }>) {
   return (
     <Group gap="xs" wrap="nowrap" align="flex-start">
-      <CharacterAvatar characterId={agent.characterId} size="md" radius="xl" />
+      <CharacterAvatar characterId={agent.characterId} size="md" />
       <Stack gap={0}>
         <Group gap={6} wrap="nowrap">
           <CharacterAnchor characterId={agent.characterId} fw={600}>
