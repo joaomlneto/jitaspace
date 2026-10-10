@@ -1717,6 +1717,69 @@ model IncursionEvent {
   @@index([observedAt])
 }
 
+enum InsurancePriceSource {
+  /// Our own `esi-track-insurance-prices` job.
+  esi
+  /// EVE Ref's archive of GET /insurance/prices responses (hourly since
+  /// 2022-12-16), imported by `backfill-everef-insurance-prices`.
+  everef
+}
+
+/// One observation of ESI's insurance price list (GET /insurance/prices).
+/// Every observation is recorded, including the many that changed nothing, so
+/// these rows are the coverage of InsurancePrice: a price change first seen
+/// at `validFrom` happened after the observation before it, and a long gap
+/// between two observations is a stretch nobody watched.
+model InsurancePriceSnapshot {
+  /// When the list was known to be current. For `esi`, the response's
+  /// Last-Modified (ESI caches the list for an hour, so polling twice in one
+  /// cache window yields the same row); for `everef`, when EVE Ref fetched it.
+  observedAt DateTime             @id
+  source     InsurancePriceSource
+  /// How many types the list priced.
+  typeCount  Int
+  createdAt  DateTime             @default(now())
+}
+
+/// The insurance prices of one ship type over one stretch of time, as ESI's
+/// GET /insurance/prices lists them: one row per type each time any of its
+/// prices changes, so the prices at time T are the row with
+/// `validFrom <= T < validUntil` (or `validUntil` null). The current prices
+/// are the rows with `validUntil` null.
+///
+/// The bounds are observations (InsurancePriceSnapshot): the change happened
+/// at some point after the observation before `validFrom`. A type ESI stops
+/// listing has its row closed and no new one, until it is listed again.
+///
+/// Each level is stored as ESI reports it (`cost` is the premium, `payout`
+/// what a loss pays out). ESI lists all six levels for every type seen so
+/// far; a level it leaves out is null.
+model InsurancePrice {
+  typeId         Int
+  /// The first observation listing these prices.
+  validFrom      DateTime
+  /// The first observation that no longer did (the prices changed, or the
+  /// type was no longer listed); null while they are current.
+  validUntil     DateTime?
+  basicCost      Float?
+  basicPayout    Float?
+  standardCost   Float?
+  standardPayout Float?
+  bronzeCost     Float?
+  bronzePayout   Float?
+  silverCost     Float?
+  silverPayout   Float?
+  goldCost       Float?
+  goldPayout     Float?
+  platinumCost   Float?
+  platinumPayout Float?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt()
+
+  @@id([typeId, validFrom])
+  @@index([validUntil])
+}
+
 model AllianceWarAlly {
   warId      Int
   allianceId Int

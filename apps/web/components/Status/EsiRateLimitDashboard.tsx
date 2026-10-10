@@ -401,7 +401,6 @@ export function EsiRateLimitDashboard() {
                           <Group gap={4} wrap="nowrap">
                             <CharacterAvatar
                               characterId={bucket.characterId}
-                              radius="xl"
                               size={18}
                             />
                             <Text size="xs" fw={500}>

@@ -5,7 +5,7 @@ import { evePanelSurface, lightDark } from "./lightDark";
 import { WALLPAPERS } from "./wallpapers";
 
 /**
- * EVE v2 — a refined take on the EVE theme.
+ * EVE — the app's EVE Online look, and the base the faction themes extend.
  *
  * Dark-first cool steel-blue surfaces, muted teal primary, amber-gold accent,
  * Caldari signal blues, sharp 2px corners, deep cool shadows, Rajdhani UI +
@@ -127,7 +127,7 @@ const rust: MantineColorsTuple = [
 
 /* ---- Theme --------------------------------------------------- */
 
-export const eveV2Theme = createTheme({
+export const eveTheme = createTheme({
   /* Foundations */
   primaryColor: "eve",
   primaryShade: { light: 6, dark: 7 },
@@ -332,8 +332,8 @@ export const eveV2Theme = createTheme({
   /* Escape hatch — design tokens not modeled by Mantine props.
      Read via theme.other.* */
   other: {
-    // The same Cradle of War wallpaper the EVE theme uses, with a 55% black
-    // overlay, so v2 reads as a sibling of v1.
+    // Cradle of War, under a 55% black overlay. Faction themes swap in their
+    // own wallpaper.
     ...WALLPAPERS.cradleOfWar,
     fonts: {
       display: displayFont,
@@ -420,4 +420,4 @@ export const eveV2Theme = createTheme({
   },
 });
 
-export default eveV2Theme;
+export default eveTheme;

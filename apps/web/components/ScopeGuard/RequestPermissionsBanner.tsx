@@ -65,7 +65,7 @@ export function RequestPermissionsBanner({
           onClick={() => {
             openContextModal({
               modal: "login",
-              title: <Title order={3}>Login</Title>,
+              title: "Login",
               size: "xl",
               centered: false,
               innerProps: {

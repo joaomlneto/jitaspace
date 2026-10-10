@@ -22,7 +22,7 @@ describe("SettingsCard", () => {
     mockSetAcceptLanguage.mockReset();
     usePreferencesStore.setState({
       esiAcceptLanguage: "en",
-      appTheme: "default",
+      appTheme: "minimal",
     });
   });
 
@@ -30,7 +30,7 @@ describe("SettingsCard", () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({
-        state: { esiAcceptLanguage: "de", appTheme: "default" },
+        state: { esiAcceptLanguage: "de", appTheme: "minimal" },
         version: 0,
       }),
     );
@@ -68,7 +68,7 @@ describe("SettingsCard", () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({
-        state: { esiAcceptLanguage: "invalid", appTheme: "default" },
+        state: { esiAcceptLanguage: "invalid", appTheme: "minimal" },
         version: 0,
       }),
     );
@@ -139,7 +139,7 @@ describe("SettingsCard", () => {
     await screen.findByText("Gallente");
   });
 
-  it("falls back to default when stored theme is invalid", async () => {
+  it("falls back to Default when stored theme is invalid", async () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({
@@ -156,7 +156,7 @@ describe("SettingsCard", () => {
       </AppMantineProvider>,
     );
 
-    await screen.findByText("Default");
+    await screen.findByText("Default (Crimson Harvest)");
   });
 
   it("renders General and Experimental tabs", () => {
