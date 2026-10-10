@@ -301,18 +301,34 @@ describe("Incursions page", () => {
     });
 
     it.each([
-      [2, "No high-sec incursion can spawn for another"],
-      [20, "A new high-sec incursion should spawn within"],
-      [40, "A new high-sec incursion should spawn any minute now."],
+      [2, "can spawn in 10:00:00", 6],
+      [20, "due within 16:00:00", 56],
+      [40, "overdue", 100],
     ])(
-      "counts down to the next high-sec spawn, %ih after the last ended",
-      (hours, message) => {
+      "shows the next high-sec spawn %ih after the last ended",
+      (hours, status, percent) => {
         // The countdown runs on the clock: hold it at the data's read time.
         jest.useFakeTimers({ now: Date.parse(READ_AT) });
         renderPage([NULL_SEC, endedHighSec(hours)]);
-        expect(screen.getByText(message, { exact: false })).toBeVisible();
+        expect(screen.getByText("Next high-sec incursion")).toBeVisible();
+        expect(screen.getByText(status)).toBeVisible();
+        // The marker sits that far along the 36 hours after the last ended.
+        expect(
+          screen.getByRole("img", { name: /^Timeline: / }),
+        ).toHaveAccessibleName(
+          `Timeline: ${Math.round((percent / 100) * 36)} of 36 hours since the last ended`,
+        );
       },
     );
+
+    it("explains the spawn window in a tooltip, not on the page", () => {
+      jest.useFakeTimers({ now: Date.parse(READ_AT) });
+      renderPage([NULL_SEC, endedHighSec(2)]);
+      expect(
+        screen.getByLabelText("How this is worked out"),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/never spawns within 12 hours/)).toBeNull();
+    });
 
     it("refreshes its data every five minutes while visible", () => {
       jest.useFakeTimers();
