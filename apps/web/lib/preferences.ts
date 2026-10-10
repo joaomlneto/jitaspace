@@ -21,7 +21,7 @@ export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
 ] as const;
 
 export const APP_THEME_OPTIONS = [
-  { value: "default", label: "Default (Crimson Harvest)" },
+  { value: "default", label: "Default" },
   { value: "minimal", label: "Minimal" },
   { value: "eve", label: "EVE" },
   { value: "amarr", label: "Amarr" },

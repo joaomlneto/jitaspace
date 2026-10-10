@@ -1,6 +1,10 @@
 import type { AppTheme, DEFAULT_APP_THEME } from "~/lib/preferences";
 import { PREFERENCES_STORAGE_KEY } from "~/lib/preferences";
 import { lightDark } from "~/themes/lightDark";
+import {
+  DEFAULT_THEME_SEASON,
+  DEFAULT_THEME_SEASON_END,
+} from "~/themes/season";
 import { WALLPAPERS } from "~/themes/wallpapers";
 
 /**
@@ -77,17 +81,30 @@ const json = (value: unknown) =>
   JSON.stringify(value).replaceAll("<", "\\u003c");
 
 // Mirrors the persist middleware's storage format ({ state: { appTheme } })
-// and sanitizeAppTheme's normalisation. Anything unexpected leaves the page
-// untouched, i.e. exactly as it behaved before this script existed.
-const script = (key: string, themes: Record<string, ThemePreload>) => `(() => {
+// and sanitizeAppTheme's normalisation: nothing stored, an unreadable value or
+// an unknown theme all mean Default, which the prerendered page already shows —
+// until its season ends (themes/season.ts), when Default shows the season's
+// fallback and this paints that instead.
+const script = (
+  key: string,
+  themes: Record<string, ThemePreload>,
+  seasonEnd: number,
+  fallback: string,
+) => `(() => {
   try {
-    const raw = localStorage.getItem(${json(key)});
-    if (!raw) return;
-    let theme = JSON.parse(raw)?.state?.appTheme;
-    if (typeof theme !== "string") return;
-    theme = theme.trim().toLowerCase();
     const themes = ${json(themes)};
-    if (!Object.prototype.hasOwnProperty.call(themes, theme)) return;
+    const has = (name) => Object.prototype.hasOwnProperty.call(themes, name);
+    let theme = "default";
+    try {
+      const stored = JSON.parse(localStorage.getItem(${json(key)}))?.state?.appTheme;
+      if (typeof stored === "string" && has(stored.trim().toLowerCase())) {
+        theme = stored.trim().toLowerCase();
+      }
+    } catch {}
+    if (theme === "default") {
+      if (Date.now() < ${json(seasonEnd)}) return;
+      theme = ${json(fallback)};
+    }
     const html = document.documentElement;
     html.setAttribute(${json(THEME_PENDING_ATTRIBUTE)}, theme);
     html.style.setProperty("--app-pending-body", themes[theme].body);
@@ -104,6 +121,8 @@ const script = (key: string, themes: Record<string, ThemePreload>) => `(() => {
 export const THEME_PRELOAD_SCRIPT = script(
   PREFERENCES_STORAGE_KEY,
   THEME_PRELOAD,
+  DEFAULT_THEME_SEASON_END,
+  DEFAULT_THEME_SEASON.fallback,
 );
 
 /** Undoes the pre-paint script once the real theme has been rendered. */
