@@ -104,7 +104,7 @@ ${sources.join("\n")}
       .join("\n")}
 
 // Names from before the package was generated, kept so existing imports work.
-${aliases.sort().join("\n")}
+${aliases.toSorted((a, b) => a.localeCompare(b)).join("\n")}
 `,
   );
 

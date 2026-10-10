@@ -140,7 +140,7 @@ async function main() {
     icons: [...icons.values()]
       .map((icon) => ({
         ...icon,
-        files: icon.files.sort((a, b) => a.width - b.width),
+        files: icon.files.toSorted((a, b) => a.width - b.width),
       }))
       .sort((a, b) => a.id.localeCompare(b.id)),
   };

@@ -47,7 +47,9 @@ export function readPng(bytes: Uint8Array): PngInfo {
 
   for (let offset = 8; offset + 8 <= bytes.length; ) {
     const length = view.getUint32(offset);
-    const type = String.fromCharCode(...bytes.subarray(offset + 4, offset + 8));
+    const type = String.fromCodePoint(
+      ...bytes.subarray(offset + 4, offset + 8),
+    );
     const chunk = bytes.subarray(offset + 8, offset + 8 + length);
     if (type === "IHDR") {
       width = view.getUint32(offset + 8);
@@ -120,6 +122,38 @@ export function readPng(bytes: Uint8Array): PngInfo {
   };
 }
 
+/** The Paeth predictor: whichever neighbour is closest to `left + up - upLeft`. */
+function paeth(left: number, up: number, upLeft: number): number {
+  const estimate = left + up - upLeft;
+  const dl = Math.abs(estimate - left);
+  const du = Math.abs(estimate - up);
+  const dul = Math.abs(estimate - upLeft);
+  if (dl <= du && dl <= dul) return left;
+  if (du <= dul) return up;
+  return upLeft;
+}
+
+/** The value PNG filter `filter` predicted for a sample from its neighbours. */
+function predict(
+  filter: number | undefined,
+  left: number,
+  up: number,
+  upLeft: number,
+): number {
+  switch (filter) {
+    case 1:
+      return left;
+    case 2:
+      return up;
+    case 3:
+      return (left + up) >> 1;
+    case 4:
+      return paeth(left, up, upLeft);
+    default:
+      return 0;
+  }
+}
+
 /** Undo PNG's per-scanline filters (filter types 0–4), returning raw samples. */
 function unfilter(
   raw: Uint8Array,
@@ -138,18 +172,8 @@ function unfilter(
       const left = x >= bpp ? (out[row + x - bpp] ?? 0) : 0;
       const up = y > 0 ? (out[prev + x] ?? 0) : 0;
       const upLeft = x >= bpp && y > 0 ? (out[prev + x - bpp] ?? 0) : 0;
-      let predictor = 0;
-      if (filter === 1) predictor = left;
-      else if (filter === 2) predictor = up;
-      else if (filter === 3) predictor = (left + up) >> 1;
-      else if (filter === 4) {
-        const estimate = left + up - upLeft;
-        const dl = Math.abs(estimate - left);
-        const du = Math.abs(estimate - up);
-        const dul = Math.abs(estimate - upLeft);
-        predictor = dl <= du && dl <= dul ? left : du <= dul ? up : upLeft;
-      }
-      out[row + x] = ((raw[src + x] ?? 0) + predictor) & 0xff;
+      out[row + x] =
+        ((raw[src + x] ?? 0) + predict(filter, left, up, upLeft)) & 0xff;
     }
   }
   return out;
@@ -173,7 +197,9 @@ export function stripMetadata(bytes: Uint8Array): Uint8Array {
   const kept: Uint8Array[] = [bytes.subarray(0, 8)];
   for (let offset = 8; offset + 8 <= bytes.length; ) {
     const length = view.getUint32(offset);
-    const type = String.fromCharCode(...bytes.subarray(offset + 4, offset + 8));
+    const type = String.fromCodePoint(
+      ...bytes.subarray(offset + 4, offset + 8),
+    );
     const end = offset + 12 + length;
     if (!NON_RENDERING_CHUNKS.has(type)) kept.push(bytes.subarray(offset, end));
     offset = end;

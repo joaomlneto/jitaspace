@@ -685,7 +685,7 @@ export function pascal(value: string): string {
 
 /** `arrow-down` → `Arrow down`. */
 export function label(name: string): string {
-  const words = name.replace(/-/g, " ");
+  const words = name.replaceAll("-", " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
