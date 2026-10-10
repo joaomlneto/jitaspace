@@ -16,6 +16,19 @@
       "autoPort": false
     },
     {
+      "name": "EVE Icons Gallery",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@jitaspace/eve-icons-gallery",
+        "dev",
+        "-p",
+        "3210"
+      ],
+      "port": 3210,
+      "autoPort": false
+    },
+    {
       "name": "Prisma Studio",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [

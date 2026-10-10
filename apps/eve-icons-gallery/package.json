@@ -1,0 +1,34 @@
+{
+  "name": "@jitaspace/eve-icons-gallery",
+  "description": "Searchable gallery of @jitaspace/eve-icons",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm copy-icons && next build",
+    "clean": "rm -rf .turbo .next out node_modules public/icons",
+    "copy-icons": "rm -rf public/icons && mkdir -p public && cp -R ../../packages/eve-icons/assets public/icons",
+    "dev": "pnpm copy-icons && next dev",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@jitaspace/eve-icons": "workspace:*",
+    "next": "16.2.11",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}
