@@ -1,0 +1,424 @@
+/* Layout: masthead, a sticky toolbar (search, display controls, set chips),
+   then one tile grid per icon set. Page chrome follows the OS theme; the tile
+   ground is a separate control, because most EVE glyphs are white artwork
+   drawn for the game's dark UI. */
+:root {
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --line: #d9dde3;
+  --fg: #16191d;
+  --muted: #5c6672;
+  --accent: #b5741c;
+  --accent-fg: #ffffff;
+  --tile-dark: #12161c;
+  --tile-light: #e9ecf0;
+  --tile-line: rgba(255, 255, 255, 0.06);
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b0e12;
+    --panel: #12161c;
+    --line: #232a33;
+    --fg: #dde3ea;
+    --muted: #8a95a3;
+    --accent: #e8a33d;
+    --accent-fg: #1a1205;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 var(--body);
+}
+
+code,
+pre {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+a {
+  color: var(--accent);
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-inline: clamp(16px, 3vw, 40px);
+  padding-block: 0 48px;
+}
+
+.masthead {
+  padding-block: 36px 20px;
+}
+
+.masthead h1 {
+  margin: 0 0 6px;
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.01em;
+}
+
+.masthead p {
+  margin: 0;
+  max-width: 72ch;
+  color: var(--muted);
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  padding-block: 12px;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.toolbar input[type="search"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  align-items: center;
+}
+
+.control {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.control select {
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.control input[type="color"] {
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: none;
+}
+
+.sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+.chip:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.chip .count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.set {
+  margin-top: 32px;
+}
+
+.set-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 16px;
+  align-items: baseline;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.set-head h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.set-head p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+}
+
+.set-meta {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--tile)), 1fr));
+  gap: 6px;
+}
+
+.tile {
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--tile-dark);
+  color: #cfd6de;
+  cursor: pointer;
+}
+
+.tile:hover {
+  border-color: var(--accent);
+}
+
+.tile-art {
+  display: grid;
+  place-items: center;
+  min-height: 64px;
+}
+
+.tinted {
+  display: inline-block;
+}
+
+.tile-name {
+  max-width: 100%;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+[data-background="light"] .tile,
+[data-background="light"] .preview,
+[data-background="light"] .natives figure {
+  background: var(--tile-light);
+  color: #2a3038;
+}
+
+[data-background="checker"] .tile,
+[data-background="checker"] .preview,
+[data-background="checker"] .natives figure {
+  background: repeating-conic-gradient(#3a414b 0% 25%, #252b33 0% 50%) 0 0 /
+    16px 16px;
+  color: #e8edf2;
+}
+
+.empty {
+  margin-top: 32px;
+  color: var(--muted);
+}
+
+.footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.footer p {
+  max-width: 90ch;
+}
+
+.detail {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.detail::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.detail-body {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.detail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 12px;
+}
+
+.detail-top h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail-top h2 code {
+  font-size: 15px;
+}
+
+.close,
+.code button {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+.preview {
+  display: grid;
+  place-items: center;
+  min-height: 140px;
+  border-radius: 8px;
+  background: var(--tile-dark);
+  color: #cfd6de;
+}
+
+.loading {
+  color: #8a95a3;
+  font-size: 13px;
+}
+
+.natives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.natives figure {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--tile-dark);
+  color: #cfd6de;
+}
+
+.natives img {
+  max-width: 128px;
+  height: auto;
+}
+
+.natives figcaption {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.code {
+  position: relative;
+}
+
+.code pre {
+  margin: 0;
+  padding: 12px 14px;
+  padding-right: 72px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.code button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  margin: 0;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.source {
+  font-size: 11.5px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tile {
+    transition: border-color 0.12s;
+  }
+}
+
+/* On a phone the toolbar, with its 20 set chips, would cover most of the
+   screen if it stayed pinned, so it scrolls away with the page instead. */
+@media (max-width: 640px) {
+  .toolbar {
+    position: static;
+    backdrop-filter: none;
+  }
+}

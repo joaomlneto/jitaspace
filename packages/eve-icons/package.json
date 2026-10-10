@@ -1,31 +1,76 @@
 {
   "name": "@jitaspace/eve-icons",
-  "description": "EVE Icons",
+  "description": "EVE Online UI icons as React components",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
-  "license": "MIT",
+  "sideEffects": false,
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joaomlneto/jitaspace.git",
+    "directory": "packages/eve-icons"
+  },
+  "publishConfig": {
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.cjs"
+        }
+      },
+      "./package.json": "./package.json"
+    },
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
   "scripts": {
-    "clean": "rm -rf .turbo node_modules",
+    "build:package": "tsup index.ts --format cjs,esm --dts --external react",
+    "clean": "rm -rf .turbo node_modules dist coverage src/generated",
+    "icons:sync": "tsx scripts/sync.ts && pnpm kubb:generate",
+    "kubb:generate": "tsx scripts/generate.ts",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
+    "prepack": "pnpm build:package",
+    "test": "jest",
     "type-check": "tsc --noEmit"
   },
+  "peerDependencies": {
+    "react": ">=19"
+  },
   "devDependencies": {
-    "@jitaspace/esi-client": "workspace:*",
+    "@jest/globals": "^30.4.1",
     "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/eve-resources": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@jitaspace/utils": "workspace:*",
+    "@swc/core": "^1.15.40",
+    "@swc/jest": "^0.2.39",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
     "eslint": "^9.39.4",
-    "next": "16.2.11",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "prettier": "^3.8.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "tsup": "^8.5.1",
+    "tsx": "^4.22.3",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"

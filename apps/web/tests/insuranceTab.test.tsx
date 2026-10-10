@@ -12,7 +12,8 @@ import {
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type * as InsuranceTabModule from "~/app/type/[typeId]/InsuranceTab";
 import type {
@@ -80,7 +81,7 @@ afterEach(() => {
 const load = () =>
   require("~/app/type/[typeId]/InsuranceTab") as typeof InsuranceTabModule;
 
-const renderTab = (latest: InsurancePricePeriod) => {
+const renderTab = (latest: InsurancePricePeriod, searchParams = "") => {
   const { InsuranceTab } = load();
   return render(
     <QueryClientProvider
@@ -92,6 +93,7 @@ const renderTab = (latest: InsurancePricePeriod) => {
         <InsuranceTab typeId={587} latest={latest} />
       </MantineProvider>
     </QueryClientProvider>,
+    { wrapper: withNuqsTestingAdapter({ searchParams, hasMemory: true }) },
   );
 };
 
@@ -107,15 +109,44 @@ describe("InsuranceTab", () => {
     expect(screen.getAllByText("86,552.00").length).toBeGreaterThan(0);
     expect(screen.getByText("77,896.80")).toBeInTheDocument();
 
-    // The real table: its cells render each column's formatter.
-    await waitFor(() => expect(screen.getByText("Now")).toBeInTheDocument());
+    // The chart first, of Platinum.
+    await waitFor(() =>
+      expect(container.querySelector(".recharts-wrapper")).not.toBeNull(),
+    );
     expect(mockFetch).toHaveBeenCalledWith("/api/type/587/insurance");
     expect(
       screen.getByText(/last checked 10 Oct 2026, 19:31 UTC/),
     ).toBeInTheDocument();
+    expect(screen.getByText("Platinum payout")).toBeInTheDocument();
+    expect(screen.queryByText("Now")).not.toBeInTheDocument();
+
+    // Then the table instead: its cells render each column's formatter.
+    fireEvent.click(screen.getByLabelText("Table"));
+    await waitFor(() => expect(screen.getByText("Now")).toBeInTheDocument());
     expect(screen.getByText("Platinum payout (ISK)")).toBeInTheDocument();
     expect(screen.getByText("9 Oct 2026, 11:50 UTC")).toBeInTheDocument();
-    expect(container.querySelector(".recharts-wrapper")).not.toBeNull();
+    expect(container.querySelector(".recharts-wrapper")).toBeNull();
+  });
+
+  it("charts the tier picked, and remembers it in the URL", async () => {
+    mockFetch.mockResolvedValue(reply(history));
+    renderTab(current, "?insuranceTier=gold");
+    await waitFor(() =>
+      expect(screen.getByText("Gold payout")).toBeInTheDocument(),
+    );
+    fireEvent.change(screen.getByLabelText("Insurance tier"), {
+      target: { value: "basic" },
+    });
+    await waitFor(() =>
+      expect(screen.getByText("Basic payout")).toBeInTheDocument(),
+    );
+  });
+
+  it("opens on the table from a link", async () => {
+    mockFetch.mockResolvedValue(reply(history));
+    renderTab(current, "?insuranceView=table");
+    await waitFor(() => expect(screen.getByText("Now")).toBeInTheDocument());
+    expect(screen.queryByLabelText("Insurance tier")).not.toBeInTheDocument();
   });
 
   it("says when the item is no longer insurable", () => {
