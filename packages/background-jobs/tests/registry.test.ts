@@ -79,6 +79,7 @@ describe("background-jobs registry", () => {
       .sort((a, b) => a.localeCompare(b));
     expect(cronJobIds).toEqual([
       "esi-track-incursions",
+      "esi-track-insurance-prices",
       "esi-update-alliances",
       "esi-update-wars",
       "watch-sde",
