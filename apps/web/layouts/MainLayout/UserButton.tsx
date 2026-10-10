@@ -2,8 +2,6 @@
 
 import type { UnstyledButtonProps } from "@mantine/core";
 import type React from "react";
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
 import {
   Group,
   Indicator,
@@ -13,100 +11,108 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
-import { modals, openContextModal } from "@mantine/modals";
 
 import {
   RecruitmentIcon,
   SettingsIcon,
   TerminateIcon,
 } from "@jitaspace/eve-icons";
-import { useAuthStore, useSelectedCharacter } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
+
+import { useAccountActions } from "./useAccountActions";
 
 interface UserButtonProps extends UnstyledButtonProps {
   icon?: React.ReactNode;
+  /**
+   * Render only the character's avatar, for the narrow phone header where the
+   * name doesn't fit. The dropdown is the same either way.
+   */
+  compact?: boolean;
 }
 
-export default function UserButton({ ...others }: UserButtonProps) {
+export default function UserButton({ compact, ...others }: UserButtonProps) {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
-  const router = useRouter();
-  const character = useSelectedCharacter();
-  const { characters, selectCharacter, removeCharacter } = useAuthStore();
-
-  const sortedCharacters = useMemo(
-    () =>
-      Object.values(characters).sort((a, b) =>
-        a.accessTokenPayload.name.localeCompare(b.accessTokenPayload.name),
-      ),
-    [characters],
-  );
+  const {
+    character,
+    otherCharacters,
+    openLoginModal,
+    openSettingsModal,
+    switchToCharacter,
+    confirmLogout,
+  } = useAccountActions();
 
   if (!character) return "not logged in";
 
   const characterId = character.characterId;
   const characterName = character.accessTokenPayload.name;
 
-  // Re-authentication uses the same EVE SSO login flow as adding a character;
-  // logging in again with an expired character refreshes its tokens and clears
-  // the `sessionExpired` flag.
-  const openLoginModal = () =>
-    openContextModal({
-      modal: "login",
-      title: "Login",
-      size: "xl",
-      innerProps: {},
-    });
+  const avatar = (
+    <Indicator
+      inline
+      disabled={!character.sessionExpired}
+      color="red"
+      size={12}
+      offset={4}
+      withBorder
+    >
+      <CharacterAvatar
+        characterId={characterId}
+        radius="xl"
+        size={compact ? 32 : "sm"}
+      />
+    </Indicator>
+  );
 
   return (
-    <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
+    <Menu
+      withArrow
+      position={compact ? "bottom-end" : "bottom"}
+      transitionProps={{ transition: "pop" }}
+    >
       <Menu.Target>
-        <UnstyledButton
-          style={{
-            display: "block",
-            width: "100%",
-            padding: theme.spacing.md,
-            color: colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
-
-            "&:hover": {
-              backgroundColor:
-                colorScheme === "dark"
-                  ? theme.colors.dark[6]
-                  : theme.colors.gray[0],
-            },
-          }}
-          {...others}
-        >
-          <Group>
-            <Indicator
-              inline
-              disabled={!character.sessionExpired}
-              color="red"
-              size={12}
-              offset={4}
-              withBorder
-            >
-              <CharacterAvatar
-                characterId={characterId}
-                radius="xl"
-                size="sm"
-              />
-            </Indicator>
-
-            <div style={{ flex: 1 }}>
-              <Text size="sm" fw={500}>
-                {characterName}
-              </Text>
-              {character.sessionExpired && (
-                <Text size="xs" c="red">
-                  Session expired
+        {compact ? (
+          <UnstyledButton
+            aria-label={`Character menu for ${characterName}`}
+            style={{ display: "flex", alignItems: "center", padding: 4 }}
+            {...others}
+          >
+            {avatar}
+          </UnstyledButton>
+        ) : (
+          <UnstyledButton
+            style={{
+              display: "block",
+              width: "100%",
+              padding: theme.spacing.md,
+              color:
+                colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
+            }}
+            {...others}
+          >
+            <Group>
+              {avatar}
+              <div style={{ flex: 1 }}>
+                <Text size="sm" fw={500}>
+                  {characterName}
                 </Text>
-              )}
-            </div>
-          </Group>
-        </UnstyledButton>
+                {character.sessionExpired && (
+                  <Text size="xs" c="red">
+                    Session expired
+                  </Text>
+                )}
+              </div>
+            </Group>
+          </UnstyledButton>
+        )}
       </Menu.Target>
       <Menu.Dropdown>
+        {compact && (
+          <>
+            <Menu.Label>{characterName}</Menu.Label>
+            <Menu.Divider />
+          </>
+        )}
         {character.sessionExpired && (
           <>
             <Menu.Label c="red">Session expired</Menu.Label>
@@ -120,58 +126,45 @@ export default function UserButton({ ...others }: UserButtonProps) {
             <Menu.Divider />
           </>
         )}
-        {sortedCharacters.length > 1 && (
+        {otherCharacters.length > 0 && (
           <>
             <Menu.Label>Switch Character</Menu.Label>
-            {sortedCharacters
-              .filter((character) => character.characterId !== characterId)
-              .map((character) => (
-                <Menu.Item
-                  key={character.characterId}
-                  leftSection={
-                    <Indicator
-                      inline
-                      disabled={!character.sessionExpired}
-                      color="red"
-                      size={8}
-                      offset={2}
-                      withBorder
-                    >
-                      <CharacterAvatar
-                        characterId={character.characterId}
-                        size={20}
-                      />
-                    </Indicator>
-                  }
-                  rightSection={
-                    character.sessionExpired ? (
-                      <Text size="xs" c="red">
-                        expired
-                      </Text>
-                    ) : undefined
-                  }
-                  onClick={() =>
-                    character.sessionExpired
-                      ? openLoginModal()
-                      : selectCharacter(character.characterId)
-                  }
-                >
-                  {character.accessTokenPayload.name}
-                </Menu.Item>
-              ))}
+            {otherCharacters.map((other) => (
+              <Menu.Item
+                key={other.characterId}
+                leftSection={
+                  <Indicator
+                    inline
+                    disabled={!other.sessionExpired}
+                    color="red"
+                    size={8}
+                    offset={2}
+                    withBorder
+                  >
+                    <CharacterAvatar
+                      characterId={other.characterId}
+                      size={20}
+                    />
+                  </Indicator>
+                }
+                rightSection={
+                  other.sessionExpired ? (
+                    <Text size="xs" c="red">
+                      expired
+                    </Text>
+                  ) : undefined
+                }
+                onClick={() => switchToCharacter(other)}
+              >
+                {other.accessTokenPayload.name}
+              </Menu.Item>
+            ))}
             <Menu.Divider />
           </>
         )}
         <Menu.Item
           leftSection={<SettingsIcon width={20} />}
-          onClick={() => {
-            openContextModal({
-              modal: "settings",
-              title: "Settings",
-              size: "xl",
-              innerProps: {},
-            });
-          }}
+          onClick={openSettingsModal}
         >
           Settings
         </Menu.Item>
@@ -183,28 +176,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </Menu.Item>
         <Menu.Item
           leftSection={<TerminateIcon width={20} />}
-          onClick={() =>
-            modals.openConfirmModal({
-              title: `Log out ${characterName}?`,
-              children: (
-                <Text size="sm">
-                  Are you sure you want to log out from character{" "}
-                  {characterName}?
-                </Text>
-              ),
-              labels: { confirm: "Confirm", cancel: "Cancel" },
-              confirmProps: { color: "red" },
-              onConfirm: () => {
-                removeCharacter(characterId);
-                // If that was the last character we're fully logged out, so
-                // go home. Otherwise removeCharacter() selects one of the
-                // remaining characters and we stay on the current page.
-                if (sortedCharacters.length <= 1) {
-                  router.push("/");
-                }
-              },
-            })
-          }
+          onClick={confirmLogout}
         >
           Logout
         </Menu.Item>
