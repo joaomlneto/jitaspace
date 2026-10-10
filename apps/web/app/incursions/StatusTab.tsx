@@ -128,7 +128,7 @@ const EXPECTED_HOURS = HIGH_SEC_SPAWN_EXPECTED_MS / HOUR_MS;
 /**
  * When the next high-sec incursion is due, in one line, over a timeline of the
  * 36 hours after the last one ended: 12 in which none can spawn, then the
- * window in which one usually does. The details are in a tooltip.
+ * window in which one usually does. The details open from the info button.
  */
 function SpawnOutlook({
   outlook,
