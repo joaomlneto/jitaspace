@@ -1,0 +1,68 @@
+/* One colour per activity: slots 1–6 of the reference categorical palette, in
+   order (validated as a set: adjacent CVD ΔE ≥ 9.1 light, ≥ 8.4 dark), each
+   with its own dark-mode step. Aqua, yellow and magenta sit below 3:1 on the
+   light surface, which is why the toggles double as a legend and the tooltip
+   prints every value in text ink. */
+.root {
+  --series-manufacturing: light-dark(#2a78d6, #3987e5);
+  --series-researchingTimeEfficiency: light-dark(#eb6834, #d95926);
+  --series-researchingMaterialEfficiency: light-dark(#1baf7a, #199e70);
+  --series-copying: light-dark(#eda100, #c98500);
+  --series-invention: light-dark(#e87ba4, #d55181);
+  --series-reaction: light-dark(#008300, #008300);
+  --chart-grid: light-dark(#e1e0d9, #2c2c2a);
+  --chart-axis: light-dark(#898781, #898781);
+}
+
+.key {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--key-color);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: 2px var(--mantine-spacing-xs);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-xl);
+  background: none;
+  color: var(--mantine-color-text);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  cursor: pointer;
+}
+
+.toggle[aria-pressed="false"] {
+  color: var(--mantine-color-dimmed);
+  border-style: dashed;
+}
+
+.toggle[aria-pressed="false"] .key {
+  opacity: 0.35;
+}
+
+.toggle:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+
+.tooltip {
+  min-width: 230px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+
+.tooltipValue {
+  margin-left: auto;
+  font-weight: 600;
+}

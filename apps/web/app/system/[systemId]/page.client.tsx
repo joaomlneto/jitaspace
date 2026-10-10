@@ -74,6 +74,7 @@ import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
 import { SectionHeader } from "~/components/Home";
 import { SolarSystem3D } from "~/components/SolarSystem3D";
 import { PlanetName, StarName } from "~/components/Text";
+import { CostIndexHistory, formatCostIndex } from "./CostIndexHistory";
 import classes from "./page.module.css";
 
 interface SovereigntyEntry {
@@ -800,24 +801,27 @@ export default function Page({
           </div>
         </SimpleGrid>
 
-        {/* ---- Industry cost indices ---- */}
-        {systemCostIndices.length > 0 && (
-          <section>
-            <SectionHeader title="Industry Indices" />
-            <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="md">
-              {systemCostIndices.map((index) => (
-                <Paper key={index.activity} p="md" radius="md">
-                  <Text size="xs" c="dimmed" className={classes.statLabel}>
-                    {index.activity.replaceAll("_", " ")}
-                  </Text>
-                  <Text className={classes.statValue} mt="sm">
-                    {(index.cost_index * 100).toFixed(2)}%
-                  </Text>
-                </Paper>
-              ))}
-            </SimpleGrid>
-          </section>
-        )}
+        {/* ---- Industry cost indices: now (ESI) and over time (our record) ---- */}
+        <section>
+          <SectionHeader title="Industry Indices" />
+          <Stack gap="md">
+            {systemCostIndices.length > 0 && (
+              <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="md">
+                {systemCostIndices.map((index) => (
+                  <Paper key={index.activity} p="md" radius="md">
+                    <Text size="xs" c="dimmed" className={classes.statLabel}>
+                      {index.activity.replaceAll("_", " ")}
+                    </Text>
+                    <Text className={classes.statValue} mt="sm">
+                      {formatCostIndex(index.cost_index)}
+                    </Text>
+                  </Paper>
+                ))}
+              </SimpleGrid>
+            )}
+            <CostIndexHistory systemId={systemId} />
+          </Stack>
+        </section>
 
         {/* ---- System information ---- */}
         <SystemInfoSection
