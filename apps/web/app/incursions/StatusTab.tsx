@@ -4,11 +4,12 @@ import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ActionIcon,
-  Alert,
   Anchor,
+  Box,
   Grid,
   Group,
   Paper,
+  Popover,
   Progress,
   Stack,
   Table,
@@ -26,6 +27,7 @@ import { formatDistanceStrict } from "date-fns";
 
 import { DateHoverCard, securityStatusBand } from "@jitaspace/ui";
 
+import type { HighSecSpawnOutlook } from "./math";
 import type { Names } from "./parts";
 import type { IncursionSiteRole } from "./siteRoles";
 import type {
@@ -34,7 +36,13 @@ import type {
   TrackedIncursionRow,
 } from "./types";
 import { InfluenceChart } from "./InfluenceChart";
-import { formatCountdown, highSecSpawnOutlook, latestEnd } from "./math";
+import {
+  formatCountdown,
+  HIGH_SEC_SPAWN_BLOCKED_MS,
+  HIGH_SEC_SPAWN_EXPECTED_MS,
+  highSecSpawnOutlook,
+  latestEnd,
+} from "./math";
 import {
   BossBadge,
   ConstellationLink,
@@ -102,25 +110,136 @@ function HighSecSpawnBanner({
     now,
   });
   if (outlook.kind === "none" || lastHighSecEndedAt === undefined) return null;
-
-  let message: string;
-  if (outlook.kind === "blocked") {
-    message = `No high-sec incursion can spawn for another ${formatCountdown(outlook.until - now)}.`;
-  } else if (outlook.kind === "expected") {
-    message = `A new high-sec incursion should spawn within ${formatCountdown(outlook.until - now)}.`;
-  } else {
-    message = "A new high-sec incursion should spawn any minute now.";
-  }
   return (
-    <Alert
-      variant="light"
-      color="cyan"
-      icon={<IconClockHour4 size={18} />}
-      title="No high-sec incursion is up"
-    >
-      {message} The last one ended {eveTime(lastHighSecEndedAt)}; a new one
-      never spawns within 12 hours of that, and usually does within 36.
-    </Alert>
+    <SpawnOutlook outlook={outlook} endedAt={lastHighSecEndedAt} now={now} />
+  );
+}
+
+/** Where now sits on the 36 hours after the last high-sec incursion ended. */
+const spawnPosition = (endedAt: number, now: number) =>
+  Math.min(1, Math.max(0, (now - endedAt) / HIGH_SEC_SPAWN_EXPECTED_MS));
+
+const BLOCKED_SHARE = HIGH_SEC_SPAWN_BLOCKED_MS / HIGH_SEC_SPAWN_EXPECTED_MS;
+const HOUR_MS = 60 * 60 * 1000;
+/** The window's bounds in hours (12 and 36), for its labels. */
+const BLOCKED_HOURS = HIGH_SEC_SPAWN_BLOCKED_MS / HOUR_MS;
+const EXPECTED_HOURS = HIGH_SEC_SPAWN_EXPECTED_MS / HOUR_MS;
+
+/**
+ * When the next high-sec incursion is due, in one line, over a timeline of the
+ * 36 hours after the last one ended: 12 in which none can spawn, then the
+ * window in which one usually does. The details open from the info button.
+ */
+function SpawnOutlook({
+  outlook,
+  endedAt,
+  now,
+}: Readonly<{
+  outlook: Exclude<HighSecSpawnOutlook, { kind: "none" }>;
+  endedAt: number;
+  now: number;
+}>) {
+  let status: string;
+  if (outlook.kind === "blocked") {
+    status = `can spawn in ${formatCountdown(outlook.until - now)}`;
+  } else if (outlook.kind === "expected") {
+    status = `due within ${formatCountdown(outlook.until - now)}`;
+  } else {
+    status = "overdue";
+  }
+  const position = spawnPosition(endedAt, now);
+  return (
+    <Paper withBorder radius="md" p="sm">
+      <Stack gap={6}>
+        <Group justify="space-between" gap={4} wrap="wrap">
+          <Group gap={6} wrap="nowrap">
+            <IconClockHour4 size={16} aria-hidden style={{ flexShrink: 0 }} />
+            <Text size="sm" fw={600} style={{ whiteSpace: "nowrap" }}>
+              Next high-sec incursion
+            </Text>
+            {/* A button, so a tap or the keyboard opens it, not only hover. */}
+            <Popover width={280} withArrow shadow="md" position="bottom-start">
+              <Popover.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="xs"
+                  aria-label="How this is worked out"
+                >
+                  <IconInfoCircle size={14} />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Text size="xs">
+                  None can spawn within {BLOCKED_HOURS} hours of the last
+                  high-sec incursion ending, and one usually does within{" "}
+                  {EXPECTED_HOURS}. The last ended {eveTime(endedAt)}.
+                </Text>
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
+          <Text
+            size="sm"
+            fw={600}
+            ff="monospace"
+            c={outlook.kind === "blocked" ? "dimmed" : "cyan"}
+            style={{ whiteSpace: "nowrap" }}
+          >
+            {status}
+          </Text>
+        </Group>
+        <Box
+          pos="relative"
+          h={8}
+          role="img"
+          aria-label={`Timeline: ${Math.round(position * EXPECTED_HOURS)} of ${EXPECTED_HOURS} hours since the last ended`}
+        >
+          <Group gap={2} h="100%" wrap="nowrap">
+            <Box
+              h="100%"
+              w={`${BLOCKED_SHARE * 100}%`}
+              bg="var(--mantine-color-gray-light)"
+              style={{ borderRadius: "4px 0 0 4px" }}
+            />
+            <Box
+              h="100%"
+              style={{ flex: 1, borderRadius: "0 4px 4px 0", opacity: 0.6 }}
+              bg="var(--mantine-color-cyan-filled)"
+            />
+          </Group>
+          <Box
+            pos="absolute"
+            top={-3}
+            h={14}
+            w={3}
+            bg="var(--mantine-color-bright)"
+            style={{
+              left: `calc(${position * 100}% - 1.5px)`,
+              borderRadius: 2,
+            }}
+          />
+        </Box>
+        <Box pos="relative" h={18} aria-hidden>
+          <Text size="xs" c="dimmed" pos="absolute" left={0}>
+            Last ended
+          </Text>
+          <Text
+            size="xs"
+            c="dimmed"
+            pos="absolute"
+            style={{
+              left: `${BLOCKED_SHARE * 100}%`,
+              transform: "translateX(-50%)",
+            }}
+          >
+            +{BLOCKED_HOURS}h
+          </Text>
+          <Text size="xs" c="dimmed" pos="absolute" right={0}>
+            +{EXPECTED_HOURS}h
+          </Text>
+        </Box>
+      </Stack>
+    </Paper>
   );
 }
 
