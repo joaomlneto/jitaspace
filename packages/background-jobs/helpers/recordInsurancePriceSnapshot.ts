@@ -34,15 +34,8 @@ const notRecorded: InsurancePriceRecordResult = {
 
 /** Attempts at a transaction CockroachDB aborts as a write conflict. */
 const CONFLICT_ATTEMPTS = 3;
-
-/**
- * A list missing more than this share of the types insured at the time (and
- * more than {@link MAX_TYPES_LOST} of them) is taken for a truncated response,
- * not for that many ships losing insurance: the count has only ever grown
- * (527 types in 2022, 570 in 2026).
- */
-const MAX_SHARE_LOST = 0.1;
-const MAX_TYPES_LOST = 10;
+/** Base wait before a retry, so it does not collide with the same run again. */
+const CONFLICT_BACKOFF_MS = 250;
 
 /**
  * A serializable transaction CockroachDB aborted (SQLSTATE 40001): running it
@@ -84,6 +77,8 @@ export async function recordInsurancePriceSnapshot(
       return await recordOnce(observation); // NOSONAR: a retry needs the previous attempt to have failed
     } catch (error) {
       if (!isWriteConflict(error) || attempt >= CONFLICT_ATTEMPTS) throw error;
+      const delay = CONFLICT_BACKOFF_MS * attempt * (1 + Math.random());
+      await new Promise((resolve) => setTimeout(resolve, delay)); // NOSONAR: backoff between attempts
     }
   }
 }
@@ -125,13 +120,13 @@ async function recordOnce({
           OR: [{ validUntil: null }, { validUntil: { gt: observedAt } }],
         },
       });
-      const lost = containing.length - prices.size;
-      if (
-        prices.size === 0 ||
-        (lost > MAX_TYPES_LOST && lost > containing.length * MAX_SHARE_LOST)
-      ) {
+      // An empty list is a failed response, never every ship losing its
+      // insurance: recording it would close every row. A shorter list is
+      // recorded as listed (no list in the archive ever dropped a type), so a
+      // real change cannot stall the job behind a guard.
+      if (prices.size === 0 && containing.length > 0) {
         throw new Error(
-          `Insurance price list at ${observedAt.toISOString()} prices ${prices.size} types, while ${containing.length} are insured: refusing a truncated list`,
+          `Insurance price list at ${observedAt.toISOString()} is empty while ${containing.length} types are insured`,
         );
       }
 

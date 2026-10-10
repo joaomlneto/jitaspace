@@ -332,37 +332,25 @@ describe("recordInsurancePriceSnapshot", () => {
     });
   });
 
-  it("refuses an empty or truncated list", async () => {
-    const many = new Map(
-      Array.from({ length: 100 }, (_, i) => [i + 1, prices(100)] as const),
-    );
-    await recordInsurancePriceSnapshot({
-      observedAt: at(0),
-      source: "everef",
-      prices: many,
-    });
-    const truncated = new Map([...many].slice(0, 80));
-    await expect(
-      recordInsurancePriceSnapshot({
-        observedAt: at(1),
-        source: "everef",
-        prices: truncated,
-      }),
-    ).rejects.toThrow(/truncated/);
+  it("refuses an empty list while types are insured", async () => {
+    await record(0);
     await expect(
       recordInsurancePriceSnapshot({
         observedAt: at(1),
         source: "everef",
         prices: new Map(),
       }),
-    ).rejects.toThrow(/truncated/);
-    // Losing a handful of types is ESI's to decide.
+    ).rejects.toThrow(/is empty/);
+  });
+
+  it("records a shorter list as listed", async () => {
+    await record(0);
     await expect(
       recordInsurancePriceSnapshot({
         observedAt: at(1),
         source: "everef",
-        prices: new Map([...many].slice(0, 95)),
+        prices: new Map([[1, prices(100)]]),
       }),
-    ).resolves.toMatchObject({ recorded: true, changedTypes: 5 });
+    ).resolves.toMatchObject({ recorded: true, changedTypes: 1 });
   });
 });
