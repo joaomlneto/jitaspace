@@ -5,9 +5,9 @@
  * Each wallpaper ships twice: the full 16:9 image (a 3840x2160 JPEG where we
  * have one), and a `-mobile.webp` that is a centred 9:16 crop of it, at
  * 1080x1920 or the source's own height if smaller (~50-100 KB against
- * ~400-500 KB). On a phone
- * `cover` only ever shows the middle sliver of the 16:9 original, so the crop
- * shows exactly what the original did, sharper and a fraction of the download.
+ * ~400-500 KB). On a phone `cover` only ever shows the middle sliver of the
+ * 16:9 original, so the crop shows exactly what the original did, sharper and
+ * a fraction of the download.
  * MainLayout.module.css picks between them with a media query.
  *
  * Deliberately not a "use client" module: besides the Mantine themes, the
