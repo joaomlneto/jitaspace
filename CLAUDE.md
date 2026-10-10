@@ -95,6 +95,7 @@ Workspaces are `apps/*`, `packages/*` and `tooling/*`; each `package.json` descr
 - `packages/ui` is presentational and dependency-light: no hooks, no data fetching. Data-aware components go in `packages/eve-components`.
 - `tooling/eslint`, `tooling/prettier` and `tooling/tsconfig` are shared presets: extend them, don't redefine them.
 - There is no `apps/worker`. Background jobs run on Trigger.dev: the logic lives in `@jitaspace/background-jobs`, and the `@jitaspace/background-jobs-triggerdev` adapter runs it.
+- `packages/eve-icons` **commits CCP artwork** (`assets/*.png`, copied from the live client) and is publishable. Its LICENSE splits the terms: the code is MIT, the art is © CCP hf. / Fenris Creations and is not. Refresh the art with `pnpm --filter @jitaspace/eve-icons icons:sync` and review the diff: an icon CCP renames or removes is a breaking change for importers. The components in `src/generated/` are built from the PNGs by its `kubb:generate` script, which only reuses that task name. `apps/eve-icons-gallery` is a static site for browsing them (not deployed anywhere yet).
 - `apps/icon-server` is a separate Nitro service (its own Vercel project, `icons.jita.space`), not part of the web app. It resolves icon/type IDs through `@jitaspace/db` and fetches the images from CCP's CDN via `@jitaspace/eve-resources`. `@jitaspace/ui`'s `EveIconAvatar` points at it.
 
 ## Tech Stack
@@ -130,7 +131,7 @@ patch = bug fix/internal; minor = new feature/export; major = breaking.
 
 **When a changeset is required:**
 
-- **Publishable packages — always.** Only six workspaces are publishable (`auth-utils`, `db`, `esi-metadata`, `eve-resources`, `solar-system-map`, `tiptap-eve`); every other workspace is `"private": true`. A change to one of these needs a changeset with a developer-facing description.
+- **Publishable packages — always.** Only seven workspaces are publishable (`auth-utils`, `db`, `esi-metadata`, `eve-icons`, `eve-resources`, `solar-system-map`, `tiptap-eve`); every other workspace is `"private": true`. A change to one of these needs a changeset with a developer-facing description.
 - **`@jitaspace/web` — always for user-visible changes.** `web` is private and never published, but its changesets are the release-notes queue — the large majority of pending changesets are `web` — so they **must be end-user-readable** ("Fixed mail search not returning results"), not implementation detail. If a change elsewhere produces a visible web-app effect, add `"@jitaspace/web": patch` with a user-facing note.
 - **Other private packages — optional.** Internal-only fixes routinely ship without one (e.g. PRs #651 and #652 in `background-jobs`). Add one when the change is worth recording for other developers. The changeset-bot's "No Changeset found" warning on such a PR is expected and can be ignored.
 

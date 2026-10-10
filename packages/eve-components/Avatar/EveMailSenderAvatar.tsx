@@ -42,11 +42,13 @@ export const EveMailSenderAvatar = memo(
         sizes,
       });
       return (
+        // Only the box and class carry over: the rest are Avatar props (radius,
+        // color, variant) that mean nothing, or something else, on an icon.
         <GroupListIcon
           width={avatarSize}
           height={avatarSize}
-          {...otherProps}
-          variant={undefined}
+          className={otherProps.className}
+          alt={mailingListMatch.name}
         />
       );
     }
