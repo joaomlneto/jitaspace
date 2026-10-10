@@ -9,10 +9,13 @@ import type * as OpenInformationWindowActionIconModule from "../../ActionIcon/Op
 import type * as OpenMarketWindowActionIconModule from "../../ActionIcon/OpenMarketWindowActionIcon";
 import type * as SetAutopilotDestinationActionIconModule from "../../ActionIcon/SetAutopilotDestinationActionIcon";
 
-// MarketIcon pulls in the (heavy) eve-icons sprite machinery — stub it out.
+// eve-icons inlines every icon's artwork; stub the ones these buttons use.
 jest.mock("@jitaspace/eve-icons", () => ({
   MarketIcon: (props: Record<string, unknown>) => (
     <svg data-testid="market-icon" {...props} />
+  ),
+  CategorySetDestinationMapIcon: () => (
+    <svg data-testid="set-destination-icon" />
   ),
 }));
 

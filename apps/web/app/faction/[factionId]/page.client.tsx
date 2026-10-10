@@ -22,18 +22,13 @@ import {
 } from "@mantine/core";
 import {
   IconBuildingFortress,
-  IconBuildingSkyscraper,
   IconExternalLink,
   IconFileText,
   IconHierarchy3,
   IconHistory,
   IconInfoCircle,
   IconListCheck,
-  IconMap2,
-  IconPackage,
   IconShieldHalf,
-  IconSwords,
-  IconTarget,
   IconUsersGroup,
 } from "@tabler/icons-react";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
@@ -53,6 +48,17 @@ import {
   SolarSystemName,
   TypeAnchor,
 } from "@jitaspace/eve-components";
+import {
+  CategoryAgentMissionIcon,
+  CategoryCombatSitesIcon,
+  CategoryCorporationIcon,
+  CategoryEpicArcIcon,
+  CategoryFactionalWarfareIcon,
+  CategoryMapFwIcon,
+  CategorySolarSystemIcon,
+  ControlCargoInventoryIcon,
+  ControlRegionLayoutIcon,
+} from "@jitaspace/eve-icons";
 import { useEsiNameLookup } from "@jitaspace/hooks";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -349,7 +355,13 @@ function TerritoryPanel({
     <Stack gap="lg">
       {faction.regions.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconMap2 size={18} />}>Regions</SectionHeading>
+          <SectionHeading
+            icon={
+              <ControlRegionLayoutIcon size={18} color="currentColor" alt="" />
+            }
+          >
+            Regions
+          </SectionHeading>
           <SimpleGrid cols={{ base: 1, xs: 2, sm: 3, md: 4 }} spacing="sm">
             {faction.regions.map((region) => (
               <StatCard
@@ -381,7 +393,11 @@ function TerritoryPanel({
       )}
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconTarget size={18} />}>
+        <SectionHeading
+          icon={
+            <CategorySolarSystemIcon size={18} color="currentColor" alt="" />
+          }
+        >
           Solar systems
         </SectionHeading>
         <Text size="sm" c="dimmed">
@@ -656,7 +672,15 @@ function WarfarePanel({
     <Stack gap="lg">
       {stats && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconSwords size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryFactionalWarfareIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Faction Warfare
           </SectionHeading>
           <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
@@ -698,7 +722,15 @@ function WarfarePanel({
         live.enlistedAlliances.length > 0 ||
         live.enlistedCorporationCount > 0) && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconShieldHalf size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryFactionalWarfareIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Militia
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -762,7 +794,9 @@ function WarfarePanel({
 
       {warzone.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconTarget size={18} />}>
+          <SectionHeading
+            icon={<CategoryMapFwIcon size={18} color="currentColor" alt="" />}
+          >
             Warzone systems
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1269,18 +1303,35 @@ export default function FactionPage({
             {tab("description", <IconFileText size={16} />, "Description")}
             {tab(
               "territory",
-              <IconMap2 size={16} />,
+              <ControlRegionLayoutIcon size={16} color="currentColor" alt="" />,
               "Territory",
               totalSystems,
             )}
             {tab(
               "corporations",
-              <IconBuildingSkyscraper size={16} />,
+              <CategoryCorporationIcon size={16} color="currentColor" alt="" />,
               "Corporations",
               counts.corporations,
             )}
-            {tab("warfare", <IconSwords size={16} />, "Warfare")}
-            {tab("items", <IconPackage size={16} />, "Items", counts.items)}
+            {tab(
+              "warfare",
+              <CategoryFactionalWarfareIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Warfare",
+            )}
+            {tab(
+              "items",
+              <ControlCargoInventoryIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Items",
+              counts.items,
+            )}
             {tab(
               "ship-tree",
               <IconHierarchy3 size={16} />,
@@ -1296,7 +1347,11 @@ export default function FactionPage({
             )}
             {tab(
               "missions",
-              <IconTarget size={16} />,
+              <CategoryAgentMissionIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
               "Missions & Sites",
               counts.missions + counts.dungeons,
             )}
@@ -1576,7 +1631,13 @@ function OverviewPanel({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconMap2 size={18} />}>Presence</SectionHeading>
+        <SectionHeading
+          icon={
+            <ControlRegionLayoutIcon size={18} color="currentColor" alt="" />
+          }
+        >
+          Presence
+        </SectionHeading>
         <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
           <StatCard
             label="Regions"
@@ -1627,7 +1688,15 @@ function OverviewPanel({
 
       {fwStats && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconSwords size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryFactionalWarfareIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Faction Warfare
           </SectionHeading>
           <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
@@ -1747,7 +1816,9 @@ function MissionsPanel({
     <Stack gap="lg">
       {faction.epicArcs.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconTarget size={18} />}>
+          <SectionHeading
+            icon={<CategoryEpicArcIcon size={18} color="currentColor" alt="" />}
+          >
             Epic arcs
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -1775,7 +1846,11 @@ function MissionsPanel({
 
       {counts.missions > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconTarget size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryAgentMissionIcon size={18} color="currentColor" alt="" />
+            }
+          >
             Missions
           </SectionHeading>
           <DataTable
@@ -1797,7 +1872,11 @@ function MissionsPanel({
 
       {counts.dungeons > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconMap2 size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryCombatSitesIcon size={18} color="currentColor" alt="" />
+            }
+          >
             Dungeons &amp; sites
           </SectionHeading>
           <DataTable

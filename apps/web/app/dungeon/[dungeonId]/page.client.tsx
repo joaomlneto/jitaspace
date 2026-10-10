@@ -24,7 +24,6 @@ import {
   IconMapPin,
   IconSitemap,
   IconSwords,
-  IconTarget,
   IconUsers,
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -36,7 +35,7 @@ import {
   TypeAnchor,
   TypeAvatar,
 } from "@jitaspace/eve-components";
-import { AgencyIcon } from "@jitaspace/eve-icons";
+import { AgencyIcon, CategoryAgentMissionIcon } from "@jitaspace/eve-icons";
 import {
   CorporationAnchor,
   DungeonAnchor,
@@ -693,7 +692,16 @@ export default function DungeonPage({
               </Tabs.Tab>
             )}
             {available.missions && (
-              <Tabs.Tab value="missions" leftSection={<IconTarget size={16} />}>
+              <Tabs.Tab
+                value="missions"
+                leftSection={
+                  <CategoryAgentMissionIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Missions ({dungeon.missions.length})
               </Tabs.Tab>
             )}

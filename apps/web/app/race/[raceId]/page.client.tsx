@@ -29,8 +29,6 @@ import {
   IconHistory,
   IconInfoCircle,
   IconListCheck,
-  IconPackage,
-  IconRocket,
   IconSchool,
   IconUsersGroup,
   IconUserStar,
@@ -46,6 +44,11 @@ import {
   StationAnchor,
   TypeAnchor,
 } from "@jitaspace/eve-components";
+import {
+  CategoryCorporationIcon,
+  CategorySpaceshipCommandIcon,
+  ControlCargoInventoryIcon,
+} from "@jitaspace/eve-icons";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -656,7 +659,15 @@ function SkillsPanel({
 
       {counts.racialSkills > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconRocket size={18} />}>
+          <SectionHeading
+            icon={
+              <CategorySpaceshipCommandIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Racial skills
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1370,7 +1381,15 @@ function OverviewPanel({
 
       {race.itemCategories.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconPackage size={18} />}>
+          <SectionHeading
+            icon={
+              <ControlCargoInventoryIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Items by category
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -1689,7 +1708,16 @@ export default function RacePage(race: Readonly<PageProps>) {
               race.schools.length,
             )}
             {tab("skills", <IconListCheck size={16} />, "Skills")}
-            {tab("ships", <IconRocket size={16} />, "Ships", publishedShips)}
+            {tab(
+              "ships",
+              <CategorySpaceshipCommandIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Ships",
+              publishedShips,
+            )}
             {tab(
               "ship-tree",
               <IconHierarchy3 size={16} />,
@@ -1697,10 +1725,19 @@ export default function RacePage(race: Readonly<PageProps>) {
               undefined,
               preloadShipTreeTab,
             )}
-            {tab("items", <IconPackage size={16} />, "Items", counts.items)}
+            {tab(
+              "items",
+              <ControlCargoInventoryIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Items",
+              counts.items,
+            )}
             {tab(
               "corporations",
-              <IconBuildingSkyscraper size={16} />,
+              <CategoryCorporationIcon size={16} color="currentColor" alt="" />,
               "Corporations",
               counts.corporations,
             )}

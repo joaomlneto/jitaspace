@@ -19,15 +19,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconBuildingSkyscraper,
-  IconExternalLink,
-  IconFlag,
-  IconInfoCircle,
-  IconSkull,
-  IconSwords,
-  IconUsersGroup,
-} from "@tabler/icons-react";
+import { IconExternalLink, IconInfoCircle } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { GetAlliancesAllianceIdQueryResponse } from "@jitaspace/esi-client";
@@ -39,6 +31,12 @@ import {
   FactionName,
   SolarSystemAnchor,
 } from "@jitaspace/eve-components";
+import {
+  CategoryCorporationIcon,
+  CategoryOngoingConflictsIcon,
+  CategorySkullIcon,
+  CategorySovereigntyIcon,
+} from "@jitaspace/eve-icons";
 import {
   useEsiAllianceInformation,
   useEsiAllianceMemberCorporations,
@@ -526,7 +524,13 @@ export default function AlliancePage({
             </Tabs.Tab>
             <Tabs.Tab
               value="corporations"
-              leftSection={<IconBuildingSkyscraper size={16} />}
+              leftSection={
+                <CategoryCorporationIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
             >
               Corporations
               {corporationCount > 0 && ` (${formatInteger(corporationCount)})`}
@@ -534,17 +538,37 @@ export default function AlliancePage({
             {hasSovereignty && (
               <Tabs.Tab
                 value="sovereignty"
-                leftSection={<IconFlag size={16} />}
+                leftSection={
+                  <CategorySovereigntyIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Sovereignty ({formatInteger(sovereigntySystems)})
               </Tabs.Tab>
             )}
             {hasWars && warSummary && (
-              <Tabs.Tab value="wars" leftSection={<IconSwords size={16} />}>
+              <Tabs.Tab
+                value="wars"
+                leftSection={
+                  <CategoryOngoingConflictsIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Wars ({formatInteger(warSummary.total)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="killboard" leftSection={<IconSkull size={16} />}>
+            <Tabs.Tab
+              value="killboard"
+              leftSection={
+                <CategorySkullIcon size={16} color="currentColor" alt="" />
+              }
+            >
               Killboard
             </Tabs.Tab>
           </Tabs.List>
@@ -678,7 +702,15 @@ export default function AlliancePage({
 
               {corporationSummary && corporationSummary.corporations > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconUsersGroup size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryCorporationIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Membership
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
@@ -760,7 +792,15 @@ export default function AlliancePage({
 
               {hasSovereignty && sovereigntySummary && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconFlag size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategorySovereigntyIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Sovereignty
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
@@ -804,7 +844,15 @@ export default function AlliancePage({
 
               {hasWars && warSummary && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSwords size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryOngoingConflictsIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Wars
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
@@ -830,7 +878,11 @@ export default function AlliancePage({
               )}
 
               <Stack gap="sm">
-                <SectionHeading icon={<IconSkull size={18} />}>
+                <SectionHeading
+                  icon={
+                    <CategorySkullIcon size={18} color="currentColor" alt="" />
+                  }
+                >
                   Killboard
                 </SectionHeading>
                 {zkill.isError ? (

@@ -11,7 +11,6 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import { IconFlag, IconMap2, IconSwords } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { useGetSovereigntyCampaigns } from "@jitaspace/esi-client";
@@ -22,6 +21,12 @@ import {
   SolarSystemAnchor,
   SolarSystemName,
 } from "@jitaspace/eve-components";
+import {
+  CategoryOngoingConflictsIcon,
+  CategorySolarSystemIcon,
+  CategorySovereigntyIcon,
+  ControlRegionLayoutIcon,
+} from "@jitaspace/eve-icons";
 import {
   AllianceAnchor,
   CorporationAnchor,
@@ -236,7 +241,11 @@ function Campaigns({
 
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconSwords size={18} />}>
+      <SectionHeading
+        icon={
+          <CategoryOngoingConflictsIcon size={18} color="currentColor" alt="" />
+        }
+      >
         Active campaigns
       </SectionHeading>
       <Paper withBorder radius="md" p="sm">
@@ -344,7 +353,13 @@ export function SovereigntyTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconFlag size={18} />}>Holdings</SectionHeading>
+        <SectionHeading
+          icon={
+            <CategorySovereigntyIcon size={18} color="currentColor" alt="" />
+          }
+        >
+          Holdings
+        </SectionHeading>
         <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
           <StatCard label="Systems" value={formatInteger(summary.systems)} />
           <StatCard
@@ -405,7 +420,13 @@ export function SovereigntyTab({
       <Campaigns allianceId={allianceId} systemNames={systemNames} />
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconMap2 size={18} />}>By region</SectionHeading>
+        <SectionHeading
+          icon={
+            <ControlRegionLayoutIcon size={18} color="currentColor" alt="" />
+          }
+        >
+          By region
+        </SectionHeading>
         <Paper withBorder radius="md" p="sm">
           <Table highlightOnHover verticalSpacing="xs">
             <Table.Thead>
@@ -455,7 +476,13 @@ export function SovereigntyTab({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconFlag size={18} />}>Systems</SectionHeading>
+        <SectionHeading
+          icon={
+            <CategorySolarSystemIcon size={18} color="currentColor" alt="" />
+          }
+        >
+          Systems
+        </SectionHeading>
         <DataTable
           data={systems}
           columns={columns}

@@ -22,7 +22,6 @@ import {
   IconId,
   IconInfoCircle,
   IconMapPin,
-  IconSkull,
   IconUserCircle,
   IconUsers,
 } from "@tabler/icons-react";
@@ -41,6 +40,7 @@ import {
   TypeAnchor,
   TypeAvatar,
 } from "@jitaspace/eve-components";
+import { CategorySkullIcon } from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
   useCharacterSkills,
@@ -606,7 +606,12 @@ export default function CharacterPage({
               </Tabs.Tab>
             )}
             {visibleTabs.killboard && (
-              <Tabs.Tab value="killboard" leftSection={<IconSkull size={16} />}>
+              <Tabs.Tab
+                value="killboard"
+                leftSection={
+                  <CategorySkullIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Killboard
               </Tabs.Tab>
             )}
@@ -774,7 +779,15 @@ export default function CharacterPage({
 
               {!isNpc && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSkull size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategorySkullIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Killboard
                   </SectionHeading>
                   {zkill.isError ? (

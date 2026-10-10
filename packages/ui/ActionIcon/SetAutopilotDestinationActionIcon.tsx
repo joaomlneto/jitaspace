@@ -2,7 +2,8 @@
 
 import type { ActionIconProps } from "@mantine/core";
 import { memo } from "react";
-import { IconRocket } from "@tabler/icons-react";
+
+import { CategorySetDestinationMapIcon } from "@jitaspace/eve-icons";
 
 import { TooltipActionIcon } from "./TooltipActionIcon";
 
@@ -24,7 +25,7 @@ export const SetAutopilotDestinationActionIcon = memo(
         disabled={disabled}
         {...actionIconProps}
       >
-        <IconRocket size={20} />
+        <CategorySetDestinationMapIcon size={20} color="currentColor" alt="" />
       </TooltipActionIcon>
     );
   },

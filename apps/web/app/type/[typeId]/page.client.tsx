@@ -21,7 +21,6 @@ import {
 } from "@mantine/core";
 import {
   IconArrowsDiff,
-  IconCoin,
   IconExternalLink,
   IconFileText,
   IconHistory,
@@ -37,6 +36,7 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { CategoryIskIcon } from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -602,7 +602,12 @@ export default function TypePage({
               </Tabs.Tab>
             )}
             {hasMarket && (
-              <Tabs.Tab value="market" leftSection={<IconCoin size={16} />}>
+              <Tabs.Tab
+                value="market"
+                leftSection={
+                  <CategoryIskIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Market
               </Tabs.Tab>
             )}
@@ -866,7 +871,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <TypeMarketBreadcrumbs typeId={typeId} fz="sm" />
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconCoin size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryIskIcon size={18} color="currentColor" alt="" />
+                    }
+                  >
                     Jita / The Forge
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="sm">

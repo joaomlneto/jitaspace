@@ -18,14 +18,12 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconBuildingStore,
   IconBuildingWarehouse,
   IconChartPie,
   IconExternalLink,
   IconFileText,
   IconHistory,
   IconInfoCircle,
-  IconSkull,
   IconSwords,
   IconUserCircle,
   IconWorld,
@@ -44,6 +42,7 @@ import {
   StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
+import { CategoryLpIcon, CategorySkullIcon } from "@jitaspace/eve-icons";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -570,7 +569,9 @@ export default function CorporationPage({
                 href={lpStorePath(identity.name)}
                 size="xs"
                 variant="light"
-                leftSection={<IconBuildingStore size={14} />}
+                leftSection={
+                  <CategoryLpIcon size={14} color="currentColor" alt="" />
+                }
               >
                 LP Store
               </Button>
@@ -635,7 +636,12 @@ export default function CorporationPage({
                 Wars ({formatInteger(warSummary.total)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="killboard" leftSection={<IconSkull size={16} />}>
+            <Tabs.Tab
+              value="killboard"
+              leftSection={
+                <CategorySkullIcon size={16} color="currentColor" alt="" />
+              }
+            >
               Killboard
             </Tabs.Tab>
           </Tabs.List>
@@ -794,7 +800,11 @@ export default function CorporationPage({
               )}
 
               <Stack gap="sm">
-                <SectionHeading icon={<IconSkull size={18} />}>
+                <SectionHeading
+                  icon={
+                    <CategorySkullIcon size={18} color="currentColor" alt="" />
+                  }
+                >
                   Killboard
                 </SectionHeading>
                 {zkill.isError ? (
