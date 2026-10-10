@@ -1409,6 +1409,7 @@ model KillmailVictimItems {
   quantityDropped   Int?
   /**
    * Whether the item was a blueprint copy: 0 = ordinary item, 2 = blueprint copy.
+   *
    * Despite the name this is not an item ID, and it is not the assets API's
    * `is_singleton` boolean either — fitted, assembled modules also report 0.
    * ESI documents no values for it, but across a full day of killmails

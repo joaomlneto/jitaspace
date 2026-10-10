@@ -36,14 +36,36 @@ const notRecorded: InsurancePriceRecordResult = {
 const CONFLICT_ATTEMPTS = 3;
 
 /**
- * A serializable transaction CockroachDB aborted (SQLSTATE 40001), which Prisma
- * reports as P2034: running it again is the documented fix.
+ * A list missing more than this share of the types insured at the time (and
+ * more than {@link MAX_TYPES_LOST} of them) is taken for a truncated response,
+ * not for that many ships losing insurance: the count has only ever grown
+ * (527 types in 2022, 570 in 2026).
  */
-export const isWriteConflict = (error: unknown): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  error.code === "P2034";
+const MAX_SHARE_LOST = 0.1;
+const MAX_TYPES_LOST = 10;
+
+/**
+ * A serializable transaction CockroachDB aborted (SQLSTATE 40001): running it
+ * again is the documented fix. Prisma reports one aborted mid-transaction as
+ * P2034, but one aborted at COMMIT reaches us as the driver adapter's own
+ * error, so the cause chain is searched for either.
+ */
+export function isWriteConflict(error: unknown): boolean {
+  for (let e: unknown = error, depth = 0; depth < 5; depth++) {
+    if (typeof e !== "object" || e === null) return false;
+    const { code, kind, originalCode, cause } = e as Record<string, unknown>;
+    if (
+      code === "P2034" ||
+      code === "40001" ||
+      originalCode === "40001" ||
+      kind === "TransactionWriteConflict"
+    ) {
+      return true;
+    }
+    e = cause;
+  }
+  return false;
+}
 
 /**
  * Record one observation of the insurance price list: its snapshot row(s), and
@@ -103,6 +125,16 @@ async function recordOnce({
           OR: [{ validUntil: null }, { validUntil: { gt: observedAt } }],
         },
       });
+      const lost = containing.length - prices.size;
+      if (
+        prices.size === 0 ||
+        (lost > MAX_TYPES_LOST && lost > containing.length * MAX_SHARE_LOST)
+      ) {
+        throw new Error(
+          `Insurance price list at ${observedAt.toISOString()} prices ${prices.size} types, while ${containing.length} are insured: refusing a truncated list`,
+        );
+      }
+
       const startingAtNext =
         nextObservedAt === null
           ? []
@@ -156,6 +188,12 @@ async function recordOnce({
     },
     // Prisma's 5s default is tight for a remote database and a change that
     // rewrites every type's row.
-    { maxWait: 10_000, timeout: 60_000 },
+    {
+      // The rows' validity depends on it: under READ COMMITTED (Postgres'
+      // default) two overlapping runs could both leave a row open-ended.
+      isolationLevel: "Serializable",
+      maxWait: 10_000,
+      timeout: 60_000,
+    },
   );
 }

@@ -26,7 +26,6 @@ export const trackInsurancePrices = defineJob<Record<string, never>>({
   description:
     "Poll ESI's insurance price list and record which prices changed, keeping the history",
   handler: async (ctx) => {
-    const now = new Date();
     const response = await getInsurancePrices(undefined, {
       // Level names are localized; they are stored by their English name.
       acceptLanguage: "en",
@@ -37,9 +36,11 @@ export const trackInsurancePrices = defineJob<Record<string, never>>({
       // A failed response, not every ship losing its insurance: retry.
       throw new Error("ESI listed no insurance prices");
     }
+    // Taken after the response: a poll that itself refreshes ESI's cache gets
+    // a Last-Modified later than any time taken before the request.
     const observedAt = observedAtFromLastModified(
       response.headers["last-modified"],
-      now,
+      new Date(),
     );
 
     const previous = await prisma.insurancePriceSnapshot.findFirst({

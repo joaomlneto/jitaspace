@@ -113,21 +113,36 @@ const tx = {
     },
   },
 };
-/** Write conflicts to raise before the next transactions run. */
+/**
+ * Write conflicts to raise at COMMIT of the next transactions, after their
+ * writes ran (which are rolled back), in the shape `conflictError` builds.
+ */
 let conflicts = 0;
-const transaction = jest.fn((fn: (client: typeof tx) => Promise<unknown>) => {
-  if (conflicts > 0) {
-    conflicts--;
-    return Promise.reject(
-      Object.assign(new Error("write conflict"), { code: "P2034" }),
-    );
-  }
-  return fn(tx);
-});
+let conflictError: () => unknown;
+const transaction = jest.fn(
+  async (
+    fn: (client: typeof tx) => Promise<unknown>,
+    _options?: Record<string, unknown>,
+  ) => {
+    const saved = {
+      snapshots: snapshots.map((s) => ({ ...s })),
+      rows: rows.map((r) => ({ ...r })),
+    };
+    const result = await fn(tx);
+    if (conflicts > 0) {
+      conflicts--;
+      ({ snapshots, rows } = saved);
+      throw conflictError();
+    }
+    return result;
+  },
+);
 jest.mock("../db", () => ({
   prisma: {
-    $transaction: (fn: (client: typeof tx) => Promise<unknown>) =>
-      transaction(fn),
+    $transaction: (
+      fn: (client: typeof tx) => Promise<unknown>,
+      options?: Record<string, unknown>,
+    ) => transaction(fn, options),
   },
 }));
 
@@ -140,6 +155,8 @@ beforeEach(() => {
   snapshots = [];
   rows = [];
   conflicts = 0;
+  conflictError = () =>
+    Object.assign(new Error("write conflict"), { code: "P2034" });
 });
 
 const at = (hour: number) => new Date(Date.UTC(2026, 9, 10, hour));
@@ -287,5 +304,65 @@ describe("recordInsurancePriceSnapshot", () => {
     conflicts = 3;
     await expect(record(0)).rejects.toThrow("write conflict");
     expect(snapshots).toHaveLength(0);
+  });
+
+  it("retries a conflict at COMMIT, reported as the driver adapter's error", async () => {
+    conflicts = 1;
+    conflictError = () =>
+      Object.assign(new Error("restart transaction"), {
+        name: "DriverAdapterError",
+        cause: { kind: "TransactionWriteConflict", originalCode: "40001" },
+      });
+    await expect(record(0)).resolves.toMatchObject({ recorded: true });
+    expect(transaction).toHaveBeenCalledTimes(2);
+    expect(snapshots).toHaveLength(1);
+  });
+
+  it("does not retry any other error", async () => {
+    conflicts = 1;
+    conflictError = () => Object.assign(new Error("boom"), { code: "P2002" });
+    await expect(record(0)).rejects.toThrow("boom");
+    expect(transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs serializable, whatever the database's default", async () => {
+    await record(0);
+    expect(transaction.mock.calls[0]?.[1]).toMatchObject({
+      isolationLevel: "Serializable",
+    });
+  });
+
+  it("refuses an empty or truncated list", async () => {
+    const many = new Map(
+      Array.from({ length: 100 }, (_, i) => [i + 1, prices(100)] as const),
+    );
+    await recordInsurancePriceSnapshot({
+      observedAt: at(0),
+      source: "everef",
+      prices: many,
+    });
+    const truncated = new Map([...many].slice(0, 80));
+    await expect(
+      recordInsurancePriceSnapshot({
+        observedAt: at(1),
+        source: "everef",
+        prices: truncated,
+      }),
+    ).rejects.toThrow(/truncated/);
+    await expect(
+      recordInsurancePriceSnapshot({
+        observedAt: at(1),
+        source: "everef",
+        prices: new Map(),
+      }),
+    ).rejects.toThrow(/truncated/);
+    // Losing a handful of types is ESI's to decide.
+    await expect(
+      recordInsurancePriceSnapshot({
+        observedAt: at(1),
+        source: "everef",
+        prices: new Map([...many].slice(0, 95)),
+      }),
+    ).resolves.toMatchObject({ recorded: true, changedTypes: 5 });
   });
 });

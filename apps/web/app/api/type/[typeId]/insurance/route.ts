@@ -7,10 +7,11 @@ import { parsePositiveEntityId } from "~/lib/routeParams";
  * tab fetches this when it opens.
  *
  * Cached at the CDN for an hour, as long as the read lasts: the job records a
- * new observation hourly, and prices change every couple of days.
+ * new observation hourly. Served stale for at most another hour, so the chart
+ * trails the page's current prices (also cached for hours) by little.
  */
 const CACHE_OK =
-  "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400";
+  "public, max-age=300, s-maxage=3600, stale-while-revalidate=3600";
 
 export async function GET(
   _request: Request,

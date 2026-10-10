@@ -155,29 +155,59 @@ export function planInsurancePriceUpdates({
 
   const typeIds = new Set([...containingByType.keys(), ...prices.keys()]);
   for (const typeId of [...typeIds].sort((a, b) => a - b)) {
-    const current = containingByType.get(typeId);
-    const observed = prices.get(typeId);
-    if (current && observed && pricesAreEqual(current, observed)) continue;
-    plan.changedTypeIds.push(typeId);
-    if (current) plan.closeTypeIds.push(typeId);
-
-    // What N saw: the tail of P when P runs past it, or else N's own row.
-    const tail = current && tailFromNext(current, nextObservedAt);
-    const atNext = tail ?? nextByType.get(typeId);
-
-    if (!observed) {
-      if (tail) plan.create.push(tail);
-    } else if (atNext && pricesAreEqual(atNext, observed)) {
-      // N saw the same prices: one row from here through N's.
-      plan.create.push(row(typeId, observedAt, atNext.validUntil, observed));
-      if (!tail) plan.deleteAtNextTypeIds.push(typeId);
-    } else {
-      plan.create.push(row(typeId, observedAt, nextObservedAt, observed));
-      if (tail) plan.create.push(tail);
-    }
+    planType(plan, {
+      typeId,
+      observedAt,
+      nextObservedAt,
+      current: containingByType.get(typeId),
+      observed: prices.get(typeId),
+      nextRow: nextByType.get(typeId),
+    });
   }
 
   return plan;
+}
+
+/** One type's part of the plan: see {@link planInsurancePriceUpdates}. */
+function planType(
+  plan: InsurancePricePlan,
+  {
+    typeId,
+    observedAt,
+    nextObservedAt,
+    current,
+    observed,
+    nextRow,
+  }: {
+    typeId: number;
+    observedAt: Date;
+    nextObservedAt: Date | null;
+    /** P: the row current at `observedAt`. */
+    current: InsurancePriceRow | undefined;
+    /** The prices observed, if listed. */
+    observed: InsurancePriceValues | undefined;
+    /** The row starting at N, if any. */
+    nextRow: InsurancePriceRow | undefined;
+  },
+): void {
+  if (current && observed && pricesAreEqual(current, observed)) return;
+  plan.changedTypeIds.push(typeId);
+  if (current) plan.closeTypeIds.push(typeId);
+
+  // What N saw: the tail of P when P runs past it, or else N's own row.
+  const tail = current && tailFromNext(current, nextObservedAt);
+  const atNext = tail ?? nextRow;
+
+  if (!observed) {
+    if (tail) plan.create.push(tail);
+  } else if (atNext && pricesAreEqual(atNext, observed)) {
+    // N saw the same prices: one row from here through N's.
+    plan.create.push(row(typeId, observedAt, atNext.validUntil, observed));
+    if (!tail) plan.deleteAtNextTypeIds.push(typeId);
+  } else {
+    plan.create.push(row(typeId, observedAt, nextObservedAt, observed));
+    if (tail) plan.create.push(tail);
+  }
 }
 
 const row = (
