@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 import type { InsurancePriceSource } from "@jitaspace/db";
 
 import type { InsurancePriceValues } from "./planInsurancePriceUpdates.ts";
@@ -77,7 +79,8 @@ export async function recordInsurancePriceSnapshot(
       return await recordOnce(observation); // NOSONAR: a retry needs the previous attempt to have failed
     } catch (error) {
       if (!isWriteConflict(error) || attempt >= CONFLICT_ATTEMPTS) throw error;
-      const delay = CONFLICT_BACKOFF_MS * attempt * (1 + Math.random());
+      const base = CONFLICT_BACKOFF_MS * attempt;
+      const delay = base + randomInt(base);
       await new Promise((resolve) => setTimeout(resolve, delay)); // NOSONAR: backoff between attempts
     }
   }
