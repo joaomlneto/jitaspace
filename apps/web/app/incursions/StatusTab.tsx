@@ -619,7 +619,8 @@ export function StatusTab({
         ))
       )}
       <Text size="xs" c="dimmed">
-        Vanguard, Assault and Headquarters systems come from the community map{" "}
+        Vanguard, Assault and Headquarters systems come from the community maps
+        of{" "}
         <Anchor
           href="https://github.com/Shadowlauch/eve-incursions-node"
           target="_blank"
@@ -628,8 +629,25 @@ export function StatusTab({
         >
           eve-incursions.de
         </Anchor>{" "}
-        kept; null-sec constellations were never mapped. ESI names only the
-        staging system.
+        and the{" "}
+        <Anchor
+          href="https://wiki.eveuniversity.org/Constellation_layouts_for_Incursions"
+          target="_blank"
+          rel="noopener noreferrer"
+          inherit
+        >
+          EVE University wiki
+        </Anchor>{" "}
+        (
+        <Anchor
+          href="https://creativecommons.org/licenses/by-sa/4.0/"
+          target="_blank"
+          rel="noopener noreferrer"
+          inherit
+        >
+          CC BY-SA 4.0
+        </Anchor>
+        ). ESI names only the staging system.
       </Text>
     </Stack>
   );

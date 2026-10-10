@@ -4,7 +4,7 @@
  * SDE says where the other sites spawn, so this is community knowledge, kept
  * as eve-incursions.de (https://github.com/Shadowlauch/eve-incursions-node)
  * curated it. It covers the high- and low-sec constellations incursions use;
- * null-sec systems are not mapped, so they show as unknown.
+ * `siteRolesEveUniversity.ts` adds null-sec and the constellations it missed.
  *
  * Extracted from that project's `seed/eve-incursions-seed.sql.gz`
  * (`solar_systems.systemType`, commit 6764c63), under its licence:
@@ -31,6 +31,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+import { EVE_UNIVERSITY_SYSTEMS_BY_ROLE } from "./siteRolesEveUniversity";
 
 export type IncursionSiteRole = "vanguard" | "assault" | "headquarters";
 
@@ -159,11 +161,16 @@ const SYSTEMS_BY_ROLE: Record<IncursionSiteRole, readonly number[]> = {
   ],
 };
 
-const ROLE_BY_SYSTEM = new Map<number, IncursionSiteRole>(
-  (
-    Object.entries(SYSTEMS_BY_ROLE) as [IncursionSiteRole, readonly number[]][]
-  ).flatMap(([role, ids]) => ids.map((id) => [id, role] as const)),
-);
+const entries = (byRole: Record<IncursionSiteRole, readonly number[]>) =>
+  (Object.entries(byRole) as [IncursionSiteRole, readonly number[]][]).flatMap(
+    ([role, ids]) => ids.map((id) => [id, role] as const),
+  );
+
+/** eve-incursions.de's map, then the EVE University wiki's for the rest. */
+const ROLE_BY_SYSTEM = new Map<number, IncursionSiteRole>([
+  ...entries(EVE_UNIVERSITY_SYSTEMS_BY_ROLE),
+  ...entries(SYSTEMS_BY_ROLE),
+]);
 
 /** The site type that spawns in a system, if it is mapped. */
 export const incursionSiteRole = (
