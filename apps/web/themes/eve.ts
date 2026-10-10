@@ -332,7 +332,7 @@ export const eveTheme = createTheme({
   /* Escape hatch — design tokens not modeled by Mantine props.
      Read via theme.other.* */
   other: {
-    // Cradle of War, under a 55% black overlay. Faction themes swap in their
+    // Cradle of War, under a 68% black overlay. Faction themes swap in their
     // own wallpaper.
     ...WALLPAPERS.cradleOfWar,
     fonts: {
@@ -383,7 +383,7 @@ export const eveTheme = createTheme({
         "linear-gradient(180deg, rgba(61,75,94,.34) 0%, rgba(22,31,45,.76) 100%)",
       btnFilled: "linear-gradient(180deg, #35949d 0%, #236a74 100%)",
       btnFilledHover: "linear-gradient(180deg, #3fa3ad 0%, #2a7983 100%)",
-      appOverlay: "linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.55))",
+      appOverlay: "linear-gradient(rgba(0,0,0,.68), rgba(0,0,0,.68))",
     },
     shadows: {
       panel:

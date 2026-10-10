@@ -49,7 +49,9 @@ const ember: MantineColorsTuple = [
   "#7f3800",
 ];
 
-// Frost — the cold blue inside the triangle. Links.
+// Frost — the cold blue inside the triangle. Links: frost.2 on the dark scheme
+// and frost.8 on the light one, the shades that keep 4.5:1 over the brightest
+// (bluest) part of the wallpaper.
 const frost: MantineColorsTuple = [
   "#e3f2fd",
   "#c4e2fa",
@@ -64,11 +66,12 @@ const frost: MantineColorsTuple = [
 ];
 
 // Mantine's dark scale, warmed towards red: dark.0 is the dark scheme's text,
-// dark.2 its dimmed text, dark.7 its body.
+// dark.2 its dimmed text (lifted so it stays readable on the wallpaper), dark.7
+// its body.
 const dark: MantineColorsTuple = [
   "#e6dada",
   "#c4b2b2",
-  "#9e8a8a",
+  "#b2a0a0",
   "#735f60",
   "#4f3e3f",
   "#3b2c2d",
@@ -196,7 +199,7 @@ export const crimsonHarvestTheme = createTheme({
     },
 
     Anchor: {
-      styles: { root: { color: lightDark("#176bb8", "#62b0ef") } },
+      styles: { root: { color: lightDark("#115896", "#94caf5") } },
     },
 
     Title: {

@@ -16,9 +16,12 @@
  */
 import { lightDark } from "./lightDark";
 
-// The veil over the art: 55% black on the dark scheme, and a pale wash on the
-// light one so light panels and dark text stand out from it.
-const veil = lightDark("rgba(242,247,251,0.86)", "rgba(0,0,0,0.55)");
+// The veil over the art: 68% black on the dark scheme, and a pale wash on the
+// light one so light panels and dark text stand out from it. Page text often
+// sits straight on the art (e.g. /about), so the veil is what keeps it
+// readable: at 55% the brightest parts of every wallpaper took body text below
+// WCAG AA (4.5:1); at 68% it stays above 5.5:1 on all of them.
+const veil = lightDark("rgba(242,247,251,0.86)", "rgba(0,0,0,0.68)");
 
 const layer = (url: string) =>
   `linear-gradient(${veil},${veil}),url(${url}) center/cover no-repeat`;
