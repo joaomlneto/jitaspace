@@ -8,7 +8,6 @@ import {
   Center,
   Container,
   Group,
-  Title,
   UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
@@ -115,7 +114,7 @@ export function HeaderWithMegaMenus({
                   onClick={() => {
                     openContextModal({
                       modal: "login",
-                      title: <Title order={3}>Login</Title>,
+                      title: "Login",
                       size: "xl",
                       centered: false,
                       innerProps: {},
