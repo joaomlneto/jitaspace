@@ -30,7 +30,10 @@ interface UserButtonProps extends UnstyledButtonProps {
   compact?: boolean;
 }
 
-export default function UserButton({ compact, ...others }: UserButtonProps) {
+export default function UserButton({
+  compact,
+  ...others
+}: Readonly<UserButtonProps>) {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const {

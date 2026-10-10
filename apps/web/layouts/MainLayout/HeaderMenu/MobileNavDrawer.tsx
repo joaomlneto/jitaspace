@@ -36,7 +36,7 @@ export interface MobileNavDrawerProps {
  * full-screen drawer is cramped on a phone and easy to lose behind it. Every
  * action closes the drawer first, so the modal it opens is never covered.
  */
-function DrawerAccountSection({ close }: { close: () => void }) {
+function DrawerAccountSection({ close }: Readonly<{ close: () => void }>) {
   const {
     character,
     otherCharacters,
