@@ -12,14 +12,20 @@ import { historyTable } from "~/lib/history-sql";
  * A change without an `entityType` is a type, as the change lists group it.
  *
  * Every entity a build adds or changes has a name, so a row without one means a
- * lookup failed to find it. Two sources, in order:
+ * lookup failed to find it. Three sources, in order:
  *
  * 1. Our database ({@link MAIN_DB_NAMES}), one query per kind on the page. It
  *    covers everything the last SDE ingest knew about, removed entities
  *    included (their rows are kept, flagged `isDeleted`).
  * 2. For the rest — above all whatever a fresh build adds, which the SDE does
  *    not have yet — the history database, as of `atBuild`
- *    ({@link readHistoryNames}). Without `atBuild` there is no second source.
+ *    ({@link readHistoryNames}).
+ * 3. Then the name the history database stores on the entity
+ *    ({@link readStoredNames}). It covers what the second source can't: a
+ *    name the game never renamed has no string change to read it from, which
+ *    left most mission dungeons unnamed.
+ *
+ * Without `atBuild` the history database isn't read.
  *
  * Throws on failure, so that inside a `"use cache"` scope an outage fails the
  * read instead of caching a day of missing names.
@@ -59,7 +65,41 @@ export async function readEntityNames(
   if (atBuild === undefined || missing.length === 0) return names;
   for (const { kind, id, name } of await readHistoryNames(missing, atBuild))
     set(kind, id, name);
+
+  const unnamed = missing.filter(
+    ({ kind, id }) => names[kind]?.[id] === undefined,
+  );
+  for (const { kind, id, name } of await readStoredNames(unnamed))
+    set(kind, id, name);
   return names;
+}
+
+/**
+ * The English names the history database stores on `Entity.name`, for the
+ * `wanted` entities that have one. jovespace resolves each entity's name-ID
+ * field (`typeNameID`, `dungeonNameID`, …) against every new Tranquility
+ * build's whole localization, so this holds the latest name, not the name as
+ * of any one build. An entity the game removed keeps the last name seen. Kinds
+ * whose names aren't localization messages (stargates, graphics, most planets
+ * and moons) have none. One query, on `Entity`'s unique `(kind, eveId)` index.
+ */
+export async function readStoredNames(
+  wanted: readonly { kind: string; id: number }[],
+): Promise<{ kind: string; id: number; name: string }[]> {
+  if (wanted.length === 0) return [];
+  const rows = await buildsDb.$queryRaw<
+    { kind: string; id: number | bigint | string; name: string }[]
+  >`
+    SELECT e."kind" AS kind, e."eveId" AS id, e."name" AS name
+    FROM unnest(
+      ${wanted.map((w) => w.kind)}::STRING[],
+      ${wanted.map((w) => w.id)}::INT8[]
+    ) AS w(kind, id)
+    JOIN ${historyTable("Entity")} e
+      ON e."kind" = w.kind AND e."eveId" = w.id
+    WHERE e."name" IS NOT NULL
+  `;
+  return rows.map((r) => ({ kind: r.kind, id: Number(r.id), name: r.name }));
 }
 
 type NameRows = readonly (readonly [number, string | null | undefined])[];

@@ -29,8 +29,10 @@ jest.mock("~/app/dungeon/[dungeonId]/page.client", () => ({
 }));
 // The page reads the entity's change history on the server; stub that read
 // (it loads `next/server`, which jsdom cannot).
+const loadEntityHistory =
+  jest.fn<(kind: string, id: number) => Promise<unknown>>();
 jest.mock("~/lib/history-entity-page", () => ({
-  loadEntityHistory: () => Promise.resolve(null),
+  loadEntityHistory: (kind: string, id: number) => loadEntityHistory(kind, id),
 }));
 jest.mock("~/components/PageSkeleton", () => ({ PageSkeleton: () => null }));
 jest.mock("nuqs/adapters/react", () => ({
@@ -76,6 +78,7 @@ const missionDetail = {
 beforeEach(() => {
   getMission.mockReset().mockResolvedValue(null);
   getDungeon.mockReset().mockResolvedValue(null);
+  loadEntityHistory.mockReset().mockResolvedValue(null);
 });
 
 describe("mission route", () => {
@@ -205,6 +208,43 @@ describe("dungeon route", () => {
     expect(meta.description).toBe(
       "EVE Online dungeon 213 — the mission and agents that use it.",
     );
+  });
+
+  it("names an undescribed dungeon from its history", async () => {
+    const pocket = {
+      ...described,
+      dungeonId: 184,
+      described: false,
+      name: null,
+      description: null,
+      archetype: null,
+      faction: null,
+      missions: [{}],
+    };
+    getDungeon.mockResolvedValue(pocket);
+    loadEntityHistory.mockResolvedValue({ name: "Seek and Destroy" });
+
+    const meta = await dungeon.generateMetadata(params("dungeonId", "184"));
+    expect(loadEntityHistory).toHaveBeenCalledWith("dungeon", 184);
+    expect(meta.title).toBe("Seek and Destroy — Dungeon");
+    expect(meta.description).toBe(
+      "Seek and Destroy, an EVE Online dungeon — the mission and agents that use it.",
+    );
+
+    const tree = await renderContent(
+      dungeon.default,
+      params("dungeonId", "184"),
+    );
+    expect(tree.props.children.props.dungeon).toEqual({
+      ...pocket,
+      name: "Seek and Destroy",
+    });
+  });
+
+  it("reads no history for the metadata of a dungeon the SDE names", async () => {
+    getDungeon.mockResolvedValue(described);
+    await dungeon.generateMetadata(params("dungeonId", "43"));
+    expect(loadEntityHistory).not.toHaveBeenCalled();
   });
 
   it("returns no metadata for a non-canonical id, without a query", async () => {
