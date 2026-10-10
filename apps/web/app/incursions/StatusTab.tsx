@@ -9,6 +9,7 @@ import {
   Grid,
   Group,
   Paper,
+  Popover,
   Progress,
   Stack,
   Table,
@@ -119,13 +120,17 @@ const spawnPosition = (endedAt: number, now: number) =>
   Math.min(1, Math.max(0, (now - endedAt) / HIGH_SEC_SPAWN_EXPECTED_MS));
 
 const BLOCKED_SHARE = HIGH_SEC_SPAWN_BLOCKED_MS / HIGH_SEC_SPAWN_EXPECTED_MS;
+const HOUR_MS = 60 * 60 * 1000;
+/** The window's bounds in hours (12 and 36), for its labels. */
+const BLOCKED_HOURS = HIGH_SEC_SPAWN_BLOCKED_MS / HOUR_MS;
+const EXPECTED_HOURS = HIGH_SEC_SPAWN_EXPECTED_MS / HOUR_MS;
 
 /**
  * When the next high-sec incursion is due, in one line, over a timeline of the
  * 36 hours after the last one ended: 12 in which none can spawn, then the
  * window in which one usually does. The details are in a tooltip.
  */
-export function SpawnOutlook({
+function SpawnOutlook({
   outlook,
   endedAt,
   now,
@@ -152,18 +157,26 @@ export function SpawnOutlook({
             <Text size="sm" fw={600} style={{ whiteSpace: "nowrap" }}>
               Next high-sec incursion
             </Text>
-            <Tooltip
-              multiline
-              w={280}
-              label={`None can spawn within 12 hours of the last high-sec incursion ending, and one usually does within 36. The last ended ${eveTime(endedAt)}.`}
-            >
-              <IconInfoCircle
-                size={14}
-                aria-label="How this is worked out"
-                color="var(--mantine-color-dimmed)"
-                style={{ cursor: "help" }}
-              />
-            </Tooltip>
+            {/* A button, so a tap or the keyboard opens it, not only hover. */}
+            <Popover width={280} withArrow shadow="md" position="bottom-start">
+              <Popover.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="xs"
+                  aria-label="How this is worked out"
+                >
+                  <IconInfoCircle size={14} />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Text size="xs">
+                  None can spawn within {BLOCKED_HOURS} hours of the last
+                  high-sec incursion ending, and one usually does within{" "}
+                  {EXPECTED_HOURS}. The last ended {eveTime(endedAt)}.
+                </Text>
+              </Popover.Dropdown>
+            </Popover>
           </Group>
           <Text
             size="sm"
@@ -179,7 +192,7 @@ export function SpawnOutlook({
           pos="relative"
           h={8}
           role="img"
-          aria-label={`Timeline: ${Math.round(position * 36)} of 36 hours since the last ended`}
+          aria-label={`Timeline: ${Math.round(position * EXPECTED_HOURS)} of ${EXPECTED_HOURS} hours since the last ended`}
         >
           <Group gap={2} h="100%" wrap="nowrap">
             <Box
@@ -219,10 +232,10 @@ export function SpawnOutlook({
               transform: "translateX(-50%)",
             }}
           >
-            +12h
+            +{BLOCKED_HOURS}h
           </Text>
           <Text size="xs" c="dimmed" pos="absolute" right={0}>
-            +36h
+            +{EXPECTED_HOURS}h
           </Text>
         </Box>
       </Stack>

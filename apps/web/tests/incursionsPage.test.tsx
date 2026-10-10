@@ -301,33 +301,40 @@ describe("Incursions page", () => {
     });
 
     it.each([
-      [2, "can spawn in 10:00:00", 6],
-      [20, "due within 16:00:00", 56],
-      [40, "overdue", 100],
+      [2, "can spawn in 10:00:00", 2],
+      [20, "due within 16:00:00", 20],
+      [40, "overdue", 36],
     ])(
       "shows the next high-sec spawn %ih after the last ended",
-      (hours, status, percent) => {
+      (hours, status, hoursAlong) => {
         // The countdown runs on the clock: hold it at the data's read time.
         jest.useFakeTimers({ now: Date.parse(READ_AT) });
         renderPage([NULL_SEC, endedHighSec(hours)]);
         expect(screen.getByText("Next high-sec incursion")).toBeVisible();
         expect(screen.getByText(status)).toBeVisible();
-        // The marker sits that far along the 36 hours after the last ended.
+        // The marker sits that far along the 36 hours after the last ended
+        // (and stops at the end once overdue).
         expect(
           screen.getByRole("img", { name: /^Timeline: / }),
         ).toHaveAccessibleName(
-          `Timeline: ${Math.round((percent / 100) * 36)} of 36 hours since the last ended`,
+          `Timeline: ${hoursAlong} of 36 hours since the last ended`,
         );
       },
     );
 
-    it("explains the spawn window in a tooltip, not on the page", () => {
+    it("explains the spawn window on a tap, not on the page", () => {
       jest.useFakeTimers({ now: Date.parse(READ_AT) });
       renderPage([NULL_SEC, endedHighSec(2)]);
+      expect(screen.queryByText(/None can spawn within 12 hours/)).toBeNull();
+      fireEvent.click(
+        screen.getByRole("button", { name: "How this is worked out" }),
+      );
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
       expect(
-        screen.getByLabelText("How this is worked out"),
-      ).toBeInTheDocument();
-      expect(screen.queryByText(/never spawns within 12 hours/)).toBeNull();
+        screen.getByText(/None can spawn within 12 hours/),
+      ).toHaveTextContent("The last ended 2026-10-08 10:00");
     });
 
     it("refreshes its data every five minutes while visible", () => {
