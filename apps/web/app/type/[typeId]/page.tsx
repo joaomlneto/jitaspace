@@ -6,11 +6,13 @@ import { HttpStatusCode } from "axios";
 import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
+import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { loadEntityHistory } from "~/lib/history-entity-page";
+import { readLatestTypeInsurance } from "~/lib/insuranceData";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { hasCombatStats } from "~/lib/npcStats";
 import {
@@ -369,6 +371,20 @@ async function getTypeTypeLists(
   }
 }
 
+/**
+ * The ship's latest insurance prices, for its Insurance tab. The page renders
+ * fine without them, so a database failure just leaves the tab out.
+ */
+async function getTypeInsurance(
+  typeId: number,
+): Promise<InsurancePricePeriod | null> {
+  try {
+    return await readLatestTypeInsurance(typeId);
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -430,12 +446,14 @@ async function PageContent({
   // Not awaited: the History tab streams it in after the rest of the page, so
   // the item's first byte never waits on seconds of history reads.
   const history = loadEntityHistory("type", typeId);
-  const [dogmaMeta, variations, typeLists, npcStats] = await Promise.all([
-    getTypeDogmaMeta(typeId),
-    getTypeVariations(data.variationBaseTypeId),
-    getTypeTypeLists(typeId, data.groupId, data.categoryId),
-    getTypeNpcStats(typeId, data.categoryId),
-  ]);
+  const [dogmaMeta, variations, typeLists, npcStats, insurance] =
+    await Promise.all([
+      getTypeDogmaMeta(typeId),
+      getTypeVariations(data.variationBaseTypeId),
+      getTypeTypeLists(typeId, data.groupId, data.categoryId),
+      getTypeNpcStats(typeId, data.categoryId),
+      getTypeInsurance(typeId),
+    ]);
   return (
     <TypePage
       {...props}
@@ -444,6 +462,7 @@ async function PageContent({
       typeLists={typeLists}
       history={history}
       npcStats={npcStats}
+      insurance={insurance}
     />
   );
 }

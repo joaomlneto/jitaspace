@@ -28,6 +28,7 @@ import {
   IconInfoCircle,
   IconListCheck,
   IconListDetails,
+  IconShieldCheck,
   IconSwords,
   IconVersions,
 } from "@tabler/icons-react";
@@ -57,6 +58,7 @@ import {
 import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
+import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
@@ -89,6 +91,7 @@ import { TypeListMatchTable } from "~/components/TypeLists";
 import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
+import { InsuranceTab } from "./InsuranceTab";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
@@ -213,6 +216,7 @@ export default function TypePage({
   typeLists = [],
   history = NO_HISTORY,
   npcStats = null,
+  insurance = null,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
@@ -225,6 +229,8 @@ export default function TypePage({
     history?: Promise<EntityHistoryData | null>;
     /** An NPC's combat figures; null for anything else. */
     npcStats?: NpcStats | null;
+    /** A ship's latest insurance prices; null for anything never insured. */
+    insurance?: InsurancePricePeriod | null;
   }
 >) {
   const character = useSelectedCharacter();
@@ -276,7 +282,8 @@ export default function TypePage({
   // page blank; show the overview instead.
   const selectedTab =
     (activeTab === "type-lists" && typeLists.length === 0) ||
-    (activeTab === "combat" && !npcStats)
+    (activeTab === "combat" && !npcStats) ||
+    (activeTab === "insurance" && !insurance)
       ? DEFAULT_TYPE_PAGE_TAB
       : activeTab;
 
@@ -599,6 +606,14 @@ export default function TypePage({
                 Market
               </Tabs.Tab>
             )}
+            {insurance && (
+              <Tabs.Tab
+                value="insurance"
+                leftSection={<IconShieldCheck size={16} />}
+              >
+                Insurance
+              </Tabs.Tab>
+            )}
             {description && (
               <Tabs.Tab
                 value="description"
@@ -914,6 +929,13 @@ export default function TypePage({
                   </Text>
                 </Stack>
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Insurance */}
+          {insurance && (
+            <Tabs.Panel value="insurance" pt="lg">
+              <InsuranceTab typeId={typeId} latest={insurance} />
             </Tabs.Panel>
           )}
 
