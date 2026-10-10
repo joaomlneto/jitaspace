@@ -20,14 +20,17 @@ import {
 import {
   IconGitBranch,
   IconHistory,
-  IconInfoCircle,
   IconListNumbers,
-  IconRoute,
-  IconUsers,
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { FactionAnchor } from "@jitaspace/eve-components";
+import {
+  CategoryAgentMissionIcon,
+  CategoryEpicArcIcon,
+  WindowAgentIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
 import {
   EveIconAvatar,
   FactionAvatar,
@@ -172,7 +175,7 @@ function EpicArcOverview({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Epic Arc
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -208,7 +211,9 @@ function EpicArcOverview({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconRoute size={18} />}>
+        <SectionHeading
+          icon={<CategoryEpicArcIcon size={18} color="currentColor" alt="" />}
+        >
           Where It Starts
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -331,14 +336,26 @@ export default function EpicArcPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
-            <Tabs.Tab value="missions" leftSection={<IconRoute size={16} />}>
+            <Tabs.Tab
+              value="missions"
+              leftSection={
+                <CategoryAgentMissionIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               Missions ({arc.steps.length})
             </Tabs.Tab>
-            <Tabs.Tab value="agents" leftSection={<IconUsers size={16} />}>
+            <Tabs.Tab
+              value="agents"
+              leftSection={<WindowAgentIcon size={16} alt="" />}
+            >
               Agents
             </Tabs.Tab>
             <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>

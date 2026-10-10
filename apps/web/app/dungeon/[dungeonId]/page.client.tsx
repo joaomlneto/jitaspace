@@ -19,13 +19,10 @@ import {
 import {
   IconFileText,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
   IconMapPin,
   IconSitemap,
   IconSwords,
-  IconTarget,
-  IconUsers,
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
@@ -36,7 +33,12 @@ import {
   TypeAnchor,
   TypeAvatar,
 } from "@jitaspace/eve-components";
-import { AgencyIcon } from "@jitaspace/eve-icons";
+import {
+  AgencyIcon,
+  CategoryAgentMissionIcon,
+  WindowAgentIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
 import {
   CorporationAnchor,
   DungeonAnchor,
@@ -516,7 +518,11 @@ function DungeonReferencesAlert({
     operations.length > 0 && "a tactical operation runs here",
   ].filter(Boolean);
   return (
-    <Alert variant="light" color="gray" icon={<IconInfoCircle />}>
+    <Alert
+      variant="light"
+      color="gray"
+      icon={<WindowInfoIcon size={20} alt="" />}
+    >
       The Static Data Export does not describe this dungeon — it is known only
       because {reasons.join(", and ")}. Its name, layout and description live
       only in the game client.
@@ -548,7 +554,7 @@ function DungeonOverview({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Dungeon
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -672,7 +678,7 @@ export default function DungeonPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -693,12 +699,24 @@ export default function DungeonPage({
               </Tabs.Tab>
             )}
             {available.missions && (
-              <Tabs.Tab value="missions" leftSection={<IconTarget size={16} />}>
+              <Tabs.Tab
+                value="missions"
+                leftSection={
+                  <CategoryAgentMissionIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Missions ({dungeon.missions.length})
               </Tabs.Tab>
             )}
             {available.agents && (
-              <Tabs.Tab value="agents" leftSection={<IconUsers size={16} />}>
+              <Tabs.Tab
+                value="agents"
+                leftSection={<WindowAgentIcon size={16} alt="" />}
+              >
                 Agents ({dungeon.agents.length})
               </Tabs.Tab>
             )}

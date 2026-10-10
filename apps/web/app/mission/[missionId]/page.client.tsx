@@ -21,11 +21,8 @@ import {
 } from "@mantine/core";
 import {
   IconBook,
-  IconCoin,
   IconHistory,
-  IconInfoCircle,
   IconMessages,
-  IconRoute,
   IconTarget,
   IconUser,
   IconVersions,
@@ -34,6 +31,12 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { FactionAnchor } from "@jitaspace/eve-components";
+import {
+  CategoryAgentMissionIcon,
+  CategoryEpicArcIcon,
+  CategoryIskIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
@@ -523,7 +526,7 @@ function OptionalTypeRef({
 function MissionSummary({ mission }: Readonly<{ mission: MissionDetail }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconInfoCircle size={18} />}>
+      <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
         Mission
       </SectionHeading>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -615,7 +618,13 @@ function MissionObjective({ mission }: Readonly<{ mission: MissionDetail }>) {
       : undefined;
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconTarget size={18} />}>Objective</SectionHeading>
+      <SectionHeading
+        icon={
+          <CategoryAgentMissionIcon size={18} color="currentColor" alt="" />
+        }
+      >
+        Objective
+      </SectionHeading>
       {mission.kind === "other" ? (
         <Text size="sm" c="dimmed">
           This mission has no encounter or delivery of its own — it is completed
@@ -654,7 +663,11 @@ function MissionObjective({ mission }: Readonly<{ mission: MissionDetail }>) {
 function MissionRewards({ mission }: Readonly<{ mission: MissionDetail }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconCoin size={18} />}>Rewards</SectionHeading>
+      <SectionHeading
+        icon={<CategoryIskIcon size={18} color="currentColor" alt="" />}
+      >
+        Rewards
+      </SectionHeading>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
         <StatCard
           label="Reward"
@@ -882,7 +895,7 @@ export default function MissionPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -900,7 +913,12 @@ export default function MissionPage({
               </Tabs.Tab>
             )}
             {available["epic-arc"] && (
-              <Tabs.Tab value="epic-arc" leftSection={<IconRoute size={16} />}>
+              <Tabs.Tab
+                value="epic-arc"
+                leftSection={
+                  <CategoryEpicArcIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Epic Arc
               </Tabs.Tab>
             )}

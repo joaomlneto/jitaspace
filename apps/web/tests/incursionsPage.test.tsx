@@ -39,7 +39,10 @@ jest.mock("next/dynamic", () => ({
   default: () => () => <span data-testid="influence-chart" />,
 }));
 
-jest.mock("@jitaspace/eve-icons", () => ({ IncursionsIcon: () => null }));
+jest.mock("@jitaspace/eve-icons", () => ({
+  IncursionsIcon: () => null,
+  WindowInfoIcon: () => null,
+}));
 
 // The shared stub, plus what this page needs from the real package.
 jest.mock("@jitaspace/ui", () => ({

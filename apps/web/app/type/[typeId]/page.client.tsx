@@ -21,14 +21,11 @@ import {
 } from "@mantine/core";
 import {
   IconArrowsDiff,
-  IconCoin,
   IconExternalLink,
   IconFileText,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
   IconListDetails,
-  IconShieldCheck,
   IconSwords,
   IconVersions,
 } from "@tabler/icons-react";
@@ -37,6 +34,11 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import {
+  CategoryIskIcon,
+  WindowInfoIcon,
+  WindowInsuranceIcon,
+} from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -576,7 +578,7 @@ export default function TypePage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -602,14 +604,19 @@ export default function TypePage({
               </Tabs.Tab>
             )}
             {hasMarket && (
-              <Tabs.Tab value="market" leftSection={<IconCoin size={16} />}>
+              <Tabs.Tab
+                value="market"
+                leftSection={
+                  <CategoryIskIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Market
               </Tabs.Tab>
             )}
             {insurance && (
               <Tabs.Tab
                 value="insurance"
-                leftSection={<IconShieldCheck size={16} />}
+                leftSection={<WindowInsuranceIcon size={16} alt="" />}
               >
                 Insurance
               </Tabs.Tab>
@@ -639,7 +646,7 @@ export default function TypePage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
                   Identity &amp; Classification
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -866,7 +873,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <TypeMarketBreadcrumbs typeId={typeId} fz="sm" />
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconCoin size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryIskIcon size={18} color="currentColor" alt="" />
+                    }
+                  >
                     Jita / The Forge
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="sm">

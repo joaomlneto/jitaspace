@@ -24,11 +24,6 @@ import {
   IconExternalLink,
   IconMeteor,
   IconMoon,
-  IconRobot,
-  IconRocket,
-  IconShieldHalf,
-  IconSkull,
-  IconSwords,
 } from "@tabler/icons-react";
 
 import { useGetFwSystems, useGetIncursions } from "@jitaspace/esi-client";
@@ -41,6 +36,14 @@ import {
   StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
+import {
+  CategoryDestroyCapsuleerIcon,
+  CategoryFactionalWarfareIcon,
+  CategoryLoseShipIcon,
+  CategoryNpcActivityIcon,
+  CategorySovereigntyIcon,
+  ControlJumpToIcon,
+} from "@jitaspace/eve-icons";
 import {
   useAllSolarSystemJumps,
   useAllSolarSystemKills,
@@ -303,9 +306,10 @@ function SystemControlPanels({
         {hasSovereignty && sov && (
           <Paper p="md" radius="md">
             <Group gap="sm" wrap="nowrap">
-              <IconShieldHalf
+              <CategorySovereigntyIcon
                 size={22}
                 color="var(--mantine-color-eve_primary-4)"
+                alt=""
               />
               <SolarSystemSovereigntyAvatar
                 solarSystemId={systemId}
@@ -328,7 +332,11 @@ function SystemControlPanels({
           <Paper p="md" radius="md">
             <Group justify="space-between" mb="xs">
               <Group gap="xs">
-                <IconSwords size={18} color="var(--mantine-color-orange-5)" />
+                <CategoryFactionalWarfareIcon
+                  size={18}
+                  color="var(--mantine-color-orange-5)"
+                  alt=""
+                />
                 <Text fw={600}>Faction Warfare</Text>
               </Group>
               <Badge
@@ -667,10 +675,10 @@ export default function Page({
           <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
             <StatTile
               icon={
-                <IconRocket
+                <ControlJumpToIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-teal-4)"
+                  alt=""
                 />
               }
               label="Ship Jumps"
@@ -680,10 +688,10 @@ export default function Page({
             />
             <StatTile
               icon={
-                <IconSwords
+                <CategoryLoseShipIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-red-5)"
+                  alt=""
                 />
               }
               label="Ship Kills"
@@ -693,10 +701,10 @@ export default function Page({
             />
             <StatTile
               icon={
-                <IconSkull
+                <CategoryDestroyCapsuleerIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-grape-4)"
+                  alt=""
                 />
               }
               label="Pod Kills"
@@ -706,10 +714,10 @@ export default function Page({
             />
             <StatTile
               icon={
-                <IconRobot
+                <CategoryNpcActivityIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-orange-5)"
+                  alt=""
                 />
               }
               label="NPC Kills"

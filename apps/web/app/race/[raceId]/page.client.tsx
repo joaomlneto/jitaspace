@@ -21,16 +21,12 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconBuildingSkyscraper,
   IconBuildingStore,
   IconDna,
   IconFileText,
   IconHierarchy3,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
-  IconPackage,
-  IconRocket,
   IconSchool,
   IconUsersGroup,
   IconUserStar,
@@ -46,6 +42,15 @@ import {
   StationAnchor,
   TypeAnchor,
 } from "@jitaspace/eve-components";
+import {
+  CategoryCorporationIcon,
+  CategorySpaceshipCommandIcon,
+  ControlCargoInventoryIcon,
+  SystemShipTreeIcon,
+  WindowInfoIcon,
+  WindowSkillsIcon,
+  WindowStationIcon,
+} from "@jitaspace/eve-icons";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -656,7 +661,15 @@ function SkillsPanel({
 
       {counts.racialSkills > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconRocket size={18} />}>
+          <SectionHeading
+            icon={
+              <CategorySpaceshipCommandIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Racial skills
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1090,7 +1103,7 @@ function StationsPanel({
 
       {hasStations && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconBuildingSkyscraper size={18} />}>
+          <SectionHeading icon={<WindowStationIcon size={18} alt="" />}>
             Stations
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1234,7 +1247,7 @@ function OverviewPanel({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Identity
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -1370,7 +1383,15 @@ function OverviewPanel({
 
       {race.itemCategories.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconPackage size={18} />}>
+          <SectionHeading
+            icon={
+              <ControlCargoInventoryIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Items by category
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -1674,7 +1695,7 @@ export default function RacePage(race: Readonly<PageProps>) {
           keepMounted={false}
         >
           <Tabs.List>
-            {tab("overview", <IconInfoCircle size={16} />, "Overview")}
+            {tab("overview", <WindowInfoIcon size={16} alt="" />, "Overview")}
             {tab("description", <IconFileText size={16} />, "Description")}
             {tab(
               "bloodlines",
@@ -1688,25 +1709,43 @@ export default function RacePage(race: Readonly<PageProps>) {
               "Schools",
               race.schools.length,
             )}
-            {tab("skills", <IconListCheck size={16} />, "Skills")}
-            {tab("ships", <IconRocket size={16} />, "Ships", publishedShips)}
+            {tab("skills", <WindowSkillsIcon size={16} alt="" />, "Skills")}
+            {tab(
+              "ships",
+              <CategorySpaceshipCommandIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Ships",
+              publishedShips,
+            )}
             {tab(
               "ship-tree",
-              <IconHierarchy3 size={16} />,
+              <SystemShipTreeIcon size={16} color="currentColor" alt="" />,
               "Ship Tree",
               undefined,
               preloadShipTreeTab,
             )}
-            {tab("items", <IconPackage size={16} />, "Items", counts.items)}
+            {tab(
+              "items",
+              <ControlCargoInventoryIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Items",
+              counts.items,
+            )}
             {tab(
               "corporations",
-              <IconBuildingSkyscraper size={16} />,
+              <CategoryCorporationIcon size={16} color="currentColor" alt="" />,
               "Corporations",
               counts.corporations,
             )}
             {tab(
               "stations",
-              <IconBuildingStore size={16} />,
+              <WindowStationIcon size={16} alt="" />,
               "Stations",
               counts.stations > 0 ? counts.stations : undefined,
             )}

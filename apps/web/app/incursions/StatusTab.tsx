@@ -20,11 +20,11 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconClockHour4,
-  IconInfoCircle,
   IconTool,
 } from "@tabler/icons-react";
 import { formatDistanceStrict } from "date-fns";
 
+import { WindowInfoIcon } from "@jitaspace/eve-icons";
 import { DateHoverCard, securityStatusBand } from "@jitaspace/ui";
 
 import type { HighSecSpawnOutlook } from "./math";
@@ -167,7 +167,7 @@ function SpawnOutlook({
                   size="xs"
                   aria-label="How this is worked out"
                 >
-                  <IconInfoCircle size={14} />
+                  <WindowInfoIcon size={14} alt="" />
                 </ActionIcon>
               </Popover.Target>
               <Popover.Dropdown>
@@ -347,7 +347,7 @@ function SystemsTable({
                 style={{ cursor: "help" }}
               >
                 Size
-                <IconInfoCircle size={14} aria-hidden />
+                <WindowInfoIcon size={14} alt="" />
               </Group>
             </Tooltip>
           </Table.Th>
