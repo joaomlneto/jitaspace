@@ -95,7 +95,11 @@ export const CharacterMenu = ({
               onClick={() => {
                 openContextModal({
                   modal: "ssoToken",
-                  title: <Text fw={700}>{character?.name}</Text>,
+                  title: (
+                    <Text component="span" fw={700}>
+                      {character?.name}
+                    </Text>
+                  ),
                   size: "xl",
                   innerProps: {
                     characterId,

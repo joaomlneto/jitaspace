@@ -31,7 +31,7 @@ describe("AppMantineProvider", () => {
     window.localStorage.clear();
     usePreferencesStore.setState({
       esiAcceptLanguage: "en",
-      appTheme: "default",
+      appTheme: "minimal",
     });
   });
 
@@ -52,7 +52,29 @@ describe("AppMantineProvider", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
-        "eve_primary",
+        "eve",
+      );
+    });
+  });
+
+  it.each([
+    ["default", "crimson"],
+    ["minimal", DEFAULT_THEME.primaryColor],
+  ])("applies the right theme for a stored %s", async (stored, primary) => {
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ state: { appTheme: stored }, version: 0 }),
+    );
+
+    render(
+      <AppMantineProvider>
+        <ThemePrimaryColorText />
+      </AppMantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
+        new RegExp(`^${primary}$`),
       );
     });
   });

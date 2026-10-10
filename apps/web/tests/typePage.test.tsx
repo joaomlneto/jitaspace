@@ -6,6 +6,8 @@ import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
+import { computeNpcStats } from "~/lib/npcStats";
+
 // ---------------------------------------------------------------------------
 // next/navigation — the page client receives props directly; mock defensively.
 // ---------------------------------------------------------------------------
@@ -144,6 +146,7 @@ interface TypePageProps {
     categoryId: number;
     metaLevel?: number;
   }[];
+  npcStats?: unknown;
 }
 
 /** Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized. */
@@ -351,6 +354,39 @@ describe("Type page (client)", () => {
 
     await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
     expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("");
+  });
+
+  it("shows an NPC's combat figures on a Combat tab, linkable by ?tab=combat", () => {
+    const npcStats = computeNpcStats(
+      new Map([
+        [9, 10450],
+        [263, 41800],
+        [271, 0.32],
+        [51, 5000],
+        [64, 80],
+        [114, 6],
+        [118, 6],
+      ]),
+    );
+    renderPage({ npcStats }, { searchParams: "?tab=combat" });
+    expect(screen.getByRole("tab", { name: /Combat/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByText("Offense & Defense")).toBeInTheDocument();
+    // 6 EM + 6 thermal, times the damage multiplier of 80.
+    expect(screen.getByText("960")).toBeInTheDocument();
+  });
+
+  it("has no Combat tab for a type that is not an NPC", () => {
+    renderPage({}, { searchParams: "?tab=combat" });
+    expect(
+      screen.queryByRole("tab", { name: /Combat/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Overview/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("falls back to the Overview tab for an unknown ?tab= value", () => {

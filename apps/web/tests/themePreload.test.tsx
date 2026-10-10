@@ -120,10 +120,21 @@ describe("THEME_PRELOAD_SCRIPT", () => {
     expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("whpd");
   });
 
+  it("marks Minimal pending with its body colour and no wallpaper", () => {
+    store(JSON.stringify({ state: { appTheme: "minimal" } }));
+    runScript();
+    expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("minimal");
+    expect(html.style.getPropertyValue("--app-pending-body")).toBe(
+      "light-dark(#fff, #242424)",
+    );
+    expect(html.style.getPropertyValue("--app-pending-background")).toBe("");
+  });
+
   it.each([
     ["nothing stored", null],
     ["the default theme", JSON.stringify({ state: { appTheme: "default" } })],
     ["an unknown theme", JSON.stringify({ state: { appTheme: "jove" } })],
+    ["a removed theme", JSON.stringify({ state: { appTheme: "eve_v2" } })],
     ["an inherited key", JSON.stringify({ state: { appTheme: "toString" } })],
     ["a non-string theme", JSON.stringify({ state: { appTheme: 3 } })],
     ["no state", JSON.stringify({ version: 0 })],
@@ -172,6 +183,6 @@ describe("AppMantineProvider", () => {
         <Probe />
       </AppMantineProvider>,
     );
-    expect(revealedWith).toEqual([DEFAULT_THEME.primaryColor]);
+    expect(revealedWith).toEqual([themes[DEFAULT_APP_THEME].primaryColor]);
   });
 });
