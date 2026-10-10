@@ -28,6 +28,7 @@ import {
   THEME_PRELOAD_SCRIPT,
 } from "~/lib/themePreload";
 import { themes } from "~/themes";
+import { DEFAULT_THEME_SEASON_END } from "~/themes/season";
 
 // Records which theme was rendered last whenever the provider reveals the page.
 const revealedWith: string[] = [];
@@ -61,7 +62,13 @@ function runScript() {
   new Function(THEME_PRELOAD_SCRIPT)();
 }
 
+// The clock the pre-paint script and the provider read. Pinned inside the
+// Default theme's season unless a test moves it past the end.
+let now = DEFAULT_THEME_SEASON_END - 24 * 60 * 60 * 1000;
+jest.spyOn(Date, "now").mockImplementation(() => now);
+
 function reset() {
+  now = DEFAULT_THEME_SEASON_END - 24 * 60 * 60 * 1000;
   localStorage.clear();
   html.removeAttribute(THEME_PENDING_ATTRIBUTE);
   html.removeAttribute("style");
@@ -146,6 +153,28 @@ describe("THEME_PRELOAD_SCRIPT", () => {
     expect(html.getAttribute("style")).toBeNull();
   });
 
+  it.each([
+    ["nothing stored", null],
+    ["Default", JSON.stringify({ state: { appTheme: "default" } })],
+    ["an unknown theme", JSON.stringify({ state: { appTheme: "jove" } })],
+    ["malformed JSON", "{not json"],
+  ])("paints EVE for %s once the season is over", (_, value) => {
+    now = DEFAULT_THEME_SEASON_END;
+    store(value);
+    runScript();
+    expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("eve");
+    expect(html.style.getPropertyValue("--app-pending-background")).toBe(
+      THEME_PRELOAD.eve.background,
+    );
+  });
+
+  it("still paints a chosen theme after the season", () => {
+    now = DEFAULT_THEME_SEASON_END + 1000;
+    store(JSON.stringify({ state: { appTheme: "caldari" } }));
+    runScript();
+    expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("caldari");
+  });
+
   it("cannot close its own <script> tag", () => {
     expect(THEME_PRELOAD_SCRIPT).not.toMatch(/<\/script/i);
   });
@@ -175,6 +204,21 @@ describe("AppMantineProvider", () => {
     expect(html.style.getPropertyValue("--app-pending-background-mobile")).toBe(
       "",
     );
+  });
+
+  it("reveals Default as EVE, already themed, once the season is over", () => {
+    now = DEFAULT_THEME_SEASON_END;
+    runScript();
+    expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("eve");
+
+    render(
+      <AppMantineProvider>
+        <Probe />
+      </AppMantineProvider>,
+    );
+
+    expect(revealedWith).toEqual([themes.eve.primaryColor]);
+    expect(html.hasAttribute(THEME_PENDING_ATTRIBUTE)).toBe(false);
   });
 
   it("reveals once for the default theme too", () => {
