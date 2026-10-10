@@ -141,7 +141,6 @@ export default function Page({
                 <CharacterAvatar
                   characterId={attendee.character_id}
                   size="sm"
-                  radius="xl"
                 />
                 <CharacterAnchor characterId={attendee.character_id}>
                   <CharacterName span characterId={attendee.character_id} />

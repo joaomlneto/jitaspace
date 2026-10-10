@@ -68,14 +68,10 @@ function DrawerAccountSection({
           disabled={!character.sessionExpired}
           color="red"
           size={12}
-          offset={4}
+          offset={2}
           withBorder
         >
-          <CharacterAvatar
-            characterId={character.characterId}
-            radius="xl"
-            size="md"
-          />
+          <CharacterAvatar characterId={character.characterId} size="md" />
         </Indicator>
         <div style={{ minWidth: 0 }}>
           <Text fw={600} size="sm" truncate>
@@ -119,14 +115,10 @@ function DrawerAccountSection({
                   disabled={!other.sessionExpired}
                   color="red"
                   size={8}
-                  offset={2}
+                  offset={1}
                   withBorder
                 >
-                  <CharacterAvatar
-                    characterId={other.characterId}
-                    radius="xl"
-                    size={24}
-                  />
+                  <CharacterAvatar characterId={other.characterId} size={24} />
                 </Indicator>
                 <Text size="sm" truncate style={{ flex: 1 }}>
                   {other.accessTokenPayload.name}

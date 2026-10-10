@@ -169,11 +169,11 @@ function DialogueLine({
   const avatarId = SPEAKER_AVATAR[speaker]({ agentId, pilotId });
   const avatar =
     avatarId === null ? (
-      <Avatar size="md" radius="xl">
+      <Avatar size="md">
         <IconUser size={18} />
       </Avatar>
     ) : (
-      <CharacterAvatar characterId={avatarId} size="md" radius="xl" />
+      <CharacterAvatar characterId={avatarId} size="md" />
     );
   return (
     <Group
