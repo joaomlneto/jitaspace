@@ -2,7 +2,13 @@ import { describe, expect, it } from "@jest/globals";
 import { render, screen } from "@testing-library/react";
 
 import type { EveIconDefinition } from "../src/createEveIcon";
-import { createEveIcon, pickSource, resolveSize } from "../src/createEveIcon";
+import {
+  createEveIcon,
+  pickSource,
+  pickWidth,
+  resolveSize,
+  tintStyle,
+} from "../src/createEveIcon";
 
 const src = (width: number) => `data:image/png;base64,${width}`;
 
@@ -11,9 +17,9 @@ const glyph: EveIconDefinition = {
   label: "Arrow down",
   monochrome: true,
   sources: [
-    { width: 16, height: 16, src: src(16) },
-    { width: 32, height: 32, src: src(32) },
-    { width: 64, height: 64, src: src(64) },
+    { width: 16, height: 16, src: src(16), path: "res:/x.png" },
+    { width: 32, height: 32, src: src(32), path: "res:/x.png" },
+    { width: 64, height: 64, src: src(64), path: "res:/x.png" },
   ],
 };
 
@@ -21,7 +27,7 @@ const colourful: EveIconDefinition = {
   id: "window/calendar",
   label: "Calendar",
   monochrome: false,
-  sources: [{ width: 64, height: 65, src: src(64) }],
+  sources: [{ width: 64, height: 65, src: src(64), path: "res:/x.png" }],
 };
 
 describe("pickSource", () => {
@@ -35,6 +41,27 @@ describe("pickSource", () => {
   it("falls back to the largest size", () => {
     expect(pickSource(glyph.sources, 200).width).toBe(64);
     expect(pickSource(glyph.sources, undefined).width).toBe(64);
+  });
+});
+
+describe("pickWidth", () => {
+  it("applies the same rule to bare widths", () => {
+    expect(pickWidth([16, 32, 64], 16)).toBe(32);
+    expect(pickWidth([16, 32, 64], undefined)).toBe(64);
+  });
+
+  it("rejects an icon without sizes", () => {
+    expect(() => pickWidth([], 16)).toThrow("at least one size");
+  });
+});
+
+describe("tintStyle", () => {
+  it("paints the colour through the image as a mask", () => {
+    expect(tintStyle("x.png", "red")).toEqual({
+      backgroundColor: "red",
+      mask: 'url("x.png") center / contain no-repeat',
+      WebkitMask: 'url("x.png") center / contain no-repeat',
+    });
   });
 });
 

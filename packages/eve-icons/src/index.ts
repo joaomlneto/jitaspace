@@ -4,6 +4,11 @@ export type {
   EveIconProps,
   EveIconSource,
 } from "./createEveIcon";
-export { createEveIcon } from "./createEveIcon";
+export {
+  createEveIcon,
+  pickSource,
+  pickWidth,
+  tintStyle,
+} from "./createEveIcon";
 export * from "./generated";
 export * from "./generated/metadata";

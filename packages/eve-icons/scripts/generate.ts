@@ -55,7 +55,7 @@ function main() {
       const base64 = Buffer.from(
         stripMetadata(readFileSync(join(root, "assets", file.file))),
       ).toString("base64");
-      return `    { width: ${file.width}, height: ${file.height}, src: "data:image/png;base64,${base64}" },`;
+      return `    { width: ${file.width}, height: ${file.height}, path: ${JSON.stringify(file.source)}, src: "data:image/png;base64,${base64}" },`;
     });
     writeFileSync(
       join(iconsDir, `${component}.ts`),

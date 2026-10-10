@@ -1,4 +1,5 @@
 import type { EveIconMetadata } from "@jitaspace/eve-icons";
+import { pickWidth } from "@jitaspace/eve-icons";
 
 /** Rendering options shared by the grid and the detail panel. */
 export interface Appearance {
@@ -13,14 +14,9 @@ export function iconFile(icon: EveIconMetadata, width: number): string {
   return `/icons/${icon.id}.${width}.png`;
 }
 
-/**
- * The file the component would send for `size`: the smallest native size that
- * is sharp at 2x, or the largest. Mirrors `pickSource` in the package.
- */
+/** The native size the component itself would send for `size`. */
 export function bestWidth(icon: EveIconMetadata, size: number): number {
-  return (
-    icon.sizes.find((width) => width >= size * 2) ?? icon.sizes.at(-1) ?? 0
-  );
+  return pickWidth(icon.sizes, size);
 }
 
 /** `system/arrow-down` → `arrow-down`. */

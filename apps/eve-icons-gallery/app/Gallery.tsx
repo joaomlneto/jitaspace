@@ -2,18 +2,19 @@
 
 import type { CSSProperties } from "react";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 import type { EveIconMetadata } from "@jitaspace/eve-icons";
 import {
   EVE_ICON_SETS,
   EVE_ICONS,
   EVE_ICONS_BUILD,
+  tintStyle,
 } from "@jitaspace/eve-icons";
 
 import type { Appearance } from "./icons";
 import { IconDetail } from "./IconDetail";
 import { bestWidth, iconFile, matches, shortName } from "./icons";
+import { setSearchParams, useSearchParams } from "./url";
 
 const SIZES = [16, 24, 32, 48, 64] as const;
 const BACKGROUNDS = ["dark", "light", "checker"] as const;
@@ -25,19 +26,6 @@ const setLabels = new Map<string, string>(
 const byId = new Map<string, EveIconMetadata>(
   EVE_ICONS.map((icon) => [icon.id, icon]),
 );
-
-function writeUrl(query: string, set: string | null, icon: string | null) {
-  const params = new URLSearchParams();
-  if (query) params.set("q", query);
-  if (set) params.set("set", set);
-  if (icon) params.set("icon", icon);
-  const search = params.toString();
-  window.history.replaceState(
-    null,
-    "",
-    `${window.location.pathname}${search ? `?${search}` : ""}`,
-  );
-}
 
 function Tile({
   icon,
@@ -59,12 +47,7 @@ function Tile({
         {appearance.tint && icon.monochrome ? (
           <span
             className="tinted"
-            style={{
-              ...box,
-              backgroundColor: appearance.tint,
-              mask: `url("${src}") center / contain no-repeat`,
-              WebkitMask: `url("${src}") center / contain no-repeat`,
-            }}
+            style={{ ...box, ...tintStyle(src, appearance.tint) }}
           />
         ) : (
           // Static gallery: the PNGs are served as-is, there is nothing for
@@ -80,26 +63,22 @@ function Tile({
 
 export function Gallery() {
   // The search, set filter and open icon live in the query string, so a view
-  // can be shared. They are read once; afterwards the URL mirrors the state.
+  // can be shared (see ./url).
   const params = useSearchParams();
-  const [query, setQuery] = useState(() => params.get("q") ?? "");
-  const [set, setSet] = useState<string | null>(() => {
-    const value = params.get("set");
-    return value && setLabels.has(value) ? value : null;
-  });
-  const [openId, setOpenId] = useState<string | null>(() => {
-    const value = params.get("icon");
-    return value && byId.has(value) ? value : null;
-  });
+  const query = params.get("q") ?? "";
+  const setParam = params.get("set");
+  const set = setParam && setLabels.has(setParam) ? setParam : null;
+  const iconParam = params.get("icon");
+  const openId = iconParam && byId.has(iconParam) ? iconParam : null;
+  const setQuery = (value: string) => setSearchParams({ q: value });
+  const setSet = (value: string | null) => setSearchParams({ set: value });
+  const setOpenId = (value: string | null) => setSearchParams({ icon: value });
+
   const [size, setSize] = useState<number>(32);
   const [tintOn, setTintOn] = useState(false);
   const [tintColor, setTintColor] = useState("#e8a33d");
   const [background, setBackground] = useState<Background>("dark");
   const searchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    writeUrl(query, set, openId);
-  }, [query, set, openId]);
 
   // "/" jumps to the search box, as on most icon sites.
   useEffect(() => {

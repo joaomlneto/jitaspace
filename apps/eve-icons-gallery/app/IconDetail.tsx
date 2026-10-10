@@ -25,10 +25,7 @@ function isIcon(value: unknown): value is EveIconComponent {
  * needs the lightweight metadata and static PNGs.
  */
 async function load(icon: EveIconMetadata): Promise<Loaded> {
-  const [icons, manifest] = await Promise.all([
-    import("@jitaspace/eve-icons"),
-    import("@jitaspace/eve-icons/manifest.json"),
-  ]);
+  const icons = await import("@jitaspace/eve-icons");
   const exports = icons as unknown as Record<string, unknown>;
   const Component = exports[icon.component];
   if (!isIcon(Component)) throw new Error(`${icon.component} is not exported`);
@@ -38,10 +35,7 @@ async function load(icon: EveIconMetadata): Promise<Loaded> {
         name !== icon.component && isIcon(value) && value.icon.id === icon.id,
     )
     .map(([name]) => name);
-  const sources =
-    manifest.default.icons
-      .find((entry) => entry.id === icon.id)
-      ?.files.map((file) => file.source) ?? [];
+  const sources = Component.icon.sources.map((source) => source.path);
   return { Component, aliases, sources };
 }
 
@@ -73,6 +67,14 @@ export function IconDetail({
     dialog.current?.showModal();
   }, []);
 
+  // Reset the "Copied" label after a moment; the cleanup cancels the timer if
+  // the panel closes first.
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
   useEffect(() => {
     // The parent keys this component by icon, so state starts empty for each.
     let cancelled = false;
@@ -92,10 +94,7 @@ export function IconDetail({
   const code = snippet(icon, appearance);
   const copy = () => {
     navigator.clipboard.writeText(code).then(
-      () => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      },
+      () => setCopied(true),
       () => setCopied(false),
     );
   };

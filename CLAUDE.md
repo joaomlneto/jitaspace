@@ -18,7 +18,7 @@ Scripts are in the root `package.json`. One does more than its name suggests: `p
 
 ### Running a single test
 
-Jest suites live in 20 workspaces — `apps/web` plus most `packages/*` (`hooks`, `ui`, `eve-components`, `background-jobs`, `auth`, `auth-utils`, `utils`, `tiptap-eve`, `eve-resources`, …). `apps/web` runs Jest behind `pnpm with-env` (loads root `.env`); packages run Jest directly. From the workspace that owns the test:
+Jest suites live in 21 workspaces — `apps/web` plus most `packages/*` (`hooks`, `ui`, `eve-components`, `eve-icons`, `background-jobs`, `auth`, `auth-utils`, `utils`, `tiptap-eve`, `eve-resources`, …). `apps/web` runs Jest behind `pnpm with-env` (loads root `.env`); packages run Jest directly. From the workspace that owns the test:
 
 ```bash
 pnpm test path/to/file.test.ts          # a single file

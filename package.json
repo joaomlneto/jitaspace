@@ -27,6 +27,7 @@
     "version-packages": "changeset version && node --import tsx/esm .changeset/stamp-changelog-dates.ts $(find . -name 'CHANGELOG.md' -not -path '*/node_modules/*')",
     "publish-packages": "pnpm version-packages && changeset publish",
     "preinstall": "npx only-allow pnpm",
+    "postinstall": "pnpm --filter @jitaspace/eve-icons kubb:generate",
     "prepare": "git config core.hooksPath .githooks || true",
     "test": "turbo test",
     "test:watch": "turbo test:watch"

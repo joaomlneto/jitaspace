@@ -6,6 +6,8 @@ export interface EveIconSource {
   height: number;
   /** The PNG, as a data URI. */
   src: string;
+  /** The client file it was copied from, e.g. `res:/ui/texture/…png`. */
+  path: string;
 }
 
 export interface EveIconDefinition {
@@ -54,7 +56,6 @@ const FILL_STYLE: CSSProperties = {
 
 /** `<img>` attributes that mean nothing on the `<span>` a tinted icon renders. */
 const IMG_ONLY_PROPS = [
-  "alt",
   "crossOrigin",
   "decoding",
   "fetchPriority",
@@ -70,20 +71,40 @@ function toNumber(value: number | `${number}` | undefined): number | undefined {
 }
 
 /**
- * The smallest native size that still looks sharp at `cssWidth` on a
- * high-density screen, or the largest there is.
+ * Of `widths` (ascending), the smallest that still looks sharp at `cssWidth`
+ * on a high-density screen, or the largest there is.
  */
+export function pickWidth(
+  widths: readonly number[],
+  cssWidth: number | undefined,
+): number {
+  const largest = widths.at(-1);
+  if (largest === undefined) throw new Error("An icon needs at least one size");
+  if (cssWidth === undefined) return largest;
+  return widths.find((width) => width >= cssWidth * TARGET_DENSITY) ?? largest;
+}
+
+/** The native size {@link pickWidth} chooses for `cssWidth`. */
 export function pickSource(
   sources: readonly EveIconSource[],
   cssWidth: number | undefined,
 ): EveIconSource {
-  const largest = sources.at(-1);
-  if (!largest) throw new Error("An icon needs at least one source");
-  if (cssWidth === undefined) return largest;
-  return (
-    sources.find((source) => source.width >= cssWidth * TARGET_DENSITY) ??
-    largest
+  const width = pickWidth(
+    sources.map((source) => source.width),
+    cssWidth,
   );
+  const source = sources.find((candidate) => candidate.width === width);
+  if (!source) throw new Error("An icon needs at least one source");
+  return source;
+}
+
+/**
+ * Styles that paint `color` through the image at `src` used as a mask: how a
+ * single-colour glyph is tinted.
+ */
+export function tintStyle(src: string, color: string): CSSProperties {
+  const mask = `url("${src}") center / contain no-repeat`;
+  return { backgroundColor: color, mask, WebkitMask: mask };
 }
 
 /**
@@ -125,7 +146,6 @@ export function createEveIcon(icon: EveIconDefinition): EveIconComponent {
       const spanProps: Record<string, unknown> = { ...rest };
       for (const key of IMG_ONLY_PROPS) delete spanProps[key];
       const decorative = alt === "";
-      const mask = `url("${source.src}") center / contain no-repeat`;
       return (
         <span
           role={decorative ? undefined : "img"}
@@ -136,9 +156,7 @@ export function createEveIcon(icon: EveIconDefinition): EveIconComponent {
             display: "inline-block",
             flexShrink: 0,
             ...(box ?? FILL_STYLE),
-            backgroundColor: color,
-            mask,
-            WebkitMask: mask,
+            ...tintStyle(source.src, color),
             ...style,
           }}
         />

@@ -40,7 +40,9 @@ Every component renders an `<img>` and accepts its attributes, plus:
 | `alt`            | Defaults to the icon's name. Pass `""` for a decorative icon.                                            |
 
 The artwork is inlined as data URIs, so the package works with any bundler and
-an app only ships the icons it imports. Each icon carries every native size;
+an app only ships the icons it imports. The trade-off: an icon rendered on the
+server reaches the browser inside the HTML rather than as a separately cached
+image file, so a page pays for its icons on every uncached load. Each icon carries every native size;
 the component sends the smallest one that stays sharp at twice the rendered
 size.
 
@@ -83,7 +85,8 @@ be tinted) without loading any artwork. `EVE_ICON_SETS` describes the sets.
 
 The PNGs in `assets/` and their index, `manifest.json`, are the source of
 truth. Components are generated from them into `src/generated/` (gitignored),
-on install and ahead of every build, type-check, lint and test.
+on install (the repo's root `postinstall`, so nothing runs when the published
+package is installed) and ahead of every build, type-check, lint and test.
 
 ```bash
 pnpm --filter @jitaspace/eve-icons icons:sync    # fetch from the live client, then regenerate
