@@ -92,7 +92,8 @@ function ActiveDesktopNavGroup() {
  * dropdowns (Character / Corporation / Alliance / Universe) replace the older
  * icon-only triggers, alongside a Spotlight-backed search box and the character
  * menu. Responsive: trigger labels and the full search box appear on wider
- * screens, and it collapses to a burger + full-screen drawer below `sm`.
+ * screens, and it collapses to the character avatar (opening the same character
+ * menu) plus a burger + full-screen drawer below `sm`.
  */
 export function HeaderMenu() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
@@ -141,11 +142,14 @@ export function HeaderMenu() {
               )}
             </Group>
 
-            <Burger
-              opened={drawerOpened}
-              onClick={toggleDrawer}
-              hiddenFrom="sm"
-            />
+            <Group gap="xs" hiddenFrom="sm" wrap="nowrap">
+              {characterIds.length > 0 && <UserButton compact />}
+              <Burger
+                opened={drawerOpened}
+                onClick={toggleDrawer}
+                aria-label="Toggle navigation"
+              />
+            </Group>
           </Group>
         </Container>
       </div>
