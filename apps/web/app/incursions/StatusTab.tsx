@@ -33,6 +33,7 @@ import type { IncursionSiteRole } from "./siteRoles";
 import type {
   IncursionRow,
   IncursionsData,
+  IncursionSolarSystem,
   TrackedIncursionRow,
 } from "./types";
 import { InfluenceChart } from "./InfluenceChart";
@@ -55,7 +56,6 @@ import {
   SystemLink,
   useLiveNow,
 } from "./parts";
-import { incursionSiteRole } from "./siteRoles";
 import { isTrackedIncursion } from "./types";
 
 type SystemRole = "staging" | IncursionSiteRole | "unknown";
@@ -77,10 +77,11 @@ const ROLE_LABEL: Record<SystemRole, string> = {
 const roleOf = (
   solarSystemId: number,
   stagingSolarSystemId: number,
+  system: IncursionSolarSystem | undefined,
 ): SystemRole =>
   solarSystemId === stagingSolarSystemId
     ? "staging"
-    : (incursionSiteRole(solarSystemId) ?? "unknown");
+    : (system?.siteRole ?? "unknown");
 
 const isHighSec = (securityStatus: number | undefined) =>
   securityStatus !== undefined &&
@@ -304,11 +305,14 @@ function SystemsTable({
       ]),
     ];
     return ids
-      .map((solarSystemId) => ({
-        solarSystemId,
-        role: roleOf(solarSystemId, incursion.stagingSolarSystemId),
-        system: names.system(solarSystemId),
-      }))
+      .map((solarSystemId) => {
+        const system = names.system(solarSystemId);
+        return {
+          solarSystemId,
+          role: roleOf(solarSystemId, incursion.stagingSolarSystemId, system),
+          system,
+        };
+      })
       .sort(
         (a, b) =>
           ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) ||
@@ -619,7 +623,8 @@ export function StatusTab({
         ))
       )}
       <Text size="xs" c="dimmed">
-        Vanguard, Assault and Headquarters systems come from the community map{" "}
+        Vanguard, Assault and Headquarters systems come from the community maps
+        of{" "}
         <Anchor
           href="https://github.com/Shadowlauch/eve-incursions-node"
           target="_blank"
@@ -628,8 +633,25 @@ export function StatusTab({
         >
           eve-incursions.de
         </Anchor>{" "}
-        kept; null-sec constellations were never mapped. ESI names only the
-        staging system.
+        and the{" "}
+        <Anchor
+          href="https://wiki.eveuniversity.org/Constellation_layouts_for_Incursions"
+          target="_blank"
+          rel="noopener noreferrer"
+          inherit
+        >
+          EVE University wiki
+        </Anchor>{" "}
+        (
+        <Anchor
+          href="https://creativecommons.org/licenses/by-sa/4.0/"
+          target="_blank"
+          rel="noopener noreferrer"
+          inherit
+        >
+          CC BY-SA 4.0
+        </Anchor>
+        ). ESI names only the staging system.
       </Text>
     </Stack>
   );

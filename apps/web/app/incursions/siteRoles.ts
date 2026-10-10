@@ -4,10 +4,11 @@
  * SDE says where the other sites spawn, so this is community knowledge, kept
  * as eve-incursions.de (https://github.com/Shadowlauch/eve-incursions-node)
  * curated it. It covers the high- and low-sec constellations incursions use;
- * null-sec systems are not mapped, so they show as unknown.
+ * `siteRolesEveUniversity.ts` adds null-sec and the constellations it missed.
  *
  * Extracted from that project's `seed/eve-incursions-seed.sql.gz`
- * (`solar_systems.systemType`, commit 6764c63), under its licence:
+ * (`solar_systems.systemType`, commit 6764c63) and kept verbatim; where we
+ * depart from it is `CORRECTIONS` below. It is used under its licence:
  *
  * MIT License
  *
@@ -32,9 +33,14 @@
  * SOFTWARE.
  */
 
+import { EVE_UNIVERSITY_SYSTEMS_BY_ROLE } from "./siteRolesEveUniversity";
+
 export type IncursionSiteRole = "vanguard" | "assault" | "headquarters";
 
-const SYSTEMS_BY_ROLE: Record<IncursionSiteRole, readonly number[]> = {
+export const EVE_INCURSIONS_SYSTEMS_BY_ROLE: Record<
+  IncursionSiteRole,
+  readonly number[]
+> = {
   vanguard: [
     30000001, 30000003, 30000007, 30000008, 30000025, 30000026, 30000028,
     30000030, 30000052, 30000053, 30000055, 30000059, 30000060, 30000062,
@@ -159,11 +165,45 @@ const SYSTEMS_BY_ROLE: Record<IncursionSiteRole, readonly number[]> = {
   ],
 };
 
-const ROLE_BY_SYSTEM = new Map<number, IncursionSiteRole>(
-  (
-    Object.entries(SYSTEMS_BY_ROLE) as [IncursionSiteRole, readonly number[]][]
-  ).flatMap(([role, ids]) => ids.map((id) => [id, role] as const)),
-);
+const entries = (byRole: Record<IncursionSiteRole, readonly number[]>) =>
+  (Object.entries(byRole) as [IncursionSiteRole, readonly number[]][]).flatMap(
+    ([role, ids]) => ids.map((id) => [id, role] as const),
+  );
+
+/**
+ * Where we depart from eve-incursions.de's map; `undefined` drops a system.
+ *
+ * - Intaki is high-sec, in low-sec Viriette, and ESI has never listed it among
+ *   an incursion's systems.
+ * - Semou, Yekti, Pezarba, Eustron, Viriette and Enka take the EVE University
+ *   wiki's vanguard and assault systems. Its split follows the rule the rest of
+ *   the map does (four such systems: three vanguard, one assault), and in Enka
+ *   its vanguards are the ones next to the staging system.
+ */
+const CORRECTIONS = new Map<number, IncursionSiteRole | undefined>([
+  [30002961, "vanguard"], // Oyeman (Semou)
+  [30003501, "vanguard"], // Kudi (Yekti)
+  [30004137, "vanguard"], // Omam (Pezarba)
+  [30005025, "vanguard"], // Derririntel (Eustron)
+  [30003788, undefined], // Intaki (Viriette)
+  [30003787, "vanguard"], // Agoze (Viriette)
+  [30003792, "vanguard"], // Ostingele (Viriette)
+  [30003790, "assault"], // Vey (Viriette)
+  [30003007, "vanguard"], // Arveyil (Enka)
+  [30003006, "vanguard"], // Nidebora (Enka)
+  [30003002, "assault"], // Faktun (Enka)
+  [30003003, "assault"], // Halenan (Enka)
+]);
+
+/** eve-incursions.de's map, corrected, then the EVE University wiki's. */
+const ROLE_BY_SYSTEM = new Map<number, IncursionSiteRole>([
+  ...entries(EVE_UNIVERSITY_SYSTEMS_BY_ROLE),
+  ...entries(EVE_INCURSIONS_SYSTEMS_BY_ROLE),
+]);
+for (const [solarSystemId, role] of CORRECTIONS) {
+  if (role === undefined) ROLE_BY_SYSTEM.delete(solarSystemId);
+  else ROLE_BY_SYSTEM.set(solarSystemId, role);
+}
 
 /** The site type that spawns in a system, if it is mapped. */
 export const incursionSiteRole = (
