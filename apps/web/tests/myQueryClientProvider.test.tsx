@@ -36,7 +36,7 @@ describe("MyQueryClientProvider", () => {
 
     usePreferencesStore.setState({
       esiAcceptLanguage: "en",
-      appTheme: "default",
+      appTheme: "minimal",
     });
   });
 
@@ -78,7 +78,7 @@ describe("MyQueryClientProvider", () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({
-        state: { esiAcceptLanguage: "not-a-language", appTheme: "default" },
+        state: { esiAcceptLanguage: "not-a-language", appTheme: "minimal" },
         version: 0,
       }),
     );

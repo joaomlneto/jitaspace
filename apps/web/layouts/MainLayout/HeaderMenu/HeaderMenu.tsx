@@ -4,7 +4,7 @@ import { Suspense, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Box, Burger, Container, Group, Title } from "@mantine/core";
+import { Box, Burger, Container, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 
@@ -132,7 +132,7 @@ export function HeaderMenu() {
                   onClick={() => {
                     openContextModal({
                       modal: "login",
-                      title: <Title order={3}>Login</Title>,
+                      title: "Login",
                       size: "xl",
                       centered: false,
                       innerProps: {},

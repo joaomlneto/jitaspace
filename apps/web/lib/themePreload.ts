@@ -54,12 +54,17 @@ export const THEME_PRELOAD: Record<
   Exclude<AppTheme, typeof DEFAULT_APP_THEME>,
   ThemePreload
 > = {
+  // No wallpaper: just Mantine's own body colours.
+  minimal: { body: lightDark("#fff", "#242424") },
   eve: preload("#111111", WALLPAPERS.cradleOfWar),
-  eve_v2: preload("#111111", WALLPAPERS.cradleOfWar),
   amarr: preload("#111111", WALLPAPERS.amarr),
   caldari: preload("#111111", WALLPAPERS.caldari),
   gallente: preload("#111111", WALLPAPERS.gallente),
   minmatar: preload("#111111", WALLPAPERS.minmatar),
+  ore: preload("#111111", WALLPAPERS.cradleOfWar),
+  sisters_of_eve: preload("#111111", WALLPAPERS.cradleOfWar),
+  carbon: preload("#111111", WALLPAPERS.cradleOfWar),
+  photon: preload("#111111", WALLPAPERS.cradleOfWar),
   whpd: {
     body: lightDark("#eef2ff", "#080c18"),
     background: lightDark("#eef2ff", "#000"),
