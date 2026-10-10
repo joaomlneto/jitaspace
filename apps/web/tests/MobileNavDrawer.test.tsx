@@ -169,4 +169,32 @@ describe("MobileNavDrawer account section", () => {
       expect.objectContaining({ modal: "login" }),
     );
   });
+
+  it("puts navigation before the account section, and login before navigation", () => {
+    const follows = (a: HTMLElement, b: HTMLElement) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+    renderDrawer(jest.fn());
+    // Signed in, the header avatar is the quick way in, so the drawer leads
+    // with navigation and ends with the account section.
+    expect(
+      follows(screen.getByText("EveMail"), screen.getByText("Logout")),
+    ).toBe(true);
+  });
+
+  it("leads with the login button when nobody is signed in", () => {
+    selectedCharacter = null;
+    charactersMap = {};
+    const follows = (a: HTMLElement, b: HTMLElement) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+    renderDrawer(jest.fn());
+    // A signed-out phone has no header affordance, so login comes first.
+    expect(
+      follows(
+        screen.getByText("Log in with EVE Online"),
+        screen.getByText("EveMail"),
+      ),
+    ).toBe(true);
+  });
 });

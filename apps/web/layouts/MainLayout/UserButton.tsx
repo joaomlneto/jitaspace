@@ -77,7 +77,8 @@ export default function UserButton({
         {compact ? (
           <UnstyledButton
             aria-label={`Character menu for ${characterName}`}
-            style={{ display: "flex", alignItems: "center", padding: 4 }}
+            // 32px avatar + 6px padding = a 44px tap target.
+            style={{ display: "flex", alignItems: "center", padding: 6 }}
             {...others}
           >
             {avatar}

@@ -3,6 +3,7 @@
 import { memo } from "react";
 import Link from "next/link";
 import {
+  Box,
   Divider,
   Drawer,
   Group,
@@ -30,13 +31,19 @@ export interface MobileNavDrawerProps {
   close: () => void;
 }
 
+type AccountActions = ReturnType<typeof useAccountActions>;
+
 /**
  * The signed-in character, the others to switch to, and the account actions,
  * laid out inline rather than behind a dropdown: a popover nested in a
- * full-screen drawer is cramped on a phone and easy to lose behind it. Every
+ * full-screen drawer is cramped on a phone and easy to lose behind it. It sits
+ * after the navigation, since the header avatar is the quick way in. Every
  * action closes the drawer first, so the modal it opens is never covered.
  */
-function DrawerAccountSection({ close }: Readonly<{ close: () => void }>) {
+function DrawerAccountSection({
+  actions,
+  close,
+}: Readonly<{ actions: AccountActions; close: () => void }>) {
   const {
     character,
     otherCharacters,
@@ -44,20 +51,14 @@ function DrawerAccountSection({ close }: Readonly<{ close: () => void }>) {
     openSettingsModal,
     switchToCharacter,
     confirmLogout,
-  } = useAccountActions();
+  } = actions;
 
-  const then = (action: () => void) => () => {
+  if (!character) return null;
+
+  const closeThen = (action: () => void) => () => {
     close();
     action();
   };
-
-  if (!character) {
-    return (
-      <Group justify="center" px="md">
-        <LoginWithEveOnlineButton size="small" onClick={then(openLoginModal)} />
-      </Group>
-    );
-  }
 
   return (
     <Stack gap={2}>
@@ -92,7 +93,7 @@ function DrawerAccountSection({ close }: Readonly<{ close: () => void }>) {
         <UnstyledButton
           className={classes.link}
           c="red"
-          onClick={then(openLoginModal)}
+          onClick={closeThen(openLoginModal)}
         >
           <Group gap="sm" wrap="nowrap">
             <RecruitmentIcon width={24} />
@@ -110,7 +111,7 @@ function DrawerAccountSection({ close }: Readonly<{ close: () => void }>) {
             <UnstyledButton
               key={other.characterId}
               className={classes.link}
-              onClick={then(() => switchToCharacter(other))}
+              onClick={closeThen(() => switchToCharacter(other))}
             >
               <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
                 <Indicator
@@ -144,20 +145,26 @@ function DrawerAccountSection({ close }: Readonly<{ close: () => void }>) {
 
       <UnstyledButton
         className={classes.link}
-        onClick={then(openSettingsModal)}
+        onClick={closeThen(openSettingsModal)}
       >
         <Group gap="sm" wrap="nowrap">
           <SettingsIcon width={24} />
           <Text size="sm">Settings</Text>
         </Group>
       </UnstyledButton>
-      <UnstyledButton className={classes.link} onClick={then(openLoginModal)}>
+      <UnstyledButton
+        className={classes.link}
+        onClick={closeThen(openLoginModal)}
+      >
         <Group gap="sm" wrap="nowrap">
           <RecruitmentIcon width={24} />
           <Text size="sm">Add Character</Text>
         </Group>
       </UnstyledButton>
-      <UnstyledButton className={classes.link} onClick={then(confirmLogout)}>
+      <UnstyledButton
+        className={classes.link}
+        onClick={closeThen(confirmLogout)}
+      >
         <Group gap="sm" wrap="nowrap">
           <TerminateIcon width={24} />
           <Text size="sm">Logout</Text>
@@ -169,65 +176,95 @@ function DrawerAccountSection({ close }: Readonly<{ close: () => void }>) {
 
 /**
  * Full-screen navigation for phones (below the `sm` breakpoint, where the
- * desktop bar is hidden). Opens with the search box and the account section,
- * then mirrors the desktop groups as flat, always-expanded sections.
+ * desktop bar is hidden). Opens with the search box (and, when signed out, the
+ * login button, which has no other home on a phone), mirrors the desktop groups
+ * as flat, always-expanded sections, and ends with the account section.
  */
 export const MobileNavDrawer = memo(
-  ({ opened, close }: MobileNavDrawerProps) => (
-    <Drawer
-      opened={opened}
-      onClose={close}
-      size="100%"
-      padding="md"
-      title="Navigation"
-      hiddenFrom="sm"
-      styles={{ body: { paddingLeft: 0, paddingRight: 0 } }}
-    >
-      <UnstyledButton
-        className={classes.search}
-        mx="md"
-        mb="sm"
-        onClick={() => {
-          close();
-          openSpotlight();
+  ({ opened, close }: MobileNavDrawerProps) => {
+    const actions = useAccountActions();
+
+    return (
+      <Drawer
+        opened={opened}
+        onClose={close}
+        size="100%"
+        padding="md"
+        title="Navigation"
+        hiddenFrom="sm"
+        styles={{
+          body: {
+            paddingLeft: 0,
+            paddingRight: 0,
+            paddingBottom:
+              "calc(var(--mantine-spacing-xl) + env(safe-area-inset-bottom))",
+          },
         }}
-        aria-label="Search New Eden"
       >
-        <IconSearch size={16} stroke={1.5} />
-        <Text className={classes.searchLabel} size="sm" c="dimmed">
-          Search New Eden…
-        </Text>
-      </UnstyledButton>
-
-      <DrawerAccountSection close={close} />
-
-      <Divider my="sm" />
-
-      {Object.values(jitaApps).map((group) => (
-        <Stack gap={2} key={group.name} mb="sm">
-          <Group gap="xs" px="md" py={4}>
-            <group.Icon width={20} />
-            <Text fw={600} size="sm">
-              {group.name}
+        <Box px="md" mb="sm">
+          <UnstyledButton
+            className={classes.search}
+            w="100%"
+            onClick={() => {
+              close();
+              openSpotlight();
+            }}
+            aria-label="Search New Eden"
+          >
+            <IconSearch size={16} stroke={1.5} />
+            <Text className={classes.searchLabel} size="sm" c="dimmed">
+              Search New Eden…
             </Text>
+          </UnstyledButton>
+        </Box>
+
+        {!actions.character && (
+          <Group justify="center" px="md" mb="sm">
+            <LoginWithEveOnlineButton
+              size="small"
+              onClick={() => {
+                close();
+                actions.openLoginModal();
+              }}
+            />
           </Group>
-          {Object.entries(group.apps).map(([key, app]) => (
-            <UnstyledButton
-              key={key}
-              component={Link}
-              href={app.url ?? "#"}
-              className={classes.link}
-              onClick={close}
-            >
-              <Group gap="sm" wrap="nowrap">
-                <app.Icon width={24} />
-                <Text size="sm">{app.name}</Text>
-              </Group>
-            </UnstyledButton>
-          ))}
-        </Stack>
-      ))}
-    </Drawer>
-  ),
+        )}
+
+        <Divider mb="sm" />
+
+        {Object.values(jitaApps).map((group) => (
+          <Stack gap={2} key={group.name} mb="sm">
+            <Group gap="xs" px="md" py={4}>
+              <group.Icon width={20} />
+              <Text fw={600} size="sm">
+                {group.name}
+              </Text>
+            </Group>
+            {Object.entries(group.apps).map(([key, app]) => (
+              <UnstyledButton
+                key={key}
+                component={Link}
+                href={app.url ?? "#"}
+                className={classes.link}
+                onClick={close}
+              >
+                <Group gap="sm" wrap="nowrap">
+                  <app.Icon width={24} />
+                  <Text size="sm">{app.name}</Text>
+                </Group>
+              </UnstyledButton>
+            ))}
+          </Stack>
+        ))}
+
+        {actions.character && (
+          <>
+            <Divider mb="sm" />
+            <DrawerAccountSection actions={actions} close={close} />
+          </>
+        )}
+      </Drawer>
+    );
+  },
 );
 MobileNavDrawer.displayName = "MobileNavDrawer";
