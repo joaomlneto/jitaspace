@@ -9,11 +9,23 @@ describe("incursionSiteRole", () => {
     expect(incursionSiteRole(30000231)).toBe("headquarters"); // YXIB-I
   });
 
+  it("maps the large null-sec constellations past the wiki's count rule", () => {
+    // 6E-578 (Z-6NQ6), one of four assaults among eleven systems.
+    expect(incursionSiteRole(30003270)).toBe("assault");
+  });
+
   it("keeps eve-incursions.de's role where the two disagree", () => {
-    // Oyeman (Semou): an assault there, a vanguard on the wiki.
-    expect(incursionSiteRole(30002961)).toBe("assault");
+    // Van (Anama): an assault there, a vanguard on the wiki.
+    expect(incursionSiteRole(30004230)).toBe("assault");
     // Melmaniel (Woenckee): only eve-incursions.de lists it.
     expect(incursionSiteRole(30005296)).toBe("vanguard");
+  });
+
+  it("corrects eve-incursions.de where its split breaks its own rule", () => {
+    // Oyeman (Semou): three vanguards and one assault, as elsewhere.
+    expect(incursionSiteRole(30002961)).toBe("vanguard");
+    // Intaki: high-sec in low-sec Viriette, never part of an incursion.
+    expect(incursionSiteRole(30003788)).toBeUndefined();
   });
 
   it("leaves out what the wiki gets wrong or lost to Pochven", () => {
