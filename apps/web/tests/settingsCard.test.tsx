@@ -156,7 +156,7 @@ describe("SettingsCard", () => {
       </AppMantineProvider>,
     );
 
-    await screen.findByText("Default (Crimson Harvest)");
+    await screen.findByText("Default");
   });
 
   it("renders General and Experimental tabs", () => {

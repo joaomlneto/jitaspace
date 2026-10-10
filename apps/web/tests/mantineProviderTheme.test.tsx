@@ -1,6 +1,13 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import {
   createTheme,
   DEFAULT_THEME,
@@ -19,6 +26,7 @@ import {
   setStoredAppTheme,
   usePreferencesStore,
 } from "~/lib/preferences";
+import { DEFAULT_THEME_SEASON_END } from "~/themes/season";
 
 function ThemePrimaryColorText() {
   const theme = useMantineTheme();
@@ -33,6 +41,15 @@ describe("AppMantineProvider", () => {
       esiAcceptLanguage: "en",
       appTheme: "minimal",
     });
+    // Pinned inside the Default theme's season, so these hold after it ends.
+    jest.useFakeTimers({
+      now: DEFAULT_THEME_SEASON_END - 24 * 60 * 60 * 1000,
+      doNotFake: ["queueMicrotask", "nextTick"],
+    });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it("applies stored theme from localStorage", async () => {
@@ -75,6 +92,73 @@ describe("AppMantineProvider", () => {
     await waitFor(() => {
       expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
         new RegExp(`^${primary}$`),
+      );
+    });
+  });
+
+  it("shows EVE for Default once the season is over", async () => {
+    jest.setSystemTime(DEFAULT_THEME_SEASON_END);
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ state: { appTheme: "default" }, version: 0 }),
+    );
+
+    render(
+      <AppMantineProvider>
+        <ThemePrimaryColorText />
+      </AppMantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
+        /^eve$/,
+      );
+    });
+  });
+
+  it("switches an open tab from the season to EVE when the season ends", async () => {
+    jest.setSystemTime(DEFAULT_THEME_SEASON_END - 1000);
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ state: { appTheme: "default" }, version: 0 }),
+    );
+
+    render(
+      <AppMantineProvider>
+        <ThemePrimaryColorText />
+      </AppMantineProvider>,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
+        /^crimson$/,
+      );
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
+      /^eve$/,
+    );
+  });
+
+  it("leaves a chosen theme alone after the season", async () => {
+    jest.setSystemTime(DEFAULT_THEME_SEASON_END + 1000);
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ state: { appTheme: "caldari" }, version: 0 }),
+    );
+
+    render(
+      <AppMantineProvider>
+        <ThemePrimaryColorText />
+      </AppMantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
+        "caldari_primary",
       );
     });
   });

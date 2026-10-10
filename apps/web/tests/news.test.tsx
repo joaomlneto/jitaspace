@@ -113,6 +113,50 @@ describe("news", () => {
       expect(screen.queryByText("Old item")).not.toBeInTheDocument();
     });
 
+    it("orders cards newest first by publish date, generated ones included", async () => {
+      const { NewsCarousel } = require("~/components/News");
+      render(
+        <MantineProvider>
+          <NewsCarousel
+            storageKey={STORAGE_KEY}
+            items={[
+              makeItem({
+                id: "undated",
+                title: "Undated item",
+                date: undefined,
+              }),
+              makeItem({ id: "june", title: "June item", date: "2026-06-09" }),
+              makeItem({
+                id: "october",
+                title: "October item",
+                date: "2026-01-01",
+                // publishAt wins over date.
+                publishAt: "2026-10-06T11:00:00Z",
+              }),
+            ]}
+            extraItems={[
+              makeItem({
+                id: "patch",
+                title: "Patch item",
+                date: "2026-08-01",
+              }),
+            ]}
+          />
+        </MantineProvider>,
+      );
+
+      await screen.findByText("October item");
+      const titles = screen
+        .getAllByText(/ item$/)
+        .map((element) => element.textContent);
+      expect(titles).toEqual([
+        "October item",
+        "Patch item",
+        "June item",
+        "Undated item",
+      ]);
+    });
+
     it("dismisses an item and persists the dismissal", async () => {
       renderCarousel([makeItem({ id: "dismiss-me", title: "Dismiss me" })]);
       expect(await screen.findByText("Dismiss me")).toBeInTheDocument();

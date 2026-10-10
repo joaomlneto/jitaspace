@@ -31,8 +31,9 @@ export interface NewsItem {
 /**
  * News / update items shown at the top of the home page.
  *
- * Newest first. Add an entry to publish; remove it (or set `expiresAt`) to
- * retire it. Each `id` must be unique and stable — it is the key used to
+ * The carousel shows them newest first by publish date (`publishAt`, else
+ * `date`), so their order here does not matter. Add an entry to publish; remove
+ * it (or set `expiresAt`) to retire it. Each `id` must be unique and stable — it is the key used to
  * remember that a user has dismissed the item.
  *
  * The three content categories this is built for:

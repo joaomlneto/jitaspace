@@ -19,6 +19,7 @@ import { colors } from "./colors";
 import { crimsonHarvestTheme } from "./crimson-harvest";
 import { eveTheme } from "./eve";
 import { lightDark } from "./lightDark";
+import { DEFAULT_THEME_SEASON } from "./season";
 import { WALLPAPERS } from "./wallpapers";
 
 declare module "@mantine/core" {
@@ -82,7 +83,8 @@ const eve = mergeThemeOverrides(baseTheme, createTheme({ colors }), eveTheme);
 
 export const themes = {
   // The seasonal theme everyone gets until they pick another: EVE, dressed for
-  // the current in-game event. Swap the override when the season changes.
+  // the current in-game event. Swap the override (and ./season.ts) when the
+  // season changes; once the season ends, `resolveAppTheme` shows its fallback.
   default: mergeThemeOverrides(eve, crimsonHarvestTheme),
   minimal: baseTheme,
   eve,
@@ -293,3 +295,16 @@ export const themes = {
     }),
   ),
 };
+
+/**
+ * The Mantine theme for a theme preference: `themes[name]`, except that
+ * Default shows its season's fallback (EVE) once the season is over.
+ */
+export function resolveAppTheme(
+  name: keyof typeof themes,
+  seasonOver: boolean,
+) {
+  return name === "default" && seasonOver
+    ? themes[DEFAULT_THEME_SEASON.fallback]
+    : themes[name];
+}
