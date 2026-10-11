@@ -28,11 +28,32 @@ export function createPrismaClient({
   logQueries = false,
   maxConnections = 5,
 }: CreatePrismaClientOptions) {
-  const adapter = new PrismaPg({ connectionString, max: maxConnections });
+  const adapter = new PrismaPg({
+    connectionString: withoutSystemRootCert(connectionString),
+    max: maxConnections,
+  });
   return new PrismaClient({
     adapter,
     log: logQueries ? ["query", "info", "error", "warn"] : ["error"],
   });
+}
+
+/**
+ * Drops `sslrootcert=system` from a connection string.
+ *
+ * PlanetScale's connection strings end in it, meaning "verify against the
+ * system CA store" (a libpq 16+ convention). `pg-connection-string` has no case
+ * for it and reads `system` as a file path, so every query fails with
+ * `ENOENT: open 'system'`. Without the parameter, `sslmode=verify-full` still
+ * verifies the server certificate against Node's bundled CA store, which is
+ * what the parameter asks for.
+ */
+export function withoutSystemRootCert(connectionString: string): string {
+  return connectionString
+    .replace(/([?&])sslrootcert=system(&|$)/, (_, sep: string, next: string) =>
+      next ? sep : "",
+    )
+    .replace(/\?$/, "");
 }
 
 export type Db = ReturnType<typeof createPrismaClient>;
