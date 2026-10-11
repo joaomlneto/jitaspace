@@ -169,7 +169,10 @@ export function useTypeMarketOrders(typeId?: number) {
     // Aborting stops the requests themselves, not just their results: switching
     // types used to leave every region of the previous type still downloading.
     const controller = new AbortController();
-    const { hubs, rest } = splitMarketHubs(regionIds, tradesOnGlobalMarket);
+    const { hubs, rest } = splitMarketHubs(
+      regionIds,
+      tradesOnGlobalMarket === true,
+    );
 
     // Orders are committed in two batches — the hubs, then the long tail —
     // rather than one state update per region as it lands. The order tables page

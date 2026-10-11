@@ -167,6 +167,29 @@ describe("useTypeMarketOrders", () => {
     );
   });
 
+  it("doesn't start over when the global market's types load after failing", async () => {
+    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useGetMarketsRegionIdTypes.mockReturnValue({ isError: true });
+
+    const { result, rerender } = renderHook(() => useTypeMarketOrders(PLEX));
+    await waitFor(() =>
+      expect(getMarketsRegionIdOrders).toHaveBeenCalledTimes(
+        UNSORTED_REGIONS.length,
+      ),
+    );
+
+    useGetMarketsRegionIdTypes.mockReturnValue({
+      data: { data: [PLEX] },
+      isError: false,
+    });
+    rerender();
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(getMarketsRegionIdOrders).toHaveBeenCalledTimes(
+      UNSORTED_REGIONS.length,
+    );
+  });
+
   it("fetches nothing when no type is selected", () => {
     useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
 

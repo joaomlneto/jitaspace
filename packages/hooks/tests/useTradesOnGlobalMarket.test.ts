@@ -53,16 +53,37 @@ describe("useTradesOnGlobalMarket", () => {
     );
   });
 
-  it("is undefined until ESI answers, and false if it could not", () => {
+  it("is undefined until ESI answers, and null if it could not", () => {
     useGetMarketsRegionIdTypes.mockReturnValue({ isError: false });
     expect(
       renderHook(() => useTradesOnGlobalMarket(PLEX)).result.current,
     ).toBeUndefined();
 
     useGetMarketsRegionIdTypes.mockReturnValue({ isError: true });
-    expect(renderHook(() => useTradesOnGlobalMarket(PLEX)).result.current).toBe(
-      false,
+    expect(
+      renderHook(() => useTradesOnGlobalMarket(PLEX)).result.current,
+    ).toBeNull();
+  });
+
+  it("keeps its first answer for a type when a refetch changes it", () => {
+    useGetMarketsRegionIdTypes.mockReturnValue({ isError: true });
+    const { result, rerender } = renderHook(
+      ({ typeId }: { typeId: number }) => useTradesOnGlobalMarket(typeId),
+      { initialProps: { typeId: PLEX } },
     );
+    expect(result.current).toBeNull();
+
+    // The failed request succeeds on a later refetch.
+    useGetMarketsRegionIdTypes.mockReturnValue({
+      data: { data: [PLEX] },
+      isError: false,
+    });
+    rerender({ typeId: PLEX });
+    expect(result.current).toBeNull();
+
+    // Another type is asked afresh.
+    rerender({ typeId: 34 });
+    expect(result.current).toBe(false);
   });
 
   it("asks nothing without a type", () => {

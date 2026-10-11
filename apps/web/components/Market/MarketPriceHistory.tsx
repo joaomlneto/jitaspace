@@ -358,12 +358,12 @@ function resolveRegionId(
 
 /**
  * The region a type's history opens on: the global PLEX market for the types
- * that trade only there, and The Forge for the rest. `undefined` until ESI has
- * said which; the market page asks as it loads its orders, so by the time this
- * tab opens the answer is usually cached.
+ * that trade only there, and The Forge for the rest, or when ESI could not say
+ * (`null`). `undefined` until ESI has answered; the market page asks as it
+ * loads its orders, so by the time this tab opens the answer is usually cached.
  */
 function defaultRegionIdFor(
-  tradesOnGlobalMarket: boolean | undefined,
+  tradesOnGlobalMarket: boolean | null | undefined,
 ): number | undefined {
   if (tradesOnGlobalMarket === undefined) return undefined;
   return tradesOnGlobalMarket
@@ -665,6 +665,11 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
 
   const tradesOnGlobalMarket = useTradesOnGlobalMarket(typeId);
   const defaultRegionId = defaultRegionIdFor(tradesOnGlobalMarket);
+  // The default as ESI stated it. A fallback because ESI could not say is not
+  // reason enough to drop a region the URL names: for PLEX, that would turn a
+  // link to its Jita history into one to the global market.
+  const settledDefaultRegionId =
+    tradesOnGlobalMarket === null ? undefined : defaultRegionId;
   // The global market is only worth offering where the type trades, or where
   // the URL asks for it.
   const { regionOptions, marketRegionIds } = useRegionOptions(
@@ -685,11 +690,11 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
     if (
       requestedRegionId !== null &&
       regionId !== undefined &&
-      (regionId !== requestedRegionId || regionId === defaultRegionId)
+      (regionId !== requestedRegionId || regionId === settledDefaultRegionId)
     ) {
       void setParams({ region: null });
     }
-  }, [regionId, requestedRegionId, defaultRegionId, setParams]);
+  }, [regionId, requestedRegionId, settledDefaultRegionId, setParams]);
 
   const {
     data,
@@ -770,7 +775,7 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
             const region = Number(value);
             // The default needs no parameter, so links to it stay clean.
             void setParams({
-              region: region === defaultRegionId ? null : region,
+              region: region === settledDefaultRegionId ? null : region,
             });
           }}
           searchable

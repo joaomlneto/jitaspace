@@ -45,10 +45,13 @@ let mockParams: { region: number | null; range: string } = {
   region: null,
   range: "6m",
 };
-/** Whether the type trades on the global PLEX market; `undefined` while asked. */
-let mockTradesOnGlobalMarket: (typeId?: number) => boolean | undefined = (
-  typeId,
-) => typeId === PLEX;
+/**
+ * Whether the type trades on the global PLEX market; `undefined` while asked,
+ * `null` if ESI could not say.
+ */
+let mockTradesOnGlobalMarket: (
+  typeId?: number,
+) => boolean | null | undefined = (typeId) => typeId === PLEX;
 
 jest.mock("@jitaspace/esi-client", () => ({
   useGetMarketsRegionIdHistory: (
@@ -268,6 +271,19 @@ describe("MarketPriceHistory", () => {
     );
     expect(screen.getByRole("combobox", { name: "Region" })).toHaveValue(
       "Global PLEX market",
+    );
+    expect(mockSetParams).not.toHaveBeenCalled();
+  });
+
+  it("keeps a region the URL names when ESI could not say where the type trades", () => {
+    mockParams = { region: 10000002, range: "6m" };
+    mockTradesOnGlobalMarket = () => null;
+    renderChart(PLEX);
+    expect(mockUseHistory).toHaveBeenCalledWith(
+      10000002,
+      { type_id: PLEX },
+      undefined,
+      expect.anything(),
     );
     expect(mockSetParams).not.toHaveBeenCalled();
   });
