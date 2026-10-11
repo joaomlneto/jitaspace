@@ -1,9 +1,11 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+
+import type { PageProps } from "~/app/dogma/effect/[effectId]/page.client";
 
 // ---------------------------------------------------------------------------
 // next/navigation — the page client receives props directly; mock defensively.
@@ -25,21 +27,32 @@ jest.mock("next/cache", () => ({
   cacheTag: () => undefined,
 }));
 
-// ---------------------------------------------------------------------------
-// Hooks
-// ---------------------------------------------------------------------------
-const mockUseDogmaEffect = jest.fn();
-jest.mock("@jitaspace/hooks", () => ({
-  useDogmaEffect: (...args: unknown[]) => mockUseDogmaEffect(...args),
-}));
-
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => s,
 }));
 
-// Stub every @jitaspace/ui export to render nothing (hoist-safe Proxy).
+// Anchors render their text; DogmaAttributeValue renders its raw value.
 jest.mock(
   "@jitaspace/ui",
+  () =>
+    new Proxy(
+      {},
+      {
+        get:
+          () =>
+          ({ children, value }: { children?: ReactNode; value?: number }) =>
+            children ?? (value === undefined ? null : `value:${value}`),
+      },
+    ),
+);
+
+jest.mock("@jitaspace/eve-components", () => ({
+  TypeAnchor: ({ children }: { children?: ReactNode }) => <>{children}</>,
+  TypeAvatar: () => null,
+}));
+
+jest.mock(
+  "@jitaspace/eve-icons",
   () =>
     new Proxy(
       {},
@@ -49,224 +62,296 @@ jest.mock(
     ),
 );
 
-jest.mock("~/components/Text", () => ({
-  DogmaAttributeName: () => null,
-  DogmaEffectName: () => null,
-}));
-
 jest.mock("~/components/EveMail", () => ({
   MailMessageViewer: ({ content }: { content?: string }) => (
     <div data-testid="mail-viewer">{content}</div>
   ),
 }));
 
-// ---------------------------------------------------------------------------
-// Sample data: rich effect so every effect?.data.* conditional renders.
-// ---------------------------------------------------------------------------
-const FULL_EFFECT = {
-  effect_category: 4,
-  name: "shieldBoosting",
-  display_name: "Shield Boosting",
-  discharge_attribute_id: 1,
-  duration_attribute_id: 2,
-  falloff_attribute_id: 3,
-  range_attribute_id: 4,
-  tracking_speed_attribute_id: 5,
-  disallow_auto_repeat: true,
-  electronic_chance: false,
-  is_assistance: true,
-  is_offensive: false,
-  is_warp_safe: true,
-  range_chance: false,
-  icon_id: 1234,
-  pre_expression: 100,
-  post_expression: 200,
+// Render every cell the columns describe, so value columns are exercised
+// without depending on either table engine.
+jest.mock("~/components/DataTable", () => ({
+  DataTable: ({
+    data,
+    columns,
+  }: {
+    data: object[];
+    columns: {
+      id: string;
+      header: string;
+      cell?: (row: object) => ReactNode;
+      defaultVisible?: boolean;
+    }[];
+  }) => (
+    <table data-testid="types-table">
+      <thead>
+        <tr>
+          {columns
+            .filter((column) => column.defaultVisible !== false)
+            .map((column) => (
+              <th key={column.id}>{column.header}</th>
+            ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, index) => (
+          <tr key={index}>
+            {columns
+              .filter((column) => column.defaultVisible !== false)
+              .map((column) => (
+                <td key={column.id}>{column.cell?.(row)}</td>
+              ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ),
+}));
+
+const attribute = (
+  attributeId: number,
+  name: string,
+  displayName: string | null,
+  unitId: number | null = null,
+) => ({ attributeId, name, displayName, unitId, unitSymbol: null });
+
+// Effect 5189 trackingSpeedBonusEffectLasers, plus an effect stopper so both
+// sentence shapes render.
+const PROPS: PageProps = {
+  effectId: 5189,
+  name: "trackingSpeedBonusEffectLasers",
+  displayName: null,
+  description: "Automatically generated effect",
+  customDescription: null,
+  published: false,
+  iconId: null,
+  guid: "effects.Laser",
+  distribution: 2,
+  category: { effectCategoryId: 0, name: "dgmEffPassive" },
+  flags: {
+    isOffensive: true,
+    isAssistance: false,
+    isWarpSafe: false,
+    disallowAutoRepeat: false,
+    electronicChance: false,
+    propulsionChance: false,
+    rangeChance: null,
+  },
+  stats: {
+    discharge: 6,
+    duration: null,
+    range: null,
+    falloff: null,
+    trackingSpeed: null,
+    resistance: null,
+    npcUsageChance: null,
+    npcActivationChance: null,
+    fittingUsageChance: null,
+  },
+  preExpression: null,
+  postExpression: 200,
+  attributes: [
+    attribute(6, "capacitorNeed", "Activation Cost"),
+    attribute(160, "trackingSpeed", "Turret Tracking"),
+    attribute(767, "trackingSpeedBonus", "Tracking Speed Bonus", 105),
+  ],
+  modifiers: [
+    {
+      modifierIndex: 0,
+      func: "LocationGroupModifier",
+      domain: "shipID",
+      operator: 6,
+      modifiedAttributeId: 160,
+      modifyingAttributeId: 767,
+      groupId: 53,
+      groupName: "Energy Weapon",
+      skillTypeId: null,
+      skillName: null,
+      targetEffectId: null,
+      targetEffectName: null,
+    },
+    {
+      modifierIndex: 1,
+      func: "EffectStopper",
+      domain: "target",
+      operator: null,
+      modifiedAttributeId: null,
+      modifyingAttributeId: null,
+      groupId: null,
+      groupName: null,
+      skillTypeId: null,
+      skillName: null,
+      targetEffectId: 6441,
+      targetEffectName: "fighterAbilityMicroWarpDrive",
+    },
+  ],
+  targetedBy: [
+    {
+      effectId: 5934,
+      name: "warpScrambleBlockMWDWithNPCEffect",
+      func: "EffectStopper",
+      domain: "target",
+    },
+  ],
+  types: [
+    {
+      typeId: 31378,
+      name: "Small Energy Metastasis Adjuster I",
+      published: true,
+      groupId: 776,
+      groupName: "Rig Energy Weapon",
+      categoryId: 7,
+      isDefault: false,
+      values: { 767: 15 },
+    },
+    {
+      typeId: 3300,
+      name: "Gunnery",
+      published: true,
+      groupId: 255,
+      groupName: "Gunnery",
+      categoryId: 16,
+      isDefault: true,
+      values: { 767: 5 },
+    },
+  ],
 };
 
-const FULL_MODIFIERS = [
-  {
-    modifierIndex: 0,
-    domain: "shipID",
-    targetEffectId: 99,
-    func: "ItemModifier",
-    modifiedAttributeId: 11,
-    modifyingAttributeId: 12,
-    operator: 6,
-    groupId: 40,
-    skillTypeId: 3300,
-    isDeleted: false,
-  },
-  {
-    // Minimal modifier: all optional ids falsy so those branches are skipped.
-    modifierIndex: 1,
-    domain: null,
-    targetEffectId: null,
-    func: "LocationModifier",
-    modifiedAttributeId: null,
-    modifyingAttributeId: null,
-    operator: null,
-    groupId: null,
-    skillTypeId: null,
-    isDeleted: false,
-  },
-];
-
-const FULL_TYPES = [
-  { typeId: 587, name: "Rifter", isDefault: true, groupId: 25 },
-  { typeId: 588, name: "Breacher", isDefault: false, groupId: 25 },
-  { typeId: 621, name: "Caracal", isDefault: true, groupId: 26 },
-];
-
-const FULL_GROUPS = [
-  { groupId: 26, name: "Cruiser" },
-  { groupId: 25, name: "Frigate" },
-];
-
-function renderPage(props: Record<string, unknown> = {}) {
+function renderPage(props: Partial<PageProps> = {}) {
   const Page = require("~/app/dogma/effect/[effectId]/page.client").default;
-  const defaults = {
-    effectId: 30,
-    name: "Shield Boosting",
-    description: "Boosts shields.",
-    published: true,
-    types: FULL_TYPES,
-    modifiers: FULL_MODIFIERS,
-    groups: FULL_GROUPS,
-  };
   return render(
-    <MantineProvider>
-      <Page {...defaults} {...props} />
+    <MantineProvider env="test">
+      <Page {...PROPS} {...props} />
     </MantineProvider>,
   );
 }
 
 describe("Dogma effect page (client)", () => {
-  beforeEach(() => {
-    mockUseDogmaEffect.mockReset();
-    mockUseDogmaEffect.mockReturnValue({ data: { data: FULL_EFFECT } });
-  });
-
-  it("renders every section/field with full data present", () => {
+  it("names the effect and shows its category and flags as badges", () => {
     renderPage();
-
-    // Title + description viewer ("Shield Boosting" appears both as the title
-    // and as the effect display name row).
     expect(
-      screen.getAllByText("Shield Boosting").length,
-    ).toBeGreaterThanOrEqual(1);
+      screen.getByRole("heading", { name: "trackingSpeedBonusEffectLasers" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Unpublished")).toBeInTheDocument();
+    expect(screen.getAllByText("Passive").length).toBeGreaterThanOrEqual(1);
+    // True flags are badges in the header and Yes in Details; false flags
+    // only appear in Details, as No; unknown (null) ones nowhere.
+    expect(screen.getAllByText("Offensive")).toHaveLength(2);
+    expect(screen.getAllByText("Warp safe")).toHaveLength(1);
+    expect(screen.queryByText("Range chance")).not.toBeInTheDocument();
     expect(screen.getByTestId("mail-viewer")).toHaveTextContent(
-      "Boosts shields.",
+      "Automatically generated effect",
     );
-
-    // Core fields
-    expect(screen.getByText("Effect ID")).toBeInTheDocument();
-    expect(screen.getByText("Effect Category ID")).toBeInTheDocument();
-    expect(screen.getByText("Display Name")).toBeInTheDocument();
-
-    // All attribute-id gated rows
-    expect(screen.getByText("Discharge Attribute")).toBeInTheDocument();
-    expect(screen.getByText("Duration Attribute")).toBeInTheDocument();
-    expect(screen.getByText("Falloff Attribute")).toBeInTheDocument();
-    expect(screen.getByText("Range Attribute")).toBeInTheDocument();
-    expect(screen.getByText("Tracking Speed Attribute")).toBeInTheDocument();
-
-    // Boolean-ish rows
-    expect(screen.getByText("Published")).toBeInTheDocument();
-    expect(screen.getByText("Disallow Auto Repeat")).toBeInTheDocument();
-    expect(screen.getByText("Electronic Chance")).toBeInTheDocument();
-    expect(screen.getByText("Is Assistance")).toBeInTheDocument();
-    expect(screen.getByText("Is Offensive")).toBeInTheDocument();
-    expect(screen.getByText("Is Warp Safe")).toBeInTheDocument();
-    expect(screen.getByText("Range Chance")).toBeInTheDocument();
-    expect(screen.getByText("Icon ID")).toBeInTheDocument();
-    expect(screen.getByText("Pre Expression")).toBeInTheDocument();
-    expect(screen.getByText("Post Expression")).toBeInTheDocument();
-
-    // Modifiers section (rich modifier renders its gated rows)
-    expect(screen.getByText("Modifiers")).toBeInTheDocument();
-    expect(screen.getByText("Effect Group ID")).toBeInTheDocument();
-    expect(screen.getByText("Modifying Attribute")).toBeInTheDocument();
-    expect(screen.getByText("Modified Attribute")).toBeInTheDocument();
-    expect(screen.getByText("Target Effect")).toBeInTheDocument();
-    expect(screen.getByText("Skill")).toBeInTheDocument();
-    expect(screen.getAllByText("Domain").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Function").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Operator").length).toBeGreaterThanOrEqual(1);
-
-    // Types grouped by sorted group name
-    expect(screen.getByText("Types")).toBeInTheDocument();
-    expect(screen.getByText("Cruiser")).toBeInTheDocument();
-    expect(screen.getByText("Frigate")).toBeInTheDocument();
-    // isDefault badge
-    expect(screen.getAllByText("IS DEFAULT").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders the opposite Yes/No arms when the boolean flags are flipped", () => {
-    mockUseDogmaEffect.mockReturnValue({
-      data: {
-        data: {
-          ...FULL_EFFECT,
-          disallow_auto_repeat: false,
-          electronic_chance: true,
-          is_assistance: false,
-          is_offensive: true,
-          is_warp_safe: false,
-          range_chance: true,
-        },
-      },
-    });
-
-    renderPage({ published: false });
-
-    // Both Yes and No values are now present across the boolean rows.
-    expect(screen.getAllByText("Yes").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("No").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Disallow Auto Repeat")).toBeInTheDocument();
-    expect(screen.getByText("Range Chance")).toBeInTheDocument();
+  it("shows the internal name under a display name that differs", () => {
+    renderPage({ displayName: "Tracking Speed Bonus" });
+    expect(
+      screen.getByRole("heading", { name: "Tracking Speed Bonus" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText("trackingSpeedBonusEffectLasers").length,
+    ).toBeGreaterThanOrEqual(2);
   });
 
-  it("renders the unnamed/no-description fallbacks and Published No", () => {
-    // Effect hook returns no data so every effect?.data.* row is skipped.
-    mockUseDogmaEffect.mockReturnValue({ data: undefined });
+  it("lists the attributes the effect points at under Stats used", () => {
+    renderPage();
+    expect(screen.getByText("Stats used")).toBeInTheDocument();
+    expect(screen.getByText("Activation cost")).toBeInTheDocument();
+    expect(screen.getByText("Activation Cost")).toBeInTheDocument();
+  });
 
+  it("reads each modifier as a sentence with its raw rows expanded", () => {
+    renderPage();
+    const sentence = screen.getByText(
+      (_, element) =>
+        element?.tagName === "P" &&
+        element.textContent ===
+          "Energy Weapon on the ship›Turret Tracking + Tracking Speed Bonus %",
+    );
+    expect(sentence).toBeInTheDocument();
+    expect(screen.getByText("percent")).toBeInTheDocument();
+
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          element.textContent ===
+            "Stops fighterAbilityMicroWarpDrive on the target",
+      ),
+    ).toBeInTheDocument();
+
+    // Raw rows start expanded and can be collapsed per line.
+    expect(screen.getAllByText("LocationGroupModifier")).toHaveLength(1);
+    expect(screen.getAllByText("PostPercent")).toHaveLength(1);
+    fireEvent.click(screen.getAllByRole("button", { name: "Hide raw" })[0]!);
+    expect(screen.queryByText("LocationGroupModifier")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Show raw" })).toHaveLength(1);
+  });
+
+  it("lists the effects that target this one", () => {
+    renderPage();
+    expect(screen.getByText("Targeted by")).toBeInTheDocument();
+    expect(screen.getByText("Stopped by")).toBeInTheDocument();
+    expect(
+      screen.getByText("warpScrambleBlockMWDWithNPCEffect"),
+    ).toBeInTheDocument();
+  });
+
+  it("adds a column for each modifying attribute, per level for skills", () => {
+    renderPage();
+    const table = screen.getByTestId("types-table");
+    expect(table).toHaveTextContent("Tracking Speed Bonus");
+    expect(table).toHaveTextContent("value:15");
+    expect(table).toHaveTextContent("value:5/ level");
+    expect(screen.getByText(/2 types in 2 groups/)).toBeInTheDocument();
+  });
+
+  it("explains empty modifiers and types instead of empty tables", () => {
+    renderPage({ modifiers: [], types: [], targetedBy: [] });
+    expect(
+      screen.getByText(/This effect has no modifiers/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("No item uses this effect.")).toBeInTheDocument();
+    expect(screen.queryByTestId("types-table")).not.toBeInTheDocument();
+    expect(screen.queryByText("Targeted by")).not.toBeInTheDocument();
+  });
+
+  it("shows the custom description, labelled, in place of CCP's placeholder", () => {
     renderPage({
-      name: null,
-      description: null,
-      published: false,
-      types: [],
-      modifiers: [],
-      groups: [],
+      customDescription: "Increases the tracking speed of energy turrets.",
     });
+    expect(
+      screen.getByText("Increases the tracking speed of energy turrets."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("AI-generated")).toBeInTheDocument();
+    expect(screen.queryByTestId("mail-viewer")).not.toBeInTheDocument();
+  });
 
-    // Unnamed effect title italic
-    expect(screen.getByText("Unnamed Effect")).toBeInTheDocument();
-    // No description fallback string passed into the viewer
+  it("shows the custom description when CCP has none at all", () => {
+    renderPage({ description: null, customDescription: "Stops warping." });
+    expect(screen.getByText("Stops warping.")).toBeInTheDocument();
+    expect(screen.getByText("AI-generated")).toBeInTheDocument();
+  });
+
+  it("prefers CCP's own description over the custom one", () => {
+    renderPage({
+      description: "Attempts to prevent the target from warping.",
+      customDescription: "Stops warping.",
+    });
     expect(screen.getByTestId("mail-viewer")).toHaveTextContent(
-      "No description provided",
+      "Attempts to prevent the target from warping.",
     );
-
-    // Published "No"
-    expect(screen.getByText("Published")).toBeInTheDocument();
-    expect(screen.getByText("No")).toBeInTheDocument();
-
-    // Optional effect rows absent
-    expect(screen.queryByText("Effect Category ID")).not.toBeInTheDocument();
-    expect(screen.queryByText("Display Name")).not.toBeInTheDocument();
-    expect(screen.queryByText("Discharge Attribute")).not.toBeInTheDocument();
-
-    // Sections still present
-    expect(screen.getByText("Modifiers")).toBeInTheDocument();
-    expect(screen.getByText("Types")).toBeInTheDocument();
+    expect(screen.queryByText("Stops warping.")).not.toBeInTheDocument();
+    expect(screen.queryByText("AI-generated")).not.toBeInTheDocument();
   });
 
-  it("handles undefined groups/modifiers without crashing", () => {
-    mockUseDogmaEffect.mockReturnValue({ data: { data: { name: "x" } } });
-    renderPage({
-      types: [],
-      modifiers: [],
-      groups: undefined,
-    });
-    expect(screen.getByText("Types")).toBeInTheDocument();
+  it("falls back to the effect id when it has no name at all", () => {
+    renderPage({ name: null, displayName: null, description: null });
+    expect(
+      screen.getByRole("heading", { name: "Effect 5189" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("mail-viewer")).not.toBeInTheDocument();
   });
 });
 

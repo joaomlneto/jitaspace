@@ -10,82 +10,254 @@ import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead } from "~/lib/sdeCache";
 import DogmaEffectPage from "./page.client";
 
-async function getEffectData(effectId: number): Promise<PageProps> {
+const effectName = (effect: {
+  displayName: string | null;
+  name: string | null;
+}) => [effect.displayName, effect.name].find(Boolean) ?? null;
+
+/**
+ * Everything the page shows, from the database: the effect's own row, its
+ * modifiers with the names they point at, the effects that stop it, and the
+ * types that carry it along with their values for the modifying attributes.
+ * Returns null for an effect that does not exist.
+ */
+async function getEffectData(effectId: number): Promise<PageProps | null> {
   "use cache";
   cacheSdeRead();
 
-  const effect = await prisma.dogmaEffect.findUniqueOrThrow({
+  const effect = await prisma.dogmaEffect.findUnique({
     select: {
       effectId: true,
       name: true,
       displayName: true,
       description: true,
+      customDescription: true,
       published: true,
+      iconId: true,
+      guid: true,
+      distribution: true,
+      effectCategoryId: true,
+      effectCategory: { select: { name: true } },
+      disallowAutoRepeat: true,
+      electronicChance: true,
+      isAssistance: true,
+      isOffensive: true,
+      isWarpSafe: true,
+      propulsionChance: true,
+      rangeChance: true,
+      dischargeAttributeId: true,
+      durationAttributeId: true,
+      rangeAttributeId: true,
+      falloffAttributeId: true,
+      trackingSpeedAttributeId: true,
+      resistanceAttributeId: true,
+      npcUsageChanceAttributeId: true,
+      npcActivationChanceAttributeId: true,
+      fittingUsageChanceAttributeId: true,
+      preExpression: true,
+      postExpression: true,
+      DogmaEffectModifiers: {
+        select: {
+          modifierIndex: true,
+          func: true,
+          domain: true,
+          operator: true,
+          modifiedAttributeId: true,
+          modifyingAttributeId: true,
+          groupId: true,
+          group: { select: { name: true } },
+          skillTypeId: true,
+          targetEffectId: true,
+          targetEffect: { select: { name: true, displayName: true } },
+        },
+        where: { isDeleted: false },
+        orderBy: { modifierIndex: "asc" },
+      },
+      ModifiedDogmaEffect: {
+        select: {
+          func: true,
+          domain: true,
+          effect: { select: { effectId: true, name: true, displayName: true } },
+        },
+        where: { isDeleted: false },
+      },
       TypeEffect: {
         select: {
+          isDefault: true,
           type: {
             select: {
               typeId: true,
               name: true,
+              published: true,
               groupId: true,
+              group: { select: { name: true, categoryId: true } },
             },
           },
-          isDefault: true,
         },
-      },
-      DogmaEffectModifiers: {
-        select: {
-          modifierIndex: true,
-          domain: true,
-          targetEffectId: true,
-          func: true,
-          modifiedAttributeId: true,
-          modifyingAttributeId: true,
-          operator: true,
-          groupId: true,
-          skillTypeId: true,
-          isDeleted: true,
-        },
-        orderBy: {
-          modifierIndex: "asc",
-        },
+        where: { isDeleted: false },
       },
     },
-    where: {
-      effectId,
-    },
+    where: { effectId },
   });
+  if (!effect) return null;
 
-  const groupIds = [
-    ...new Set(effect.TypeEffect.map((type) => type.type.groupId)),
+  const modifiers = effect.DogmaEffectModifiers;
+
+  const stats: PageProps["stats"] = {
+    discharge: effect.dischargeAttributeId,
+    duration: effect.durationAttributeId,
+    range: effect.rangeAttributeId,
+    falloff: effect.falloffAttributeId,
+    trackingSpeed: effect.trackingSpeedAttributeId,
+    resistance: effect.resistanceAttributeId,
+    npcUsageChance: effect.npcUsageChanceAttributeId,
+    npcActivationChance: effect.npcActivationChanceAttributeId,
+    fittingUsageChance: effect.fittingUsageChanceAttributeId,
+  };
+
+  const modifyingAttributeIds = [
+    ...new Set(
+      modifiers.flatMap((modifier) =>
+        modifier.modifyingAttributeId === null
+          ? []
+          : [modifier.modifyingAttributeId],
+      ),
+    ),
+  ];
+  const attributeIds = [
+    ...new Set([
+      ...Object.values(stats).filter((id): id is number => id !== null),
+      ...modifyingAttributeIds,
+      ...modifiers.flatMap((modifier) =>
+        modifier.modifiedAttributeId === null
+          ? []
+          : [modifier.modifiedAttributeId],
+      ),
+    ]),
+  ];
+  const skillTypeIds = [
+    ...new Set(
+      modifiers.flatMap((modifier) =>
+        modifier.skillTypeId === null ? [] : [modifier.skillTypeId],
+      ),
+    ),
   ];
 
-  const groups = await prisma.group.findMany({
-    select: {
-      groupId: true,
-      name: true,
-    },
-    where: {
-      groupId: {
-        in: groupIds,
+  const [attributes, skills, typeValues] = await Promise.all([
+    prisma.dogmaAttribute.findMany({
+      select: {
+        attributeId: true,
+        name: true,
+        displayName: true,
+        unitId: true,
+        DogmaUnit: { select: { displayName: true } },
       },
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
+      where: { attributeId: { in: attributeIds } },
+    }),
+    prisma.type.findMany({
+      select: { typeId: true, name: true },
+      where: { typeId: { in: skillTypeIds } },
+    }),
+    modifyingAttributeIds.length === 0
+      ? Promise.resolve([])
+      : prisma.typeAttribute.findMany({
+          select: { typeId: true, attributeId: true, value: true },
+          where: {
+            attributeId: { in: modifyingAttributeIds },
+            isDeleted: false,
+            type: { effects: { some: { effectId, isDeleted: false } } },
+          },
+        }),
+  ]);
+
+  const skillNames = new Map(skills.map((skill) => [skill.typeId, skill.name]));
+  const valuesByType = new Map<number, Record<number, number>>();
+  for (const { typeId, attributeId, value } of typeValues) {
+    const values = valuesByType.get(typeId) ?? {};
+    values[attributeId] = value;
+    valuesByType.set(typeId, values);
+  }
+
+  const targetedBy = new Map<number, PageProps["targetedBy"][number]>();
+  for (const modifier of effect.ModifiedDogmaEffect) {
+    targetedBy.set(modifier.effect.effectId, {
+      effectId: modifier.effect.effectId,
+      name: effectName(modifier.effect),
+      func: modifier.func,
+      domain: modifier.domain,
+    });
+  }
 
   return {
     effectId,
-    name: [effect.displayName, effect.name].find(Boolean) ?? null,
+    name: effect.name,
+    displayName: effect.displayName,
     description: effect.description?.length ? effect.description : null,
-    published: effect.published ?? null,
-    modifiers: effect.DogmaEffectModifiers,
-    types: effect.TypeEffect.map((entry) => ({
-      ...entry.type,
-      isDefault: entry.isDefault,
+    customDescription: effect.customDescription?.trim()
+      ? effect.customDescription
+      : null,
+    published: effect.published,
+    iconId: effect.iconId,
+    guid: effect.guid?.length ? effect.guid : null,
+    distribution: effect.distribution,
+    category:
+      effect.effectCategoryId === null
+        ? null
+        : {
+            effectCategoryId: effect.effectCategoryId,
+            name: effect.effectCategory?.name ?? null,
+          },
+    flags: {
+      isOffensive: effect.isOffensive,
+      isAssistance: effect.isAssistance,
+      isWarpSafe: effect.isWarpSafe,
+      disallowAutoRepeat: effect.disallowAutoRepeat,
+      electronicChance: effect.electronicChance,
+      propulsionChance: effect.propulsionChance,
+      rangeChance: effect.rangeChance,
+    },
+    stats,
+    preExpression: effect.preExpression,
+    postExpression: effect.postExpression,
+    attributes: attributes.map((attribute) => ({
+      attributeId: attribute.attributeId,
+      name: attribute.name,
+      displayName: attribute.displayName,
+      unitId: attribute.unitId,
+      unitSymbol: attribute.DogmaUnit?.displayName ?? null,
     })),
-    groups,
+    modifiers: modifiers.map((modifier) => ({
+      modifierIndex: modifier.modifierIndex,
+      func: modifier.func,
+      domain: modifier.domain,
+      operator: modifier.operator,
+      modifiedAttributeId: modifier.modifiedAttributeId,
+      modifyingAttributeId: modifier.modifyingAttributeId,
+      groupId: modifier.groupId,
+      groupName: modifier.group?.name ?? null,
+      skillTypeId: modifier.skillTypeId,
+      skillName:
+        modifier.skillTypeId === null
+          ? null
+          : (skillNames.get(modifier.skillTypeId) ?? null),
+      targetEffectId: modifier.targetEffectId,
+      targetEffectName: modifier.targetEffect
+        ? effectName(modifier.targetEffect)
+        : null,
+    })),
+    targetedBy: [...targetedBy.values()].sort(
+      (a, b) => a.effectId - b.effectId,
+    ),
+    types: effect.TypeEffect.map(({ isDefault, type }) => ({
+      typeId: type.typeId,
+      name: type.name,
+      published: type.published,
+      groupId: type.groupId,
+      groupName: type.group.name,
+      categoryId: type.group.categoryId,
+      isDefault,
+      values: valuesByType.get(type.typeId) ?? {},
+    })),
   };
 }
 
@@ -103,7 +275,7 @@ export async function generateMetadata({
       where: { effectId },
     });
     if (!effect) return {};
-    const title = [effect.displayName, effect.name].find(Boolean);
+    const title = effectName(effect);
     if (!title) return {};
     return pageMetadata({
       title,
@@ -130,10 +302,16 @@ async function PageContent({
     notFound();
   }
 
-  let props: PageProps;
+  // Outside the "use cache" scope and inside <Suspense>: a failed read renders
+  // a transient not-found (HTTP 200) that is never stored. See apps/web
+  // CLAUDE.md on the dynamic [param] routes.
+  let props: PageProps | null;
   try {
     props = await getEffectData(effectId);
   } catch {
+    notFound();
+  }
+  if (!props) {
     notFound();
   }
   return <DogmaEffectPage {...props} />;
