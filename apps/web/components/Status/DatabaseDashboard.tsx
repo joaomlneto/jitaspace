@@ -39,7 +39,7 @@ export function DatabaseDashboard() {
             <Title order={3}>Database</Title>
           </Group>
           <Text size="xs" c="dimmed">
-            Estimated record counts for every table, from CockroachDB table
+            Estimated record counts for every table, from PostgreSQL table
             statistics · cached for {DATABASE_STATUS_STALE_MINUTES} minutes
           </Text>
         </Stack>
