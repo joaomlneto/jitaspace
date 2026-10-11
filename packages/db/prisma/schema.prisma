@@ -472,6 +472,15 @@ model DogmaEffect {
   npcUsageChanceAttribute        DogmaAttribute? @relation("NpcUsageChanceAttribute", fields: [npcUsageChanceAttributeId], references: [attributeId])
   npcUsageChanceAttributeId      Int?
 
+  /// Not from CCP: a plain-language description written by us (AI-generated
+  /// for now) for effects whose own `description` is empty or boilerplate.
+  /// No ingest writes it — ingestSdeTable and the ESI scraper only write the
+  /// columns they produce — so it survives every SDE and ESI update. The pages
+  /// that show it cache it for a day; run the revalidate-sde-cache job to show
+  /// new text at once. Written by
+  /// packages/background-jobs/scripts/describe-dogma-effects.ts.
+  customDescription String?
+
   types                Type[]
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.

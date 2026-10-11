@@ -18,6 +18,7 @@ import {
   Tabs,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconArrowsDiff,
@@ -57,7 +58,11 @@ import {
   MarketGroupAnchor,
 } from "@jitaspace/ui";
 
-import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
+import type {
+  TypeDogmaAttributeMeta,
+  TypeDogmaEffectMeta,
+  TypeDogmaMeta,
+} from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
@@ -204,6 +209,52 @@ function AttributeValue({
         />
       );
   }
+}
+
+/**
+ * An effect's name, linked to its page, with its description underneath: CCP's
+ * own, else our AI-generated one, labelled as such. Falls back to ESI's name
+ * when our database has no row for the effect.
+ */
+function TypeEffectCell({
+  effectId,
+  meta,
+}: Readonly<{
+  effectId: number;
+  meta: TypeDogmaEffectMeta | undefined;
+}>) {
+  const description = meta?.description;
+  return (
+    <Stack gap={2}>
+      <DogmaEffectAnchor effectId={effectId}>
+        {meta?.name ?? <DogmaEffectName span effectId={effectId} />}
+      </DogmaEffectAnchor>
+      {description && (
+        <Group gap={6} align="flex-start" wrap="nowrap">
+          <Text component="div" size="xs" c="dimmed">
+            <MailMessageViewer
+              content={sanitizeFormattedEveString(description.text)}
+            />
+          </Text>
+          {description.source === "ai" && (
+            <Tooltip
+              label="AI-generated from this effect's data, not written by CCP"
+              withArrow
+            >
+              <Badge
+                size="xs"
+                variant="light"
+                color="gray"
+                style={{ flexShrink: 0, cursor: "help" }}
+              >
+                AI
+              </Badge>
+            </Tooltip>
+          )}
+        </Group>
+      )}
+    </Stack>
+  );
 }
 
 /** No history to show; one stable promise, so `use()` never sees a new one. */
@@ -840,11 +891,10 @@ export default function TypePage({
                           {sortedDogmaEffects.map((effect) => (
                             <Table.Tr key={effect.effect_id}>
                               <Table.Td>
-                                <DogmaEffectAnchor effectId={effect.effect_id}>
-                                  <DogmaEffectName
-                                    effectId={effect.effect_id}
-                                  />
-                                </DogmaEffectAnchor>
+                                <TypeEffectCell
+                                  effectId={effect.effect_id}
+                                  meta={dogmaMeta.effects[effect.effect_id]}
+                                />
                               </Table.Td>
                               <Table.Td ta="right">
                                 {booleanBadge(effect.is_default)}

@@ -9,6 +9,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
+    "describe-dogma-effects": "pnpm with-env tsx scripts/describe-dogma-effects.ts",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "test": "jest",
@@ -31,6 +32,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@jest/globals": "^30.4.1",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
