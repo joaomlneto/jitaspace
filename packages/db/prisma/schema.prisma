@@ -355,6 +355,7 @@ model DogmaAttribute {
   attributeId                  Int                     @id
   defaultValue                 Float?
   description                  String?
+  customDescription            String?
   displayName                  String?
   highIsGood                   Boolean?
   iconId                       Int?
@@ -980,10 +981,13 @@ enum SovereigntySource {
   /// every 5 minutes (ESI caches it for 300s).
   esi
   /// EVE Ref's archive of GET /sovereignty/map, fetched hourly since
-  /// 2017-11-29 with gaps (the longest by far: 2019-01-09 to 2021-07-01; a
-  /// month in mid-2018; days at most since 2022-12). Imported by
-  /// `backfill-everef-sovereignty-history`, and replayed by
-  /// `esi-track-sovereignty` to fill gaps between its polls.
+  /// 2017-11-29. Its gaps of more than 6 hours (the longest by far:
+  /// 2019-01-09 to 2021-07-01; a month in mid-2018) are filled with hourly
+  /// snapshots in the same format, rebuilt from DOTLAN EveMaps' per-system
+  /// sovereignty change log, which matched EVE Ref's holders 99.99% of the
+  /// time where both exist. Like EVE Ref's own, their data can be up to an
+  /// hour behind. Imported by `backfill-everef-sovereignty-history`, and
+  /// replayed by `esi-track-sovereignty` to fill gaps between its polls.
   everef
 }
 
