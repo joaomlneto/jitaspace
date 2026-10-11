@@ -92,7 +92,6 @@ import {
   DogmaAttributeName,
   DogmaEffectName,
   GroupName,
-  LinkedText,
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
@@ -231,26 +230,28 @@ function TypeEffectCell({
         {meta?.name ?? <DogmaEffectName span effectId={effectId} />}
       </DogmaEffectAnchor>
       {description && (
-        <Text size="xs" c="dimmed">
-          <LinkedText text={description.text} />
+        <Group gap={6} align="flex-start" wrap="nowrap">
+          <Text component="div" size="xs" c="dimmed">
+            <MailMessageViewer
+              content={sanitizeFormattedEveString(description.text)}
+            />
+          </Text>
           {description.source === "ai" && (
             <Tooltip
               label="AI-generated from this effect's data, not written by CCP"
               withArrow
             >
               <Badge
-                component="span"
                 size="xs"
                 variant="light"
                 color="gray"
-                ml={6}
-                style={{ verticalAlign: "middle", cursor: "help" }}
+                style={{ flexShrink: 0, cursor: "help" }}
               >
                 AI
               </Badge>
             </Tooltip>
           )}
-        </Text>
+        </Group>
       )}
     </Stack>
   );

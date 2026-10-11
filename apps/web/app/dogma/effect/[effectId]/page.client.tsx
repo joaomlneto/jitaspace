@@ -45,7 +45,6 @@ import {
   YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
-import { LinkedText } from "~/components/Text";
 import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import {
   DOGMA_DOMAIN_HINTS,
@@ -678,9 +677,9 @@ function EffectDescription({
     return (
       <Paper withBorder radius="md" p="md">
         <Stack gap="xs">
-          <Text>
-            <LinkedText text={resolved.text} />
-          </Text>
+          <MailMessageViewer
+            content={sanitizeFormattedEveString(resolved.text)}
+          />
           <Group gap={6}>
             <Badge size="xs" variant="light" color="gray">
               AI-generated
@@ -752,11 +751,6 @@ function ModifiersSection({
   attributes: Map<number, EffectAttribute>;
 }>) {
   const lines = useMemo(() => groupDogmaModifiers(modifiers), [modifiers]);
-  const byIndex = useMemo(
-    () =>
-      new Map(modifiers.map((modifier) => [modifier.modifierIndex, modifier])),
-    [modifiers],
-  );
   return (
     <Stack gap="sm">
       <SectionHeading icon={<WindowFittingIcon size={18} alt="" />}>
@@ -772,10 +766,7 @@ function ModifiersSection({
           <ModifierLineCard
             key={line.key}
             line={line}
-            modifiers={line.modifiers.flatMap((modifier) => {
-              const full = byIndex.get(modifier.modifierIndex);
-              return full ? [full] : [];
-            })}
+            modifiers={line.modifiers}
             attributes={attributes}
           />
         ))

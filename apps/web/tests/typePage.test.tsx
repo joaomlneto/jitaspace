@@ -81,7 +81,6 @@ jest.mock("~/components/Text", () => ({
   DogmaAttributeName: () => null,
   DogmaEffectName: () => null,
   GroupName: () => null,
-  LinkedText: ({ text }: { text: string }) => <>{text}</>,
   MarketGroupName: () => null,
 }));
 jest.mock("~/components/EveMail", () => ({

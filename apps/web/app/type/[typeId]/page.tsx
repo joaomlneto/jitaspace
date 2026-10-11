@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { HttpStatusCode } from "axios";
 
@@ -22,7 +23,7 @@ import {
   readNpcStats,
 } from "~/lib/npcStatsData";
 import { parsePositiveEntityId } from "~/lib/routeParams";
-import { cacheSdeRead } from "~/lib/sdeCache";
+import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
 import { buildTypeListRuleIndex, matchTypeLists } from "~/lib/typeLists";
 import TypePage from "./page.client";
 import { emptyTypeDogmaMeta } from "./types";
@@ -120,10 +121,15 @@ function nonEmpty(value: string | null | undefined): string | undefined {
  *
  * A failure throws rather than degrading here: the caller catches it, so a
  * database blip is never what gets written into the cache entry.
+ *
+ * Not `cacheSdeRead()`: effects' `customDescription` is written by our own
+ * script, not by the SDE ingest, so the entry keeps a daily `cacheLife` and
+ * only adds the SDE tag, as `app/lp-store/page.tsx` does.
  */
 async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   "use cache";
-  cacheSdeRead();
+  cacheLife("days");
+  cacheTag(SDE_CACHE_TAG);
 
   const [rows, effectRows] = await Promise.all([
     prisma.typeAttribute.findMany({
@@ -187,13 +193,13 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
 
   const effects: TypeDogmaMeta["effects"] = {};
   for (const { effectId, effect } of effectRows) {
+    const description = resolveEffectDescription(
+      effect.description,
+      effect.customDescription,
+    );
     effects[effectId] = {
       name: nonEmpty(effect.displayName) ?? effect.name ?? undefined,
-      description:
-        resolveEffectDescription(
-          effect.description,
-          effect.customDescription,
-        ) ?? undefined,
+      description: description ?? undefined,
     };
   }
 

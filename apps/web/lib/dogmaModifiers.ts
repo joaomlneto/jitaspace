@@ -84,7 +84,7 @@ export function dogmaDomainNoun(domain: string | null): string {
  * attributes or stopped effects they cover. `modifiers` keeps every source
  * row, verbatim, in SDE order.
  */
-export interface DogmaModifierLine {
+export interface DogmaModifierLine<T extends DogmaModifier = DogmaModifier> {
   key: string;
   func: string;
   domain: string | null;
@@ -94,7 +94,7 @@ export interface DogmaModifierLine {
   groupIds: number[];
   modifiedAttributeIds: number[];
   targetEffectIds: number[];
-  modifiers: DogmaModifier[];
+  modifiers: T[];
 }
 
 const pushUnique = (list: number[], value: number | null) => {
@@ -103,12 +103,12 @@ const pushUnique = (list: number[], value: number | null) => {
 
 const listKey = (list: number[]) => list.join(",");
 
-function mergeBy(
-  lines: DogmaModifierLine[],
-  keyOf: (line: DogmaModifierLine) => string,
-  merge: (into: DogmaModifierLine, from: DogmaModifierLine) => void,
-): DogmaModifierLine[] {
-  const merged = new Map<string, DogmaModifierLine>();
+function mergeBy<T extends DogmaModifier>(
+  lines: DogmaModifierLine<T>[],
+  keyOf: (line: DogmaModifierLine<T>) => string,
+  merge: (into: DogmaModifierLine<T>, from: DogmaModifierLine<T>) => void,
+): DogmaModifierLine<T>[] {
+  const merged = new Map<string, DogmaModifierLine<T>>();
   for (const line of lines) {
     const key = keyOf(line);
     const existing = merged.get(key);
@@ -135,15 +135,15 @@ const baseKey = (line: DogmaModifierLine) =>
  * Collapse modifiers into sentences, in three passes: first the same change
  * applied to several groups, then several attributes changed the same way,
  * then several effects stopped together. Lines keep the position of their
- * first modifier.
+ * first modifier. Each line holds the caller's own modifier objects.
  */
-export function groupDogmaModifiers(
-  modifiers: readonly DogmaModifier[],
-): DogmaModifierLine[] {
+export function groupDogmaModifiers<T extends DogmaModifier>(
+  modifiers: readonly T[],
+): DogmaModifierLine<T>[] {
   const sorted = [...modifiers].sort(
     (a, b) => a.modifierIndex - b.modifierIndex,
   );
-  let lines: DogmaModifierLine[] = sorted.map((modifier) => ({
+  let lines: DogmaModifierLine<T>[] = sorted.map((modifier) => ({
     key: String(modifier.modifierIndex),
     func: modifier.func,
     domain: modifier.domain,

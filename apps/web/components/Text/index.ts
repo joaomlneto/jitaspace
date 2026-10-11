@@ -15,4 +15,3 @@ export * from "./StargateName";
 export * from "./StarName";
 export * from "./WarAggressorName";
 export * from "./WarDefenderName";
-export * from "./LinkedText";

@@ -476,8 +476,9 @@ model DogmaEffect {
   /// for now) for effects whose own `description` is empty or boilerplate.
   /// No ingest writes it — ingestSdeTable and the ESI scraper only write the
   /// columns they produce — so it survives every SDE and ESI update. The pages
-  /// that show it read it under cacheSdeRead(), so after writing it run the
-  /// revalidate-sde-cache job. Written by packages/background-jobs/scripts/describe-dogma-effects.ts.
+  /// that show it cache it for a day; run the revalidate-sde-cache job to show
+  /// new text at once. Written by
+  /// packages/background-jobs/scripts/describe-dogma-effects.ts.
   customDescription String?
 
   types                Type[]
