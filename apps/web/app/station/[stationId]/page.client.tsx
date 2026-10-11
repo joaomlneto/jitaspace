@@ -449,7 +449,7 @@ function OverviewPanel({
               label="Divisions"
               value={station.agentDivisions
                 .map((division) => division.name)
-                .sort()
+                .sort((a, b) => a.localeCompare(b))
                 .join(", ")}
             />
           </SimpleGrid>

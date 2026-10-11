@@ -239,7 +239,7 @@ beforeEach(() => {
 describe("readStation", () => {
   it("is null for a station we have not stored", async () => {
     prismaMock.station.findUnique.mockResolvedValue(null);
-    await expect(loadData().readStation(999)).resolves.toBe(null);
+    await expect(loadData().readStation(999)).resolves.toBeNull();
     expect(prismaMock.stationOperation.findUnique).not.toHaveBeenCalled();
   });
 
@@ -247,7 +247,7 @@ describe("readStation", () => {
     prismaMock.station.findUnique.mockResolvedValue(
       stationRow({ isDeleted: true }),
     );
-    await expect(loadData().readStation(JITA_44)).resolves.toBe(null);
+    await expect(loadData().readStation(JITA_44)).resolves.toBeNull();
   });
 
   it("looks a moon orbit up alone, without the planet and star reads", async () => {
@@ -375,8 +375,8 @@ describe("readStation", () => {
     expect(
       prismaMock.stationStandingsRestriction.findMany,
     ).not.toHaveBeenCalled();
-    expect(station?.owner).toBe(null);
-    expect(station?.faction).toBe(null);
+    expect(station?.owner).toBeNull();
+    expect(station?.faction).toBeNull();
   });
 
   it("names a planet or star orbit, and none for an unknown celestial", async () => {
