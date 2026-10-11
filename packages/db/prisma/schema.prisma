@@ -477,7 +477,7 @@ model DogmaEffect {
   /// No ingest writes it — ingestSdeTable and the ESI scraper only write the
   /// columns they produce — so it survives every SDE and ESI update. The pages
   /// that show it read it under cacheSdeRead(), so after writing it run the
-  /// revalidate-sde-cache job. Written by apps/web/scripts/describe-dogma-effects.
+  /// revalidate-sde-cache job. Written by packages/background-jobs/scripts/describe-dogma-effects.ts.
   customDescription String?
 
   types                Type[]

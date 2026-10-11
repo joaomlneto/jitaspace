@@ -45,6 +45,7 @@ import {
   YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { LinkedText } from "~/components/Text";
 import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import {
   DOGMA_DOMAIN_HINTS,
@@ -677,7 +678,9 @@ function EffectDescription({
     return (
       <Paper withBorder radius="md" p="md">
         <Stack gap="xs">
-          <Text style={{ whiteSpace: "pre-line" }}>{resolved.text}</Text>
+          <Text>
+            <LinkedText text={resolved.text} />
+          </Text>
           <Group gap={6}>
             <Badge size="xs" variant="light" color="gray">
               AI-generated

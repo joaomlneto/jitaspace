@@ -92,6 +92,7 @@ import {
   DogmaAttributeName,
   DogmaEffectName,
   GroupName,
+  LinkedText,
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
@@ -231,7 +232,7 @@ function TypeEffectCell({
       </DogmaEffectAnchor>
       {description && (
         <Text size="xs" c="dimmed">
-          {description.text}
+          <LinkedText text={description.text} />
           {description.source === "ai" && (
             <Tooltip
               label="AI-generated from this effect's data, not written by CCP"

@@ -29,6 +29,8 @@ jest.mock("next/cache", () => ({
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => s,
+  renderEveHref: (href: string) =>
+    href.startsWith("showinfo:") ? `/type/${href.slice(9)}` : href,
 }));
 
 // Anchors render their text; DogmaAttributeValue renders its raw value.
@@ -319,11 +321,16 @@ describe("Dogma effect page (client)", () => {
 
   it("shows the custom description, labelled, in place of CCP's placeholder", () => {
     renderPage({
-      customDescription: "Increases the tracking speed of energy turrets.",
+      customDescription:
+        'Increases the <a href="/dogma/attribute/160">Turret Tracking</a> per <a href="showinfo:3300">Gunnery</a> level.',
     });
     expect(
-      screen.getByText("Increases the tracking speed of energy turrets."),
-    ).toBeInTheDocument();
+      screen.getByRole("link", { name: "Turret Tracking" }),
+    ).toHaveAttribute("href", "/dogma/attribute/160");
+    expect(screen.getByRole("link", { name: "Gunnery" })).toHaveAttribute(
+      "href",
+      "/type/3300",
+    );
     expect(screen.getByText("AI-generated")).toBeInTheDocument();
     expect(screen.queryByTestId("mail-viewer")).not.toBeInTheDocument();
   });
