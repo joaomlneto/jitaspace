@@ -6,11 +6,20 @@ import { HttpStatusCode } from "axios";
 import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
+import type { InsurancePricePeriod } from "~/lib/insurance";
+import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { loadEntityHistory } from "~/lib/history-entity-page";
+import { readLatestTypeInsurance } from "~/lib/insuranceData";
 import { pageMetadata, toDescription } from "~/lib/metadata";
+import { hasCombatStats } from "~/lib/npcStats";
+import {
+  COMBAT_STATS_CATEGORY_IDS,
+  DRONE_CATEGORY_ID,
+  readNpcStats,
+} from "~/lib/npcStatsData";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead } from "~/lib/sdeCache";
 import { buildTypeListRuleIndex, matchTypeLists } from "~/lib/typeLists";
@@ -173,6 +182,52 @@ async function getTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
 }
 
 /**
+ * An NPC's or drone's combat figures (damage by type, hit points and
+ * resistances, speed, electronic warfare, repair, mining), computed from its
+ * dogma attributes and effects. Null when it has none worth showing.
+ *
+ * A failure throws rather than degrading here: the caller catches it, so a
+ * database blip is never what gets written into the cache entry.
+ */
+async function readTypeNpcStats(
+  typeId: number,
+  categoryId: number,
+): Promise<NpcStats | null> {
+  "use cache";
+  cacheSdeRead();
+  const stats = (await readNpcStats([typeId])).get(typeId);
+  if (!stats || !hasCombatStats(stats)) return null;
+  // A drone that neither shoots nor does anything else is a mutated drone's
+  // template, whose real figures come from the mutaplasmid's rolls.
+  if (
+    categoryId === DRONE_CATEGORY_ID &&
+    stats.weapons.length === 0 &&
+    stats.ewar.length === 0
+  ) {
+    return null;
+  }
+  return stats;
+}
+
+/**
+ * Combat figures for NPCs and drones only: a player ship's damage comes from
+ * its fitted modules, not from its own attributes. The page renders fine
+ * without them, so a database failure just leaves the tab out.
+ */
+async function getTypeNpcStats(
+  typeId: number,
+  categoryId: number | undefined,
+): Promise<NpcStats | null> {
+  if (categoryId === undefined) return null;
+  if (!COMBAT_STATS_CATEGORY_IDS.includes(categoryId)) return null;
+  try {
+    return await readTypeNpcStats(typeId, categoryId);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Every variation of a base item — the base itself and each Tech II, faction,
  * storyline, deadspace and officer version whose `variationParentTypeId`
  * points at it — ordered by meta level, then name. Keyed by the base, so every
@@ -316,6 +371,20 @@ async function getTypeTypeLists(
   }
 }
 
+/**
+ * The ship's latest insurance prices, for its Insurance tab. The page renders
+ * fine without them, so a database failure just leaves the tab out.
+ */
+async function getTypeInsurance(
+  typeId: number,
+): Promise<InsurancePricePeriod | null> {
+  try {
+    return await readLatestTypeInsurance(typeId);
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -377,11 +446,14 @@ async function PageContent({
   // Not awaited: the History tab streams it in after the rest of the page, so
   // the item's first byte never waits on seconds of history reads.
   const history = loadEntityHistory("type", typeId);
-  const [dogmaMeta, variations, typeLists] = await Promise.all([
-    getTypeDogmaMeta(typeId),
-    getTypeVariations(data.variationBaseTypeId),
-    getTypeTypeLists(typeId, data.groupId, data.categoryId),
-  ]);
+  const [dogmaMeta, variations, typeLists, npcStats, insurance] =
+    await Promise.all([
+      getTypeDogmaMeta(typeId),
+      getTypeVariations(data.variationBaseTypeId),
+      getTypeTypeLists(typeId, data.groupId, data.categoryId),
+      getTypeNpcStats(typeId, data.categoryId),
+      getTypeInsurance(typeId),
+    ]);
   return (
     <TypePage
       {...props}
@@ -389,6 +461,8 @@ async function PageContent({
       variations={variations}
       typeLists={typeLists}
       history={history}
+      npcStats={npcStats}
+      insurance={insurance}
     />
   );
 }

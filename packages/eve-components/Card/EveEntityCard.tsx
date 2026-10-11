@@ -39,7 +39,7 @@ export const EveEntityCard = memo(({ entityId }: EveEntityCardProps) => {
       }}
     >
       <Group>
-        <EveEntityAvatar entityId={entityId} size="xl" radius={120} mx="auto" />
+        <EveEntityAvatar entityId={entityId} size="xl" radius="md" mx="auto" />
       </Group>
       <Text ta="center" fz="lg" fw={500} mt="md">
         {name}

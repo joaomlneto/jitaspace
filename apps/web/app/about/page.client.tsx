@@ -1,25 +1,159 @@
 "use client";
 
+import type { Components } from "react-markdown";
 import {
   ActionIcon,
   Anchor,
+  Avatar,
   Container,
   Group,
   List,
+  Paper,
+  SimpleGrid,
   Stack,
   Table,
   Text,
   Title,
 } from "@mantine/core";
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
+import Markdown from "react-markdown";
 import { Email } from "react-obfuscate-email";
 
-import { CharacterAnchor, CharacterName } from "@jitaspace/eve-components";
-import { CharacterAvatar } from "@jitaspace/ui";
+import {
+  CharacterAnchor,
+  CharacterName,
+  CorporationName,
+} from "@jitaspace/eve-components";
+import {
+  CharacterAvatar,
+  CorporationAnchor,
+  CorporationAvatar,
+} from "@jitaspace/ui";
 
 import { env } from "~/env";
+import acknowledgements from "./acknowledgements.json";
 
 const MY_CHARACTER_ID = 401563624;
+
+/**
+ * Someone to thank: an EVE character or corporation (named and pictured from
+ * ESI) or anyone else by name, and why, in Markdown.
+ */
+type Acknowledgement = { reason: string } & (
+  | { characterId: number }
+  | { corporationId: number }
+  | { name: string }
+);
+
+const ACKNOWLEDGEMENTS: readonly Acknowledgement[] = acknowledgements;
+
+const PORTRAIT_SIZE = 44;
+
+/** A stable React key: the EVE id, or the plain name. */
+function acknowledgementKey(acknowledgement: Acknowledgement) {
+  if ("characterId" in acknowledgement) return acknowledgement.characterId;
+  if ("corporationId" in acknowledgement) return acknowledgement.corporationId;
+  return acknowledgement.name;
+}
+
+/** Their portrait or logo from ESI, or initials for a plain name. */
+function AcknowledgementAvatar({
+  acknowledgement,
+}: Readonly<{ acknowledgement: Acknowledgement }>) {
+  if ("characterId" in acknowledgement) {
+    return (
+      <CharacterAvatar
+        characterId={acknowledgement.characterId}
+        size={PORTRAIT_SIZE}
+      />
+    );
+  }
+  if ("corporationId" in acknowledgement) {
+    return (
+      <CorporationAvatar
+        corporationId={acknowledgement.corporationId}
+        size={PORTRAIT_SIZE}
+      />
+    );
+  }
+  return (
+    <Avatar name={acknowledgement.name} color="initials" size={PORTRAIT_SIZE} />
+  );
+}
+
+/** Their name from ESI, linked to their page, or the plain name. */
+function AcknowledgementName({
+  acknowledgement,
+}: Readonly<{ acknowledgement: Acknowledgement }>) {
+  if ("characterId" in acknowledgement) {
+    const { characterId } = acknowledgement;
+    return (
+      <CharacterAnchor
+        size="sm"
+        fw={600}
+        characterId={characterId}
+        target="_blank"
+      >
+        <CharacterName span inherit characterId={characterId} />
+      </CharacterAnchor>
+    );
+  }
+  if ("corporationId" in acknowledgement) {
+    const { corporationId } = acknowledgement;
+    return (
+      <CorporationAnchor
+        size="sm"
+        fw={600}
+        corporationId={corporationId}
+        target="_blank"
+      >
+        <CorporationName span inherit corporationId={corporationId} />
+      </CorporationAnchor>
+    );
+  }
+  return (
+    <Text size="sm" fw={600}>
+      {acknowledgement.name}
+    </Text>
+  );
+}
+
+/**
+ * One person or corporation to thank: their portrait or logo and name from
+ * ESI (or initials and the plain name), and why underneath.
+ */
+function AcknowledgementCard({
+  acknowledgement,
+}: Readonly<{ acknowledgement: Acknowledgement }>) {
+  return (
+    <Paper component="li" withBorder radius="md" p="sm">
+      <Group align="flex-start" gap="sm" wrap="nowrap">
+        <AcknowledgementAvatar acknowledgement={acknowledgement} />
+        <Stack gap={2} style={{ minWidth: 0 }}>
+          <AcknowledgementName acknowledgement={acknowledgement} />
+          <Text size="sm" c="dimmed">
+            <Reason markdown={acknowledgement.reason} />
+          </Text>
+        </Stack>
+      </Group>
+    </Paper>
+  );
+}
+
+/** Reasons render inline in their card, their links opening in a new tab. */
+const REASON_COMPONENTS: Components = {
+  p: ({ children }) => children,
+  a: ({ href, children }) => (
+    <Anchor inherit href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </Anchor>
+  ),
+};
+
+/** Why: the acknowledgement's reason, in Markdown. */
+function Reason({ markdown }: Readonly<{ markdown: string }>) {
+  return <Markdown components={REASON_COMPONENTS}>{markdown}</Markdown>;
+}
 
 export default function PageClient() {
   return (
@@ -154,33 +288,22 @@ export default function PageClient() {
           </Anchor>
           . Some special mentions:
         </Text>
-        <List size="sm">
-          <List.Item>
-            <CharacterAnchor inherit characterId={90506825} target="_blank">
-              Inomares
-            </CharacterAnchor>{" "}
-            for{" "}
-            <Anchor inherit href="https://www.hoboleaks.space" target="_blank">
-              Hoboleaks
-            </Anchor>{" "}
-            and his diligence in helping fellow third party developers.
-          </List.Item>
-          <List.Item>
-            Kenn from{" "}
-            <Anchor inherit href="https://everef.net" target="_blank">
-              Eve Ref
-            </Anchor>
-            , for putting up with my questions, for sharing his code, and for
-            all the invaluable tips.
-          </List.Item>
-          <List.Item>
-            <CharacterAnchor inherit characterId={2113325640} target="_blank">
-              Nyx Viliana
-            </CharacterAnchor>{" "}
-            and the The Outuni Project incursions community, for some cool ideas
-            and all the ISK.
-          </List.Item>
-        </List>
+        <SimpleGrid
+          component="ul"
+          aria-label="Special mentions"
+          cols={{ base: 1, sm: 2 }}
+          spacing="sm"
+          p={0}
+          m={0}
+          style={{ listStyle: "none" }}
+        >
+          {ACKNOWLEDGEMENTS.map((acknowledgement) => (
+            <AcknowledgementCard
+              key={acknowledgementKey(acknowledgement)}
+              acknowledgement={acknowledgement}
+            />
+          ))}
+        </SimpleGrid>
         <Text size="sm">
           Written in{" "}
           <Anchor href="https://www.typescriptlang.org/" target="_blank">

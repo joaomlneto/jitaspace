@@ -15,9 +15,17 @@ const typeAttributeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const typeEffectFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const metaGroupFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeListEntryFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const dogmaEffectFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const dogmaEffectModifierFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const dogmaAttributeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 
 jest.mock("~/lib/db", () => ({
@@ -28,8 +36,14 @@ jest.mock("~/lib/db", () => ({
       findMany: (a?: unknown) => typeFindMany(a),
     },
     typeAttribute: { findMany: (a?: unknown) => typeAttributeFindMany(a) },
+    typeEffect: { findMany: (a?: unknown) => typeEffectFindMany(a) },
     metaGroup: { findMany: (a?: unknown) => metaGroupFindMany(a) },
     typeListEntry: { findMany: (a?: unknown) => typeListEntryFindMany(a) },
+    dogmaEffect: { findMany: (a?: unknown) => dogmaEffectFindMany(a) },
+    dogmaEffectModifier: {
+      findMany: (a?: unknown) => dogmaEffectModifierFindMany(a),
+    },
+    dogmaAttribute: { findMany: (a?: unknown) => dogmaAttributeFindMany(a) },
   },
 }));
 
@@ -90,8 +104,12 @@ beforeEach(() => {
   typeFindUniqueOrThrow.mockReset();
   typeAttributeFindMany.mockReset().mockResolvedValue([]);
   typeFindMany.mockReset().mockResolvedValue([]);
+  typeEffectFindMany.mockReset().mockResolvedValue([]);
   metaGroupFindMany.mockReset().mockResolvedValue([]);
   typeListEntryFindMany.mockReset().mockResolvedValue([]);
+  dogmaEffectFindMany.mockReset().mockResolvedValue([]);
+  dogmaEffectModifierFindMany.mockReset().mockResolvedValue([]);
+  dogmaAttributeFindMany.mockReset().mockResolvedValue([]);
   globalThis.fetch = jest.fn(() =>
     Promise.resolve({ status: 200, json: () => Promise.resolve([]) }),
   ) as unknown as typeof globalThis.fetch;
@@ -516,5 +534,151 @@ describe("type route type lists", () => {
 
     expect(props.typeLists).toEqual([]);
     expect(props.typeName).toBe("Capsule");
+  });
+});
+
+describe("type route NPC combat stats", () => {
+  const typeRow = (categoryId: number) => ({
+    typeId: 3484,
+    name: "Citizen Astur",
+    description: "",
+    variationParentTypeId: null,
+    groupId: 1056,
+    group: {
+      name: "Incursion Sansha's Nation Battleship",
+      categoryId,
+      category: { name: "Entity" },
+    },
+  });
+  // The combat read selects `value`; the dogma-metadata read selects the
+  // attribute's presentation instead and gets no rows here.
+  const statRows = (where: { typeId: { in: number[] } }) =>
+    where.typeId.in.includes(3484)
+      ? [
+          { typeId: 3484, attributeId: 263, value: 41800 },
+          { typeId: 3484, attributeId: 271, value: 0.32 },
+          { typeId: 3484, attributeId: 507, value: 2210 },
+          { typeId: 3484, attributeId: 212, value: 10 },
+          { typeId: 3484, attributeId: 506, value: 5500 },
+        ]
+      : [
+          { typeId: 2210, attributeId: 116, value: 225 },
+          { typeId: 2210, attributeId: 117, value: 225 },
+        ];
+  const mockAttributes = () =>
+    typeAttributeFindMany.mockImplementation((args) => {
+      const query = args as {
+        select: Record<string, unknown>;
+        where: { typeId: number | { in: number[] } };
+      };
+      if (!("value" in query.select) || typeof query.where.typeId === "number")
+        return Promise.resolve([]);
+      return Promise.resolve(
+        statRows(query.where as { typeId: { in: number[] } }),
+      );
+    });
+
+  it("computes an NPC's damage, with its missile's, and hit points", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(11));
+    mockAttributes();
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "3484",
+    });
+
+    const stats = props.npcStats as {
+      alpha: Record<string, number>;
+      shield: { hp: number; ehp: number };
+    };
+    expect(stats.alpha).toEqual({
+      em: 0,
+      thermal: 0,
+      kinetic: 2250,
+      explosive: 2250,
+    });
+    expect(stats.shield.hp).toBe(41800);
+  });
+
+  it("computes a drone's, with what its effects say it does", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue({
+      ...typeRow(18),
+      typeId: 23536,
+      name: "Berserker SW-900",
+    });
+    typeAttributeFindMany.mockImplementation((args) => {
+      const query = args as { select: Record<string, unknown> };
+      return Promise.resolve(
+        "value" in query.select
+          ? [
+              { typeId: 23536, attributeId: 9, value: 235 },
+              { typeId: 23536, attributeId: 20, value: -20 },
+              { typeId: 23536, attributeId: 54, value: 10000 },
+              { typeId: 23536, attributeId: 73, value: 5000 },
+            ]
+          : [],
+      );
+    });
+    typeEffectFindMany.mockResolvedValue([{ typeId: 23536, effectId: 6690 }]);
+    // What the SDE says the web effect reads: a drone's generic range and
+    // duration.
+    dogmaEffectFindMany.mockResolvedValue([
+      {
+        effectId: 6690,
+        name: "remoteWebifierEntity",
+        isOffensive: true,
+        isAssistance: false,
+        rangeAttributeId: 54,
+        falloffAttributeId: null,
+        durationAttributeId: 73,
+      },
+    ]);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "23536",
+    });
+
+    const stats = props.npcStats as { ewar: { label: string }[] };
+    expect(stats.ewar.map((e) => e.label)).toEqual(["Stasis Webifier"]);
+  });
+
+  it("leaves out a drone that neither shoots nor does anything else", async () => {
+    // A mutated drone's template: hit points, but no weapon and no effect.
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(18));
+    typeAttributeFindMany.mockImplementation((args) => {
+      const query = args as { select: Record<string, unknown> };
+      return Promise.resolve(
+        "value" in query.select
+          ? [{ typeId: 3484, attributeId: 9, value: 100 }]
+          : [],
+      );
+    });
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "3484",
+    });
+
+    expect(props.npcStats).toBeNull();
+  });
+
+  it("leaves anything that is not an NPC without combat stats", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(6));
+    mockAttributes();
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "3484",
+    });
+
+    expect(props.npcStats).toBeNull();
+  });
+
+  it("drops the combat stats when the query fails", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(11));
+    typeAttributeFindMany.mockRejectedValue(new Error("connection lost"));
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "3484",
+    });
+
+    expect(props.npcStats).toBeNull();
   });
 });

@@ -31,8 +31,9 @@ export interface NewsItem {
 /**
  * News / update items shown at the top of the home page.
  *
- * Newest first. Add an entry to publish; remove it (or set `expiresAt`) to
- * retire it. Each `id` must be unique and stable — it is the key used to
+ * The carousel shows them newest first by publish date (`publishAt`, else
+ * `date`), so their order here does not matter. Add an entry to publish; remove
+ * it (or set `expiresAt`) to retire it. Each `id` must be unique and stable — it is the key used to
  * remember that a user has dismissed the item.
  *
  * The three content categories this is built for:
@@ -41,6 +42,27 @@ export interface NewsItem {
  *  3. A recurring "support the project" reminder — no image needed.
  */
 export const newsItems: NewsItem[] = [
+  {
+    // Seasonal event — shown only while it runs: 6 Oct to 3 Nov 2026, downtime
+    // (11:00 UTC) to downtime.
+    id: "event-crimson-harvest-2026",
+    title: "Crimson Harvest",
+    message:
+      "Side with the Blood Raiders or the Order of St. Tetrimon and earn exclusive SKINs and an Akoman blueprint. Runs until 3 November.",
+    date: "2026-10-06",
+    publishAt: "2026-10-06T11:00:00Z",
+    expiresAt: "2026-11-03T11:00:00Z",
+    color: "#f01408", // the Crimson Harvest theme's primary (crimson.6)
+    // A 1280x720 WebP (79 KB) of the event key art: the card is never wider
+    // than ~520 CSS px, and the art's grain compresses poorly at 1600 px.
+    image:
+      "/wallpapers/2026-crimson-harvest/crimson-harvest-nologo-banner.webp",
+    link: {
+      label: "Read about the event",
+      href: "https://www.eveonline.com/news/view/crimson-harvest-the-bloodgates-are-open",
+      external: true,
+    },
+  },
   {
     // EVE expansion — scheduled: stays hidden until it goes live (9 Jun 2026, 11:00 UTC).
     id: "expansion-cradle-of-war",

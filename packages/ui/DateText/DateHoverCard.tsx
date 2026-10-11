@@ -19,6 +19,37 @@ function formatUtc(date: Date): string {
   return `${date.getUTCFullYear()}-${padTwo(date.getUTCMonth() + 1)}-${padTwo(date.getUTCDate())} ${padTwo(date.getUTCHours())}:${padTwo(date.getUTCMinutes())}:${padTwo(date.getUTCSeconds())}`;
 }
 
+/**
+ * A component of its own, so the relative time ("3 hours ago") is computed
+ * only while the card is open. Built inline, it read the clock on every
+ * render, which makes a page prerendered under `cacheComponents` dynamic.
+ */
+function DateHoverCardContent({ date }: Readonly<{ date: Date }>) {
+  return (
+    <Stack gap="xs">
+      <Text size="sm" fw={500}>
+        {formatDistanceToNow(date, { addSuffix: true })}
+      </Text>
+      <Group justify="space-between" gap="xs" wrap="nowrap">
+        <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+          Local
+        </Text>
+        <Text size="xs" style={{ textAlign: "right" }}>
+          {format(date, "yyyy-MM-dd HH:mm:ss")}
+        </Text>
+      </Group>
+      <Group justify="space-between" gap="xs" wrap="nowrap">
+        <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
+          EVE Time
+        </Text>
+        <Text size="xs" style={{ textAlign: "right" }}>
+          {formatUtc(date)}
+        </Text>
+      </Group>
+    </Stack>
+  );
+}
+
 export const DateHoverCard = memo(
   ({ date, children, ...hoverCardProps }: DateHoverCardProps) => {
     if (!date) return <>{children}</>;
@@ -36,27 +67,7 @@ export const DateHoverCard = memo(
           <span style={{ cursor: "default" }}>{children}</span>
         </HoverCard.Target>
         <HoverCard.Dropdown>
-          <Stack gap="xs">
-            <Text size="sm" fw={500}>
-              {formatDistanceToNow(date, { addSuffix: true })}
-            </Text>
-            <Group justify="space-between" gap="xs" wrap="nowrap">
-              <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-                Local
-              </Text>
-              <Text size="xs" style={{ textAlign: "right" }}>
-                {format(date, "yyyy-MM-dd HH:mm:ss")}
-              </Text>
-            </Group>
-            <Group justify="space-between" gap="xs" wrap="nowrap">
-              <Text size="xs" c="dimmed" style={{ flexShrink: 0 }}>
-                EVE Time
-              </Text>
-              <Text size="xs" style={{ textAlign: "right" }}>
-                {formatUtc(date)}
-              </Text>
-            </Group>
-          </Stack>
+          <DateHoverCardContent date={date} />
         </HoverCard.Dropdown>
       </HoverCard>
     );

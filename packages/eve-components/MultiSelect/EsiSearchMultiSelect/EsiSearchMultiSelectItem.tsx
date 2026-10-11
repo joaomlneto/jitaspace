@@ -25,9 +25,9 @@ export function EsiSearchMultiSelectItem({
     <Group wrap="nowrap" justify="space-between">
       <Group wrap="nowrap" gap="xs">
         {value ? (
-          <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
+          <EveEntityAvatar entityId={value} size={16} mr={10} />
         ) : (
-          <Avatar size={16} mr={10} radius="xl" />
+          <Avatar size={16} mr={10} />
         )}
         {value ? (
           <EveEntityName

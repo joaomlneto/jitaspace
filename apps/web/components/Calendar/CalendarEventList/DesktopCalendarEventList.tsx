@@ -1,5 +1,5 @@
 import type { TableProps } from "@mantine/core";
-import { Anchor, Group, Table, Title } from "@mantine/core";
+import { Anchor, Group, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
 import type { CalendarEvent } from "@jitaspace/hooks";
@@ -45,12 +45,12 @@ export function DesktopCalendarEventList({
                       openContextModal({
                         modal: "viewCalendarEvent",
                         title: (
-                          <Title order={4}>
+                          <Text component="span" fz="h4" fw={700}>
                             {event.importance === 1 && (
                               <WarningIcon width={32} />
                             )}
                             {event.title}
-                          </Title>
+                          </Text>
                         ),
                         size: "lg",
                         innerProps: { characterId, eventId: event.event_id },

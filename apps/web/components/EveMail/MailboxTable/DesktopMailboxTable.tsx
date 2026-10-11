@@ -91,7 +91,11 @@ export const DesktopMailboxTable = ({
                     }
                     openContextModal({
                       modal: "viewMailMessage",
-                      title: <Text fw={700}>{mail.subject}</Text>,
+                      title: (
+                        <Text component="span" fw={700}>
+                          {mail.subject}
+                        </Text>
+                      ),
                       size: "xl",
                       innerProps: {
                         characterId,

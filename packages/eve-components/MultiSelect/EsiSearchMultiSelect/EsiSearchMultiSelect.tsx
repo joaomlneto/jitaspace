@@ -124,7 +124,7 @@ export const EsiSearchMultiSelect = memo(
               disabled={!interactive}
             >
               <Group wrap="nowrap" gap={rem(4)} align="center">
-                <EveEntityAvatar entityId={pillValue} size={22} radius="xl" />
+                <EveEntityAvatar entityId={pillValue} size={22} />
                 <EveEntityName entityId={pillValue} size="sm" />
               </Group>
             </Pill>

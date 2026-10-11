@@ -11,8 +11,9 @@ import { useDismissedNews } from "./useDismissedNews";
 
 export interface NewsCarouselProps extends UseDismissedNewsOptions {
   /**
-   * Extra cards to show after the curated ones — for generated content that
-   * isn't in `~/config/news`, such as the latest patch notes.
+   * Extra cards to show alongside the curated ones (all sorted by publish date)
+   * — for generated content that isn't in `~/config/news`, such as the latest
+   * patch notes.
    *
    * Their dismissal is the caller's business (it may not be id-based at all),
    * so they are passed in already-filtered and their close button calls
@@ -50,6 +51,15 @@ export function NewsCarouselPlaceholder() {
   return <Box aria-hidden h={NEWS_BANNER_HEIGHT} mb={CAROUSEL_MARGIN_BOTTOM} />;
 }
 
+/**
+ * When a card was (or goes) published: its scheduled `publishAt`, else its
+ * `date`. Undated cards sort after every dated one.
+ */
+function publishedTime(item: NewsItem): number {
+  const time = Date.parse(item.publishAt ?? item.date ?? "");
+  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
+}
+
 /** Flashy, image-forward banner cards in a horizontally-scrollable carousel. */
 export function NewsCarousel({
   extraItems,
@@ -60,7 +70,8 @@ export function NewsCarousel({
 
   if (!mounted) return <NewsCarouselPlaceholder />;
 
-  // Curated announcements lead; generated cards follow.
+  // Curated and generated cards together, newest first. The sort is stable, so
+  // cards published at the same moment (or undated) keep their given order.
   const slides: { item: NewsItem; onDismiss: () => void }[] = [
     ...activeItems.map((item) => ({
       item,
@@ -70,7 +81,10 @@ export function NewsCarousel({
       item,
       onDismiss: () => onDismissExtra?.(item.id),
     })),
-  ];
+  ].sort(
+    // `|| 0`: two undated cards subtract -Infinity from -Infinity, i.e. NaN.
+    (a, b) => publishedTime(b.item) - publishedTime(a.item) || 0,
+  );
 
   if (slides.length === 0) return null;
 

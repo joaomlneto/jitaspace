@@ -21,13 +21,12 @@ import {
 } from "@mantine/core";
 import {
   IconArrowsDiff,
-  IconCoin,
   IconExternalLink,
   IconFileText,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
   IconListDetails,
+  IconSwords,
   IconVersions,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
@@ -35,6 +34,11 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import {
+  CategoryIskIcon,
+  WindowInfoIcon,
+  WindowInsuranceIcon,
+} from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -56,6 +60,8 @@ import {
 import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
+import type { InsurancePricePeriod } from "~/lib/insurance";
+import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
@@ -72,6 +78,11 @@ import {
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
+  DamageTypeLegend,
+  NpcCombatStats,
+  NpcEwarTable,
+} from "~/components/NpcCombatStats";
+import {
   CategoryName,
   DogmaAttributeName,
   DogmaEffectName,
@@ -79,8 +90,10 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
+import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
+import { InsuranceTab } from "./InsuranceTab";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
@@ -204,6 +217,8 @@ export default function TypePage({
   variations = [],
   typeLists = [],
   history = NO_HISTORY,
+  npcStats = null,
+  insurance = null,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
@@ -214,6 +229,10 @@ export default function TypePage({
      * streaming (`loadEntityHistory`); null once resolved if that failed.
      */
     history?: Promise<EntityHistoryData | null>;
+    /** An NPC's combat figures; null for anything else. */
+    npcStats?: NpcStats | null;
+    /** A ship's latest insurance prices; null for anything never insured. */
+    insurance?: InsurancePricePeriod | null;
   }
 >) {
   const character = useSelectedCharacter();
@@ -260,10 +279,13 @@ export default function TypePage({
     () => typeLists.filter((typeList) => !isTypeListMember(typeList)),
     [typeLists],
   );
-  // `?tab=type-lists` on an item no list matches would select a tab that is
-  // not rendered, leaving the page blank; show the overview instead.
+  // `?tab=type-lists` on an item no list matches (or `?tab=combat` on one
+  // that is not an NPC) would select a tab that is not rendered, leaving the
+  // page blank; show the overview instead.
   const selectedTab =
-    activeTab === "type-lists" && typeLists.length === 0
+    (activeTab === "type-lists" && typeLists.length === 0) ||
+    (activeTab === "combat" && !npcStats) ||
+    (activeTab === "insurance" && !insurance)
       ? DEFAULT_TYPE_PAGE_TAB
       : activeTab;
 
@@ -556,10 +578,15 @@ export default function TypePage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
+            {npcStats && (
+              <Tabs.Tab value="combat" leftSection={<IconSwords size={16} />}>
+                Combat
+              </Tabs.Tab>
+            )}
             {hasAttributes && (
               <Tabs.Tab
                 value="attributes"
@@ -577,8 +604,21 @@ export default function TypePage({
               </Tabs.Tab>
             )}
             {hasMarket && (
-              <Tabs.Tab value="market" leftSection={<IconCoin size={16} />}>
+              <Tabs.Tab
+                value="market"
+                leftSection={
+                  <CategoryIskIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Market
+              </Tabs.Tab>
+            )}
+            {insurance && (
+              <Tabs.Tab
+                value="insurance"
+                leftSection={<WindowInsuranceIcon size={16} alt="" />}
+              >
+                Insurance
               </Tabs.Tab>
             )}
             {description && (
@@ -606,7 +646,7 @@ export default function TypePage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
                   Identity &amp; Classification
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -679,6 +719,36 @@ export default function TypePage({
               )}
             </Stack>
           </Tabs.Panel>
+
+          {/* Combat: an NPC's figures, computed from its dogma attributes */}
+          {npcStats && (
+            <Tabs.Panel value="combat" pt="lg">
+              <Stack gap="lg">
+                <Stack gap="sm">
+                  <SectionHeading icon={<IconSwords size={18} />}>
+                    Offense &amp; Defense
+                  </SectionHeading>
+                  <DamageTypeLegend />
+                  <NpcCombatStats stats={npcStats} />
+                  <Text size="xs" c="dimmed">
+                    Computed from its dogma attributes: turret damage from its
+                    own, missile damage from the missile it launches. EHP
+                    assumes an even spread of the four damage types.
+                    {categoryId === DRONE_CATEGORY_ID &&
+                      " These are the drone's base figures, before skills, ship bonuses and drone upgrades."}
+                  </Text>
+                </Stack>
+                {npcStats.ewar.length > 0 && (
+                  <Stack gap="sm">
+                    <SectionHeading icon={<IconSwords size={18} />}>
+                      Abilities
+                    </SectionHeading>
+                    <NpcEwarTable ewar={npcStats.ewar} />
+                  </Stack>
+                )}
+              </Stack>
+            </Tabs.Panel>
+          )}
 
           {/* Attributes */}
           {hasAttributes && (
@@ -803,7 +873,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <TypeMarketBreadcrumbs typeId={typeId} fz="sm" />
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconCoin size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryIskIcon size={18} color="currentColor" alt="" />
+                    }
+                  >
                     Jita / The Forge
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="sm">
@@ -866,6 +940,13 @@ export default function TypePage({
                   </Text>
                 </Stack>
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Insurance */}
+          {insurance && (
+            <Tabs.Panel value="insurance" pt="lg">
+              <InsuranceTab typeId={typeId} latest={insurance} />
             </Tabs.Panel>
           )}
 

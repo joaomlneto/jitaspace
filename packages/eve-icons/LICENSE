@@ -1,0 +1,74 @@
+@jitaspace/eve-icons is made of two parts under different terms:
+
+  1. The source code, licensed under the MIT License below.
+  2. The icon artwork, which belongs to CCP hf. (Fenris Creations) and is
+     NOT covered by the MIT License.
+
+-------------------------------------------------------------------------------
+1. Source code
+-------------------------------------------------------------------------------
+
+Covers everything in this package except the artwork described in part 2:
+the scripts in scripts/, the runtime in src/ (outside src/generated/), the
+tests, and the configuration files.
+
+MIT License
+
+Copyright (c) 2025 Joao Neto
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+2. Icon artwork
+-------------------------------------------------------------------------------
+
+Covers every image in assets/, the artwork embedded as data URIs in the
+generated components (src/generated/ and dist/), and manifest.json's record of
+it.
+
+The images in assets/ are byte-for-byte copies of files in the EVE Online
+game client. The copies inlined into the components omit text metadata chunks
+(such as Adobe XMP); their pixels and colour information are unchanged.
+
+The artwork is the property of CCP hf., which trades as Fenris Creations
+(formerly CCP Games), and all rights in it are reserved. It is NOT licensed
+under the MIT License, and nothing in this package grants any right to use,
+copy, modify or distribute it.
+
+It is used here under the EVE Online Developer License Agreement
+(https://developers.eveonline.com/license-agreement). That agreement requires
+the following notice, reproduced as written:
+
+  © 2014 CCP hf. All rights reserved. "EVE", "EVE Online", "CCP", and all
+  related logos and images are trademarks or registered trademarks of CCP hf.
+
+The notice Fenris Creations currently publishes on https://www.eveonline.com:
+
+  EVE Online® and Fenris Creations™ and all related logos and other elements
+  are trademarks of Fenris Creations.
+
+  © 2026 Fenris Creations. All rights reserved.
+
+If you use this package, your right to use the artwork comes from your own
+standing with CCP hf. / Fenris Creations, for example your acceptance of the
+Developer License Agreement, not from this file. Keep both notices above with
+any copy of the artwork.
+
+This is an unofficial fan project. It is not affiliated with, endorsed,
+sponsored or approved by CCP hf. or Fenris Creations.
