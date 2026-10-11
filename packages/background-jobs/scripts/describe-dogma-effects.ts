@@ -54,6 +54,36 @@ const OUT_DIR = join(
   "node_modules/.cache/describe-dogma-effects",
 );
 
+/** Hull bonus attribute → the ship skills that multiply it by their level. */
+function skillsScaling(
+  rows: {
+    modifiedAttributeId: number | null;
+    effect: {
+      TypeEffect: {
+        type: {
+          typeId: number;
+          name: string;
+          group: { categoryId: number };
+        };
+      }[];
+    };
+  }[],
+): Map<number, Ref[]> {
+  const scaledBy = new Map<number, Ref[]>();
+  for (const { modifiedAttributeId, effect } of rows) {
+    if (modifiedAttributeId === null) continue;
+    const skills = scaledBy.get(modifiedAttributeId) ?? [];
+    for (const { type } of effect.TypeEffect) {
+      const known = skills.some((skill) => skill.id === type.typeId);
+      if (type.group.categoryId === SKILL_CATEGORY_ID && !known) {
+        skills.push({ id: type.typeId, name: type.name });
+      }
+    }
+    if (skills.length > 0) scaledBy.set(modifiedAttributeId, skills);
+  }
+  return scaledBy;
+}
+
 /** The model's input for each effect, from the database. */
 async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
   const effects = await prisma.dogmaEffect.findMany({
@@ -198,20 +228,7 @@ async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
   const valuesByType = new Map<string, number>(
     values.map((v) => [`${v.typeId}:${v.attributeId}`, v.value]),
   );
-  const scaledBy = new Map<number, Ref[]>();
-  for (const s of scaling) {
-    if (s.modifiedAttributeId === null) continue;
-    const skills = scaledBy.get(s.modifiedAttributeId) ?? [];
-    for (const { type } of s.effect.TypeEffect) {
-      if (
-        type.group.categoryId === SKILL_CATEGORY_ID &&
-        !skills.some((skill) => skill.id === type.typeId)
-      ) {
-        skills.push({ id: type.typeId, name: type.name });
-      }
-    }
-    if (skills.length > 0) scaledBy.set(s.modifiedAttributeId, skills);
-  }
+  const scaledBy = skillsScaling(scaling);
 
   return effects.map((e): EffectInput => {
     const own = carriers.filter((c) => c.effectId === e.effectId);
@@ -511,9 +528,8 @@ async function main() {
   }
 }
 
-main()
-  .catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(() => void prisma.$disconnect());
+try {
+  await main();
+} finally {
+  await prisma.$disconnect();
+}

@@ -165,7 +165,9 @@ export function problemWith(text: string, input: EffectInput): string | null {
   );
   if (/[<>]/.test(withoutLinks)) return "markup other than links";
   if (/&[#a-z0-9]+;/i.test(withoutLinks)) return "HTML entity";
-  if (/\d/.test(withoutLinks.replace(/[A-Za-z_]+\d+[A-Za-z_\d]*/g, ""))) {
+  // A word starting with a digit is a number; digits inside internal
+  // attribute names (shipBonusCarrierM1) are not.
+  if (withoutLinks.split(/\W+/).some((word) => /^\d/.test(word))) {
     return "a number";
   }
   if (withoutLinks.length === 0) return "empty";
