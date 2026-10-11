@@ -7,19 +7,8 @@
  *
  *   pnpm --filter @jitaspace/background-jobs describe-dogma-effects <command>
  *
- * Commands (reads the root .env: DATABASE_URL, ANTHROPIC_API_KEY):
- *   count                       how many effects lack a description
- *   payload <effectId>          print the model's input for one effect
- *   sample <effectId…>          describe a few effects now; prints, writes nothing
- *   submit [--all]              send every candidate to the Message Batches API
- *                               (--all: also effects that already have one)
- *   collect <batchId>           read a finished batch; redo failures one by one;
- *                               save the results to <outDir>/<batchId>.json
- *   write <file> [--overwrite]  store the results (--overwrite: replace
- *                               existing descriptions, else fill empty ones)
- *
- * After `write`, run the revalidate-sde-cache job: the pages read this column
- * under cacheSdeRead(), which only the SDE ingest refreshes.
+ * Commands (count, payload, sample, submit, collect, write) are documented in
+ * scripts/lib/describeWithClaude.ts.
  *
  * What a description may say, learned with the site owner:
  * - what changes, on which items, in which direction, and how it scales with
@@ -28,18 +17,11 @@
  * - plain text plus links (<a href="showinfo:TYPEID">, or a site path for a
  *   group, attribute or effect), and only to ids found in the input.
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import Anthropic from "@anthropic-ai/sdk";
 
-import type {
-  EffectInput,
-  Ref,
-  Result,
-} from "../utils/dogmaEffectDescriptions";
+import type { EffectInput, Ref } from "../utils/dogmaEffectDescriptions";
+import type { Describer } from "./lib/describeWithClaude";
 import { prisma } from "../db";
 import {
-  BOILERPLATE,
   checkDescription,
   directionOf,
   label,
@@ -47,42 +29,8 @@ import {
   SKILL_CATEGORY_ID,
   SYSTEM_PROMPT,
 } from "../utils/dogmaEffectDescriptions";
-
-const MODEL = "claude-opus-5-5";
-const OUT_DIR = join(
-  process.cwd(),
-  "node_modules/.cache/describe-dogma-effects",
-);
-
-/** Hull bonus attribute → the ship skills that multiply it by their level. */
-function skillsScaling(
-  rows: {
-    modifiedAttributeId: number | null;
-    effect: {
-      TypeEffect: {
-        type: {
-          typeId: number;
-          name: string;
-          group: { categoryId: number };
-        };
-      }[];
-    };
-  }[],
-): Map<number, Ref[]> {
-  const scaledBy = new Map<number, Ref[]>();
-  for (const { modifiedAttributeId, effect } of rows) {
-    if (modifiedAttributeId === null) continue;
-    const skills = scaledBy.get(modifiedAttributeId) ?? [];
-    for (const { type } of effect.TypeEffect) {
-      const known = skills.some((skill) => skill.id === type.typeId);
-      if (type.group.categoryId === SKILL_CATEGORY_ID && !known) {
-        skills.push({ id: type.typeId, name: type.name });
-      }
-    }
-    if (skills.length > 0) scaledBy.set(modifiedAttributeId, skills);
-  }
-  return scaledBy;
-}
+import { runDescriber } from "./lib/describeWithClaude";
+import { readSkillScaling } from "./lib/skillScaling";
 
 /** The model's input for each effect, from the database. */
 async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
@@ -156,7 +104,7 @@ async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
     }
   }
 
-  const [attributes, skills, values, scaling] = await Promise.all([
+  const [attributes, skills, values, scaledBy] = await Promise.all([
     prisma.dogmaAttribute.findMany({
       where: { attributeId: { in: [...attributeIds] } },
       select: {
@@ -186,36 +134,7 @@ async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
       },
       select: { typeId: true, attributeId: true, value: true },
     }),
-    // Hull bonus attributes a ship skill multiplies by its trained level.
-    prisma.dogmaEffectModifier.findMany({
-      where: {
-        isDeleted: false,
-        func: "ItemModifier",
-        domain: "shipID",
-        operator: { in: [0, 4] },
-        modifiedAttributeId: { in: [...modifyingIds] },
-        modifyingAttribute: { name: "skillLevel" },
-      },
-      select: {
-        modifiedAttributeId: true,
-        effect: {
-          select: {
-            TypeEffect: {
-              where: { isDeleted: false },
-              select: {
-                type: {
-                  select: {
-                    typeId: true,
-                    name: true,
-                    group: { select: { categoryId: true } },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    }),
+    readSkillScaling([...modifyingIds]),
   ]);
 
   const attributeById = new Map(attributes.map((a) => [a.attributeId, a]));
@@ -228,7 +147,6 @@ async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
   const valuesByType = new Map<string, number>(
     values.map((v) => [`${v.typeId}:${v.attributeId}`, v.value]),
   );
-  const scaledBy = skillsScaling(scaling);
 
   return effects.map((e): EffectInput => {
     const own = carriers.filter((c) => c.effectId === e.effectId);
@@ -326,210 +244,37 @@ async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
   });
 }
 
-/** Effects with modifiers and no real CCP description. */
+/**
+ * Every live effect, for completeness: also those CCP described (whose own
+ * text the pages show instead) and those without modifiers (implemented by
+ * the game, described from their name, category, flags and stats).
+ */
 async function candidateIds(includeDescribed: boolean): Promise<number[]> {
   const rows = await prisma.dogmaEffect.findMany({
     where: {
       isDeleted: false,
-      DogmaEffectModifiers: { some: { isDeleted: false } },
       ...(includeDescribed ? {} : { customDescription: null }),
     },
-    select: { effectId: true, description: true },
+    select: { effectId: true },
     orderBy: { effectId: "asc" },
   });
-  return rows
-    .filter((r) => {
-      const d = r.description?.trim() ?? "";
-      return d === "" || d === BOILERPLATE;
-    })
-    .map((r) => r.effectId);
+  return rows.map((r) => r.effectId);
 }
 
-function requestParams(input: EffectInput) {
-  return {
-    model: MODEL,
-    max_tokens: 4000,
-    output_config: { effort: "medium" as const },
-    system: [
-      {
-        type: "text" as const,
-        text: SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" as const },
-      },
-    ],
-    messages: [
-      {
-        role: "user" as const,
-        content: JSON.stringify(
-          {
-            effect: input.effect,
-            modifiers: input.modifiers,
-            itemsAreSkills: input.itemsAreSkills,
-          },
-          null,
-          1,
-        ),
-      },
-    ],
-  };
-}
+const describer: Describer<EffectInput> = {
+  noun: "effect",
+  table: "DogmaEffect",
+  idColumn: "effectId",
+  systemPrompt: SYSTEM_PROMPT,
+  idOf: (input) => input.effectId,
+  userContent: (input) => ({
+    effect: input.effect,
+    modifiers: input.modifiers,
+    itemsAreSkills: input.itemsAreSkills,
+  }),
+  check: checkDescription,
+  loadInputs,
+  candidateIds,
+};
 
-const textOf = (content: { type: string; text?: string }[]) =>
-  content
-    .flatMap((b) => (b.type === "text" && b.text ? [b.text] : []))
-    .join("")
-    .trim();
-
-/** One effect, now, with server-side fallbacks and one retry on a problem. */
-async function describeNow(
-  client: Anthropic,
-  input: EffectInput,
-): Promise<string | null> {
-  const params = requestParams(input);
-  const message = await client.beta.messages.create({
-    ...params,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-  });
-  if (message.stop_reason === "refusal") return null;
-  const first = textOf(message.content);
-  const problem = checkDescription(first, input);
-  if (!problem) return first;
-  const retry = await client.beta.messages.create({
-    ...params,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
-    messages: [
-      ...params.messages,
-      { role: "assistant", content: message.content },
-      {
-        role: "user",
-        content: `That has ${problem}. Rewrite it following every rule.`,
-      },
-    ],
-  });
-  const second = retry.stop_reason === "refusal" ? "" : textOf(retry.content);
-  return checkDescription(second, input) ? null : second;
-}
-
-async function submit(includeDescribed: boolean) {
-  const ids = await candidateIds(includeDescribed);
-  const inputs = await loadInputs(ids);
-  const batch = await new Anthropic().messages.batches.create({
-    requests: inputs.map((input) => ({
-      custom_id: `effect-${input.effectId}`,
-      params: requestParams(input),
-    })),
-  });
-  mkdirSync(OUT_DIR, { recursive: true });
-  console.log(`submitted ${inputs.length} effects as ${batch.id}`);
-}
-
-async function collect(batchId: string) {
-  const client = new Anthropic();
-  const batch = await client.messages.batches.retrieve(batchId);
-  if (batch.processing_status !== "ended") {
-    console.log(batch.processing_status, batch.request_counts);
-    return;
-  }
-  const texts = new Map<number, string>();
-  for await (const r of await client.messages.batches.results(batchId)) {
-    const effectId = Number(r.custom_id.replace("effect-", ""));
-    texts.set(
-      effectId,
-      r.result.type === "succeeded" &&
-        r.result.message.stop_reason === "end_turn"
-        ? textOf(r.result.message.content)
-        : "",
-    );
-  }
-  const inputs = await loadInputs([...texts.keys()]);
-  const results: Result[] = [];
-  let redone = 0;
-  const skipped: number[] = [];
-  for (const input of inputs) {
-    let text: string | null = texts.get(input.effectId) ?? "";
-    if (checkDescription(text, input)) {
-      redone++;
-      text = await describeNow(client, input);
-    }
-    if (text) results.push({ effectId: input.effectId, description: text });
-    else skipped.push(input.effectId);
-  }
-  results.sort((a, b) => a.effectId - b.effectId);
-  mkdirSync(OUT_DIR, { recursive: true });
-  const file = join(OUT_DIR, `${batchId}.json`);
-  writeFileSync(file, JSON.stringify(results, null, 1));
-  console.log(
-    `${results.length} descriptions in ${file}; ${redone} redone one by one; skipped: ${skipped.join(", ") || "none"}`,
-  );
-}
-
-/**
- * One `UPDATE … FROM (VALUES …)` per chunk rather than a row-by-row
- * transaction, which runs past Prisma's interactive-transaction timeout.
- */
-async function write(file: string, overwrite: boolean) {
-  const results = JSON.parse(readFileSync(file, "utf8")) as Result[];
-  let written = 0;
-  for (let i = 0; i < results.length; i += 500) {
-    const chunk = results.slice(i, i + 500);
-    const values = chunk
-      .map((_, j) => `($${2 * j + 1}::int, $${2 * j + 2}::text)`)
-      .join(", ");
-    written += await prisma.$executeRawUnsafe(
-      `UPDATE "DogmaEffect" AS e SET "customDescription" = v.d
-       FROM (VALUES ${values}) AS v(id, d)
-       WHERE e."effectId" = v.id${overwrite ? "" : ' AND e."customDescription" IS NULL'}`,
-      ...chunk.flatMap((r) => [r.effectId, r.description]),
-    );
-  }
-  console.log(
-    `wrote ${written} of ${results.length}. Now run the revalidate-sde-cache job.`,
-  );
-}
-
-async function main() {
-  const [command, ...args] = process.argv.slice(2);
-  const flag = (name: string) => args.includes(name);
-  const positional = args.filter((a) => !a.startsWith("--"));
-  switch (command) {
-    case "count":
-      console.log(
-        `${(await candidateIds(false)).length} effects need a description`,
-      );
-      break;
-    case "payload":
-      console.log(
-        JSON.stringify(await loadInputs(positional.map(Number)), null, 1),
-      );
-      break;
-    case "sample": {
-      const client = new Anthropic();
-      for (const input of await loadInputs(positional.map(Number))) {
-        console.log(input.effectId, await describeNow(client, input));
-      }
-      break;
-    }
-    case "submit":
-      await submit(flag("--all"));
-      break;
-    case "collect":
-      await collect(positional[0] ?? "");
-      break;
-    case "write":
-      await write(positional[0] ?? "", flag("--overwrite"));
-      break;
-    default:
-      console.error(
-        "usage: describe-dogma-effects count | payload <id…> | sample <id…> | submit [--all] | collect <batchId> | write <file> [--overwrite]",
-      );
-      process.exitCode = 1;
-  }
-}
-
-try {
-  await main();
-} finally {
-  await prisma.$disconnect();
-}
+await runDescriber(describer, process.argv.slice(2));

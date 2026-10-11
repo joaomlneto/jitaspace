@@ -5,11 +5,14 @@
  * finished description may contain.
  */
 
+import { checkLinkedDescription } from "./linkedDescriptions";
+
+export { label } from "./linkedDescriptions";
+
 export const BOILERPLATE = "Automatically generated effect";
 export const SKILL_CATEGORY_ID = 16;
 /** Resonance unit: a lower value means more resistance. */
 export const RESONANCE_UNIT_ID = 108;
-export const MAX_VISIBLE_CHARS = 280;
 
 export const SYSTEM_PROMPT = `You write short descriptions of EVE Online dogma effects for JitaSpace, a reference website. CCP gave these effects no description. Players read your text directly above the effect's raw modifier data, and the page lists every item that has the effect together with its own value.
 
@@ -30,6 +33,7 @@ Rules:
 - Do not begin with "This effect", and do not repeat the effect's internal name.
 - direction says what the effect does to the modified attribute as players see it: "increases", "decreases", "increases or decreases" (it depends on the item), or "sets" (it overrides the value). Use it for your verb. When it is null, say the attribute is changed or modified.
 - When scalesWithSkills lists a skill, the bonus grows with that skill's level: say it applies "per <a href="showinfo:TYPEID">Skill Name</a> level" (with several skills, name each, joined by "or"). When itemsAreSkills is true, the bonus applies per skill level.
+- When modifiers is empty, the game implements the effect in its own code: describe what it does from its name, display name, category, flags and the attributes under usesAttributes (for example the activation cost and cycle time it uses), without inventing what the code does beyond that.
 - Say only what the effect does. Do not restate its flags or the attributes under usesAttributes unless they are needed to explain it, and do not state what the effect does not do.
 
 How to read a modifier:
@@ -122,17 +126,6 @@ export function directionOf(
   return up ? "increases" : "decreases";
 }
 
-/** Display name, else internal name, else the id; blanks count as missing. */
-export function label(
-  displayName: string | null,
-  name: string | null,
-  id: number,
-) {
-  const display = displayName?.trim();
-  if (display) return display;
-  return name ?? `#${id}`;
-}
-
 /** Every link id the input mentions, by link kind. */
 export function linkableIds(input: EffectInput): Set<string> {
   const ids = new Set<string>([`/dogma/effect/${input.effectId}`]);
@@ -150,38 +143,10 @@ export function linkableIds(input: EffectInput): Set<string> {
   return ids;
 }
 
-/**
- * Why a description must be redone, or null when it is fine: it may only hold
- * text and links to ids from its own input, and stay short.
- */
-export function problemWith(text: string, input: EffectInput): string | null {
-  const allowed = linkableIds(input);
-  const withoutLinks = text.replace(
-    /<a href="([^"<>]+)">([^<>]+)<\/a>/g,
-    (_, href: string, inner: string) => {
-      if (!allowed.has(href)) throw new Error(`link to ${href}`);
-      return inner;
-    },
-  );
-  if (/[<>]/.test(withoutLinks)) return "markup other than links";
-  if (/&[#a-z0-9]+;/i.test(withoutLinks)) return "HTML entity";
-  // A word starting with a digit is a number; digits inside internal
-  // attribute names (shipBonusCarrierM1) are not.
-  if (withoutLinks.split(/\W+/).some((word) => /^\d/.test(word))) {
-    return "a number";
-  }
-  if (withoutLinks.length === 0) return "empty";
-  if (withoutLinks.length > MAX_VISIBLE_CHARS) return "too long";
-  return null;
-}
-
+/** Why a description must be redone, or null when it is fine. */
 export function checkDescription(
   text: string,
   input: EffectInput,
 ): string | null {
-  try {
-    return problemWith(text, input);
-  } catch (error) {
-    return error instanceof Error ? error.message : "invalid link";
-  }
+  return checkLinkedDescription(text, linkableIds(input));
 }
