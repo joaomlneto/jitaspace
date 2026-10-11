@@ -1,55 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { prisma } from "~/lib/db";
+import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
-import { cacheSdeRead } from "~/lib/sdeCache";
+import { readStation } from "./data";
 import PageClient from "./page.client";
-
-/**
- * The station's own row, or null when there is no such station.
- *
- * Cached until the next SDE build is ingested. The ESI station scraper also
- * writes these rows, but it only runs by hand, and its changes show up at the
- * next SDE ingest. Nothing is caught inside this scope — a failed query
- * must throw out of it, because the `notFound()` the caller would otherwise
- * render is a *successful* response that Next stores for the full cacheLife
- * (CLAUDE.md). `findUnique` plus a null test is what keeps a genuinely absent
- * station — a real, legitimately cached 404 — distinguishable from an outage.
- *
- * `generateMetadata` and the page share this one read, as the type page shares
- * `getTypeData`: the metadata pass and the render then resolve to the same
- * cache entry, so 5,211 station routes keep costing one query per render
- * rather than two.
- */
-async function readStation(stationId: number) {
-  "use cache";
-  cacheSdeRead();
-
-  return prisma.station.findUnique({
-    select: {
-      name: true,
-      solarSystemId: true,
-      typeId: true,
-      raceId: true,
-      ownerId: true,
-      // Names, not just ids: the OpenGraph card labels the station with its
-      // system, region and owner, and riding along in this row keeps the
-      // route at one query rather than adding a second for the card.
-      owner: { select: { name: true } },
-      solarSystem: {
-        select: {
-          name: true,
-          constellation: { select: { region: { select: { name: true } } } },
-        },
-      },
-    },
-    where: { stationId },
-  });
-}
 
 export async function generateMetadata({
   params,
@@ -59,43 +18,45 @@ export async function generateMetadata({
   const { stationId } = await params;
   const id = parsePositiveEntityId(stationId);
   if (id === null) return {};
-  try {
-    const station = await readStation(id);
-    if (!station) return {};
 
-    const system = station.solarSystem?.name;
-    const region = station.solarSystem?.constellation.region?.name;
-    const owner = station.owner?.name;
+  // Uncaught, like the page body: this route is cached whole, so a database
+  // failure must throw rather than store generic metadata.
+  const station = await readStation(id);
+  if (!station) return {};
 
-    const inSystem = system ? ` in ${system}` : "";
-    const operatedBy = owner ? `, operated by ${owner}` : "";
+  const system = station.location?.solarSystem.name;
+  const region = station.location?.region?.name;
+  const owner = station.owner?.name;
 
-    return pageMetadata({
-      title: station.name,
-      description: `${station.name} is an NPC station${inSystem}${operatedBy}. Browse its services, market orders, and agents.`,
-      path: `/station/${id}`,
-      badge: "Station",
-      image: await resolveTypeImage(station.typeId),
-      facts: [
-        ...(system ? [{ label: "System", value: system }] : []),
-        ...(region ? [{ label: "Region", value: region }] : []),
-        ...(owner ? [{ label: "Owner", value: owner }] : []),
-      ],
-    });
-  } catch {
-    return {};
-  }
+  const inSystem = system ? ` in ${system}` : "";
+  const operatedBy = owner ? `, operated by ${owner}` : "";
+  const agents =
+    station.agents.length > 0 ? `, ${station.agents.length} agents` : "";
+
+  return pageMetadata({
+    title: station.name,
+    description: `${station.name} is an NPC station${inSystem}${operatedBy}. See its services${agents}, facilities and change history.`,
+    path: `/station/${id}`,
+    badge: "Station",
+    image: await resolveTypeImage(station.type.id),
+    facts: [
+      ...(system ? [{ label: "System", value: system }] : []),
+      ...(region ? [{ label: "Region", value: region }] : []),
+      ...(owner ? [{ label: "Owner", value: owner }] : []),
+    ],
+  });
 }
 
-/**
- * `await params` and the read both happen here, inside the Suspense boundary.
- *
- * Until now the read fed only `generateMetadata`: the body was a client shell
- * filled in from ESI, so `/station/60003760` and `/station/999999999` both
- * answered HTTP 200 with the same 416 words. That is both Search Console
- * complaints at once — 5,211 sitemap URLs a crawler cannot tell apart, and
- * nonexistent stations that never 404.
- */
+// ISR per station: without `generateStaticParams` an unlisted id re-renders,
+// and re-runs every query below, on every request (see apps/web/CLAUDE.md →
+// "ISR for a dynamic `[param]` route"). The real ids live in the database,
+// which `next build` cannot reach in CI, and Cache Components rejects an empty
+// list — so this lists one id `parsePositiveEntityId` refuses, which
+// prerenders as a 404 without a query.
+export function generateStaticParams() {
+  return [{ stationId: "0" }];
+}
+
 async function PageContent({
   params,
 }: Readonly<{ params: Promise<{ stationId: string }> }>) {
@@ -103,18 +64,19 @@ async function PageContent({
   const id = parsePositiveEntityId(stationId);
   if (id === null) notFound();
 
+  // Uncaught: this page is cached whole, so a database failure must throw
+  // rather than store a 404. `null` is a station that genuinely does not exist.
   const station = await readStation(id);
   if (!station) notFound();
+  const history = await loadEntityHistory("npcStation", id);
 
+  // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
+  // `useSearchParams()`, which drops this subtree out of the cached render. The
+  // React adapter reads `?tab=` after hydration instead.
   return (
-    <PageClient
-      stationId={id}
-      name={station.name}
-      solarSystemId={station.solarSystemId}
-      typeId={station.typeId}
-      raceId={station.raceId}
-      ownerId={station.ownerId}
-    />
+    <NuqsAdapter>
+      <PageClient station={station} history={history} />
+    </NuqsAdapter>
   );
 }
 
