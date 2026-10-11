@@ -78,6 +78,38 @@ describe("useTypeMarketOrders", () => {
     ]);
   });
 
+  it("requests the global PLEX market with the hubs, and loads it with them", async () => {
+    // Where ESI lists it: last, after wormhole and Abyssal space.
+    const WORMHOLE = 11000001;
+    const GLOBAL_PLEX_MARKET = 19000001;
+    useGetUniverseRegions.mockReturnValue({
+      data: { data: [...UNSORTED_REGIONS, WORMHOLE, GLOBAL_PLEX_MARKET] },
+    });
+    // Hold the long tail: PLEX trades only on the global market, so its tables
+    // must not stop loading until that region is in.
+    const heldTail = new Promise<never>(() => undefined);
+    getMarketsRegionIdOrders.mockImplementation((regionId) =>
+      [...HUBS, GLOBAL_PLEX_MARKET].includes(regionId)
+        ? Promise.resolve({
+            data: [{ order_id: regionId }],
+            headers: { "x-pages": "1" },
+          })
+        : heldTail,
+    );
+
+    const { result } = renderHook(() => useTypeMarketOrders(44992));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.data[GLOBAL_PLEX_MARKET]).toEqual([
+      { order_id: GLOBAL_PLEX_MARKET },
+    ]);
+    expect(
+      getMarketsRegionIdOrders.mock.calls
+        .slice(0, HUBS.length + 1)
+        .map(([regionId]) => regionId),
+    ).toEqual([...HUBS, GLOBAL_PLEX_MARKET]);
+  });
+
   it("fetches nothing when no type is selected", () => {
     useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
 

@@ -13,3 +13,12 @@ export const MARKET_HUB_REGION_IDS: readonly number[] = [
   10000030, // Heimatar (Rens)
   10000042, // Metropolis (Hek)
 ];
+
+/**
+ * The global PLEX market: one region that every player trades in, wherever
+ * they are, and the only market PLEX trades on. ESI lists the types it carries
+ * at `/markets/19000001/types`; its own name, "GPMR-01", means nothing to a
+ * reader. Its id sits among the wormhole and Abyssal regions, which have no
+ * market at all.
+ */
+export const GLOBAL_MARKET_REGION_ID = 19000001;

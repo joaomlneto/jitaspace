@@ -11,10 +11,13 @@ import { PRICE_HISTORY_RANGES } from "./priceHistory";
  * `region` or `range` of its own.
  */
 
+/** The region charted for a type that does not trade on the global market. */
 export const DEFAULT_HISTORY_REGION_ID = MARKET_HUB_REGION_IDS[0] ?? 10000002;
 
 export const priceHistoryParsers = {
-  region: parseAsInteger.withDefault(DEFAULT_HISTORY_REGION_ID),
+  // No default here: which region a type opens on depends on the type (PLEX
+  // trades only on the global market), so `null` means "the type's default".
+  region: parseAsInteger,
   range: parseAsStringLiteral(PRICE_HISTORY_RANGES).withDefault("6m"),
 };
 

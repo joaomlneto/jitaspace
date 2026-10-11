@@ -8,29 +8,43 @@ import {
   useGetUniverseRegions,
 } from "@jitaspace/esi-client";
 
-import { MARKET_HUB_REGION_IDS } from "./marketHubRegions";
+import {
+  GLOBAL_MARKET_REGION_ID,
+  MARKET_HUB_REGION_IDS,
+} from "./marketHubRegions";
 
 type RegionOrders = Record<number, GetMarketsRegionIdOrdersQueryResponse>;
 
 /** Stable empty result, so consumers memoising on `data` don't rerun while idle. */
 const NO_ORDERS: RegionOrders = {};
 
-/** Hub regions (in hub order), separated from every other region. */
+/**
+ * The regions requested in the first batch: the hubs, then the global PLEX
+ * market. The types that trade there (PLEX) trade nowhere else, so left in the
+ * long tail their tables would read "No orders" until it finished.
+ */
+const FIRST_BATCH_REGION_IDS: readonly number[] = [
+  ...MARKET_HUB_REGION_IDS,
+  GLOBAL_MARKET_REGION_ID,
+];
+
+/** First-batch regions (in that order), separated from every other region. */
 function splitMarketHubs(regionIds: number[]): {
   hubs: number[];
   rest: number[];
 } {
   return {
-    hubs: MARKET_HUB_REGION_IDS.filter((id) => regionIds.includes(id)),
-    rest: regionIds.filter((id) => !MARKET_HUB_REGION_IDS.includes(id)),
+    hubs: FIRST_BATCH_REGION_IDS.filter((id) => regionIds.includes(id)),
+    rest: regionIds.filter((id) => !FIRST_BATCH_REGION_IDS.includes(id)),
   };
 }
 
 /**
- * How many regions of the long tail are requested at once. The hubs go out
- * together regardless — there are at most five and they are what the tables
- * show first — but the other ~100 regions used to be fired in one burst, all
- * of it still running after the user had moved on to another type.
+ * How many regions of the long tail are requested at once. The first batch goes
+ * out together regardless — there are at most six regions in it and they are
+ * what the tables show first — but the other ~100 regions used to be fired in
+ * one burst, all of it still running after the user had moved on to another
+ * type.
  */
 const REGION_CONCURRENCY = 16;
 
