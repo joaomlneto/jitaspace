@@ -31,4 +31,5 @@ export * from "./useEsiSearch";
 export * from "./useMarketPrices";
 export * from "./useServerStatus";
 export * from "./marketHubRegions";
+export * from "./useTradesOnGlobalMarket";
 export * from "./useTypeMarketOrders";

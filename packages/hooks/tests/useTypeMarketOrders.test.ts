@@ -10,23 +10,30 @@ import type * as UseTypeMarketOrdersModule from "../src/hooks/useTypeMarketOrder
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   useGetUniverseRegions: jest.fn(),
+  useGetMarketsRegionIdTypes: jest.fn(),
   getMarketsRegionIdOrders: jest.fn(),
 }));
 
-const { useGetUniverseRegions, getMarketsRegionIdOrders } =
-  require("@jitaspace/esi-client") as {
-    useGetUniverseRegions: jest.MockedFunction<
-      () => { data?: { data: number[] } }
-    >;
-    getMarketsRegionIdOrders: jest.MockedFunction<
-      (
-        regionId: number,
-        params: unknown,
-        headers?: unknown,
-        config?: { signal?: AbortSignal },
-      ) => Promise<{ data: unknown[]; headers: Record<string, string> }>
-    >;
-  };
+const {
+  useGetUniverseRegions,
+  useGetMarketsRegionIdTypes,
+  getMarketsRegionIdOrders,
+} = require("@jitaspace/esi-client") as {
+  useGetUniverseRegions: jest.MockedFunction<
+    () => { data?: { data: number[] } }
+  >;
+  useGetMarketsRegionIdTypes: jest.MockedFunction<
+    () => { data?: { data: number[] }; isError: boolean }
+  >;
+  getMarketsRegionIdOrders: jest.MockedFunction<
+    (
+      regionId: number,
+      params: unknown,
+      headers?: unknown,
+      config?: { signal?: AbortSignal },
+    ) => Promise<{ data: unknown[]; headers: Record<string, string> }>
+  >;
+};
 
 const { useTypeMarketOrders } =
   require("../src/hooks/useTypeMarketOrders") as typeof UseTypeMarketOrdersModule;
@@ -43,8 +50,15 @@ const UNSORTED_REGIONS = [FILLER_A, DOMAIN, FILLER_B, THE_FORGE, HEIMATAR];
 /** The hubs present in UNSORTED_REGIONS, in the order the hook requests them. */
 const HUBS = [THE_FORGE, DOMAIN, HEIMATAR];
 
+const PLEX = 44992;
+const GLOBAL_PLEX_MARKET = 19000001;
+
 describe("useTypeMarketOrders", () => {
   beforeEach(() => {
+    useGetMarketsRegionIdTypes.mockReturnValue({
+      data: { data: [PLEX] },
+      isError: false,
+    });
     getMarketsRegionIdOrders.mockResolvedValue({
       data: [],
       headers: { "x-pages": "1" },
@@ -76,6 +90,104 @@ describe("useTypeMarketOrders", () => {
       FILLER_A,
       FILLER_B,
     ]);
+  });
+
+  it("requests the global PLEX market with the hubs for PLEX, and loads it with them", async () => {
+    // Where ESI lists it: last, after wormhole and Abyssal space.
+    const WORMHOLE = 11000001;
+    useGetUniverseRegions.mockReturnValue({
+      data: { data: [...UNSORTED_REGIONS, WORMHOLE, GLOBAL_PLEX_MARKET] },
+    });
+    // Hold the long tail: PLEX trades only on the global market, so its tables
+    // must not stop loading until that region is in.
+    const heldTail = new Promise<never>(() => undefined);
+    getMarketsRegionIdOrders.mockImplementation((regionId) =>
+      [...HUBS, GLOBAL_PLEX_MARKET].includes(regionId)
+        ? Promise.resolve({
+            data: [{ order_id: regionId }],
+            headers: { "x-pages": "1" },
+          })
+        : heldTail,
+    );
+
+    const { result } = renderHook(() => useTypeMarketOrders(PLEX));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.data[GLOBAL_PLEX_MARKET]).toEqual([
+      { order_id: GLOBAL_PLEX_MARKET },
+    ]);
+    expect(
+      getMarketsRegionIdOrders.mock.calls
+        .slice(0, HUBS.length + 1)
+        .map(([regionId]) => regionId),
+    ).toEqual([...HUBS, GLOBAL_PLEX_MARKET]);
+  });
+
+  it("leaves the global PLEX market in the long tail for other types", async () => {
+    useGetUniverseRegions.mockReturnValue({
+      data: { data: [...UNSORTED_REGIONS, GLOBAL_PLEX_MARKET] },
+    });
+    // Hold the long tail: a type that doesn't trade there must not wait on it.
+    const heldTail = new Promise<never>(() => undefined);
+    getMarketsRegionIdOrders.mockImplementation((regionId) =>
+      HUBS.includes(regionId)
+        ? Promise.resolve({ data: [], headers: { "x-pages": "1" } })
+        : heldTail,
+    );
+
+    const { result } = renderHook(() => useTypeMarketOrders(34));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(
+      getMarketsRegionIdOrders.mock.calls
+        .slice(0, HUBS.length)
+        .map(([regionId]) => regionId),
+    ).toEqual(HUBS);
+  });
+
+  it("waits to know where the type trades before requesting anything", () => {
+    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useGetMarketsRegionIdTypes.mockReturnValue({ isError: false });
+
+    const { result } = renderHook(() => useTypeMarketOrders(34));
+
+    expect(getMarketsRegionIdOrders).not.toHaveBeenCalled();
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it("treats the type as an ordinary one if the global market can't be listed", async () => {
+    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useGetMarketsRegionIdTypes.mockReturnValue({ isError: true });
+
+    const { result } = renderHook(() => useTypeMarketOrders(PLEX));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(getMarketsRegionIdOrders).toHaveBeenCalledTimes(
+      UNSORTED_REGIONS.length,
+    );
+  });
+
+  it("doesn't start over when the global market's types load after failing", async () => {
+    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useGetMarketsRegionIdTypes.mockReturnValue({ isError: true });
+
+    const { result, rerender } = renderHook(() => useTypeMarketOrders(PLEX));
+    await waitFor(() =>
+      expect(getMarketsRegionIdOrders).toHaveBeenCalledTimes(
+        UNSORTED_REGIONS.length,
+      ),
+    );
+
+    useGetMarketsRegionIdTypes.mockReturnValue({
+      data: { data: [PLEX] },
+      isError: false,
+    });
+    rerender();
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(getMarketsRegionIdOrders).toHaveBeenCalledTimes(
+      UNSORTED_REGIONS.length,
+    );
   });
 
   it("fetches nothing when no type is selected", () => {
