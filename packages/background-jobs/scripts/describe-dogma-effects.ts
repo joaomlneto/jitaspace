@@ -602,21 +602,24 @@ async function collect(batchId: string) {
   );
 }
 
+/**
+ * One `UPDATE … FROM (VALUES …)` per chunk rather than a row-by-row
+ * transaction, which runs past Prisma's interactive-transaction timeout.
+ */
 async function write(file: string, overwrite: boolean) {
   const results = JSON.parse(readFileSync(file, "utf8")) as Result[];
   let written = 0;
-  for (let i = 0; i < results.length; i += 200) {
-    const counts = await prisma.$transaction(
-      results.slice(i, i + 200).map(({ effectId, description }) =>
-        prisma.dogmaEffect.updateMany({
-          where: overwrite
-            ? { effectId }
-            : { effectId, customDescription: null },
-          data: { customDescription: description },
-        }),
-      ),
+  for (let i = 0; i < results.length; i += 500) {
+    const chunk = results.slice(i, i + 500);
+    const values = chunk
+      .map((_, j) => `($${2 * j + 1}::int, $${2 * j + 2}::text)`)
+      .join(", ");
+    written += await prisma.$executeRawUnsafe(
+      `UPDATE "DogmaEffect" AS e SET "customDescription" = v.d
+       FROM (VALUES ${values}) AS v(id, d)
+       WHERE e."effectId" = v.id${overwrite ? "" : ' AND e."customDescription" IS NULL'}`,
+      ...chunk.flatMap((r) => [r.effectId, r.description]),
     );
-    written += counts.reduce((sum, c) => sum + c.count, 0);
   }
   console.log(
     `wrote ${written} of ${results.length}. Now run the revalidate-sde-cache job.`,
