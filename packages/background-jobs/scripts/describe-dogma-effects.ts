@@ -22,7 +22,6 @@ import type { EffectInput, Ref } from "../utils/dogmaEffectDescriptions";
 import type { Describer } from "./lib/describeWithClaude";
 import { prisma } from "../db";
 import {
-  BOILERPLATE,
   checkDescription,
   directionOf,
   label,
@@ -246,22 +245,21 @@ async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
 }
 
 /** Effects with modifiers and no real CCP description. */
+/**
+ * Every live effect, for completeness: also those CCP described (whose own
+ * text the pages show instead) and those without modifiers (implemented by
+ * the game, described from their name, category, flags and stats).
+ */
 async function candidateIds(includeDescribed: boolean): Promise<number[]> {
   const rows = await prisma.dogmaEffect.findMany({
     where: {
       isDeleted: false,
-      DogmaEffectModifiers: { some: { isDeleted: false } },
       ...(includeDescribed ? {} : { customDescription: null }),
     },
-    select: { effectId: true, description: true },
+    select: { effectId: true },
     orderBy: { effectId: "asc" },
   });
-  return rows
-    .filter((r) => {
-      const d = r.description?.trim() ?? "";
-      return d === "" || d === BOILERPLATE;
-    })
-    .map((r) => r.effectId);
+  return rows.map((r) => r.effectId);
 }
 
 const describer: Describer<EffectInput> = {

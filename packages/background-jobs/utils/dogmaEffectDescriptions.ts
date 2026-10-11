@@ -33,6 +33,7 @@ Rules:
 - Do not begin with "This effect", and do not repeat the effect's internal name.
 - direction says what the effect does to the modified attribute as players see it: "increases", "decreases", "increases or decreases" (it depends on the item), or "sets" (it overrides the value). Use it for your verb. When it is null, say the attribute is changed or modified.
 - When scalesWithSkills lists a skill, the bonus grows with that skill's level: say it applies "per <a href="showinfo:TYPEID">Skill Name</a> level" (with several skills, name each, joined by "or"). When itemsAreSkills is true, the bonus applies per skill level.
+- When modifiers is empty, the game implements the effect in its own code: describe what it does from its name, display name, category, flags and the attributes under usesAttributes (for example the activation cost and cycle time it uses), without inventing what the code does beyond that.
 - Say only what the effect does. Do not restate its flags or the attributes under usesAttributes unless they are needed to explain it, and do not state what the effect does not do.
 
 How to read a modifier:
