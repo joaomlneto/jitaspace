@@ -379,6 +379,12 @@ model DogmaAttribute {
   attributeCategoryId          Int?
   Icon                         Icon?                   @relation(fields: [iconId], references: [iconId])
   DogmaUnit                    DogmaUnit?              @relation(fields: [unitId], references: [unitId])
+  /// Not from CCP: a plain-language description written by us (AI-generated
+  /// for now), shown as the attribute's main description next to CCP's own
+  /// tooltip and note. EVE HTML: text plus links. No ingest writes it —
+  /// ingestSdeTable and the ESI scraper only write the columns they produce.
+  /// Written by packages/background-jobs/scripts/describe-dogma-attributes.ts.
+  customDescription            String?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */

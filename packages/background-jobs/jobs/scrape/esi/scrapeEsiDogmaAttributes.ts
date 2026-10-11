@@ -21,6 +21,13 @@ export interface ScrapeDogmaAttributesEventPayload {
 type StatsKey = "dogmaAttributes";
 
 /**
+ * Columns neither ESI nor the SDE writes: ours, written by
+ * scripts/describe-dogma-attributes.ts. Kept out of the diff like the
+ * SDE-owned ones, or every described attribute would look modified each run.
+ */
+const OUR_DOGMA_ATTRIBUTE_COLUMNS = ["customDescription"] as const;
+
+/**
  * A DogmaAttribute row as ESI knows it: the model minus the timestamps and the
  * SDE-owned columns. Annotating the builder below with it makes the compiler
  * enforce the split — a new column on the model is an error here until it is
@@ -30,7 +37,10 @@ type StatsKey = "dogmaAttributes";
  */
 type EsiDogmaAttributeRow = Omit<
   DogmaAttribute,
-  "updatedAt" | "createdAt" | (typeof SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS)[number]
+  | "updatedAt"
+  | "createdAt"
+  | (typeof SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS)[number]
+  | (typeof OUR_DOGMA_ATTRIBUTE_COLUMNS)[number]
 >;
 
 const fetchRemoteDogmaAttribute = (attributeId: number, iconIds: number[]) =>
@@ -75,6 +85,7 @@ const excludeDogmaTimestamps = (entries: DogmaAttribute[]) =>
       "updatedAt",
       "createdAt",
       ...SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS,
+      ...OUR_DOGMA_ATTRIBUTE_COLUMNS,
     ]),
   );
 
