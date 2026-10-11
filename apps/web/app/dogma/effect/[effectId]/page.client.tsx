@@ -140,11 +140,15 @@ function categoryLabel(category: NonNullable<PageProps["category"]>): string {
   return category.name.replace(/^dgmEff/, "");
 }
 
-function joinNodes(nodes: ReactNode[]): ReactNode {
-  return nodes.map((node, index) => (
-    <Fragment key={index}>
-      {index > 0 && (index === nodes.length - 1 ? " and " : ", ")}
-      {node}
+/** "A", "A and B", "A, B and C", keyed by each item's id. */
+function joinNodes(
+  ids: number[],
+  render: (id: number) => ReactNode,
+): ReactNode {
+  return ids.map((id, index) => (
+    <Fragment key={id}>
+      {index > 0 && (index === ids.length - 1 ? " and " : ", ")}
+      {render(id)}
     </Fragment>
   ));
 }
@@ -206,14 +210,12 @@ function LineSubject({
         {first?.skillName ?? `Type ${line.skillTypeId}`}
       </TypeAnchor>
     );
-  const groups = joinNodes(
-    line.groupIds.map((groupId) => (
-      <GroupAnchor key={groupId} groupId={groupId}>
-        {modifiers.find((modifier) => modifier.groupId === groupId)
-          ?.groupName ?? `Group ${groupId}`}
-      </GroupAnchor>
-    )),
-  );
+  const groups = joinNodes(line.groupIds, (groupId) => (
+    <GroupAnchor groupId={groupId}>
+      {modifiers.find((modifier) => modifier.groupId === groupId)?.groupName ??
+        `Group ${groupId}`}
+    </GroupAnchor>
+  ));
 
   switch (line.func) {
     case "ItemModifier":
@@ -262,30 +264,21 @@ function ModifierSentence({
         <Text component="span" fw={700}>
           Stops
         </Text>{" "}
-        {joinNodes(
-          line.targetEffectIds.map((effectId) => (
-            <DogmaEffectAnchor key={effectId} effectId={effectId}>
-              {modifiers.find(
-                (modifier) => modifier.targetEffectId === effectId,
-              )?.targetEffectName ?? `Effect ${effectId}`}
-            </DogmaEffectAnchor>
-          )),
-        )}{" "}
+        {joinNodes(line.targetEffectIds, (effectId) => (
+          <DogmaEffectAnchor effectId={effectId}>
+            {modifiers.find((modifier) => modifier.targetEffectId === effectId)
+              ?.targetEffectName ?? `Effect ${effectId}`}
+          </DogmaEffectAnchor>
+        ))}{" "}
         on the <DomainNoun domain={line.domain} />
       </Text>
     );
   }
 
   const operator = dogmaOperatorInfo(line.operator);
-  const modified = joinNodes(
-    line.modifiedAttributeIds.map((attributeId) => (
-      <AttributeLink
-        key={attributeId}
-        attributeId={attributeId}
-        attributes={attributes}
-      />
-    )),
-  );
+  const modified = joinNodes(line.modifiedAttributeIds, (attributeId) => (
+    <AttributeLink attributeId={attributeId} attributes={attributes} />
+  ));
 
   return (
     <Text>
@@ -473,176 +466,429 @@ function ModifierLineCard({
   );
 }
 
-export default function DogmaEffectPage({
+interface FlagEntry {
+  key: keyof typeof FLAG_LABELS;
+  value: boolean;
+}
+
+function TypeNameCell({ row }: Readonly<{ row: EffectType }>) {
+  return (
+    <Group gap="xs" wrap="nowrap">
+      <TypeAvatar typeId={row.typeId} size="sm" />
+      <TypeAnchor typeId={row.typeId}>{row.name}</TypeAnchor>
+    </Group>
+  );
+}
+
+function TypeValueCell({
+  row,
+  attributeId,
+  attribute,
+}: Readonly<{
+  row: EffectType;
+  attributeId: number;
+  attribute: EffectAttribute | undefined;
+}>) {
+  const value = row.values[attributeId];
+  if (value === undefined) return null;
+  return (
+    <Group gap={4} justify="flex-end" wrap="nowrap">
+      <DogmaAttributeValue
+        value={value}
+        unitId={attribute?.unitId ?? undefined}
+        unitSymbol={attribute?.unitSymbol ?? undefined}
+      />
+      {row.categoryId === SKILL_CATEGORY_ID && (
+        <Text size="xs" c="dimmed">
+          / level
+        </Text>
+      )}
+    </Group>
+  );
+}
+
+function PublishedBadge({ published }: Readonly<{ published: boolean }>) {
+  return (
+    <Badge size="sm" variant="light" color={published ? "teal" : "gray"}>
+      {published ? "Yes" : "No"}
+    </Badge>
+  );
+}
+
+const renderTypeName = (row: EffectType) => <TypeNameCell row={row} />;
+const renderGroup = (row: EffectType) => (
+  <GroupAnchor groupId={row.groupId}>{row.groupName}</GroupAnchor>
+);
+const renderDefault = (row: EffectType) =>
+  row.isDefault ? (
+    <Badge size="sm" variant="light">
+      Default
+    </Badge>
+  ) : null;
+const renderPublished = (row: EffectType) => (
+  <PublishedBadge published={row.published} />
+);
+
+const LEADING_TYPE_COLUMNS: DataTableColumn<EffectType>[] = [
+  {
+    id: "typeId",
+    header: "Type ID",
+    accessor: "typeId",
+    sortable: true,
+    width: 100,
+    defaultVisible: false,
+  },
+  {
+    id: "name",
+    header: "Type",
+    accessor: "name",
+    sortable: true,
+    cell: renderTypeName,
+  },
+  {
+    id: "group",
+    header: "Group",
+    accessor: "groupName",
+    sortable: true,
+    filter: { type: "multi-select" },
+    cell: renderGroup,
+  },
+];
+
+const TRAILING_TYPE_COLUMNS: DataTableColumn<EffectType>[] = [
+  {
+    id: "isDefault",
+    header: "Default",
+    accessor: "isDefault",
+    sortable: true,
+    filter: { type: "boolean" },
+    cell: renderDefault,
+  },
+  {
+    id: "published",
+    header: "Published",
+    accessor: "published",
+    sortable: true,
+    filter: { type: "boolean" },
+    cell: renderPublished,
+  },
+];
+
+/** A column holding each type's own value for one modifying attribute. */
+function valueColumn(
+  attributeId: number,
+  attribute: EffectAttribute | undefined,
+): DataTableColumn<EffectType> {
+  return {
+    id: `value-${attributeId}`,
+    header: attributeLabel(attributeId, attribute),
+    accessor: (row) => row.values[attributeId] ?? null,
+    sortable: true,
+    filter: { type: "range" },
+    align: "right",
+    cell: (row) => (
+      <TypeValueCell
+        row={row}
+        attributeId={attributeId}
+        attribute={attribute}
+      />
+    ),
+  };
+}
+
+const plural = (count: number, one: string, many: string) =>
+  `${count.toLocaleString("en-US")} ${count === 1 ? one : many}`;
+
+function EffectHero({
   effectId,
   name,
   displayName,
-  description,
-  customDescription,
   published,
   iconId,
-  guid,
-  distribution,
   category,
-  flags,
-  stats,
-  preExpression,
-  postExpression,
-  attributes,
-  modifiers,
-  targetedBy,
-  types,
-}: Readonly<PageProps>) {
-  const attributeMap = useMemo(
-    () =>
-      new Map(
-        attributes.map((attribute) => [attribute.attributeId, attribute]),
-      ),
-    [attributes],
+  flagEntries,
+  modifierCount,
+  typeCount,
+}: Readonly<{
+  effectId: number;
+  name: string | null;
+  displayName: string | null;
+  published: boolean | null;
+  iconId: number | null;
+  category: PageProps["category"];
+  flagEntries: FlagEntry[];
+  modifierCount: number;
+  typeCount: number;
+}>) {
+  const title = displayName ?? name ?? `Effect ${effectId}`;
+  return (
+    <HeroCard
+      artwork={
+        iconId === null ? (
+          <WindowFittingIcon size={64} alt="" />
+        ) : (
+          <EveIconAvatar iconId={iconId} size={96} radius={0} />
+        )
+      }
+    >
+      <Stack gap={4}>
+        <Title order={2}>{title}</Title>
+        {displayName && name && displayName !== name && (
+          <Code w="fit-content">{name}</Code>
+        )}
+      </Stack>
+      <Group gap={6}>
+        {published !== null && (
+          <Badge variant="light" color={published ? "teal" : "gray"}>
+            {published ? "Published" : "Unpublished"}
+          </Badge>
+        )}
+        {category && (
+          <Badge variant="light" color="eve_accent">
+            {categoryLabel(category)}
+          </Badge>
+        )}
+        {flagEntries
+          .filter(({ value }) => value)
+          .map(({ key }) => (
+            <Badge key={key} variant="light" color="teal">
+              {FLAG_LABELS[key]}
+            </Badge>
+          ))}
+      </Group>
+      <Group gap="xl">
+        <HeroStat label="Effect ID" value={effectId} />
+        <HeroStat label="Modifiers" value={modifierCount} />
+        <HeroStat label="Used by" value={plural(typeCount, "type", "types")} />
+      </Group>
+    </HeroCard>
   );
+}
 
+/**
+ * CCP's own text wins; our custom description only fills the gap where CCP
+ * left nothing, or only its "Automatically generated effect" placeholder.
+ */
+function EffectDescription({
+  description,
+  customDescription,
+}: Readonly<{ description: string | null; customDescription: string | null }>) {
+  const hasOfficialDescription =
+    description !== null && description !== BOILERPLATE_DESCRIPTION;
+
+  if (!hasOfficialDescription && customDescription) {
+    return (
+      <Paper withBorder radius="md" p="md">
+        <Stack gap="xs">
+          <Text style={{ whiteSpace: "pre-line" }}>{customDescription}</Text>
+          <Group gap={6}>
+            <Badge size="xs" variant="light" color="gray">
+              AI-generated
+            </Badge>
+            <Text size="xs" c="dimmed">
+              Written from this effect&apos;s data, not by CCP. The modifiers
+              below are the source of truth.
+            </Text>
+          </Group>
+        </Stack>
+      </Paper>
+    );
+  }
+  if (!description) return null;
+  return (
+    <Paper withBorder radius="md" p="md">
+      <Text
+        component="div"
+        c={description === BOILERPLATE_DESCRIPTION ? "dimmed" : undefined}
+      >
+        <MailMessageViewer content={sanitizeFormattedEveString(description)} />
+      </Text>
+    </Paper>
+  );
+}
+
+function StatsUsedSection({
+  stats,
+  attributes,
+}: Readonly<{
+  stats: PageProps["stats"];
+  attributes: Map<number, EffectAttribute>;
+}>) {
+  const entries = (Object.keys(STAT_LABELS) as (keyof typeof STAT_LABELS)[])
+    .map((key) => ({ key, attributeId: stats[key] }))
+    .filter(
+      (
+        entry,
+      ): entry is { key: keyof typeof STAT_LABELS; attributeId: number } =>
+        entry.attributeId !== null,
+    );
+  if (entries.length === 0) return null;
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<WindowAttributesIcon size={18} alt="" />}>
+        Stats used
+      </SectionHeading>
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="sm">
+        {entries.map(({ key, attributeId }) => (
+          <StatCard
+            key={key}
+            label={STAT_LABELS[key]}
+            value={
+              <AttributeLink
+                attributeId={attributeId}
+                attributes={attributes}
+              />
+            }
+            sub={attributes.get(attributeId)?.name ?? undefined}
+          />
+        ))}
+      </SimpleGrid>
+    </Stack>
+  );
+}
+
+function ModifiersSection({
+  modifiers,
+  attributes,
+}: Readonly<{
+  modifiers: EffectModifier[];
+  attributes: Map<number, EffectAttribute>;
+}>) {
   const lines = useMemo(() => groupDogmaModifiers(modifiers), [modifiers]);
-  const modifiersByIndex = useMemo(
+  const byIndex = useMemo(
     () =>
       new Map(modifiers.map((modifier) => [modifier.modifierIndex, modifier])),
     [modifiers],
   );
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<WindowFittingIcon size={18} alt="" />}>
+        Modifiers
+      </SectionHeading>
+      {lines.length === 0 ? (
+        <Text c="dimmed" size="sm">
+          This effect has no modifiers. Whatever it does is implemented in the
+          game itself rather than described by data.
+        </Text>
+      ) : (
+        lines.map((line) => (
+          <ModifierLineCard
+            key={line.key}
+            line={line}
+            modifiers={line.modifiers.flatMap((modifier) => {
+              const full = byIndex.get(modifier.modifierIndex);
+              return full ? [full] : [];
+            })}
+            attributes={attributes}
+          />
+        ))
+      )}
+    </Stack>
+  );
+}
 
-  const title = displayName ?? name ?? `Effect ${effectId}`;
-  // CCP's own text wins; our custom description only fills the gap where CCP
-  // left nothing, or only its "Automatically generated effect" placeholder.
-  const hasOfficialDescription =
-    description !== null && description !== BOILERPLATE_DESCRIPTION;
+function TargetedBySection({
+  targetedBy,
+}: Readonly<{ targetedBy: PageProps["targetedBy"] }>) {
+  if (targetedBy.length === 0) return null;
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<WindowRestrictionIcon size={18} alt="" />}>
+        Targeted by
+      </SectionHeading>
+      <Paper withBorder radius="md" p="sm">
+        <Stack gap={6}>
+          {targetedBy.map((entry) => (
+            <Group key={entry.effectId} gap="xs">
+              <Badge size="sm" variant="light" color="gray">
+                {entry.func === "EffectStopper" ? "Stopped by" : "Modified by"}
+              </Badge>
+              <DogmaEffectAnchor effectId={entry.effectId}>
+                {entry.name ?? `Effect ${entry.effectId}`}
+              </DogmaEffectAnchor>
+              <Text size="xs" c="dimmed">
+                on the {dogmaDomainNoun(entry.domain)}
+              </Text>
+            </Group>
+          ))}
+        </Stack>
+      </Paper>
+    </Stack>
+  );
+}
 
-  const statEntries = (
-    Object.keys(STAT_LABELS) as (keyof typeof STAT_LABELS)[]
-  ).flatMap((key) => {
-    const attributeId = stats[key];
-    return attributeId === null ? [] : [{ key, attributeId }];
-  });
-
-  const flagEntries = (
-    Object.keys(FLAG_LABELS) as (keyof typeof FLAG_LABELS)[]
-  ).flatMap((key) => {
-    const value = flags[key];
-    return value === null ? [] : [{ key, value }];
-  });
-
-  // One column per modifying attribute some type actually has a value for.
-  const valueAttributeIds = useMemo(() => {
+function TypesSection({
+  types,
+  modifiers,
+  attributes,
+}: Readonly<{
+  types: EffectType[];
+  modifiers: EffectModifier[];
+  attributes: Map<number, EffectAttribute>;
+}>) {
+  const columns = useMemo((): DataTableColumn<EffectType>[] => {
+    // One column per modifying attribute some type actually has a value for.
     const ids = new Set<number>();
-    for (const modifier of modifiers) {
-      const id = modifier.modifyingAttributeId;
+    for (const { modifyingAttributeId: id } of modifiers) {
       if (id !== null && types.some((type) => type.values[id] !== undefined)) {
         ids.add(id);
       }
     }
-    return [...ids];
-  }, [modifiers, types]);
-
-  const typeColumns = useMemo((): DataTableColumn<EffectType>[] => {
-    const valueColumns = valueAttributeIds.map(
-      (attributeId): DataTableColumn<EffectType> => {
-        const attribute = attributeMap.get(attributeId);
-        return {
-          id: `value-${attributeId}`,
-          header: attributeLabel(attributeId, attribute),
-          accessor: (row) => row.values[attributeId] ?? null,
-          sortable: true,
-          filter: { type: "range" },
-          align: "right",
-          cell: (row) => {
-            const value = row.values[attributeId];
-            if (value === undefined) return null;
-            return (
-              <Group gap={4} justify="flex-end" wrap="nowrap">
-                <DogmaAttributeValue
-                  value={value}
-                  unitId={attribute?.unitId ?? undefined}
-                  unitSymbol={attribute?.unitSymbol ?? undefined}
-                />
-                {row.categoryId === SKILL_CATEGORY_ID && (
-                  <Text size="xs" c="dimmed">
-                    / level
-                  </Text>
-                )}
-              </Group>
-            );
-          },
-        };
-      },
-    );
-
     return [
-      {
-        id: "typeId",
-        header: "Type ID",
-        accessor: "typeId",
-        sortable: true,
-        width: 100,
-        defaultVisible: false,
-      },
-      {
-        id: "name",
-        header: "Type",
-        accessor: "name",
-        sortable: true,
-        cell: (row) => (
-          <Group gap="xs" wrap="nowrap">
-            <TypeAvatar typeId={row.typeId} size="sm" />
-            <TypeAnchor typeId={row.typeId}>{row.name}</TypeAnchor>
-          </Group>
-        ),
-      },
-      {
-        id: "group",
-        header: "Group",
-        accessor: "groupName",
-        sortable: true,
-        filter: { type: "multi-select" },
-        cell: (row) => (
-          <GroupAnchor groupId={row.groupId}>{row.groupName}</GroupAnchor>
-        ),
-      },
-      ...valueColumns,
-      {
-        id: "isDefault",
-        header: "Default",
-        accessor: "isDefault",
-        sortable: true,
-        filter: { type: "boolean" },
-        cell: (row) =>
-          row.isDefault ? (
-            <Badge size="sm" variant="light">
-              Default
-            </Badge>
-          ) : null,
-      },
-      {
-        id: "published",
-        header: "Published",
-        accessor: "published",
-        sortable: true,
-        filter: { type: "boolean" },
-        cell: (row) => (
-          <Badge
-            size="sm"
-            variant="light"
-            color={row.published ? "teal" : "gray"}
-          >
-            {row.published ? "Yes" : "No"}
-          </Badge>
-        ),
-      },
+      ...LEADING_TYPE_COLUMNS,
+      ...[...ids].map((id) => valueColumn(id, attributes.get(id))),
+      ...TRAILING_TYPE_COLUMNS,
     ];
-  }, [valueAttributeIds, attributeMap]);
+  }, [modifiers, types, attributes]);
 
   const groupCount = useMemo(
     () => new Set(types.map((type) => type.groupId)).size,
     [types],
   );
 
-  const details: { label: string; value: ReactNode }[] = [
+  return (
+    <Stack gap="sm">
+      <SectionHeading icon={<WindowItemsIcon size={18} alt="" />}>
+        Types
+      </SectionHeading>
+      {types.length === 0 ? (
+        <Text c="dimmed" size="sm">
+          No item uses this effect.
+        </Text>
+      ) : (
+        <>
+          <Text size="sm" c="dimmed">
+            {plural(types.length, "type", "types")} in{" "}
+            {plural(groupCount, "group", "groups")} carry this effect.
+          </Text>
+          <DataTable
+            data={types}
+            columns={columns}
+            rowId={(row) => row.typeId}
+            withGlobalFilter
+            withColumnVisibility
+            withPagination
+            defaultPageSize={25}
+            initialSort={{ columnId: "name", direction: "asc" }}
+            verticalSpacing="xs"
+            highlightOnHover
+            striped
+          />
+        </>
+      )}
+    </Stack>
+  );
+}
+
+/** Every raw field, with the flags as Yes/No. */
+function effectDetails(
+  props: Readonly<PageProps>,
+  flagEntries: FlagEntry[],
+): { label: string; value: ReactNode }[] {
+  const { effectId, name, displayName, category, guid } = props;
+  const optional = (label: string, value: number | null) =>
+    value === null ? [] : [{ label, value }];
+  return [
     { label: "Effect ID", value: effectId },
     ...(name ? [{ label: "Name", value: <Code>{name}</Code> }] : []),
     ...(displayName ? [{ label: "Display name", value: displayName }] : []),
@@ -666,214 +912,61 @@ export default function DogmaEffectPage({
       value: <YesNoBadge value={value} />,
     })),
     ...(guid ? [{ label: "GUID", value: <Code>{guid}</Code> }] : []),
-    ...(distribution === null
-      ? []
-      : [{ label: "Distribution", value: distribution }]),
-    ...(iconId === null ? [] : [{ label: "Icon ID", value: iconId }]),
-    ...(preExpression === null
-      ? []
-      : [{ label: "Pre-expression", value: preExpression }]),
-    ...(postExpression === null
-      ? []
-      : [{ label: "Post-expression", value: postExpression }]),
+    ...optional("Distribution", props.distribution),
+    ...optional("Icon ID", props.iconId),
+    ...optional("Pre-expression", props.preExpression),
+    ...optional("Post-expression", props.postExpression),
   ];
+}
+
+export default function DogmaEffectPage(props: Readonly<PageProps>) {
+  const { attributes, flags, modifiers, types } = props;
+  const attributeMap = useMemo(
+    () =>
+      new Map(
+        attributes.map((attribute) => [attribute.attributeId, attribute]),
+      ),
+    [attributes],
+  );
+  const flagEntries = (
+    Object.keys(FLAG_LABELS) as (keyof typeof FLAG_LABELS)[]
+  ).flatMap((key) => {
+    const value = flags[key];
+    return value === null ? [] : [{ key, value }];
+  });
 
   return (
     <Container size="lg">
       <Stack gap="lg">
-        <HeroCard
-          artwork={
-            iconId === null ? (
-              <WindowFittingIcon size={64} alt="" />
-            ) : (
-              <EveIconAvatar iconId={iconId} size={96} radius={0} />
-            )
-          }
-        >
-          <Stack gap={4}>
-            <Title order={2}>{title}</Title>
-            {displayName && name && displayName !== name && (
-              <Code w="fit-content">{name}</Code>
-            )}
-          </Stack>
-          <Group gap={6}>
-            {published !== null && (
-              <Badge variant="light" color={published ? "teal" : "gray"}>
-                {published ? "Published" : "Unpublished"}
-              </Badge>
-            )}
-            {category && (
-              <Badge variant="light" color="eve_accent">
-                {categoryLabel(category)}
-              </Badge>
-            )}
-            {flagEntries
-              .filter(({ value }) => value)
-              .map(({ key }) => (
-                <Badge key={key} variant="light" color="teal">
-                  {FLAG_LABELS[key]}
-                </Badge>
-              ))}
-          </Group>
-          <Group gap="xl">
-            <HeroStat label="Effect ID" value={effectId} />
-            <HeroStat label="Modifiers" value={modifiers.length} />
-            <HeroStat
-              label="Used by"
-              value={`${types.length.toLocaleString("en-US")} ${
-                types.length === 1 ? "type" : "types"
-              }`}
-            />
-          </Group>
-        </HeroCard>
-
-        {!hasOfficialDescription && customDescription ? (
-          <Paper withBorder radius="md" p="md">
-            <Stack gap="xs">
-              <Text style={{ whiteSpace: "pre-line" }}>
-                {customDescription}
-              </Text>
-              <Group gap={6}>
-                <Badge size="xs" variant="light" color="gray">
-                  AI-generated
-                </Badge>
-                <Text size="xs" c="dimmed">
-                  Written from this effect&apos;s data, not by CCP. The
-                  modifiers below are the source of truth.
-                </Text>
-              </Group>
-            </Stack>
-          </Paper>
-        ) : (
-          description && (
-            <Paper withBorder radius="md" p="md">
-              <Text
-                component="div"
-                c={
-                  description === BOILERPLATE_DESCRIPTION ? "dimmed" : undefined
-                }
-              >
-                <MailMessageViewer
-                  content={sanitizeFormattedEveString(description)}
-                />
-              </Text>
-            </Paper>
-          )
-        )}
-
-        {statEntries.length > 0 && (
-          <Stack gap="sm">
-            <SectionHeading icon={<WindowAttributesIcon size={18} alt="" />}>
-              Stats used
-            </SectionHeading>
-            <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="sm">
-              {statEntries.map(({ key, attributeId }) => (
-                <StatCard
-                  key={key}
-                  label={STAT_LABELS[key]}
-                  value={
-                    <AttributeLink
-                      attributeId={attributeId}
-                      attributes={attributeMap}
-                    />
-                  }
-                  sub={attributeMap.get(attributeId)?.name ?? undefined}
-                />
-              ))}
-            </SimpleGrid>
-          </Stack>
-        )}
-
-        <Stack gap="sm">
-          <SectionHeading icon={<WindowFittingIcon size={18} alt="" />}>
-            Modifiers
-          </SectionHeading>
-          {lines.length === 0 ? (
-            <Text c="dimmed" size="sm">
-              This effect has no modifiers. Whatever it does is implemented in
-              the game itself rather than described by data.
-            </Text>
-          ) : (
-            lines.map((line) => (
-              <ModifierLineCard
-                key={line.key}
-                line={line}
-                modifiers={line.modifiers.flatMap((modifier) => {
-                  const full = modifiersByIndex.get(modifier.modifierIndex);
-                  return full ? [full] : [];
-                })}
-                attributes={attributeMap}
-              />
-            ))
-          )}
-        </Stack>
-
-        {targetedBy.length > 0 && (
-          <Stack gap="sm">
-            <SectionHeading icon={<WindowRestrictionIcon size={18} alt="" />}>
-              Targeted by
-            </SectionHeading>
-            <Paper withBorder radius="md" p="sm">
-              <Stack gap={6}>
-                {targetedBy.map((entry) => (
-                  <Group key={entry.effectId} gap="xs">
-                    <Badge size="sm" variant="light" color="gray">
-                      {entry.func === "EffectStopper"
-                        ? "Stopped by"
-                        : "Modified by"}
-                    </Badge>
-                    <DogmaEffectAnchor effectId={entry.effectId}>
-                      {entry.name ?? `Effect ${entry.effectId}`}
-                    </DogmaEffectAnchor>
-                    <Text size="xs" c="dimmed">
-                      on the {dogmaDomainNoun(entry.domain)}
-                    </Text>
-                  </Group>
-                ))}
-              </Stack>
-            </Paper>
-          </Stack>
-        )}
-
-        <Stack gap="sm">
-          <SectionHeading icon={<WindowItemsIcon size={18} alt="" />}>
-            Types
-          </SectionHeading>
-          {types.length === 0 ? (
-            <Text c="dimmed" size="sm">
-              No item uses this effect.
-            </Text>
-          ) : (
-            <>
-              <Text size="sm" c="dimmed">
-                {types.length.toLocaleString("en-US")}{" "}
-                {types.length === 1 ? "type" : "types"} in{" "}
-                {groupCount.toLocaleString("en-US")}{" "}
-                {groupCount === 1 ? "group" : "groups"} carry this effect.
-              </Text>
-              <DataTable
-                data={types}
-                columns={typeColumns}
-                rowId={(row) => row.typeId}
-                withGlobalFilter
-                withColumnVisibility
-                withPagination
-                defaultPageSize={25}
-                initialSort={{ columnId: "name", direction: "asc" }}
-                verticalSpacing="xs"
-                highlightOnHover
-                striped
-              />
-            </>
-          )}
-        </Stack>
-
+        <EffectHero
+          effectId={props.effectId}
+          name={props.name}
+          displayName={props.displayName}
+          published={props.published}
+          iconId={props.iconId}
+          category={props.category}
+          flagEntries={flagEntries}
+          modifierCount={modifiers.length}
+          typeCount={types.length}
+        />
+        <EffectDescription
+          description={props.description}
+          customDescription={props.customDescription}
+        />
+        <StatsUsedSection stats={props.stats} attributes={attributeMap} />
+        <ModifiersSection modifiers={modifiers} attributes={attributeMap} />
+        <TargetedBySection targetedBy={props.targetedBy} />
+        <TypesSection
+          types={types}
+          modifiers={modifiers}
+          attributes={attributeMap}
+        />
         <Stack gap="sm">
           <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
             Details
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }} spacing="sm">
-            {details.map((detail) => (
+            {effectDetails(props, flagEntries).map((detail) => (
               <StatCard
                 key={detail.label}
                 label={detail.label}
