@@ -19,12 +19,12 @@ import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
 import { RouterTransition } from "~/components/RouterTransition.tsx";
+import { SpeedInsights } from "~/components/SpeedInsights";
 import { MainSpotlight } from "~/components/Spotlight";
 import { env } from "~/env";
 import { MainLayout } from "~/layouts";
