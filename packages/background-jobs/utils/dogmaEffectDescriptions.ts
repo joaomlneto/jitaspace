@@ -5,11 +5,14 @@
  * finished description may contain.
  */
 
+import { checkLinkedDescription } from "./linkedDescriptions";
+
+export { label } from "./linkedDescriptions";
+
 export const BOILERPLATE = "Automatically generated effect";
 export const SKILL_CATEGORY_ID = 16;
 /** Resonance unit: a lower value means more resistance. */
 export const RESONANCE_UNIT_ID = 108;
-export const MAX_VISIBLE_CHARS = 280;
 
 export const SYSTEM_PROMPT = `You write short descriptions of EVE Online dogma effects for JitaSpace, a reference website. CCP gave these effects no description. Players read your text directly above the effect's raw modifier data, and the page lists every item that has the effect together with its own value.
 
@@ -122,17 +125,6 @@ export function directionOf(
   return up ? "increases" : "decreases";
 }
 
-/** Display name, else internal name, else the id; blanks count as missing. */
-export function label(
-  displayName: string | null,
-  name: string | null,
-  id: number,
-) {
-  const display = displayName?.trim();
-  if (display) return display;
-  return name ?? `#${id}`;
-}
-
 /** Every link id the input mentions, by link kind. */
 export function linkableIds(input: EffectInput): Set<string> {
   const ids = new Set<string>([`/dogma/effect/${input.effectId}`]);
@@ -150,38 +142,10 @@ export function linkableIds(input: EffectInput): Set<string> {
   return ids;
 }
 
-/**
- * Why a description must be redone, or null when it is fine: it may only hold
- * text and links to ids from its own input, and stay short.
- */
-export function problemWith(text: string, input: EffectInput): string | null {
-  const allowed = linkableIds(input);
-  const withoutLinks = text.replace(
-    /<a href="([^"<>]+)">([^<>]+)<\/a>/g,
-    (_, href: string, inner: string) => {
-      if (!allowed.has(href)) throw new Error(`link to ${href}`);
-      return inner;
-    },
-  );
-  if (/[<>]/.test(withoutLinks)) return "markup other than links";
-  if (/&[#a-z0-9]+;/i.test(withoutLinks)) return "HTML entity";
-  // A word starting with a digit is a number; digits inside internal
-  // attribute names (shipBonusCarrierM1) are not.
-  if (withoutLinks.split(/\W+/).some((word) => /^\d/.test(word))) {
-    return "a number";
-  }
-  if (withoutLinks.length === 0) return "empty";
-  if (withoutLinks.length > MAX_VISIBLE_CHARS) return "too long";
-  return null;
-}
-
+/** Why a description must be redone, or null when it is fine. */
 export function checkDescription(
   text: string,
   input: EffectInput,
 ): string | null {
-  try {
-    return problemWith(text, input);
-  } catch (error) {
-    return error instanceof Error ? error.message : "invalid link";
-  }
+  return checkLinkedDescription(text, linkableIds(input));
 }
