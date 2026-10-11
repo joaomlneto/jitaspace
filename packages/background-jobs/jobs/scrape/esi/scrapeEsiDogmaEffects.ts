@@ -20,7 +20,11 @@ type StatsKey = "dogmaEffects";
 
 type LimitFunction = ReturnType<typeof pLimit>;
 
-const fetchDogmaEffectForBatch = (effectId: number, limit: LimitFunction) =>
+const fetchDogmaEffectForBatch = (
+  effectId: number,
+  limit: LimitFunction,
+  iconIds: ReadonlySet<number>,
+) =>
   limit(async () => {
     const dogmaEffect = await getDogmaEffectsEffectId(effectId).then(
       (res) => res.data,
@@ -30,7 +34,13 @@ const fetchDogmaEffectForBatch = (effectId: number, limit: LimitFunction) =>
       name: dogmaEffect.name ?? null,
       description: dogmaEffect.description ?? null,
       published: dogmaEffect.published ?? null,
-      iconId: dogmaEffect.icon_id ?? null,
+      // `Icon` is filled by the SDE ingest, which runs after this scrape on a
+      // fresh database: keep an unknown icon null rather than break the FK.
+      // ingest-sde-dogma-effects sets it once the icon exists.
+      iconId:
+        dogmaEffect.icon_id && iconIds.has(dogmaEffect.icon_id)
+          ? dogmaEffect.icon_id
+          : null,
       displayName: dogmaEffect.display_name ?? null,
       disallowAutoRepeat: dogmaEffect.disallow_auto_repeat ?? null,
       effectCategoryId: dogmaEffect.effect_category ?? null,
@@ -53,6 +63,7 @@ const fetchDogmaEffectForBatch = (effectId: number, limit: LimitFunction) =>
 const updateDogmaEffectsBatch = (
   thisBatchIds: number[],
   limit: LimitFunction,
+  iconIds: ReadonlySet<number>,
 ) =>
   updateTable({
     fetchLocalEntries: async () =>
@@ -84,7 +95,7 @@ const updateDogmaEffectsBatch = (
     fetchRemoteEntries: async () =>
       Promise.all(
         thisBatchIds.map((effectId) =>
-          fetchDogmaEffectForBatch(effectId, limit),
+          fetchDogmaEffectForBatch(effectId, limit, iconIds),
         ),
       ),
     batchCreate: (entries) =>
@@ -143,6 +154,15 @@ export const scrapeEsiDogmaEffects = defineJob<
 
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
+    const iconIds = await ctx.run(
+      "Fetch known icon IDs",
+      async () =>
+        new Set(
+          await prisma.icon
+            .findMany({ select: { iconId: true } })
+            .then((entries) => entries.map((entry) => entry.iconId)),
+        ),
+    );
 
     // update in batches
     for (const [i, thisBatchIds] of batches.entries()) {
@@ -154,6 +174,7 @@ export const scrapeEsiDogmaEffects = defineJob<
           const dogmaEffectsChanges = await updateDogmaEffectsBatch(
             thisBatchIds,
             limit,
+            iconIds,
           );
 
           return {
