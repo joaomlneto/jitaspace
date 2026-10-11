@@ -35,6 +35,8 @@ export interface ContactsTableProps {
   agents: Agent[];
   agentDivisions: { name: string; npcCorporationDivisionId: number }[];
   agentTypes: { name: string; agentTypeId: number }[];
+  /** Show each agent's station; off where every agent is at the same one. */
+  withLocation?: boolean;
 }
 
 function nameCell(agent: Agent) {
@@ -78,6 +80,7 @@ export const AgentsTable = ({
   agents,
   agentDivisions,
   agentTypes,
+  withLocation = true,
 }: ContactsTableProps) => {
   const agentTypeNames = useMemo(() => {
     const index: Record<string, string> = {};
@@ -146,15 +149,19 @@ export const AgentsTable = ({
         sortable: true,
         filter: { type: "multi-select" },
       },
-      {
-        id: "location",
-        header: "Location",
-        accessor: "stationId",
-        sortable: true,
-        cell: locationCell,
-      },
+      ...(withLocation
+        ? [
+            {
+              id: "location",
+              header: "Location",
+              accessor: "stationId",
+              sortable: true,
+              cell: locationCell,
+            } satisfies DataTableColumn<Agent>,
+          ]
+        : []),
     ],
-    [agentTypeNames, divisionNames],
+    [agentTypeNames, divisionNames, withLocation],
   );
 
   return (
