@@ -281,12 +281,13 @@ describe("Dogma effect page (client)", () => {
       ),
     ).toBeInTheDocument();
 
-    // Raw rows start expanded and can be collapsed per line.
+    // Raw rows start hidden and can be shown per line.
+    expect(screen.queryByText("LocationGroupModifier")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Show raw" })).toHaveLength(2);
+    fireEvent.click(screen.getAllByRole("button", { name: "Show raw" })[0]!);
     expect(screen.getAllByText("LocationGroupModifier")).toHaveLength(1);
     expect(screen.getAllByText("PostPercent")).toHaveLength(1);
-    fireEvent.click(screen.getAllByRole("button", { name: "Hide raw" })[0]!);
-    expect(screen.queryByText("LocationGroupModifier")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Show raw" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Hide raw" })).toHaveLength(1);
   });
 
   it("lists the effects that target this one", () => {
@@ -318,14 +319,12 @@ describe("Dogma effect page (client)", () => {
   });
 
   it("shows the custom description, labelled, in place of CCP's placeholder", () => {
-    renderPage({
-      customDescription: "Increases the tracking speed of energy turrets.",
-    });
-    expect(
-      screen.getByText("Increases the tracking speed of energy turrets."),
-    ).toBeInTheDocument();
+    const linked =
+      'Increases the <a href="/dogma/attribute/160">Turret Tracking</a> per <a href="showinfo:3300">Gunnery</a> level.';
+    renderPage({ customDescription: linked });
+    // Rendered by the same EVE viewer as CCP's text, links and all.
+    expect(screen.getByTestId("mail-viewer")).toHaveTextContent(linked);
     expect(screen.getByText("AI-generated")).toBeInTheDocument();
-    expect(screen.queryByTestId("mail-viewer")).not.toBeInTheDocument();
   });
 
   it("shows the custom description when CCP has none at all", () => {

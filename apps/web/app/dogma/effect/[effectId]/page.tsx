@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 
 import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
-import { cacheSdeRead } from "~/lib/sdeCache";
+import { SDE_CACHE_TAG } from "~/lib/sdeCache";
 import DogmaEffectPage from "./page.client";
 
 const effectName = (effect: {
@@ -20,10 +22,15 @@ const effectName = (effect: {
  * modifiers with the names they point at, the effects that stop it, and the
  * types that carry it along with their values for the modifying attributes.
  * Returns null for an effect that does not exist.
+ *
+ * Not `cacheSdeRead()`: `customDescription` is written by our own script, not
+ * by the SDE ingest, so the entry keeps a daily `cacheLife` and only adds the
+ * SDE tag, as `app/lp-store/page.tsx` does.
  */
 async function getEffectData(effectId: number): Promise<PageProps | null> {
   "use cache";
-  cacheSdeRead();
+  cacheLife("days");
+  cacheTag(SDE_CACHE_TAG);
 
   const effect = await prisma.dogmaEffect.findUnique({
     select: {
@@ -271,16 +278,26 @@ export async function generateMetadata({
   if (effectId === null) return {};
   try {
     const effect = await prisma.dogmaEffect.findUnique({
-      select: { name: true, displayName: true, description: true },
+      select: {
+        name: true,
+        displayName: true,
+        description: true,
+        customDescription: true,
+      },
       where: { effectId },
     });
     if (!effect) return {};
     const title = effectName(effect);
     if (!title) return {};
+    // toDescription strips the links our own descriptions carry.
+    const described = resolveEffectDescription(
+      effect.description,
+      effect.customDescription,
+    );
     return pageMetadata({
       title,
       description: toDescription(
-        effect.description,
+        described?.text,
         `The ${title} dogma effect in EVE Online — what it does and which items apply it.`,
       ),
       path: `/dogma/effect/${effectId}`,

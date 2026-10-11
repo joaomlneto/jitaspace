@@ -476,7 +476,10 @@ model DogmaEffect {
   /// Not from CCP: a plain-language description written by us (AI-generated
   /// for now) for effects whose own `description` is empty or boilerplate.
   /// No ingest writes it — ingestSdeTable and the ESI scraper only write the
-  /// columns they produce — so it survives every SDE and ESI update.
+  /// columns they produce — so it survives every SDE and ESI update. The pages
+  /// that show it cache it for a day; run the revalidate-sde-cache job to show
+  /// new text at once. Written by
+  /// packages/background-jobs/scripts/describe-dogma-effects.ts.
   customDescription String?
 
   types                Type[]
@@ -1502,6 +1505,7 @@ model KillmailVictimItems {
   quantityDropped   Int?
   /**
    * Whether the item was a blueprint copy: 0 = ordinary item, 2 = blueprint copy.
+   *
    * Despite the name this is not an item ID, and it is not the assets API's
    * `is_singleton` boolean either — fitted, assembled modules also report 0.
    * ESI documents no values for it, but across a full day of killmails

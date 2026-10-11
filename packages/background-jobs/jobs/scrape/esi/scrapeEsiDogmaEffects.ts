@@ -89,6 +89,10 @@ const updateDogmaEffectsBatch = (
               "npcActivationChanceAttributeId",
               "fittingUsageChanceAttributeId",
               "npcUsageChanceAttributeId",
+              // Ours, written by scripts/describe-dogma-effects.ts: ESI has
+              // no such field, so diffing it would mark every described
+              // effect as modified on every run.
+              "customDescription",
             ]),
           ),
         ),
