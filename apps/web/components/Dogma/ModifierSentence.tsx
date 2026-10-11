@@ -24,7 +24,7 @@ import {
  * effect linked. Shared by the dogma effect and dogma attribute pages.
  */
 
-export interface EffectAttribute {
+export interface DogmaAttributeLabel {
   attributeId: number;
   name: string | null;
   displayName: string | null;
@@ -32,7 +32,7 @@ export interface EffectAttribute {
   unitSymbol: string | null;
 }
 
-export interface EffectModifier extends DogmaModifier {
+export interface NamedDogmaModifier extends DogmaModifier {
   groupName: string | null;
   skillName: string | null;
   targetEffectName: string | null;
@@ -53,7 +53,7 @@ function joinNodes(
 
 export function attributeLabel(
   attributeId: number,
-  attribute: EffectAttribute | undefined,
+  attribute: DogmaAttributeLabel | undefined,
 ): string {
   return (
     attribute?.displayName ?? attribute?.name ?? `Attribute ${attributeId}`
@@ -65,7 +65,7 @@ export function AttributeLink({
   attributes,
 }: Readonly<{
   attributeId: number;
-  attributes: Map<number, EffectAttribute>;
+  attributes: Map<number, DogmaAttributeLabel>;
 }>) {
   const attribute = attributes.get(attributeId);
   return (
@@ -99,7 +99,7 @@ export function DomainNoun({ domain }: Readonly<{ domain: string | null }>) {
 function LineSubject({
   line,
   modifiers,
-}: Readonly<{ line: DogmaModifierLine; modifiers: EffectModifier[] }>) {
+}: Readonly<{ line: DogmaModifierLine; modifiers: NamedDogmaModifier[] }>) {
   const domain = <DomainNoun domain={line.domain} />;
   const first = modifiers[0];
   const skill =
@@ -153,8 +153,8 @@ export function ModifierSentence({
   attributes,
 }: Readonly<{
   line: DogmaModifierLine;
-  modifiers: EffectModifier[];
-  attributes: Map<number, EffectAttribute>;
+  modifiers: NamedDogmaModifier[];
+  attributes: Map<number, DogmaAttributeLabel>;
 }>) {
   if (line.func === "EffectStopper") {
     return (

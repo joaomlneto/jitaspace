@@ -4,7 +4,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 
 import type { AttributeModifierRow, PageProps } from "./page.client";
-import type { EffectAttribute } from "~/components/Dogma";
+import type { DogmaAttributeLabel } from "~/components/Dogma";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, toDescription } from "~/lib/metadata";
@@ -151,7 +151,7 @@ async function getAttributeData(
       },
     }),
     prisma.typeAttribute.aggregate({
-      where: { attributeId, isDeleted: false },
+      where: { attributeId, isDeleted: false, type: { isDeleted: false } },
       _count: true,
       _min: { value: true },
       _max: { value: true },
@@ -226,7 +226,7 @@ async function getAttributeData(
       ? {
           attributeId: found.attributeId,
           name: found.name,
-          displayName: found.displayName,
+          displayName: nonEmpty(found.displayName),
         }
       : null;
   };
@@ -270,7 +270,7 @@ async function getAttributeData(
         ? null
         : { min: items._min.value, max: items._max.value },
     attributes: attributes.map(
-      (a): EffectAttribute => ({
+      (a): DogmaAttributeLabel => ({
         attributeId: a.attributeId,
         name: a.name,
         displayName: nonEmpty(a.displayName),

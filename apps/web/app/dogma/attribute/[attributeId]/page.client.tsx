@@ -31,8 +31,14 @@ import {
   GroupAnchor,
 } from "@jitaspace/ui";
 
-import type { DogmaAttributeTypeRow } from "~/app/api/dogma/attribute/[attributeId]/types/route";
-import type { EffectAttribute, EffectModifier } from "~/components/Dogma";
+import type {
+  DogmaAttributeLabel,
+  NamedDogmaModifier,
+} from "~/components/Dogma";
+import type {
+  DogmaAttributeTypeRow,
+  DogmaAttributeTypesPayload,
+} from "~/lib/dogmaAttributeTypes";
 import { DataTable } from "~/components/DataTable";
 import { AttributeLink, ModifierSentence } from "~/components/Dogma";
 import {
@@ -44,9 +50,9 @@ import {
   YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { unpackTypeRows } from "~/lib/dogmaAttributeTypes";
 import { groupDogmaModifiers } from "~/lib/dogmaModifiers";
 
-const SKILL_CATEGORY_ID = 16;
 const BLUEPRINT_CATEGORY_ID = 9;
 
 interface AttributeRef {
@@ -56,7 +62,7 @@ interface AttributeRef {
 }
 
 /** One modifier that changes, or reads, this attribute. */
-export interface AttributeModifierRow extends EffectModifier {
+export interface AttributeModifierRow extends NamedDogmaModifier {
   effectId: number;
   effectName: string | null;
   /** How many items carry the modifier's effect. */
@@ -98,7 +104,7 @@ export interface PageProps {
   itemCount: number;
   valueRange: { min: number; max: number } | null;
   /** Every attribute the page names, for the modifier sentences. */
-  attributes: EffectAttribute[];
+  attributes: DogmaAttributeLabel[];
   /** Modifiers that change this attribute. */
   modifiedBy: AttributeModifierRow[];
   /** Modifiers that read this attribute to change another. */
@@ -141,7 +147,7 @@ function ModifierCell({
   attributes,
 }: Readonly<{
   row: AttributeModifierRow;
-  attributes: Map<number, EffectAttribute>;
+  attributes: Map<number, DogmaAttributeLabel>;
 }>) {
   const [line] = groupDogmaModifiers([row]);
   if (!line) return null;
@@ -157,7 +163,7 @@ const renderEffect = (row: AttributeModifierRow) => (
 );
 
 function modifierColumns(
-  attributes: Map<number, EffectAttribute>,
+  attributes: Map<number, DogmaAttributeLabel>,
 ): DataTableColumn<AttributeModifierRow>[] {
   return [
     {
@@ -195,7 +201,7 @@ function ModifierTableSection({
   title: string;
   intro: string;
   rows: AttributeModifierRow[];
-  attributes: Map<number, EffectAttribute>;
+  attributes: Map<number, DogmaAttributeLabel>;
 }>) {
   const columns = useMemo(() => modifierColumns(attributes), [attributes]);
   if (rows.length === 0) return null;
@@ -296,16 +302,10 @@ function typeColumns(
       sortable: true,
       filter: { type: "range" },
       align: "right",
-      cell: (row) => (
-        <Group gap={4} justify="flex-end" wrap="nowrap">
-          <UnitValue value={row.value} unit={unit} />
-          {row.categoryId === SKILL_CATEGORY_ID && (
-            <Text size="xs" c="dimmed">
-              / level
-            </Text>
-          )}
-        </Group>
-      ),
+      // Not "/ level" for skills, as the effect page does: whether a skill's
+      // value is per level depends on the attribute (a training time
+      // multiplier is not), and this table cannot tell.
+      cell: (row) => <UnitValue value={row.value} unit={unit} />,
     },
     {
       id: "published",
@@ -329,12 +329,13 @@ function TypesSection({
   valueRange: PageProps["valueRange"];
   unit: PageProps["unit"];
 }>) {
-  const { data, isPending, isError } = useEntityTable<DogmaAttributeTypeRow[]>(
-    `/api/dogma/attribute/${attributeId}/types`,
-    itemCount > 0,
-  );
+  const { data, isPending, isError } =
+    useEntityTable<DogmaAttributeTypesPayload>(
+      `/api/dogma/attribute/${attributeId}/types`,
+      itemCount > 0,
+    );
   const columns = useMemo(() => typeColumns(unit), [unit]);
-  const rows = useMemo(() => data ?? [], [data]);
+  const rows = useMemo(() => (data ? unpackTypeRows(data) : []), [data]);
 
   return (
     <Stack gap="sm">

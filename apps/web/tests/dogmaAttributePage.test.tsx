@@ -9,6 +9,7 @@ import type {
   AttributeModifierRow,
   PageProps,
 } from "~/app/dogma/attribute/[attributeId]/page.client";
+import { packTypeRows } from "~/lib/dogmaAttributeTypes";
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => s,
@@ -189,7 +190,7 @@ describe("Dogma attribute page (client)", () => {
     mockUseEntityTable.mockReset().mockReturnValue({
       isPending: false,
       isError: false,
-      data: [
+      data: packTypeRows([
         {
           typeId: 2185,
           name: "Small Focused Pulse Laser I",
@@ -210,7 +211,7 @@ describe("Dogma attribute page (client)", () => {
           categoryName: "Skill",
           value: 0.01,
         },
-      ],
+      ]),
     });
   });
 
@@ -274,8 +275,9 @@ describe("Dogma attribute page (client)", () => {
     expect(screen.getByText(/2 items have this attribute/)).toBeInTheDocument();
     expect(screen.getByText("Small Focused Pulse Laser I")).toBeInTheDocument();
     expect(screen.getAllByText("value:0.5").length).toBeGreaterThan(0);
-    // Skills carry their value per level.
-    expect(screen.getByText("/ level")).toBeInTheDocument();
+    // A skill's value is shown as it is: whether it is per level depends on
+    // the attribute.
+    expect(screen.queryByText("/ level")).not.toBeInTheDocument();
   });
 
   it("skips the fetch when no item has the attribute", () => {

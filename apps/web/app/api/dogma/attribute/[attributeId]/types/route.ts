@@ -1,21 +1,12 @@
+import type { DogmaAttributeTypeRow } from "~/lib/dogmaAttributeTypes";
 import { prisma } from "~/lib/db";
+import { packTypeRows } from "~/lib/dogmaAttributeTypes";
 import { parsePositiveEntityId } from "~/lib/routeParams";
-
-/** One item that has the attribute, with its value. */
-export interface DogmaAttributeTypeRow {
-  typeId: number;
-  name: string;
-  published: boolean;
-  groupId: number;
-  groupName: string;
-  categoryId: number;
-  categoryName: string;
-  value: number;
-}
 
 /**
  * Every item that has a dogma attribute, with its value, as JSON: the rows of
- * `/dogma/attribute/[attributeId]`'s Types table. The page ships without them
+ * `/dogma/attribute/[attributeId]`'s Items table, packed (see
+ * `packTypeRows`). The page ships without them
  * (`mass` alone is on 26,700 items) and the table fetches them when it mounts.
  *
  * SDE data, so the CDN keeps it for a day and serves a stale copy for a week
@@ -54,7 +45,7 @@ export async function GET(
         },
       },
     },
-    where: { attributeId, isDeleted: false },
+    where: { attributeId, isDeleted: false, type: { isDeleted: false } },
   });
 
   const types: DogmaAttributeTypeRow[] = rows.map(({ value, type }) => ({
@@ -67,5 +58,7 @@ export async function GET(
     categoryName: type.group.category.name,
     value,
   }));
-  return Response.json(types, { headers: { "Cache-Control": CACHE_OK } });
+  return Response.json(packTypeRows(types), {
+    headers: { "Cache-Control": CACHE_OK },
+  });
 }

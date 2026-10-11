@@ -33,7 +33,10 @@ import {
   GroupAnchor,
 } from "@jitaspace/ui";
 
-import type { EffectAttribute, EffectModifier } from "~/components/Dogma";
+import type {
+  DogmaAttributeLabel as EffectAttribute,
+  NamedDogmaModifier as EffectModifier,
+} from "~/components/Dogma";
 import type { DogmaModifierLine } from "~/lib/dogmaModifiers";
 import { DataTable } from "~/components/DataTable";
 import {
@@ -56,7 +59,10 @@ import {
   groupDogmaModifiers,
 } from "~/lib/dogmaModifiers";
 
-export type { EffectAttribute, EffectModifier } from "~/components/Dogma";
+export type {
+  DogmaAttributeLabel as EffectAttribute,
+  NamedDogmaModifier as EffectModifier,
+} from "~/components/Dogma";
 
 const SKILL_CATEGORY_ID = 16;
 const BLUEPRINT_CATEGORY_ID = 9;
