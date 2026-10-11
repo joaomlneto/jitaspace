@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "cockroachdb"
+  provider = "postgresql"
 }
 
 enum CharacterGender {
@@ -1605,7 +1605,7 @@ enum IncursionSource {
 /// keys to the SDE tables: an incursion's history must survive a system or
 /// constellation the SDE has not caught up with, or has dropped.
 model Incursion {
-  incursionId                  Int                    @id @default(sequence())
+  incursionId                  Int                    @id @default(autoincrement())
   constellationId              Int
   factionId                    Int
   /// ESI's `type`; "Incursion" for every incursion seen so far.
@@ -1696,7 +1696,7 @@ enum IncursionEventKind {
 /// `esi-track-incursions` job's, or, for an imported incursion (see
 /// `IncursionSource`), its source's. The columns a kind does not use are null.
 model IncursionEvent {
-  eventId                      Int                @id @default(sequence())
+  eventId                      Int                @id @default(autoincrement())
   incursionId                  Int
   incursion                    Incursion          @relation("IncursionEvents", fields: [incursionId], references: [incursionId], onDelete: Cascade)
   /// When the poll that saw the change ran.
