@@ -355,7 +355,6 @@ model DogmaAttribute {
   attributeId                  Int                     @id
   defaultValue                 Float?
   description                  String?
-  customDescription            String?
   displayName                  String?
   highIsGood                   Boolean?
   iconId                       Int?
