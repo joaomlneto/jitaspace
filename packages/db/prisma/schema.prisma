@@ -939,8 +939,9 @@ model SolarSystem {
 
 /// Who holds sovereignty over a solar system, as ESI's GET /sovereignty/systems
 /// reports it: one row per system ESI lists, whether an alliance, an NPC faction
-/// or nobody holds it. Kept current by the hourly `esi-update-alliances` job;
-/// a system ESI stops listing is deleted.
+/// or nobody holds it. Kept current by the `esi-track-sovereignty` job every 5
+/// minutes; a system ESI stops listing is deleted. SolarSystemSovereigntyPeriod
+/// keeps who held each system before.
 ///
 /// Exactly one of three claims applies: an alliance claim (allianceId and the
 /// alliance-only columns set), a faction claim (factionId set), or unclaimed
@@ -971,6 +972,88 @@ model SolarSystemSovereignty {
 
   @@index([allianceId])
   @@index([factionId])
+}
+
+/// Where a SovereigntySnapshot came from.
+enum SovereigntySource {
+  /// Our `esi-track-sovereignty` job, polling ESI's GET /sovereignty/systems
+  /// every 5 minutes (ESI caches it for 300s).
+  esi
+  /// EVE Ref's archive of GET /sovereignty/map, fetched hourly since
+  /// 2017-11-29 with gaps (the longest by far: 2019-01-09 to 2021-07-01; a
+  /// month in mid-2018; days at most since 2022-12). Imported by
+  /// `backfill-everef-sovereignty-history`, and replayed by
+  /// `esi-track-sovereignty` to fill gaps between its polls.
+  everef
+}
+
+/// One snapshot of the whole sovereignty map that SolarSystemSovereigntyPeriod
+/// was built from. Every snapshot lists every K-space system, so these rows say
+/// how well the history is covered: between two consecutive snapshots nothing
+/// was observed, and a change of holder there is only known to have happened
+/// somewhere in between.
+model SovereigntySnapshot {
+  /// When the data was current: ESI's Last-Modified for our polls. For EVE
+  /// Ref's, the time EVE Ref fetched it; ESI caches GET /sovereignty/map for
+  /// an hour, so their data can be up to an hour older than this.
+  observedAt  DateTime          @id
+  source      SovereigntySource
+  /// The K-space systems it listed.
+  systemCount Int
+  createdAt   DateTime          @default(now())
+
+  @@index([source, observedAt])
+}
+
+/// Who held sovereignty over a K-space solar system, and for how long: one row
+/// per holder per system, so "who held system S at time T" is the row of S
+/// with `startedAt <= T < endedAt` (or `endedAt` null). A system's rows do not
+/// overlap, and each row's `endedAt` is the next row's `startedAt` unless the
+/// system dropped out of the snapshots in between.
+///
+/// Built from SovereigntySnapshots: by `backfill-everef-sovereignty-history`
+/// from EVE Ref's archive, then kept current by `esi-track-sovereignty`. A new
+/// row starts whenever the holder changes: alliance, holding corporation,
+/// faction or unclaimed, or a new claim by the same alliance (a different
+/// `claimedSince` or hub). Development indices and vulnerability windows are
+/// not history; SolarSystemSovereignty has their current values.
+///
+/// Not foreign keys: the history must outlive alliances, corporations and
+/// solar systems our tables do not have (closed long ago, or not yet ingested).
+model SolarSystemSovereigntyPeriod {
+  solarSystemId     Int
+  /// When the holder took over: ESI's `claimed_since` where it applies (exact,
+  /// and then equal to `earliestStartedAt`), otherwise the first snapshot that
+  /// listed it (the latest the change can have happened).
+  startedAt         DateTime
+  /// The holder took over after this: the snapshot before the one that first
+  /// listed it, which still showed the previous holder. Null when no snapshot
+  /// precedes this row (the history begins with it). Across a gap in the
+  /// snapshots this can be months before `startedAt`. When that snapshot is
+  /// EVE Ref's, whose data can be an hour old, the change can precede this by
+  /// up to an hour (`claimedSince` then shows it).
+  earliestStartedAt DateTime?
+  /// When the next holder took over (its `startedAt`), or the snapshot that
+  /// stopped listing the system. Null while the holder still holds it.
+  endedAt           DateTime?
+  isUnclaimed       Boolean
+  allianceId        Int?
+  /// The alliance corporation holding the claim.
+  corporationId     Int?
+  factionId         Int?
+  /// ESI's `claimed_since` and sovereignty hub. Only GET /sovereignty/systems
+  /// reports them, so they are null on alliance claims that ended before our
+  /// polls began.
+  claimedSince      DateTime?
+  sovereigntyHubId  BigInt?
+  /// When this row was last written. A row is rewritten when it ends, and when
+  /// ESI first reports its claim time or hub.
+  updatedAt         DateTime  @updatedAt()
+
+  @@id([solarSystemId, startedAt])
+  @@index([endedAt])
+  @@index([allianceId, startedAt])
+  @@index([factionId, startedAt])
 }
 
 model Star {
@@ -1415,7 +1498,6 @@ model KillmailVictimItems {
   quantityDropped   Int?
   /**
    * Whether the item was a blueprint copy: 0 = ordinary item, 2 = blueprint copy.
-   *
    * Despite the name this is not an item ID, and it is not the assets API's
    * `is_singleton` boolean either — fitted, assembled modules also report 0.
    * ESI documents no values for it, but across a full day of killmails
