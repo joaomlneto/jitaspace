@@ -659,7 +659,7 @@ describe("station page (client)", () => {
     ).toBeInTheDocument();
     expect(
       within(panel).getByRole("link", { name: "Browse the LP store" }),
-    ).toHaveAttribute("href", `/lp-store/${CALDARI_NAVY}`);
+    ).toHaveAttribute("href", "/lp-store/Caldari_Navy");
     expect(within(panel).getByText("×0.95")).toBeInTheDocument();
   });
 

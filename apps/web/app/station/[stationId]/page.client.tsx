@@ -72,6 +72,7 @@ import {
 } from "~/components/EntityPage";
 import { RaceName } from "~/components/Text";
 import { formatCountOf, formatInteger, formatPercent } from "~/lib/format";
+import { lpStorePath } from "~/lib/lpStorePath";
 import { named } from "~/lib/namedRef";
 import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import { SERVICE, ServiceIcon } from "./serviceIcons";
@@ -167,7 +168,15 @@ function serviceDetail(
       );
     case SERVICE.loyaltyPointStore:
       return live.owner ? (
-        <Anchor component={Link} href={`/lp-store/${live.owner.id}`} inherit>
+        <Anchor
+          component={Link}
+          href={
+            live.owner.name
+              ? lpStorePath(live.owner.name)
+              : `/lp-store/${live.owner.id}`
+          }
+          inherit
+        >
           Browse the LP store
         </Anchor>
       ) : undefined;
