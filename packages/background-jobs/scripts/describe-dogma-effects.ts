@@ -244,7 +244,6 @@ async function loadInputs(effectIds: number[]): Promise<EffectInput[]> {
   });
 }
 
-/** Effects with modifiers and no real CCP description. */
 /**
  * Every live effect, for completeness: also those CCP described (whose own
  * text the pages show instead) and those without modifiers (implemented by
