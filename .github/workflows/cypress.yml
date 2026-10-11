@@ -20,6 +20,21 @@ jobs:
     # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
     # Also see warning here https://github.com/cypress-io/github-action#parallel
     services:
+      # The main database. Production is PostgreSQL (PlanetScale), so CI pushes
+      # the schema to the same engine rather than to CockroachDB.
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jitaspace
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis:alpine
         ports:
@@ -43,7 +58,7 @@ jobs:
       # the header of smoke.cy.ts), so nothing re-checks this today: cy.request
       # never executes page JS, and these placeholders are currently unguarded.
       SKIP_ENV_VALIDATION: "1"
-      DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/jitaspace?sslmode=disable"
       # The build-history database, which `/history` and `/history/compare` are
       # prerendered from. An empty one is enough for the build: those pages
       # render their empty state, and every other history route is ISR, read on
@@ -61,6 +76,8 @@ jobs:
       matrix:
         containers: [1, 2] # Uses 2 parallel instances
     steps:
+      # Only for the build-history database: its schema is owned upstream and
+      # still lives on CockroachDB. The main database is the postgres service.
       - name: Start CockroachDB
         run: |
           docker run -d \
@@ -70,7 +87,6 @@ jobs:
             cockroachdb/cockroach:v24.3.7 \
             start-single-node --insecure --store=type=mem,size=0.5
           timeout 120 bash -c 'until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done'
-          docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
           docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS eve_builds;"
       - name: Checkout
         uses: actions/checkout@v6
