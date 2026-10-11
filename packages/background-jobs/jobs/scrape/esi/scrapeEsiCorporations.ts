@@ -64,16 +64,41 @@ const processCorporationBatch = async (
     ),
   ];
 
-  await createCorpAndItsRefRecords({
-    missingCharacterIds: new Set(characterIds.filter((id) => id > 1)),
-    missingCorporationIds: new Set(thisBatchIds.filter((id) => id > 1)),
-  });
-
   const characters = await Promise.all(
     characterIds.map((characterId) =>
       limit(() => fetchCharacterWithId(characterId)),
     ),
   );
+
+  // The helper only bootstraps the references of rows it creates itself. The
+  // corporations and characters below that already exist are updated with what
+  // ESI says now, which can point at a corporation, alliance, station or
+  // faction we have never stored (a CEO who has since joined another
+  // corporation, a corporation that joined a new alliance) — so every ID the
+  // updates will reference is passed explicitly.
+  const isRealId = (id: number | null | undefined): id is number =>
+    id != null && id > 1;
+  await createCorpAndItsRefRecords({
+    missingAllianceIds: new Set(
+      thisBatchCorporations.map((c) => c.alliance_id).filter(isRealId),
+    ),
+    missingCharacterIds: new Set(characterIds.filter(isRealId)),
+    missingCorporationIds: new Set(
+      [
+        ...thisBatchIds,
+        ...characters.map((character) => character.corporation_id),
+      ].filter(isRealId),
+    ),
+    missingFactionIds: new Set(
+      [
+        ...thisBatchCorporations.map((c) => c.enlisted_faction_id),
+        ...characters.map((character) => character.faction_id),
+      ].filter(isRealId),
+    ),
+    missingStationIds: new Set(
+      thisBatchCorporations.map((c) => c.home_station_id).filter(isRealId),
+    ),
+  });
 
   // bootstrap missing corporationIds
   await prisma.corporation.createMany({

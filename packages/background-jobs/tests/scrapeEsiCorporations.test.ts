@@ -21,21 +21,34 @@ jest.mock("p-limit", () => ({
 }));
 
 interface CorporationStub {
+  alliance_id?: number;
   ceo_id?: number;
   creator_id?: number;
+  enlisted_faction_id?: number;
+  home_station_id?: number;
 }
 
 let corporations: Map<number, CorporationStub>;
+/** The corporation each character is in now, per ESI; 98000001 by default. */
+let characterCorporations: Map<number, number>;
 
 const getCorporationsCorporationId = jest.fn((corporationId: number) => {
-  const { ceo_id, creator_id } = corporations.get(corporationId) ?? {};
+  const {
+    alliance_id,
+    ceo_id,
+    creator_id,
+    enlisted_faction_id,
+    home_station_id = 60003760,
+  } = corporations.get(corporationId) ?? {};
   return Promise.resolve({
     data: {
+      alliance_id,
       ceo_id,
       creator_id,
       description: "",
+      enlisted_faction_id,
       friendly_fire: "illegal",
-      home_station_id: 60003760,
+      home_station_id,
       member_count: 1,
       name: `Corporation ${corporationId}`,
       shares: 1000,
@@ -53,7 +66,7 @@ const getCharactersDetail = jest.fn((characterId: number) =>
     data: {
       birthday: "2020-01-01T00:00:00Z",
       bloodline_id: 1,
-      corporation_id: 98000001,
+      corporation_id: characterCorporations.get(characterId) ?? 98000001,
       gender: "male",
       name: `Character ${characterId}`,
       race_id: 1,
@@ -97,6 +110,7 @@ beforeAll(async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   corporations = new Map();
+  characterCorporations = new Map();
 });
 
 const runBatch = (corporationIds: number[]) =>
@@ -104,6 +118,17 @@ const runBatch = (corporationIds: number[]) =>
     payload: { corporationIds },
     run: (_name: string, fn: () => unknown) => fn(),
   } as unknown as Parameters<typeof scrapeEsiCorporations.handler>[0]);
+
+/** The sets of IDs the job asked the reference helper to make sure exist. */
+const requestedReferences = () => {
+  expect(createCorpAndItsRefRecords).toHaveBeenCalledTimes(1);
+  const [args] = createCorpAndItsRefRecords.mock.calls[0] as unknown as [
+    Record<string, Set<number>>,
+  ];
+  return Object.fromEntries(
+    Object.entries(args).map(([key, ids]) => [key, [...ids].sort()]),
+  );
+};
 
 /** Every characterId handed to prisma.character.createMany, in call order. */
 const createdCharacterIds = () =>
@@ -145,5 +170,77 @@ describe("scrapeEsiCorporations", () => {
     await expect(runBatch([98000001])).resolves.toBeDefined();
 
     expect(getCharactersDetail).not.toHaveBeenCalled();
+  });
+
+  it("bootstraps the corporation an existing CEO has since moved to", async () => {
+    // The CEO is already stored, so the helper would not fetch them; ESI now
+    // puts them in 98000099, which we have never seen. Updating the character
+    // without it violated Character_corporationId_fkey.
+    corporations.set(98000001, { ceo_id: 90000001, creator_id: 90000002 });
+    characterCorporations.set(90000001, 98000099);
+    prisma.character.findMany.mockImplementationOnce(() =>
+      Promise.resolve([
+        {
+          characterId: 90000001,
+          birthday: new Date("2020-01-01T00:00:00Z"),
+          bloodlineId: 1,
+          corporationId: 98000001,
+          description: null,
+          factionId: null,
+          gender: "male",
+          name: "Character 90000001",
+          raceId: 1,
+          securityStatus: null,
+          title: null,
+          isDeleted: false,
+        },
+      ] as never),
+    );
+
+    await expect(runBatch([98000001])).resolves.toBeDefined();
+
+    expect(requestedReferences().missingCorporationIds).toEqual([
+      98000001, 98000099,
+    ]);
+    const updates = prisma.character.update.mock.calls.map(
+      (call) =>
+        (
+          call as unknown as [
+            {
+              where: { characterId: number };
+              data: { corporationId: number };
+            },
+          ]
+        )[0],
+    );
+    expect(updates).toEqual([
+      expect.objectContaining({
+        where: { characterId: 90000001 },
+        data: expect.objectContaining({ corporationId: 98000099 }),
+      }),
+    ]);
+    // The references exist before any row is written that points at them.
+    expect(createCorpAndItsRefRecords.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.character.update.mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it("bootstraps the alliance, home station and factions the update references", async () => {
+    corporations.set(98000001, {
+      alliance_id: 99000001,
+      ceo_id: 90000001,
+      enlisted_faction_id: 500001,
+      home_station_id: 60008494,
+    });
+
+    await expect(runBatch([98000001])).resolves.toBeDefined();
+
+    expect(requestedReferences()).toEqual({
+      missingAllianceIds: [99000001],
+      missingCharacterIds: [90000001],
+      missingCorporationIds: [98000001],
+      missingFactionIds: [500001],
+      missingStationIds: [60008494],
+    });
   });
 });
