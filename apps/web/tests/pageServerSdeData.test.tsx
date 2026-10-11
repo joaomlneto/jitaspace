@@ -263,6 +263,7 @@ describe("type route dogma metadata", () => {
       },
       unitSymbols: { 113: "HP" },
       categoryNames: { 7: "Armor" },
+      effects: {},
     });
   });
 
@@ -322,6 +323,57 @@ describe("type route dogma metadata", () => {
     );
   });
 
+  it("names each effect and picks CCP's description over ours", async () => {
+    typeEffectFindMany.mockResolvedValue([
+      {
+        effectId: 11,
+        effect: {
+          name: "loPower",
+          displayName: "Low power",
+          description: "Requires a low power slot",
+          customDescription: "Ignored: CCP wrote one.",
+        },
+      },
+      {
+        effectId: 5189,
+        effect: {
+          name: "trackingSpeedBonusEffectLasers",
+          displayName: null,
+          description: "Automatically generated effect",
+          customDescription: "Increases the Turret Tracking of lasers.",
+        },
+      },
+      {
+        effectId: 16,
+        effect: {
+          name: "online",
+          displayName: "  ",
+          description: null,
+          customDescription: null,
+        },
+      },
+    ]);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "587",
+    });
+
+    expect((props.dogmaMeta as { effects: unknown }).effects).toEqual({
+      11: {
+        name: "Low power",
+        description: { text: "Requires a low power slot", source: "ccp" },
+      },
+      5189: {
+        name: "trackingSpeedBonusEffectLasers",
+        description: {
+          text: "Increases the Turret Tracking of lasers.",
+          source: "ai",
+        },
+      },
+      16: { name: "online", description: undefined },
+    });
+  });
+
   it("degrades to empty metadata when the query fails", async () => {
     typeAttributeFindMany.mockRejectedValue(new Error("connection lost"));
 
@@ -333,6 +385,7 @@ describe("type route dogma metadata", () => {
       attributes: {},
       unitSymbols: {},
       categoryNames: {},
+      effects: {},
     });
   });
 });

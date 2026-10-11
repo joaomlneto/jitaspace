@@ -45,6 +45,7 @@ import {
   YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import {
   DOGMA_DOMAIN_HINTS,
   dogmaDomainNoun,
@@ -53,9 +54,6 @@ import {
 } from "~/lib/dogmaModifiers";
 
 const SKILL_CATEGORY_ID = 16;
-
-/** CCP's placeholder description on effects nobody wrote one for. */
-const BOILERPLATE_DESCRIPTION = "Automatically generated effect";
 
 export interface EffectAttribute {
   attributeId: number;
@@ -666,21 +664,20 @@ function EffectHero({
 }
 
 /**
- * CCP's own text wins; our custom description only fills the gap where CCP
- * left nothing, or only its "Automatically generated effect" placeholder.
+ * CCP's own text, else our AI-generated one (see resolveEffectDescription);
+ * with neither, CCP's "Automatically generated effect" placeholder, dimmed.
  */
 function EffectDescription({
   description,
   customDescription,
 }: Readonly<{ description: string | null; customDescription: string | null }>) {
-  const hasOfficialDescription =
-    description !== null && description !== BOILERPLATE_DESCRIPTION;
+  const resolved = resolveEffectDescription(description, customDescription);
 
-  if (!hasOfficialDescription && customDescription) {
+  if (resolved?.source === "ai") {
     return (
       <Paper withBorder radius="md" p="md">
         <Stack gap="xs">
-          <Text style={{ whiteSpace: "pre-line" }}>{customDescription}</Text>
+          <Text style={{ whiteSpace: "pre-line" }}>{resolved.text}</Text>
           <Group gap={6}>
             <Badge size="xs" variant="light" color="gray">
               AI-generated
@@ -697,10 +694,7 @@ function EffectDescription({
   if (!description) return null;
   return (
     <Paper withBorder radius="md" p="md">
-      <Text
-        component="div"
-        c={description === BOILERPLATE_DESCRIPTION ? "dimmed" : undefined}
-      >
+      <Text component="div" c={resolved ? undefined : "dimmed"}>
         <MailMessageViewer content={sanitizeFormattedEveString(description)} />
       </Text>
     </Paper>

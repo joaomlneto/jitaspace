@@ -11,6 +11,7 @@ import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import { loadEntityHistory } from "~/lib/history-entity-page";
 import { readLatestTypeInsurance } from "~/lib/insuranceData";
 import { pageMetadata, toDescription } from "~/lib/metadata";
@@ -113,7 +114,9 @@ function nonEmpty(value: string | null | undefined): string | undefined {
  * client page previously discovered these in three cascading round trips.
  *
  * Attributes ESI reports but we have no row for simply stay absent from the map,
- * which is the same thing the old per-attribute 404 produced.
+ * which is the same thing the old per-attribute 404 produced. A second query
+ * names the type's effects and picks each one's description: CCP's, else our
+ * AI-generated one.
  *
  * A failure throws rather than degrading here: the caller catches it, so a
  * database blip is never what gets written into the cache entry.
@@ -122,23 +125,39 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   "use cache";
   cacheSdeRead();
 
-  const rows = await prisma.typeAttribute.findMany({
-    select: {
-      attributeId: true,
-      attribute: {
-        select: {
-          displayName: true,
-          name: true,
-          iconId: true,
-          unitId: true,
-          attributeCategoryId: true,
-          DogmaUnit: { select: { displayName: true, name: true } },
-          attributeCategory: { select: { name: true } },
+  const [rows, effectRows] = await Promise.all([
+    prisma.typeAttribute.findMany({
+      select: {
+        attributeId: true,
+        attribute: {
+          select: {
+            displayName: true,
+            name: true,
+            iconId: true,
+            unitId: true,
+            attributeCategoryId: true,
+            DogmaUnit: { select: { displayName: true, name: true } },
+            attributeCategory: { select: { name: true } },
+          },
         },
       },
-    },
-    where: { typeId },
-  });
+      where: { typeId },
+    }),
+    prisma.typeEffect.findMany({
+      select: {
+        effectId: true,
+        effect: {
+          select: {
+            name: true,
+            displayName: true,
+            description: true,
+            customDescription: true,
+          },
+        },
+      },
+      where: { typeId, isDeleted: false },
+    }),
+  ]);
 
   const attributes: TypeDogmaMeta["attributes"] = {};
   const unitSymbols: TypeDogmaMeta["unitSymbols"] = {};
@@ -166,7 +185,19 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
     }
   }
 
-  return { attributes, unitSymbols, categoryNames };
+  const effects: TypeDogmaMeta["effects"] = {};
+  for (const { effectId, effect } of effectRows) {
+    effects[effectId] = {
+      name: nonEmpty(effect.displayName) ?? effect.name ?? undefined,
+      description:
+        resolveEffectDescription(
+          effect.description,
+          effect.customDescription,
+        ) ?? undefined,
+    };
+  }
+
+  return { attributes, unitSymbols, categoryNames, effects };
 }
 
 /**

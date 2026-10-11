@@ -475,7 +475,9 @@ model DogmaEffect {
   /// Not from CCP: a plain-language description written by us (AI-generated
   /// for now) for effects whose own `description` is empty or boilerplate.
   /// No ingest writes it — ingestSdeTable and the ESI scraper only write the
-  /// columns they produce — so it survives every SDE and ESI update.
+  /// columns they produce — so it survives every SDE and ESI update. The pages
+  /// that show it read it under cacheSdeRead(), so after writing it run the
+  /// revalidate-sde-cache job. Written by apps/web/scripts/describe-dogma-effects.
   customDescription String?
 
   types                Type[]

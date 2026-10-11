@@ -1,3 +1,5 @@
+import type { ResolvedEffectDescription } from "~/lib/dogmaEffectDescription";
+
 /**
  * SDE dogma metadata for one type, resolved on the server from our own database
  * and handed to the client page as a plain, serializable prop.
@@ -15,6 +17,13 @@ export interface TypeDogmaAttributeMeta {
   categoryId?: number;
 }
 
+export interface TypeDogmaEffectMeta {
+  /** Display name, else the internal name. */
+  name?: string;
+  /** CCP's description, else our AI-generated one (resolveEffectDescription). */
+  description?: ResolvedEffectDescription;
+}
+
 export interface TypeDogmaMeta {
   /** Keyed by attribute id. */
   attributes: Record<number, TypeDogmaAttributeMeta>;
@@ -22,10 +31,13 @@ export interface TypeDogmaMeta {
   unitSymbols: Record<number, string>;
   /** Category name, keyed by dogma attribute category id. */
   categoryNames: Record<number, string>;
+  /** Keyed by effect id. */
+  effects: Record<number, TypeDogmaEffectMeta>;
 }
 
 export const emptyTypeDogmaMeta: TypeDogmaMeta = {
   attributes: {},
   unitSymbols: {},
   categoryNames: {},
+  effects: {},
 };
