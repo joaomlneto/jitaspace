@@ -339,6 +339,73 @@ export class SovereigntyHistory {
     return true;
   }
 
+  /** Why `observation` must not be applied, if it must not. */
+  private rejectionOf(
+    observation: SovereigntyObservation,
+  ): ApplyResult["reason"] | undefined {
+    const { observedAt, systems } = observation;
+    if (this.latest === null) return undefined;
+    if (+observedAt <= +this.latest) return "not-newer";
+    // An EVE Ref file fetched soon after one of our polls may hold data from
+    // before it, and would undo a change the poll already recorded.
+    const staleness = SNAPSHOT_STALENESS_MS[observation.source];
+    if (
+      staleness > SNAPSHOT_STALENESS_MS[this.latestSource ?? "esi"] &&
+      +observedAt - staleness < +this.latest
+    ) {
+      return "older-data";
+    }
+    const stillListed = [...this.open.keys()].filter((id) =>
+      systems.has(id),
+    ).length;
+    if (this.open.size > 0 && stillListed < this.open.size * MIN_LISTED_SHARE) {
+      return "too-few-systems";
+    }
+    return undefined;
+  }
+
+  /**
+   * One system as a snapshot lists it: the same claim (perhaps now with its
+   * claim time or hub), a new claim by the same holder, or a new holder.
+   */
+  private applySystem(
+    solarSystemId: number,
+    seen: SovereigntyHolder,
+    observedAt: Date,
+    result: ApplyResult,
+  ) {
+    const current = this.open.get(solarSystemId);
+    if (current && sameClaim(current, seen)) {
+      const needsFill =
+        (current.claimedSince === null && seen.claimedSince !== null) ||
+        (current.sovereigntyHubId === null && seen.sovereigntyHubId !== null);
+      if (!needsFill) return;
+      const before = +current.startedAt;
+      if (this.fillClaim(current, seen)) {
+        if (+current.startedAt !== before) result.refined++;
+        return;
+      }
+      // The same holder claimed it again since: the old claim ends there.
+      const claimedAt = seen.claimedSince ?? observedAt;
+      const startedAt = +claimedAt > +observedAt ? observedAt : claimedAt;
+      this.close(current, startedAt);
+      this.openPeriod(solarSystemId, seen, {
+        startedAt,
+        earliestStartedAt: startedAt,
+      });
+      result.closed++;
+      result.opened++;
+      return;
+    }
+    const start = this.startOf(seen, observedAt);
+    if (current) {
+      this.close(current, start.startedAt);
+      result.closed++;
+    }
+    this.openPeriod(solarSystemId, seen, start);
+    result.opened++;
+  }
+
   apply(observation: SovereigntyObservation): ApplyResult {
     const { observedAt, systems } = observation;
     const result: ApplyResult = {
@@ -347,57 +414,11 @@ export class SovereigntyHistory {
       closed: 0,
       refined: 0,
     };
-    if (this.latest !== null && +observedAt <= +this.latest) {
-      return { ...result, reason: "not-newer" };
-    }
-    // An EVE Ref file fetched soon after one of our polls may hold data from
-    // before it, and would undo a change the poll already recorded.
-    const staleness = SNAPSHOT_STALENESS_MS[observation.source];
-    if (
-      this.latest !== null &&
-      staleness > SNAPSHOT_STALENESS_MS[this.latestSource ?? "esi"] &&
-      +observedAt - staleness < +this.latest
-    ) {
-      return { ...result, reason: "older-data" };
-    }
-    const stillListed = [...this.open.keys()].filter((id) =>
-      systems.has(id),
-    ).length;
-    if (this.open.size > 0 && stillListed < this.open.size * MIN_LISTED_SHARE) {
-      return { ...result, reason: "too-few-systems" };
-    }
+    const reason = this.rejectionOf(observation);
+    if (reason) return { ...result, reason };
 
     for (const [solarSystemId, seen] of systems) {
-      const current = this.open.get(solarSystemId);
-      if (current && sameClaim(current, seen)) {
-        const needsFill =
-          (current.claimedSince === null && seen.claimedSince !== null) ||
-          (current.sovereigntyHubId === null && seen.sovereigntyHubId !== null);
-        if (!needsFill) continue;
-        const before = +current.startedAt;
-        if (this.fillClaim(current, seen)) {
-          if (+current.startedAt !== before) result.refined++;
-          continue;
-        }
-        // The same holder claimed it again since: the old claim ends there.
-        const claimedAt = seen.claimedSince ?? observedAt;
-        const startedAt = +claimedAt > +observedAt ? observedAt : claimedAt;
-        this.close(current, startedAt);
-        this.openPeriod(solarSystemId, seen, {
-          startedAt,
-          earliestStartedAt: startedAt,
-        });
-        result.closed++;
-        result.opened++;
-        continue;
-      }
-      const start = this.startOf(seen, observedAt);
-      if (current) {
-        this.close(current, start.startedAt);
-        result.closed++;
-      }
-      this.openPeriod(solarSystemId, seen, start);
-      result.opened++;
+      this.applySystem(solarSystemId, seen, observedAt, result);
     }
 
     // Systems no longer listed: their holder's period ends here.

@@ -92,25 +92,29 @@ async function fetchEveRef<T>(
 ): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     try {
+      // One attempt at a time, by design: each retry waits on the last.
       const response = await fetch(url, {
         headers: { "User-Agent": EVEREF_USER_AGENT },
         signal: AbortSignal.timeout(policy.timeoutMs),
-      });
+      }); // NOSONAR: retries are sequential
       if (!response.ok) throw new EveRefHttpError(url, response);
-      return await read(response);
+      return await read(response); // NOSONAR: retries are sequential
     } catch (error) {
       const http = error instanceof EveRefHttpError ? error : null;
       if ((http && !http.retryable) || attempt >= policy.attempts) throw error;
-      await http?.response.body?.cancel();
-      const retryAfter = Number(http?.response.headers.get("retry-after"));
-      await sleep(
-        Number.isFinite(retryAfter) && retryAfter > 0
-          ? retryAfter * 1000
-          : 2 ** attempt * 1000,
-      );
+      await http?.response.body?.cancel(); // NOSONAR: retries are sequential
+      await sleep(retryDelayMs(http, attempt)); // NOSONAR: retries are sequential
     }
   }
 }
+
+/** As long as EVE Ref's Retry-After says, else exponential backoff. */
+const retryDelayMs = (http: EveRefHttpError | null, attempt: number) => {
+  const retryAfter = Number(http?.response.headers.get("retry-after"));
+  return Number.isFinite(retryAfter) && retryAfter > 0
+    ? retryAfter * 1000
+    : 2 ** attempt * 1000;
+};
 
 const fetchIndex = (url: string, policy: EveRefRequestPolicy) =>
   fetchEveRef(

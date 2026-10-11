@@ -1,4 +1,12 @@
-import type { SovereigntyObservation } from "../../../helpers/sovereigntyHistory.ts";
+import type { JobLogger } from "../../../core";
+import type {
+  EveRefDay,
+  EveRefYearArchive,
+} from "../../../helpers/everefSovereignty.ts";
+import type {
+  SovereigntyHistory,
+  SovereigntyObservation,
+} from "../../../helpers/sovereigntyHistory.ts";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
@@ -28,6 +36,81 @@ export interface BackfillEveRefSovereigntyHistoryEventPayload {
      */
     budgetMinutes?: number;
   };
+}
+
+/** Replays EVE Ref's archive into `history`, part by part, up to `until`. */
+class Replay {
+  readonly stats = { applied: 0, skipped: 0, archivedErrors: 0, commits: 0 };
+
+  constructor(
+    private readonly history: SovereigntyHistory,
+    private readonly until: Date | null,
+    private readonly logger: JobLogger,
+  ) {}
+
+  private inRange(observedAt: Date) {
+    return this.until === null || +observedAt <= +this.until;
+  }
+
+  private apply(snapshot: SovereigntyObservation | null) {
+    // EVE Ref archived an error response that hour, not a map.
+    if (snapshot === null) {
+      this.stats.archivedErrors++;
+      return;
+    }
+    const result = this.history.apply(snapshot);
+    if (result.applied) {
+      this.stats.applied++;
+    } else if (result.reason === "too-few-systems") {
+      this.stats.skipped++;
+      this.logger.warn("Skipped a snapshot listing too few systems", {
+        observedAt: snapshot.observedAt,
+        systems: snapshot.systems.size,
+      });
+    }
+  }
+
+  async commit() {
+    if (!this.history.hasChanges) return;
+    await commitSovereigntyHistory(this.history);
+    this.stats.commits++;
+  }
+
+  /** Replays a yearly archive; true once past `until`. */
+  async archive(part: EveRefYearArchive) {
+    const { count, errors, observations } = await readEveRefYearArchive(
+      part,
+      this.history.latestSnapshotAt,
+    );
+    this.stats.archivedErrors += errors;
+    this.logger.info(`Replaying the ${part.year} archive`, {
+      snapshots: count,
+      archivedErrors: errors,
+    });
+    let sinceCommit = 0;
+    for (const snapshot of observations) {
+      if (!this.inRange(snapshot.observedAt)) return true;
+      this.apply(snapshot);
+      if (++sinceCommit >= ARCHIVE_FLUSH_EVERY) {
+        await this.commit(); // NOSONAR: in order, one at a time
+        sinceCommit = 0;
+      }
+    }
+    return false;
+  }
+
+  /** Replays a day's hourly files; true once past `until`. */
+  async day(part: EveRefDay) {
+    const after = this.history.latestSnapshotAt;
+    const files = (await listEveRefDay(part)).filter(
+      (file) => after === null || +file.observedAt > +after,
+    );
+    for (const file of files) {
+      if (!this.inRange(file.observedAt)) return true;
+      this.apply(await fetchEveRefSnapshot(file)); // NOSONAR: one request at a time
+    }
+    return false;
+  }
 }
 
 /**
@@ -62,83 +145,28 @@ export const backfillEveRefSovereigntyHistory = defineJob<
 
     const history = await loadSovereigntyHistory(prisma);
     const startedFrom = history.latestSnapshotAt;
-    const stats = { applied: 0, skipped: 0, archivedErrors: 0, commits: 0 };
-    const inRange = (observedAt: Date) =>
-      until === null || +observedAt <= +until;
-
-    const apply = (snapshot: SovereigntyObservation | null) => {
-      // EVE Ref archived an error response that hour, not a map.
-      if (snapshot === null) {
-        stats.archivedErrors++;
-        return;
-      }
-      const result = history.apply(snapshot);
-      if (result.applied) stats.applied++;
-      else if (result.reason === "too-few-systems") {
-        stats.skipped++;
-        ctx.logger.warn("Skipped a snapshot listing too few systems", {
-          observedAt: snapshot.observedAt,
-          systems: snapshot.systems.size,
-        });
-      }
-    };
-    const commit = async () => {
-      if (!history.hasChanges) return;
-      await commitSovereigntyHistory(history);
-      stats.commits++;
-    };
+    const replay = new Replay(history, until, ctx.logger);
 
     const parts = await listEveRefSovereigntyArchive(history.latestSnapshotAt);
     let finished = true;
-    let reachedUntil = false;
     for (const part of parts) {
       if (Date.now() > deadline) {
         finished = false;
         break;
       }
-      if (part.kind === "archive") {
-        const { count, errors, observations } = await readEveRefYearArchive(
-          part,
-          history.latestSnapshotAt,
-        );
-        stats.archivedErrors += errors;
-        ctx.logger.info(`Replaying the ${part.year} archive`, {
-          snapshots: count,
-          archivedErrors: errors,
-        });
-        let sinceCommit = 0;
-        for (const snapshot of observations) {
-          if (!inRange(snapshot.observedAt)) {
-            reachedUntil = true;
-            break;
-          }
-          apply(snapshot);
-          if (++sinceCommit >= ARCHIVE_FLUSH_EVERY) {
-            await commit(); // NOSONAR: in order, one at a time
-            sinceCommit = 0;
-          }
-        }
-      } else {
-        const after = history.latestSnapshotAt;
-        const files = (await listEveRefDay(part)).filter(
-          (file) => after === null || +file.observedAt > +after,
-        );
-        for (const file of files) {
-          if (!inRange(file.observedAt)) {
-            reachedUntil = true;
-            break;
-          }
-          apply(await fetchEveRefSnapshot(file)); // NOSONAR: one request at a time
-        }
-      }
+      // In order, one part at a time: each continues from the last.
+      const reachedUntil =
+        part.kind === "archive"
+          ? await replay.archive(part) // NOSONAR: in order, one at a time
+          : await replay.day(part); // NOSONAR: in order, one at a time
       // One transaction per day, or per archive's tail.
-      await commit(); // NOSONAR: in order, one at a time
+      await replay.commit(); // NOSONAR: in order, one at a time
       if (reachedUntil) break;
     }
-    await commit();
+    await replay.commit();
 
     const result = {
-      ...stats,
+      ...replay.stats,
       startedFrom: startedFrom?.toISOString() ?? null,
       reached: history.latestSnapshotAt?.toISOString() ?? null,
       openPeriods: history.openPeriodCount,

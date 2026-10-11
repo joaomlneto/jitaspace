@@ -64,7 +64,7 @@ export async function writeSovereigntyHistory(
   // and rewrite them with the new end alongside the rest.
   const retargeted: SovereigntyPeriod[] = [];
   for (const batch of chunks(retargets)) {
-    const rows = await db.solarSystemSovereigntyPeriod.findMany({
+    const query = db.solarSystemSovereigntyPeriod.findMany({
       select: periodColumns,
       where: {
         OR: batch.map(({ solarSystemId, endedAt }) => ({
@@ -73,6 +73,8 @@ export async function writeSovereigntyHistory(
         })),
       },
     });
+    // One statement at a time: a transaction holds a single connection.
+    const rows = await query; // NOSONAR: one at a time, see above
     const newEnd = new Map(
       batch.map((r) => [`${r.solarSystemId}:${+r.endedAt}`, r.newEndedAt]),
     );
@@ -91,9 +93,7 @@ export async function writeSovereigntyHistory(
   ];
   // One statement at a time: a transaction holds a single connection.
   for (const batch of chunks(toDelete)) {
-    await db.solarSystemSovereigntyPeriod.deleteMany({
-      where: { OR: batch },
-    }); // NOSONAR: one at a time, see above
+    await db.solarSystemSovereigntyPeriod.deleteMany({ where: { OR: batch } }); // NOSONAR: one at a time, see above
   }
   for (const batch of chunks([...upserts, ...retargeted])) {
     await db.solarSystemSovereigntyPeriod.createMany({ data: batch }); // NOSONAR: one at a time, see above

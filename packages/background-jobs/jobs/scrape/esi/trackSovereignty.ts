@@ -96,6 +96,45 @@ async function eveRefSnapshotsInGap(after: Date, before: Date) {
 }
 
 /**
+ * Replays EVE Ref's snapshots between the history's last one and ESI's, within
+ * GAP_FILL_BUDGET_MS. `caughtUp` says whether ESI's snapshot may follow: not
+ * while files are left, nor while EVE Ref fails within GAP_FILL_PATIENCE_MS
+ * of the gap opening.
+ */
+async function fillGap(
+  history: SovereigntyHistory,
+  latest: Date,
+  until: Date,
+  logger: JobLogger,
+) {
+  let gapFilled = 0;
+  try {
+    const { files, complete } = await eveRefSnapshotsInGap(latest, until);
+    const deadline = Date.now() + GAP_FILL_BUDGET_MS;
+    let replayed = 0;
+    for (const file of files) {
+      if (Date.now() > deadline) break;
+      const snapshot = await fetchEveRefSnapshot(file, QUICK_EVEREF_REQUESTS); // NOSONAR: one request at a time
+      replayed++;
+      if (snapshot && history.apply(snapshot).applied) gapFilled++;
+    }
+    // Out of time with files left: the next run carries on from here.
+    return { gapFilled, caughtUp: complete && replayed === files.length };
+  } catch (error) {
+    // Keep what was replayed; within the patience window, hold ESI's
+    // snapshot back so the next run can fill the rest of the gap.
+    const caughtUp = +until - +latest >= GAP_FILL_PATIENCE_MS;
+    logger.warn(
+      caughtUp
+        ? "Could not fill the sovereignty gap from EVE Ref for hours; leaving it"
+        : "Could not fill the sovereignty gap from EVE Ref; retrying next run",
+      { latestSnapshotAt: history.latestSnapshotAt, error: String(error) },
+    );
+    return { gapFilled, caughtUp };
+  }
+}
+
+/**
  * Adds ESI's snapshot to the history, after replaying EVE Ref's snapshots of
  * any gap since the last one. Returns what it did, for the run's stats.
  */
@@ -112,8 +151,6 @@ async function recordHistory(
     return { recorded: false, gapFilled: 0 };
   }
 
-  let gapFilled = 0;
-  let caughtUp = true;
   const gap = +esi.observedAt - +latest;
   if (gap > MAX_GAP_FILL_MS) {
     logger.warn(
@@ -122,34 +159,10 @@ async function recordHistory(
     );
     return { recorded: false, gapFilled: 0 };
   }
-  if (gap > GAP_MS) {
-    try {
-      const { files, complete } = await eveRefSnapshotsInGap(
-        latest,
-        esi.observedAt,
-      );
-      const deadline = Date.now() + GAP_FILL_BUDGET_MS;
-      let replayed = 0;
-      for (const file of files) {
-        if (Date.now() > deadline) break;
-        const snapshot = await fetchEveRefSnapshot(file, QUICK_EVEREF_REQUESTS); // NOSONAR: one request at a time
-        replayed++;
-        if (snapshot && history.apply(snapshot).applied) gapFilled++;
-      }
-      // Out of time with files left: the next run carries on from here.
-      caughtUp = complete && replayed === files.length;
-    } catch (error) {
-      // Keep what was replayed; within the patience window, hold ESI's
-      // snapshot back so the next run can fill the rest of the gap.
-      caughtUp = gap >= GAP_FILL_PATIENCE_MS;
-      logger.warn(
-        caughtUp
-          ? "Could not fill the sovereignty gap from EVE Ref for hours; leaving it"
-          : "Could not fill the sovereignty gap from EVE Ref; retrying next run",
-        { latestSnapshotAt: history.latestSnapshotAt, error: String(error) },
-      );
-    }
-  }
+  const { gapFilled, caughtUp } =
+    gap > GAP_MS
+      ? await fillGap(history, latest, esi.observedAt, logger)
+      : { gapFilled: 0, caughtUp: true };
 
   const applied = caughtUp ? history.apply(esi) : undefined;
   if (applied && !applied.applied && applied.reason === "too-few-systems") {
