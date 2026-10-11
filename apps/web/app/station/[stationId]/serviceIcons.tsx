@@ -1,5 +1,7 @@
 import type { ReactElement } from "react";
+import { createElement } from "react";
 
+import type { EveIconComponent } from "@jitaspace/eve-icons";
 import {
   CategoryAgentMissionIcon,
   WindowBasicServicesIcon,
@@ -32,53 +34,30 @@ import {
  * retired long ago (Gambling, Surgery, DNA Therapy), fall back to the generic
  * station services icon.
  */
-const SERVICE_ICONS: Record<number, (size: number) => ReactElement> = {
-  // Bounty Missions
-  1: (size) => <WindowBountyOfficeIcon size={size} alt="" />,
-  // Assassination Missions
-  2: (size) => <CategoryAgentMissionIcon size={size} alt="" />,
-  // Courier Missions
-  3: (size) => <WindowContractCourierIcon size={size} alt="" />,
-  // Reprocessing Plant
-  5: (size) => <WindowReprocessingIcon size={size} alt="" />,
-  // Refinery
-  6: (size) => <WindowReprocessIcon size={size} alt="" />,
-  // Market
-  7: (size) => <WindowMarketIcon size={size} alt="" />,
-  // Black Market
-  8: (size) => <WindowMarketIcon size={size} alt="" />,
-  // Stock Exchange
-  9: (size) => <WindowMarketOrdersIcon size={size} alt="" />,
-  // Cloning
-  10: (size) => <WindowCloneBayIcon size={size} alt="" />,
-  // Repair Facilities
-  13: (size) => <WindowRepairShopIcon size={size} alt="" />,
-  // Factory
-  14: (size) => <WindowIndustryIcon size={size} alt="" />,
-  // Laboratory
-  15: (size) => <WindowResearchIcon size={size} alt="" />,
-  // Fitting
-  17: (size) => <WindowFittingIcon size={size} alt="" />,
-  // Paintshop
-  18: (size) => <WindowPaintToolIcon size={size} alt="" />,
-  // News
-  19: (size) => <WindowNewsPostIcon size={size} alt="" />,
-  // Storage
-  20: (size) => <WindowItemHangarIcon size={size} alt="" />,
-  // Insurance
-  21: (size) => <WindowInsuranceIcon size={size} alt="" />,
-  // Docking
-  22: (size) => <WindowDockingIcon size={size} alt="" />,
-  // Office Rental
-  23: (size) => <WindowOfficesIcon size={size} alt="" />,
-  // Jump Clone Facility
-  24: (size) => <WindowJumpClonesIcon size={size} alt="" />,
-  // Loyalty Point Store
-  25: (size) => <WindowLpStoreIcon size={size} alt="" />,
-  // Navy Offices
-  26: (size) => <WindowFactionalWarfareIcon size={size} alt="" />,
-  // Security Office
-  27: (size) => <WindowSecurityStatusIcon size={size} alt="" />,
+const SERVICE_ICONS: Record<number, EveIconComponent> = {
+  1: WindowBountyOfficeIcon, // Bounty Missions
+  2: CategoryAgentMissionIcon, // Assassination Missions
+  3: WindowContractCourierIcon, // Courier Missions
+  5: WindowReprocessingIcon, // Reprocessing Plant
+  6: WindowReprocessIcon, // Refinery
+  7: WindowMarketIcon, // Market
+  8: WindowMarketIcon, // Black Market
+  9: WindowMarketOrdersIcon, // Stock Exchange
+  10: WindowCloneBayIcon, // Cloning
+  13: WindowRepairShopIcon, // Repair Facilities
+  14: WindowIndustryIcon, // Factory
+  15: WindowResearchIcon, // Laboratory
+  17: WindowFittingIcon, // Fitting
+  18: WindowPaintToolIcon, // Paintshop
+  19: WindowNewsPostIcon, // News
+  20: WindowItemHangarIcon, // Storage
+  21: WindowInsuranceIcon, // Insurance
+  22: WindowDockingIcon, // Docking
+  23: WindowOfficesIcon, // Office Rental
+  24: WindowJumpClonesIcon, // Jump Clone Facility
+  25: WindowLpStoreIcon, // Loyalty Point Store
+  26: WindowFactionalWarfareIcon, // Navy Offices
+  27: WindowSecurityStatusIcon, // Security Office
 };
 
 /** The client's icon for a station service, decorative beside its name. */
@@ -86,8 +65,10 @@ export function ServiceIcon({
   serviceId,
   size,
 }: Readonly<{ serviceId: number; size: number }>): ReactElement {
-  const icon = SERVICE_ICONS[serviceId];
-  return icon ? icon(size) : <WindowBasicServicesIcon size={size} alt="" />;
+  return createElement(SERVICE_ICONS[serviceId] ?? WindowBasicServicesIcon, {
+    size,
+    alt: "",
+  });
 }
 
 /** Service ids the page annotates with the station's own figures. */

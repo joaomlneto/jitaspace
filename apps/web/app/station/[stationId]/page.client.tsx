@@ -70,6 +70,7 @@ import {
   SectionHeading,
   StatCard,
 } from "~/components/EntityPage";
+import { RaceName } from "~/components/Text";
 import { formatCountOf, formatInteger, formatPercent } from "~/lib/format";
 import { named } from "~/lib/namedRef";
 import { EmbeddedEntityHistory } from "../../history/EntityHistory";
@@ -104,6 +105,9 @@ function useLiveStation(station: StationPageData) {
     owner,
     // The faction is the server-read owner's; drop it if ESI names another.
     faction: owner?.id === station.owner?.id ? station.faction : null,
+    // Our row's race comes from the ESI station scraper, so ESI may know one
+    // our row does not have yet.
+    race: named(esi?.race_id ?? station.race?.id, station.race),
     reprocessingEfficiency:
       esi?.reprocessing_efficiency ?? station.reprocessingEfficiency,
     reprocessingStationsTake:
@@ -204,7 +208,9 @@ function ServiceCard({
               {detail}
             </Text>
           )}
-          {service.minimumStanding !== null && (
+          {/* The threshold is the server-read owner's faction's: without that
+              faction (ESI names another owner) it may no longer apply. */}
+          {service.minimumStanding !== null && faction && (
             <Group gap={6}>
               <Badge
                 variant="light"
@@ -212,11 +218,9 @@ function ServiceCard({
               >
                 {standingLabel(service.minimumStanding)}
               </Badge>
-              {faction && (
-                <Text size="xs" c="dimmed">
-                  with {faction.name ?? "the owner's faction"}
-                </Text>
-              )}
+              <Text size="xs" c="dimmed">
+                with {faction.name ?? "the owner's faction"}
+              </Text>
             </Group>
           )}
         </Stack>
@@ -333,12 +337,12 @@ function OverviewPanel({
               value={<FactionLine faction={live.faction} />}
             />
           )}
-          {station.race && (
+          {live.race && (
             <StatCard
               label="Race"
               value={
-                <RaceAnchor raceId={station.race.id}>
-                  {station.race.name ?? station.race.id}
+                <RaceAnchor raceId={live.race.id}>
+                  {live.race.name ?? <RaceName span raceId={live.race.id} />}
                 </RaceAnchor>
               }
             />

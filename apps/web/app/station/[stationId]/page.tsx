@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
+import { formatCountOf } from "~/lib/format";
 import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
@@ -31,7 +32,9 @@ export async function generateMetadata({
   const inSystem = system ? ` in ${system}` : "";
   const operatedBy = owner ? `, operated by ${owner}` : "";
   const agents =
-    station.agents.length > 0 ? `, ${station.agents.length} agents` : "";
+    station.agents.length > 0
+      ? `, ${formatCountOf(station.agents.length, "agent", "agents")}`
+      : "";
 
   return pageMetadata({
     title: station.name,
@@ -66,9 +69,13 @@ async function PageContent({
 
   // Uncaught: this page is cached whole, so a database failure must throw
   // rather than store a 404. `null` is a station that genuinely does not exist.
-  const station = await readStation(id);
+  // The history read runs alongside, not after: a cold one takes seconds, and
+  // `loadEntityHistory` never throws.
+  const [station, history] = await Promise.all([
+    readStation(id),
+    loadEntityHistory("npcStation", id),
+  ]);
   if (!station) notFound();
-  const history = await loadEntityHistory("npcStation", id);
 
   // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
   // `useSearchParams()`, which drops this subtree out of the cached render. The

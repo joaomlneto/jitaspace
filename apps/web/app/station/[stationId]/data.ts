@@ -18,27 +18,17 @@ const [[NPC_CORPORATION_MIN, NPC_CORPORATION_MAX]] = npcCorporationIdRanges as [
 const byName = (a: { name: string }, b: { name: string }) =>
   a.name.localeCompare(b.name);
 
-/** The celestial `orbitId` names: a moon, a planet or a star. */
+/**
+ * The celestial `orbitId` names: a moon (3,986 stations), else a planet
+ * (1,223), else a star (Zarzakh alone). One lookup for most stations, rather
+ * than three in parallel of which two always miss.
+ */
 async function readOrbit(orbitId: number | null): Promise<StationOrbit | null> {
   if (orbitId === null) return null;
-  const [moon, planet, star] = await Promise.all([
-    prisma.moon.findUnique({
-      select: {
-        name: true,
-        planetId: true,
-        planet: { select: { name: true } },
-      },
-      where: { moonId: orbitId },
-    }),
-    prisma.planet.findUnique({
-      select: { name: true },
-      where: { planetId: orbitId },
-    }),
-    prisma.star.findUnique({
-      select: { name: true },
-      where: { starId: orbitId },
-    }),
-  ]);
+  const moon = await prisma.moon.findUnique({
+    select: { name: true, planetId: true, planet: { select: { name: true } } },
+    where: { moonId: orbitId },
+  });
   if (moon) {
     return {
       kind: "moon",
@@ -47,8 +37,16 @@ async function readOrbit(orbitId: number | null): Promise<StationOrbit | null> {
       planet: { id: moon.planetId, name: moon.planet.name },
     };
   }
+  const planet = await prisma.planet.findUnique({
+    select: { name: true },
+    where: { planetId: orbitId },
+  });
   if (planet)
     return { kind: "planet", id: orbitId, name: planet.name, planet: null };
+  const star = await prisma.star.findUnique({
+    select: { name: true },
+    where: { starId: orbitId },
+  });
   if (star) return { kind: "star", id: orbitId, name: star.name, planet: null };
   return null;
 }
@@ -72,11 +70,13 @@ async function readOperation(
       activityId: true,
       manufacturingFactor: true,
       researchFactor: true,
+      isDeleted: true,
       services: { select: { serviceId: true }, where: { isDeleted: false } },
     },
     where: { stationOperationId: operationId },
   });
-  if (!operation) return { operation: null, services: [] };
+  if (!operation || operation.isDeleted)
+    return { operation: null, services: [] };
 
   const serviceIds = operation.services.map((service) => service.serviceId);
   const [activity, services, restrictions] = await Promise.all([
@@ -86,7 +86,7 @@ async function readOperation(
     }),
     prisma.stationService.findMany({
       select: { stationServiceId: true, name: true, description: true },
-      where: { stationServiceId: { in: serviceIds } },
+      where: { stationServiceId: { in: serviceIds }, isDeleted: false },
     }),
     factionId === null
       ? []
@@ -232,6 +232,7 @@ export async function readStation(
       reprocessingStationsTake: true,
       maxDockableShipVolume: true,
       officeRentalCost: true,
+      isDeleted: true,
       Agent: {
         select: {
           characterId: true,
@@ -248,7 +249,8 @@ export async function readStation(
     },
     where: { stationId },
   });
-  if (!station) return null;
+  // A station the SDE dropped is soft-deleted: a 404, not a live page.
+  if (!station || station.isDeleted) return null;
 
   const factionId = station.owner?.factionId ?? null;
   const [orbit, { operation, services }, schools, headquarters] =

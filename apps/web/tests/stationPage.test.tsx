@@ -79,6 +79,10 @@ jest.mock("~/components/ActionIcon", () => ({
   OpenInformationWindowActionIcon: () => null,
 }));
 
+jest.mock("~/components/Text", () => ({
+  RaceName: () => <span>Race name</span>,
+}));
+
 jest.mock("~/components/Agents", () => ({
   AgentsTable: ({
     agents,
@@ -237,6 +241,20 @@ describe("readStation", () => {
     prismaMock.station.findUnique.mockResolvedValue(null);
     await expect(loadData().readStation(999)).resolves.toBe(null);
     expect(prismaMock.stationOperation.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("is null for a station the SDE dropped", async () => {
+    prismaMock.station.findUnique.mockResolvedValue(
+      stationRow({ isDeleted: true }),
+    );
+    await expect(loadData().readStation(JITA_44)).resolves.toBe(null);
+  });
+
+  it("looks a moon orbit up alone, without the planet and star reads", async () => {
+    mockSdeReads();
+    await loadData().readStation(JITA_44);
+    expect(prismaMock.planet.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.star.findUnique).not.toHaveBeenCalled();
   });
 
   it("gathers the station, its orbit, operation, services and agents", async () => {
@@ -466,6 +484,20 @@ describe("station page metadata", () => {
     expect(metadata.alternates?.canonical).toBe("/station/60003760");
   });
 
+  it("counts a single agent in the singular", async () => {
+    mockSdeReads();
+    prismaMock.station.findUnique.mockResolvedValue(
+      stationRow({ Agent: stationRow().Agent.slice(0, 1) }),
+    );
+    const { generateMetadata } = await import("~/app/station/[stationId]/page");
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ stationId: String(JITA_44) }),
+    });
+
+    expect(metadata.description).toContain("See its services, 1 agent,");
+  });
+
   it("emits no metadata for a station we do not have", async () => {
     prismaMock.station.findUnique.mockResolvedValue(null);
     const { generateMetadata } = await import("~/app/station/[stationId]/page");
@@ -668,6 +700,19 @@ describe("station page (client)", () => {
     expect(screen.queryByText("Caldari State")).not.toBeInTheDocument();
     // ESI's office rent, which our row did not have: in the hero and overview.
     expect(screen.getAllByText("Office rent")).toHaveLength(2);
+  });
+
+  it("names ESI's race when our row has none", () => {
+    mockUseStation.mockReturnValue({ data: { data: { race_id: 1 } } });
+    renderClient(stationData({ race: null }));
+    expect(screen.getByText("Race")).toBeInTheDocument();
+    expect(screen.getByText("Race name")).toBeInTheDocument();
+  });
+
+  it("hides standing restrictions once ESI names another owner", () => {
+    mockUseStation.mockReturnValue({ data: { data: { owner: 1000036 } } });
+    renderClient(stationData(), "?tab=services");
+    expect(screen.queryByText("Standing ≥ 3.00")).not.toBeInTheDocument();
   });
 
   it("renders a station the SDE left unplaced without an undefined link", () => {
