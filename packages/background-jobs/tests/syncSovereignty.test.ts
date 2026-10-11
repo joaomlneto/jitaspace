@@ -15,13 +15,9 @@ import type { syncSovereignty as SyncSovereignty } from "../jobs/scrape/esi/sync
 import { toSovereigntyRow } from "../helpers/planSovereigntyUpdates";
 
 // @swc/jest doesn't hoist jest.mock, so the mock fns are declared first and the
-// factories close over them; the module is imported lazily in beforeAll. ESI
-// and Prisma are stubbed; planSovereigntyUpdates runs for real.
+// factories close over them; the module is imported lazily in beforeAll.
+// Prisma is stubbed; planSovereigntyUpdates runs for real.
 let esiSystems: SovereigntySystemsSolarsystem[];
-jest.mock("@jitaspace/esi-client", () => ({
-  getSovereigntySystems: () =>
-    Promise.resolve({ data: { solar_systems: esiSystems } }),
-}));
 
 type Rows = Record<string, unknown>[];
 const sovFindMany = jest.fn<(a?: unknown) => Promise<SovereigntyRow[]>>();
@@ -30,6 +26,8 @@ const sovUpdate = jest.fn((_a: unknown) => Promise.resolve({}));
 const sovDeleteMany = jest.fn((_a: unknown) => Promise.resolve({ count: 0 }));
 const solarSystemFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 const factionFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
+const allianceFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
+let knownAllianceIds: number[];
 
 jest.mock("../db", () => ({
   prisma: {
@@ -41,6 +39,7 @@ jest.mock("../db", () => ({
     },
     solarSystem: { findMany: (a?: unknown) => solarSystemFindMany(a) },
     faction: { findMany: (a?: unknown) => factionFindMany(a) },
+    alliance: { findMany: (a?: unknown) => allianceFindMany(a) },
   },
 }));
 
@@ -84,6 +83,15 @@ beforeEach(() => {
   esiSystems = [];
   sovFindMany.mockResolvedValue([]);
   factionFindMany.mockResolvedValue([{ factionId: 500007 }]);
+  knownAllianceIds = [];
+  // The Alliance table holds `knownAllianceIds`; the job asks for the claimants.
+  allianceFindMany.mockImplementation((a) =>
+    Promise.resolve(
+      (a as { where: { allianceId: { in: number[] } } }).where.allianceId.in
+        .filter((allianceId) => knownAllianceIds.includes(allianceId))
+        .map((allianceId) => ({ allianceId })),
+    ),
+  );
   solarSystemFindMany.mockImplementation((a) =>
     Promise.resolve(
       (
@@ -111,8 +119,9 @@ describe("syncSovereignty", () => {
       toSovereigntyRow(held(5, 50)), // no longer listed
     ]);
 
+    knownAllianceIds = [10, 20, 30];
     const result = await syncSovereignty({
-      knownAllianceIds: new Set([10, 20, 30]),
+      solarSystems: esiSystems,
       logger,
     });
 
@@ -145,8 +154,9 @@ describe("syncSovereignty", () => {
     esiSystems = [held(1, 10)];
     sovFindMany.mockResolvedValue([toSovereigntyRow(held(1, 10))]);
 
+    knownAllianceIds = [10];
     const result = await syncSovereignty({
-      knownAllianceIds: new Set([10]),
+      solarSystems: esiSystems,
       logger,
     });
 
@@ -154,6 +164,28 @@ describe("syncSovereignty", () => {
     expect(sovUpdate).not.toHaveBeenCalled();
     expect(sovDeleteMany).not.toHaveBeenCalled();
     expect(result.affectedAllianceIds).toEqual([]);
+  });
+
+  it("ignores a response missing more than one system in twenty", async () => {
+    // 20 systems stored; ESI lists only the first 18.
+    sovFindMany.mockResolvedValue(
+      Array.from({ length: 20 }, (_, i) => toSovereigntyRow(held(i + 1, 10))),
+    );
+    esiSystems = Array.from({ length: 18 }, (_, i) => held(i + 1, 10));
+    knownAllianceIds = [10];
+
+    const result = await syncSovereignty({
+      solarSystems: esiSystems,
+      logger,
+    });
+
+    expect(sovDeleteMany).not.toHaveBeenCalled();
+    expect(sovUpdate).not.toHaveBeenCalled();
+    expect(result.affectedAllianceIds).toEqual([]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("too few systems"),
+      { systems: 18, stored: 20 },
+    );
   });
 
   it("warns about and skips claims it cannot store", async () => {
@@ -169,8 +201,9 @@ describe("syncSovereignty", () => {
       { solarSystemId: 3 },
     ]);
 
+    knownAllianceIds = [10];
     const result = await syncSovereignty({
-      knownAllianceIds: new Set([10]),
+      solarSystems: esiSystems,
       logger,
     });
 
