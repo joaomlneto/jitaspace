@@ -47,6 +47,7 @@ import { MailMessageViewer } from "~/components/EveMail";
 import { groupDogmaModifiers } from "~/lib/dogmaModifiers";
 
 const SKILL_CATEGORY_ID = 16;
+const BLUEPRINT_CATEGORY_ID = 9;
 
 interface AttributeRef {
   attributeId: number;
@@ -128,10 +129,7 @@ function AttributeRefLink({
   attribute,
 }: Readonly<{ attribute: AttributeRef }>) {
   const map = new Map([
-    [
-      attribute.attributeId,
-      { ...attribute, unitId: null, unitSymbol: null },
-    ],
+    [attribute.attributeId, { ...attribute, unitId: null, unitSymbol: null }],
   ]);
   return <AttributeLink attributeId={attribute.attributeId} attributes={map} />;
 }
@@ -227,7 +225,13 @@ function ModifierTableSection({
 function TypeNameCell({ row }: Readonly<{ row: DogmaAttributeTypeRow }>) {
   return (
     <Group gap="xs" wrap="nowrap">
-      <TypeAvatar typeId={row.typeId} size="sm" />
+      <TypeAvatar
+        typeId={row.typeId}
+        size="sm"
+        // Blueprints have no `icon` on the image server (it answers 400), and
+        // the row already says what it is, so skip TypeAvatar's icon attempt.
+        variation={row.categoryId === BLUEPRINT_CATEGORY_ID ? "bp" : undefined}
+      />
       <TypeAnchor typeId={row.typeId}>{row.name}</TypeAnchor>
     </Group>
   );

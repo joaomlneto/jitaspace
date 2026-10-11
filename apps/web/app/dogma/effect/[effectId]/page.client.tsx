@@ -59,6 +59,7 @@ import {
 export type { EffectAttribute, EffectModifier } from "~/components/Dogma";
 
 const SKILL_CATEGORY_ID = 16;
+const BLUEPRINT_CATEGORY_ID = 9;
 
 export interface EffectType {
   typeId: number;
@@ -291,7 +292,13 @@ interface FlagEntry {
 function TypeNameCell({ row }: Readonly<{ row: EffectType }>) {
   return (
     <Group gap="xs" wrap="nowrap">
-      <TypeAvatar typeId={row.typeId} size="sm" />
+      <TypeAvatar
+        typeId={row.typeId}
+        size="sm"
+        // Blueprints have no `icon` on the image server (it answers 400), and
+        // the row already says what it is, so skip TypeAvatar's icon attempt.
+        variation={row.categoryId === BLUEPRINT_CATEGORY_ID ? "bp" : undefined}
+      />
       <TypeAnchor typeId={row.typeId}>{row.name}</TypeAnchor>
     </Group>
   );
