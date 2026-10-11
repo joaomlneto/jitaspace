@@ -30,13 +30,13 @@ import {
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
   useGetMarketsRegionIdHistory,
-  useGetMarketsRegionIdTypes,
   useGetUniverseRegions,
 } from "@jitaspace/esi-client";
 import {
   GLOBAL_MARKET_REGION_ID,
-  MARKET_HUB_REGION_IDS,
+  marketHubRegionIds,
   useEsiNameLookup,
+  useTradesOnGlobalMarket,
 } from "@jitaspace/hooks";
 
 import type {
@@ -70,16 +70,11 @@ import {
 } from "./priceHistoryParams";
 
 /**
- * The regions offered first, under "Trade hubs": the hubs, where almost all
- * trade happens (`MARKET_HUB_REGION_IDS`, the list the order tables fetch
- * first), then the global PLEX market, the only place PLEX trades. All of them
- * are trusted without waiting for ESI's region list.
+ * Labels for the regions offered first, under "Trade hubs": the hubs, where
+ * almost all trade happens, and the global PLEX market for a type that trades
+ * there (`marketHubRegionIds`, the list the order tables fetch first). A hub
+ * missing here falls back to its ESI name.
  */
-const HUB_REGION_IDS: readonly number[] = [
-  ...MARKET_HUB_REGION_IDS,
-  GLOBAL_MARKET_REGION_ID,
-];
-/** Labels for `HUB_REGION_IDS`; a hub missing here falls back to its ESI name. */
 const HUB_LABELS: Partial<Record<number, string>> = {
   10000002: "The Forge (Jita)",
   10000043: "Domain (Amarr)",
@@ -94,6 +89,8 @@ const HUB_LABELS: Partial<Record<number, string>> = {
  * market's id is past this too, but it is a hub.
  */
 const FIRST_NON_MARKET_REGION_ID = 11000000;
+/** Every region trusted without waiting for ESI's region list. */
+const TRUSTED_REGION_IDS = marketHubRegionIds(true);
 
 const RANGE_OPTIONS: { value: PriceHistoryRange; label: string }[] = [
   { value: "1m", label: "1M" },
@@ -350,7 +347,9 @@ function resolveRegionId(
   marketRegionIds: ReadonlySet<number> | undefined,
 ): number | undefined {
   if (requestedRegionId === null) return defaultRegionId;
-  if (HUB_REGION_IDS.includes(requestedRegionId)) return requestedRegionId;
+  if (TRUSTED_REGION_IDS.includes(requestedRegionId)) {
+    return requestedRegionId;
+  }
   if (marketRegionIds === undefined) return undefined;
   return marketRegionIds.has(requestedRegionId)
     ? requestedRegionId
@@ -359,19 +358,17 @@ function resolveRegionId(
 
 /**
  * The region a type's history opens on: the global PLEX market for the types
- * ESI lists there, which trade nowhere else, and The Forge for the rest.
- * `undefined` until ESI has listed them; The Forge if it could not. Only the
- * first page is read: the list is one type long (PLEX), and ESI pages it by
- * the thousand.
+ * that trade only there, and The Forge for the rest. `undefined` until ESI has
+ * said which; the market page asks as it loads its orders, so by the time this
+ * tab opens the answer is usually cached.
  */
-function useDefaultRegionId(typeId: number): number | undefined {
-  const { data, isError } = useGetMarketsRegionIdTypes(GLOBAL_MARKET_REGION_ID);
-  if (data) {
-    return data.data.includes(typeId)
-      ? GLOBAL_MARKET_REGION_ID
-      : DEFAULT_HISTORY_REGION_ID;
-  }
-  return isError ? DEFAULT_HISTORY_REGION_ID : undefined;
+function defaultRegionIdFor(
+  tradesOnGlobalMarket: boolean | undefined,
+): number | undefined {
+  if (tradesOnGlobalMarket === undefined) return undefined;
+  return tradesOnGlobalMarket
+    ? GLOBAL_MARKET_REGION_ID
+    : DEFAULT_HISTORY_REGION_ID;
 }
 
 /** A fractional change as a signed percentage with a direction arrow. */
@@ -666,8 +663,14 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
     () => new Set(SERIES.map((series) => series.id)),
   );
 
-  const { regionOptions, marketRegionIds } = useRegionOptions();
-  const defaultRegionId = useDefaultRegionId(typeId);
+  const tradesOnGlobalMarket = useTradesOnGlobalMarket(typeId);
+  const defaultRegionId = defaultRegionIdFor(tradesOnGlobalMarket);
+  // The global market is only worth offering where the type trades, or where
+  // the URL asks for it.
+  const { regionOptions, marketRegionIds } = useRegionOptions(
+    tradesOnGlobalMarket === true ||
+      requestedRegionId === GLOBAL_MARKET_REGION_ID,
+  );
   const regionId = resolveRegionId(
     requestedRegionId,
     defaultRegionId,
@@ -676,16 +679,17 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
 
   // Don't leave a region the chart refused in the URL, where it would be
   // shared under the default region's data. The fallback is the default, so
-  // clearing the parameter is what selects it.
+  // clearing the parameter is what selects it. Naming the default itself is
+  // cleared too, so each view has one link.
   useEffect(() => {
     if (
       requestedRegionId !== null &&
       regionId !== undefined &&
-      regionId !== requestedRegionId
+      (regionId !== requestedRegionId || regionId === defaultRegionId)
     ) {
       void setParams({ region: null });
     }
-  }, [regionId, requestedRegionId, setParams]);
+  }, [regionId, requestedRegionId, defaultRegionId, setParams]);
 
   const {
     data,
@@ -787,11 +791,12 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
 }
 
 /**
- * Region choices: the hubs first, then every other region with a market. Also
- * the set of those regions' ids, `undefined` until ESI has listed them (and
- * empty if it could not).
+ * Region choices: the hubs first (with the global PLEX market if asked), then
+ * every other region with a market. Also the set of those regions' ids,
+ * `undefined` until ESI has listed them (and empty if it could not).
  */
-function useRegionOptions() {
+function useRegionOptions(withGlobalMarket: boolean) {
+  const hubRegionIds = marketHubRegionIds(withGlobalMarket);
   const { data, isError } = useGetUniverseRegions();
   const marketRegionIds = useMemo(() => {
     if (data) {
@@ -803,7 +808,9 @@ function useRegionOptions() {
   }, [data, isError]);
   const otherRegionIds = useMemo(
     () =>
-      [...(marketRegionIds ?? [])].filter((id) => !HUB_REGION_IDS.includes(id)),
+      [...(marketRegionIds ?? [])].filter(
+        (id) => !TRUSTED_REGION_IDS.includes(id),
+      ),
     [marketRegionIds],
   );
   // Fetched in one batched /universe/names call, in the reader's ESI language,
@@ -811,10 +818,10 @@ function useRegionOptions() {
   const nameEntries = useMemo(
     () =>
       [
-        ...HUB_REGION_IDS.filter((id) => HUB_LABELS[id] === undefined),
+        ...hubRegionIds.filter((id) => HUB_LABELS[id] === undefined),
         ...otherRegionIds,
       ].map((id) => ({ id, category: "region" as const })),
-    [otherRegionIds],
+    [hubRegionIds, otherRegionIds],
   );
   const names = useEsiNameLookup(nameEntries);
 
@@ -828,10 +835,10 @@ function useRegionOptions() {
       .map(option)
       .sort((a, b) => a.label.localeCompare(b.label));
     return [
-      { group: "Trade hubs", items: HUB_REGION_IDS.map(option) },
+      { group: "Trade hubs", items: hubRegionIds.map(option) },
       { group: "All regions", items: others },
     ];
-  }, [otherRegionIds, names]);
+  }, [hubRegionIds, otherRegionIds, names]);
 
   return { regionOptions, marketRegionIds };
 }

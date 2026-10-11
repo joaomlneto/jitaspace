@@ -42,14 +42,13 @@ const mockNameLookup =
   >();
 const mockSetParams = jest.fn();
 let mockParams: { region: number | null; range: string } = {
-  region: 10000002,
+  region: null,
   range: "6m",
 };
-/** What ESI says the global PLEX market carries. */
-let mockGlobalMarketTypes: { data?: { data: number[] }; isError: boolean } = {
-  data: { data: [PLEX] },
-  isError: false,
-};
+/** Whether the type trades on the global PLEX market; `undefined` while asked. */
+let mockTradesOnGlobalMarket: (typeId?: number) => boolean | undefined = (
+  typeId,
+) => typeId === PLEX;
 
 jest.mock("@jitaspace/esi-client", () => ({
   useGetMarketsRegionIdHistory: (
@@ -58,10 +57,6 @@ jest.mock("@jitaspace/esi-client", () => ({
     headers?: unknown,
     options?: unknown,
   ) => mockUseHistory(regionId, params, headers, options),
-  useGetMarketsRegionIdTypes: (regionId: number) => {
-    if (regionId !== GLOBAL_PLEX_MARKET) throw new Error("unexpected region");
-    return mockGlobalMarketTypes;
-  },
   useGetUniverseRegions: () => ({
     data: { data: [10000002, 10000001, 11000001, GLOBAL_PLEX_MARKET] },
   }),
@@ -71,6 +66,8 @@ jest.mock("@jitaspace/hooks", () => ({
   ...jest.requireActual<Record<string, unknown>>("@jitaspace/hooks"),
   useEsiNameLookup: (entries: { id: number; category?: string }[]) =>
     mockNameLookup(entries),
+  useTradesOnGlobalMarket: (typeId?: number) =>
+    mockTradesOnGlobalMarket(typeId),
 }));
 jest.mock("nuqs", () => ({
   parseAsInteger: { withDefault: () => ({}) },
@@ -135,8 +132,8 @@ function renderChart(typeId = 34) {
 
 describe("MarketPriceHistory", () => {
   beforeEach(() => {
-    mockParams = { region: 10000002, range: "6m" };
-    mockGlobalMarketTypes = { data: { data: [PLEX] }, isError: false };
+    mockParams = { region: null, range: "6m" };
+    mockTradesOnGlobalMarket = (typeId) => typeId === PLEX;
     mockSetParams.mockClear();
     mockUseHistory.mockReset().mockReturnValue({
       data: { data: history(30) },
@@ -198,7 +195,6 @@ describe("MarketPriceHistory", () => {
   );
 
   it("opens a type on The Forge when it does not trade on the global market", () => {
-    mockParams = { region: null, range: "6m" };
     renderChart();
     expect(mockUseHistory).toHaveBeenCalledWith(
       10000002,
@@ -210,7 +206,6 @@ describe("MarketPriceHistory", () => {
   });
 
   it("opens PLEX on the global PLEX market, the only place it trades", () => {
-    mockParams = { region: null, range: "6m" };
     renderChart(PLEX);
     expect(mockUseHistory).toHaveBeenCalledWith(
       GLOBAL_PLEX_MARKET,
@@ -230,9 +225,8 @@ describe("MarketPriceHistory", () => {
     expect(mockSetParams).not.toHaveBeenCalled();
   });
 
-  it("waits for the global market's types before picking a default", () => {
-    mockParams = { region: null, range: "6m" };
-    mockGlobalMarketTypes = { isError: false };
+  it("waits to know where the type trades before picking a default", () => {
+    mockTradesOnGlobalMarket = () => undefined;
     const { container } = renderChart(PLEX);
     expect(mockUseHistory).toHaveBeenCalledWith(
       undefined,
@@ -243,19 +237,8 @@ describe("MarketPriceHistory", () => {
     expect(container.querySelectorAll(".recharts-wrapper")).toHaveLength(0);
   });
 
-  it("falls back to The Forge if the global market's types can't be listed", () => {
-    mockParams = { region: null, range: "6m" };
-    mockGlobalMarketTypes = { isError: true };
-    renderChart(PLEX);
-    expect(mockUseHistory).toHaveBeenCalledWith(
-      10000002,
-      { type_id: PLEX },
-      undefined,
-      expect.anything(),
-    );
-  });
-
   it("still charts another region for PLEX when the URL asks for it", () => {
+    mockParams = { region: 10000002, range: "6m" };
     renderChart(PLEX);
     expect(mockUseHistory).toHaveBeenCalledWith(
       10000002,
@@ -266,11 +249,33 @@ describe("MarketPriceHistory", () => {
     expect(mockSetParams).not.toHaveBeenCalled();
   });
 
-  it("offers the global PLEX market among the trade hubs", () => {
+  it("offers the global PLEX market only where the type trades", () => {
     renderChart();
     fireEvent.click(screen.getByRole("combobox", { name: "Region" }));
-    fireEvent.click(screen.getByRole("option", { name: "Global PLEX market" }));
-    expect(mockSetParams).toHaveBeenCalledWith({ region: GLOBAL_PLEX_MARKET });
+    expect(
+      screen.queryByRole("option", { name: "Global PLEX market" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("offers the global PLEX market when the URL asks for it", () => {
+    mockParams = { region: GLOBAL_PLEX_MARKET, range: "6m" };
+    renderChart();
+    expect(mockUseHistory).toHaveBeenCalledWith(
+      GLOBAL_PLEX_MARKET,
+      { type_id: 34 },
+      undefined,
+      expect.anything(),
+    );
+    expect(screen.getByRole("combobox", { name: "Region" })).toHaveValue(
+      "Global PLEX market",
+    );
+    expect(mockSetParams).not.toHaveBeenCalled();
+  });
+
+  it("drops a region from the URL that only names the default", () => {
+    mockParams = { region: 10000002, range: "6m" };
+    renderChart();
+    expect(mockSetParams).toHaveBeenCalledWith({ region: null });
   });
 
   it("drops the region from the URL when the reader picks the default", () => {

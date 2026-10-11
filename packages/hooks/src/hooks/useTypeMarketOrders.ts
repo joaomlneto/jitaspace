@@ -8,10 +8,8 @@ import {
   useGetUniverseRegions,
 } from "@jitaspace/esi-client";
 
-import {
-  GLOBAL_MARKET_REGION_ID,
-  MARKET_HUB_REGION_IDS,
-} from "./marketHubRegions";
+import { marketHubRegionIds } from "./marketHubRegions";
+import { useTradesOnGlobalMarket } from "./useTradesOnGlobalMarket";
 
 type RegionOrders = Record<number, GetMarketsRegionIdOrdersQueryResponse>;
 
@@ -19,23 +17,22 @@ type RegionOrders = Record<number, GetMarketsRegionIdOrdersQueryResponse>;
 const NO_ORDERS: RegionOrders = {};
 
 /**
- * The regions requested in the first batch: the hubs, then the global PLEX
- * market. The types that trade there (PLEX) trade nowhere else, so left in the
- * long tail their tables would read "No orders" until it finished.
+ * First-batch regions (in that order), separated from every other region. For
+ * a type on the global PLEX market that market is in the first batch: the type
+ * trades nowhere else, so left in the long tail its tables would read "No
+ * orders" until the tail finished.
  */
-const FIRST_BATCH_REGION_IDS: readonly number[] = [
-  ...MARKET_HUB_REGION_IDS,
-  GLOBAL_MARKET_REGION_ID,
-];
-
-/** First-batch regions (in that order), separated from every other region. */
-function splitMarketHubs(regionIds: number[]): {
+function splitMarketHubs(
+  regionIds: number[],
+  tradesOnGlobalMarket: boolean,
+): {
   hubs: number[];
   rest: number[];
 } {
+  const firstBatch = marketHubRegionIds(tradesOnGlobalMarket);
   return {
-    hubs: FIRST_BATCH_REGION_IDS.filter((id) => regionIds.includes(id)),
-    rest: regionIds.filter((id) => !FIRST_BATCH_REGION_IDS.includes(id)),
+    hubs: firstBatch.filter((id) => regionIds.includes(id)),
+    rest: regionIds.filter((id) => !firstBatch.includes(id)),
   };
 }
 
@@ -151,10 +148,18 @@ export function useTypeMarketOrders(typeId?: number) {
     { query: { enabled: typeId !== undefined } },
   );
   const regionIds = regions?.data;
+  // Asked alongside the region list, so waiting on it costs no extra trip.
+  const tradesOnGlobalMarket = useTradesOnGlobalMarket(typeId);
 
   useEffect(() => {
     // if no type is selected, there are no orders!
-    if (typeId === undefined || regionIds === undefined) return;
+    if (
+      typeId === undefined ||
+      regionIds === undefined ||
+      tradesOnGlobalMarket === undefined
+    ) {
+      return;
+    }
 
     // Read through a function: TypeScript narrows a directly-referenced flag to
     // `false` and keeps that narrowing across the awaits below, which makes the
@@ -164,7 +169,7 @@ export function useTypeMarketOrders(typeId?: number) {
     // Aborting stops the requests themselves, not just their results: switching
     // types used to leave every region of the previous type still downloading.
     const controller = new AbortController();
-    const { hubs, rest } = splitMarketHubs(regionIds);
+    const { hubs, rest } = splitMarketHubs(regionIds, tradesOnGlobalMarket);
 
     // Orders are committed in two batches — the hubs, then the long tail —
     // rather than one state update per region as it lands. The order tables page
@@ -201,7 +206,7 @@ export function useTypeMarketOrders(typeId?: number) {
       cancelled = true;
       controller.abort();
     };
-  }, [typeId, regionIds]);
+  }, [typeId, regionIds, tradesOnGlobalMarket]);
 
   // Both values are derived rather than stored, so the very first render after
   // `typeId` changes already reports "loading" with no orders. A flag flipped

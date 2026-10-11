@@ -22,3 +22,22 @@ export const MARKET_HUB_REGION_IDS: readonly number[] = [
  * market at all.
  */
 export const GLOBAL_MARKET_REGION_ID = 19000001;
+
+/** Built once, so callers memoising on the list see the same array. */
+const HUB_AND_GLOBAL_MARKET_REGION_IDS: readonly number[] = [
+  ...MARKET_HUB_REGION_IDS,
+  GLOBAL_MARKET_REGION_ID,
+];
+
+/**
+ * The regions a type's market is looked at first: the hubs, then, for a type
+ * that trades on the global PLEX market, that market too. The order tables
+ * fetch these before the long tail, and the price history offers them first.
+ */
+export function marketHubRegionIds(
+  tradesOnGlobalMarket: boolean,
+): readonly number[] {
+  return tradesOnGlobalMarket
+    ? HUB_AND_GLOBAL_MARKET_REGION_IDS
+    : MARKET_HUB_REGION_IDS;
+}
