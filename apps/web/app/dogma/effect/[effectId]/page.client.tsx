@@ -422,7 +422,7 @@ function ModifierLineCard({
   modifiers: EffectModifier[];
   attributes: Map<number, EffectAttribute>;
 }>) {
-  const [showRaw, setShowRaw] = useState(true);
+  const [showRaw, setShowRaw] = useState(false);
   const operator = dogmaOperatorInfo(line.operator);
   const count = modifiers.length;
 

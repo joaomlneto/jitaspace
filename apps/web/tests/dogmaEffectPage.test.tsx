@@ -281,12 +281,13 @@ describe("Dogma effect page (client)", () => {
       ),
     ).toBeInTheDocument();
 
-    // Raw rows start expanded and can be collapsed per line.
+    // Raw rows start hidden and can be shown per line.
+    expect(screen.queryByText("LocationGroupModifier")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Show raw" })).toHaveLength(2);
+    fireEvent.click(screen.getAllByRole("button", { name: "Show raw" })[0]!);
     expect(screen.getAllByText("LocationGroupModifier")).toHaveLength(1);
     expect(screen.getAllByText("PostPercent")).toHaveLength(1);
-    fireEvent.click(screen.getAllByRole("button", { name: "Hide raw" })[0]!);
-    expect(screen.queryByText("LocationGroupModifier")).not.toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Show raw" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "Hide raw" })).toHaveLength(1);
   });
 
   it("lists the effects that target this one", () => {
