@@ -18,11 +18,21 @@ import {
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+/** Resolves to `null` when ESI answers 404, and rethrows anything else. */
+const nullOn404 = (error: unknown) => {
+  if (isAxiosError(error) && error.response?.status === 404) return null;
+  throw error;
+};
+
+/**
+ * `null` for an ID ESI does not know: a corporation ID that was never valid
+ * (one stored as a placeholder by an earlier failed fetch) answers 404.
+ */
 const fetchCorporationWithId = (corporationId: number) =>
-  getCorporationsCorporationId(corporationId).then((res) => ({
-    corporationId,
-    ...res.data,
-  }));
+  getCorporationsCorporationId(corporationId).then(
+    (res) => ({ corporationId, ...res.data }),
+    nullOn404,
+  );
 
 /**
  * `null` for a deleted (biomassed) character: ESI answers 404 "Character has
@@ -31,10 +41,7 @@ const fetchCorporationWithId = (corporationId: number) =>
 const fetchCharacterWithId = (characterId: number) =>
   getCharactersDetail(characterId).then(
     (res) => ({ characterId, ...res.data }),
-    (error: unknown) => {
-      if (isAxiosError(error) && error.response?.status === 404) return null;
-      throw error;
-    },
+    nullOn404,
   );
 
 export interface ScrapeCorporationsEventPayload {
@@ -52,11 +59,15 @@ const processCorporationBatch = async (
 ): Promise<BatchStepResult<StatsKey>> => {
   const stepStartTime = performance.now();
 
-  const thisBatchCorporations = await Promise.all(
-    thisBatchIds.map((corporationId) =>
-      limit(() => fetchCorporationWithId(corporationId)),
-    ),
-  );
+  // Unknown IDs drop out here, so the corporation diff below finds them stored
+  // but absent from ESI and marks them deleted.
+  const thisBatchCorporations = (
+    await Promise.all(
+      thisBatchIds.map((corporationId) =>
+        limit(() => fetchCorporationWithId(corporationId)),
+      ),
+    )
+  ).filter((corporation) => corporation != null);
 
   // Deduplicated: a founder who is still CEO, or a character who founded several
   // corporations in this batch, would otherwise be synced twice — and
@@ -97,7 +108,7 @@ const processCorporationBatch = async (
     missingCharacterIds: new Set(characterIds.filter(isRealId)),
     missingCorporationIds: new Set(
       [
-        ...thisBatchIds,
+        ...thisBatchCorporations.map((c) => c.corporationId),
         ...characters.map((character) => character.corporation_id),
       ].filter(isRealId),
     ),

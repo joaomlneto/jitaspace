@@ -32,7 +32,7 @@ let corporations: Map<number, CorporationStub>;
 /** The corporation each character is in now, per ESI; 98000001 by default. */
 let characterCorporations: Map<number, number>;
 
-const getCorporationsCorporationId = jest.fn((corporationId: number) => {
+const corporationFromStub = (corporationId: number) => {
   const {
     alliance_id,
     ceo_id,
@@ -59,7 +59,8 @@ const getCorporationsCorporationId = jest.fn((corporationId: number) => {
       war_eligible: true,
     },
   });
-});
+};
+const getCorporationsCorporationId = jest.fn(corporationFromStub);
 
 const getCharactersDetail = jest.fn((characterId: number) =>
   Promise.resolve({
@@ -109,6 +110,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  getCorporationsCorporationId.mockImplementation(corporationFromStub);
   corporations = new Map();
   characterCorporations = new Map();
 });
@@ -309,5 +311,66 @@ describe("scrapeEsiCorporations", () => {
     );
 
     await expect(runBatch([98000001])).rejects.toThrow("502");
+  });
+
+  it("skips a corporation ESI does not know and marks the stored row deleted", async () => {
+    // A placeholder row stored for an ID that was never valid answers 404
+    // "Not Found", which used to fail the whole batch.
+    corporations.set(98000001, { ceo_id: 90000001 });
+    const knownCorporation =
+      getCorporationsCorporationId.getMockImplementation()!;
+    getCorporationsCorporationId.mockImplementation((corporationId: number) =>
+      corporationId === 102441019
+        ? Promise.reject(
+            Object.assign(new Error("Request failed with status code 404"), {
+              isAxiosError: true,
+              response: { status: 404 },
+            }),
+          )
+        : knownCorporation(corporationId),
+    );
+    prisma.corporation.findMany.mockImplementationOnce(() =>
+      Promise.resolve([
+        {
+          corporationId: 102441019,
+          allianceId: null,
+          ceoId: null,
+          creatorId: null,
+          dateFounded: null,
+          description: null,
+          enlistedFactionId: null,
+          homeStationId: null,
+          memberCount: -1,
+          name: "",
+          shares: null,
+          taxRate: 0,
+          ticker: "",
+          url: null,
+          warEligible: null,
+          isDeleted: false,
+        },
+      ] as never),
+    );
+
+    await expect(runBatch([102441019, 98000001])).resolves.toBeDefined();
+
+    expect(requestedReferences().missingCorporationIds).toEqual([98000001]);
+    const deletions = prisma.corporation.updateMany.mock.calls.map(
+      (call) =>
+        (
+          call as unknown as [
+            {
+              data: { isDeleted: boolean };
+              where: { corporationId: { in: number[] } };
+            },
+          ]
+        )[0],
+    );
+    expect(deletions).toEqual([
+      {
+        data: { isDeleted: true },
+        where: { corporationId: { in: [102441019] } },
+      },
+    ]);
   });
 });
