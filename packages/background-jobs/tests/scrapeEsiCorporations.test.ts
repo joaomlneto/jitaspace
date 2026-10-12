@@ -243,4 +243,71 @@ describe("scrapeEsiCorporations", () => {
       missingStationIds: [60008494],
     });
   });
+
+  it("survives a deleted CEO and marks the stored character deleted", async () => {
+    // ESI answers 404 "Character has been deleted!" for a biomassed character,
+    // which used to fail the whole batch.
+    corporations.set(98000001, { ceo_id: 90000001, creator_id: 90000002 });
+    getCharactersDetail.mockImplementationOnce(() =>
+      Promise.reject(
+        Object.assign(new Error("Request failed with status code 404"), {
+          isAxiosError: true,
+          response: { status: 404 },
+        }),
+      ),
+    );
+    prisma.character.findMany.mockImplementationOnce(() =>
+      Promise.resolve([
+        {
+          characterId: 90000001,
+          birthday: new Date("2020-01-01T00:00:00Z"),
+          bloodlineId: 1,
+          corporationId: 98000001,
+          description: null,
+          factionId: null,
+          gender: "male",
+          name: "Character 90000001",
+          raceId: 1,
+          securityStatus: null,
+          title: null,
+          isDeleted: false,
+        },
+      ] as never),
+    );
+
+    await expect(runBatch([98000001])).resolves.toBeDefined();
+
+    expect(createdCharacterIds()).toEqual([90000002]);
+    const deletions = prisma.character.updateMany.mock.calls.map(
+      (call) =>
+        (
+          call as unknown as [
+            {
+              data: { isDeleted: boolean };
+              where: { characterId: { in: number[] } };
+            },
+          ]
+        )[0],
+    );
+    expect(deletions).toEqual([
+      {
+        data: { isDeleted: true },
+        where: { characterId: { in: [90000001] } },
+      },
+    ]);
+  });
+
+  it("still fails the batch on other ESI errors", async () => {
+    corporations.set(98000001, { ceo_id: 90000001 });
+    getCharactersDetail.mockImplementationOnce(() =>
+      Promise.reject(
+        Object.assign(new Error("Request failed with status code 502"), {
+          isAxiosError: true,
+          response: { status: 502 },
+        }),
+      ),
+    );
+
+    await expect(runBatch([98000001])).rejects.toThrow("502");
+  });
 });

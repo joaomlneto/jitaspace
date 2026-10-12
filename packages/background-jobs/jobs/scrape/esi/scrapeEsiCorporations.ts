@@ -1,4 +1,5 @@
 import type { LimitFunction } from "p-limit";
+import { isAxiosError } from "axios";
 import pLimit from "p-limit";
 
 import {
@@ -23,11 +24,18 @@ const fetchCorporationWithId = (corporationId: number) =>
     ...res.data,
   }));
 
+/**
+ * `null` for a deleted (biomassed) character: ESI answers 404 "Character has
+ * been deleted!", and a closed corporation's CEO or founder often is one.
+ */
 const fetchCharacterWithId = (characterId: number) =>
-  getCharactersDetail(characterId).then((res) => ({
-    characterId,
-    ...res.data,
-  }));
+  getCharactersDetail(characterId).then(
+    (res) => ({ characterId, ...res.data }),
+    (error: unknown) => {
+      if (isAxiosError(error) && error.response?.status === 404) return null;
+      throw error;
+    },
+  );
 
 export interface ScrapeCorporationsEventPayload {
   data: {
@@ -64,11 +72,15 @@ const processCorporationBatch = async (
     ),
   ];
 
-  const characters = await Promise.all(
-    characterIds.map((characterId) =>
-      limit(() => fetchCharacterWithId(characterId)),
-    ),
-  );
+  // Deleted characters drop out here, so the character diff below finds them
+  // stored but absent from ESI and marks them deleted.
+  const characters = (
+    await Promise.all(
+      characterIds.map((characterId) =>
+        limit(() => fetchCharacterWithId(characterId)),
+      ),
+    )
+  ).filter((character) => character != null);
 
   // The helper only bootstraps the references of rows it creates itself. The
   // corporations and characters below that already exist are updated with what
