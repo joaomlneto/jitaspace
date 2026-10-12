@@ -44,6 +44,17 @@ describe("incursionSiteRole", () => {
     expect(incursionSiteRole(solarSystemId)).toBe(role);
   });
 
+  it.each([
+    ["R3P0-Z (2FYX-H)", 30001806, "vanguard"],
+    ["L1YK-V (2FYX-H)", 30001809, "assault"],
+    ["4B-NQN (G2E-RJ)", 30003706, "vanguard"],
+    ["9-F0B2 (G2E-RJ)", 30003704, "assault"],
+    ["9-7SRQ (5ZAB-N)", 30004219, "headquarters"],
+    ["4T-VDE (5ZAB-N)", 30004221, "assault"],
+  ])("swaps %s back from the wiki's role", (_name, solarSystemId, role) => {
+    expect(incursionSiteRole(solarSystemId)).toBe(role);
+  });
+
   it("leaves out what the wiki gets wrong or lost to Pochven", () => {
     // Barleguet (Ganoure): ESI's staging contradicts the wiki's layout.
     expect(incursionSiteRole(30003819)).toBeUndefined();
