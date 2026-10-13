@@ -1,0 +1,26 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Introduction" />
+
+# JitaSpace UI
+
+The presentational components of [JitaSpace](https://www.jita.space), from
+[`@jitaspace/ui`](https://github.com/joaomlneto/jitaspace/tree/main/packages/ui).
+They render data they are given and fetch nothing themselves; the data-aware
+versions that resolve ids through ESI live in `@jitaspace/eve-components`.
+
+Images come from CCP's image server and `icons.jita.space`, so the avatars need
+a network connection. The ids in the stories are real ones, resolved through ESI.
+
+## Themes
+
+Every story renders inside the web app's own Mantine themes
+(`apps/web/themes`), so what you see here is what the site shows. Use the
+toolbar to switch:
+
+- **Theme**: any of the app's themes, from Default (the seasonal theme) to WHPD.
+- **Color scheme**: dark (the app's default) or light.
+- **Wallpaper**: paint the theme's wallpaper behind the story, as the app does.
+
+Start with **Foundations / Theme** to see a theme's palette, type and
+primitives, then browse **Components**.

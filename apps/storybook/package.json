@@ -1,0 +1,43 @@
+{
+  "name": "@jitaspace/storybook",
+  "description": "Storybook showcasing the @jitaspace/ui components",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "storybook build --output-dir storybook-static",
+    "clean": "rm -rf .turbo storybook-static node_modules",
+    "dev": "storybook dev --port 6006 --no-open",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@jitaspace/ui": "workspace:*",
+    "@mantine/core": "^9.3.0",
+    "@mantine/hooks": "^9.3.0",
+    "@mantine/modals": "^9.3.0",
+    "@tabler/icons-react": "^3.44.0",
+    "next": "16.2.11",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "zustand": "^5.0.13"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@storybook/addon-a11y": "^10.6.1",
+    "@storybook/addon-docs": "^10.6.1",
+    "@storybook/nextjs-vite": "^10.6.1",
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "storybook": "^10.6.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}
