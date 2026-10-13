@@ -10,8 +10,9 @@
  * call jest.mock("@jitaspace/ui", factory) — the explicit factory overrides
  * this stub for that test file.
  *
- * The entity anchors and HoverPrefetchLink moved to apps/web; their stubs live
- * in __mocks__/components/Anchor.tsx.
+ * The entity anchors moved to apps/web; their stubs live in
+ * __mocks__/components/Anchor.tsx. HoverPrefetchLink moved too and has no stub:
+ * tests render the real one from ~/components/Link.
  */
 import React from "react";
 

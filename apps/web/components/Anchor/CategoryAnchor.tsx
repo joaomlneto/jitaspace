@@ -10,12 +10,12 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type CategoryNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    categoryId?: string | number;
+    categoryId?: string | number | null;
   };
 
 export const CategoryAnchor = memo(
   ({ categoryId, children, ...otherProps }: CategoryNameAnchorProps) => {
-    if (categoryId === undefined) {
+    if (categoryId === null || categoryId === undefined) {
       return children;
     }
 

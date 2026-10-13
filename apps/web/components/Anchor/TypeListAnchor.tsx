@@ -10,12 +10,12 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type TypeListAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    typeListId?: string | number;
+    typeListId?: string | number | null;
   };
 
 export const TypeListAnchor = memo(
   ({ typeListId, children, ...otherProps }: TypeListAnchorProps) => {
-    if (typeListId === undefined) {
+    if (typeListId === null || typeListId === undefined) {
       return children;
     }
 
