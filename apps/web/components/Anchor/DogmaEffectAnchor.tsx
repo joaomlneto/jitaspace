@@ -1,0 +1,29 @@
+"use client";
+
+import type { AnchorProps } from "@mantine/core";
+import type { LinkProps } from "next/link";
+import { memo } from "react";
+import { Anchor } from "@mantine/core";
+
+import { HoverPrefetchLink } from "~/components/Link";
+
+export type DogmaEffectAnchorProps = AnchorProps &
+  Omit<LinkProps, "href"> &
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
+    effectId: string | number;
+  };
+
+export const DogmaEffectAnchor = memo(
+  ({ effectId, children, ...otherProps }: DogmaEffectAnchorProps) => {
+    return (
+      <Anchor
+        component={HoverPrefetchLink}
+        href={`/dogma/effect/${effectId}`}
+        {...otherProps}
+      >
+        {children}
+      </Anchor>
+    );
+  },
+);
+DogmaEffectAnchor.displayName = "DogmaEffectAnchor";

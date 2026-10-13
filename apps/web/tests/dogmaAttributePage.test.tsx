@@ -43,8 +43,14 @@ jest.mock(
     ),
 );
 jest.mock("@jitaspace/eve-components", () => ({
-  TypeAnchor: ({ children }: { children?: ReactNode }) => <>{children}</>,
   TypeAvatar: () => null,
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
+  TypeAnchor: ({ children }: { children?: ReactNode }) => <>{children}</>,
 }));
 jest.mock(
   "@jitaspace/eve-icons",

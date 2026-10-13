@@ -38,12 +38,17 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 
-// The shared __mocks__/@jitaspace/ui stub exports neither of the two
-// components this page imports, so an undefined element type would crash the
-// render before any assertion ran.
-jest.mock("@jitaspace/ui", () => ({
+// Stub the breadcrumbs and the group links this page renders, so the assertions
+// see plain markers instead of the real components.
+jest.mock("~/components/Breadcrumbs", () => ({
   CategoryBreadcrumbs: ({ categoryId }: { categoryId: number }) => (
     <div data-testid="breadcrumbs">{`Breadcrumbs ${categoryId}`}</div>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
   ),
   GroupAnchor: ({ children }: { children?: ReactNode }) => (
     <a href="#">{children}</a>

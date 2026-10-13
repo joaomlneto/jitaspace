@@ -35,14 +35,6 @@ import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
-  CharacterAnchor,
-  FactionAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  StationAnchor,
-  TypeAnchor,
-} from "@jitaspace/eve-components";
-import {
   CategoryCorporationIcon,
   CategorySpaceshipCommandIcon,
   ControlCargoInventoryIcon,
@@ -54,12 +46,9 @@ import {
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  BloodlineAnchor,
-  CategoryAnchor,
   CharacterAvatar,
   EveIconAvatar,
   FactionAvatar,
-  GroupAnchor,
   SkillBar,
   SolarSystemSecurityStatusBadge,
   TypeAvatar,
@@ -81,6 +70,17 @@ import type {
   RaceTables,
 } from "./types";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
+import {
+  BloodlineAnchor,
+  CategoryAnchor,
+  CharacterAnchor,
+  FactionAnchor,
+  GroupAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StationAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import {
   CorporationLink,

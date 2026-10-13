@@ -11,9 +11,8 @@ import {
 } from "@mantine/core";
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
-import { HoverPrefetchLink } from "@jitaspace/ui";
-
 import { PartnerBadge } from "~/components/Badge";
+import { HoverPrefetchLink } from "~/components/Link";
 import { env } from "~/env";
 import classes from "./FooterWithLinks.module.css";
 

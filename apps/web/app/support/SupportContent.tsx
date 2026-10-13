@@ -28,17 +28,10 @@ import {
   IconShoppingBag,
 } from "@tabler/icons-react";
 
-import {
-  CharacterAnchor,
-  CharacterName,
-  CorporationName,
-} from "@jitaspace/eve-components";
-import {
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-} from "@jitaspace/ui";
+import { CharacterName, CorporationName } from "@jitaspace/eve-components";
+import { CharacterAvatar, CorporationAvatar } from "@jitaspace/ui";
 
+import { CharacterAnchor, CorporationAnchor } from "~/components/Anchor";
 import { env } from "~/env";
 
 /**

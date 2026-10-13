@@ -3,16 +3,16 @@
 import { Group } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { TypeName } from "@jitaspace/eve-components";
+import { ISKAmount, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
+
+import type { CorporationStation } from "./types";
 import {
   RegionAnchor,
   SolarSystemAnchor,
   StationAnchor,
   TypeAnchor,
-  TypeName,
-} from "@jitaspace/eve-components";
-import { ISKAmount, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
-
-import type { CorporationStation } from "./types";
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { formatPercent } from "~/lib/format";
 

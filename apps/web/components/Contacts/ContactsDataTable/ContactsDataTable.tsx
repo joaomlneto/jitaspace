@@ -7,13 +7,10 @@ import type {
   CharacterContact,
   CorporationContact,
 } from "@jitaspace/hooks";
-import {
-  EveEntityAnchor,
-  EveEntityAvatar,
-  EveEntityName,
-} from "@jitaspace/eve-components";
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
 
+import { EveEntityAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 
 type Contact = AllianceContact & CorporationContact & CharacterContact;

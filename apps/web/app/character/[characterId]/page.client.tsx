@@ -32,10 +32,6 @@ import {
   AllianceName,
   CharacterOnlineIndicator,
   CorporationName,
-  RegionAnchor,
-  SolarSystemAnchor,
-  StationAnchor,
-  TypeAnchor,
   TypeAvatar,
 } from "@jitaspace/eve-components";
 import {
@@ -52,13 +48,8 @@ import {
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAnchor,
-  BloodlineAnchor,
   CharacterAvatar,
-  CorporationAnchor,
-  DungeonAnchor,
   ISKAmount,
-  RaceAnchor,
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
@@ -71,6 +62,17 @@ import type {
   NamedRef,
 } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import {
+  AllianceAnchor,
+  BloodlineAnchor,
+  CorporationAnchor,
+  DungeonAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StationAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import {
   CharacterLocationCard,
   CharacterSkillTrainingCard,

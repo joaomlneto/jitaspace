@@ -5,18 +5,14 @@ import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
   CorporationName,
-  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useBloodline } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CorporationAnchor,
-  CorporationAvatar,
-  RaceAnchor,
-} from "@jitaspace/ui";
+import { CorporationAvatar } from "@jitaspace/ui";
 
+import { CorporationAnchor, RaceAnchor, TypeAnchor } from "~/components/Anchor";
 import { RaceAvatar } from "~/components/Avatar";
 import { MailMessageViewer } from "~/components/EveMail";
 import { characterAttributes } from "~/components/Skills";

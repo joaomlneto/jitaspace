@@ -11,8 +11,7 @@ import {
   IconShoppingCart,
 } from "@tabler/icons-react";
 
-import { HoverPrefetchLink } from "@jitaspace/ui";
-
+import { HoverPrefetchLink } from "~/components/Link";
 import classes from "./MobileTabBar.module.css";
 
 interface Tab {

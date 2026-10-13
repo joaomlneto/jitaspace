@@ -4,10 +4,13 @@ import type { ReactNode } from "react";
 import { Burger, Container, SimpleGrid, Stack } from "@mantine/core";
 import { useShallow } from "zustand/shallow";
 
-import { AllianceCard } from "@jitaspace/eve-components";
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
 
-import { AuthenticatedCharacterCard, CorporationCard } from "~/components/Card";
+import {
+  AllianceCard,
+  AuthenticatedCharacterCard,
+  CorporationCard,
+} from "~/components/Card";
 import { DevelopmentModeAlert } from "~/components/debug";
 import { AddPilotCard, AppCard, SectionHeader } from "~/components/Home";
 import { AllianceMenu, CorporationMenu } from "~/components/Menu";

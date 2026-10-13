@@ -11,10 +11,14 @@ import {
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { FactionAnchor } from "@jitaspace/eve-components";
 import { AgencyIcon } from "@jitaspace/eve-icons";
-import { DungeonAnchor, FactionAvatar, MissionAnchor } from "@jitaspace/ui";
+import { FactionAvatar } from "@jitaspace/ui";
 
+import {
+  DungeonAnchor,
+  FactionAnchor,
+  MissionAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { StatCard } from "~/components/EntityPage";
 import { BooleanBadge } from "~/components/Missions";

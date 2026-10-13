@@ -3,9 +3,11 @@ import { memo, useMemo } from "react";
 import { Group, Loader, NavLink, Stack, Text } from "@mantine/core";
 
 import type { CharacterSkill } from "@jitaspace/hooks";
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeName } from "@jitaspace/eve-components";
 import { useCharacterSkills } from "@jitaspace/hooks";
 import { SkillBar } from "@jitaspace/ui";
+
+import { TypeAnchor } from "~/components/Anchor";
 
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 

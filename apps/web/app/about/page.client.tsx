@@ -19,17 +19,10 @@ import { IconBrandDiscordFilled } from "@tabler/icons-react";
 import Markdown from "react-markdown";
 import { Email } from "react-obfuscate-email";
 
-import {
-  CharacterAnchor,
-  CharacterName,
-  CorporationName,
-} from "@jitaspace/eve-components";
-import {
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-} from "@jitaspace/ui";
+import { CharacterName, CorporationName } from "@jitaspace/eve-components";
+import { CharacterAvatar, CorporationAvatar } from "@jitaspace/ui";
 
+import { CharacterAnchor, CorporationAnchor } from "~/components/Anchor";
 import { env } from "~/env";
 import acknowledgements from "./acknowledgements.json";
 

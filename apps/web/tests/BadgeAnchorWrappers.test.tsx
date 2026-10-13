@@ -83,9 +83,9 @@ jest.mock("@jitaspace/ui", () => ({
   ),
 }));
 
-// The anchors below delegate to components living in @jitaspace/eve-components;
-// stub them here so the wrappers importing them from that package pick these up.
-jest.mock("@jitaspace/eve-components", () => ({
+// The anchor wrappers delegate to their siblings in ~/components/Anchor; stub
+// those files so the wrappers pick these up.
+jest.mock("~/components/Anchor/EveEntityAnchor", () => ({
   EveEntityAnchor: ({
     entityId,
     category,
@@ -103,7 +103,9 @@ jest.mock("@jitaspace/eve-components", () => ({
       {children}
     </a>
   ),
-  StargateDestinationAnchor: ({
+}));
+jest.mock("~/components/Anchor/StargateDestinationAnchorDisplay", () => ({
+  StargateDestinationAnchorDisplay: ({
     destinationSystemId,
     children,
   }: {
@@ -117,7 +119,9 @@ jest.mock("@jitaspace/eve-components", () => ({
       {children}
     </a>
   ),
-  WarAggressorAnchor: ({
+}));
+jest.mock("~/components/Anchor/WarAggressorAnchorDisplay", () => ({
+  WarAggressorAnchorDisplay: ({
     aggressorAllianceId,
     aggressorCorporationId,
     children,
@@ -134,7 +138,9 @@ jest.mock("@jitaspace/eve-components", () => ({
       {children}
     </a>
   ),
-  WarDefenderAnchor: ({
+}));
+jest.mock("~/components/Anchor/WarDefenderAnchorDisplay", () => ({
+  WarDefenderAnchorDisplay: ({
     defenderAllianceId,
     defenderCorporationId,
     children,
@@ -154,12 +160,14 @@ jest.mock("@jitaspace/eve-components", () => ({
 }));
 
 // Components are pulled in lazily (after the mocks above are registered) to keep
-// the barrels' transitive imports from loading the real hooks/ui modules.
+// the barrels' transitive imports from loading the real hooks/ui modules. The
+// anchor barrel is stubbed for every test (jest.setup.ts), so take the real one.
 type BadgeBarrel = typeof import("~/components/Badge");
 type AnchorBarrel = typeof import("~/components/Anchor");
 
 const badges = (): BadgeBarrel => require("~/components/Badge");
-const anchors = (): AnchorBarrel => require("~/components/Anchor");
+const anchors = (): AnchorBarrel =>
+  jest.requireActual<AnchorBarrel>("~/components/Anchor");
 
 function renderWithMantine(ui: ReactNode) {
   return render(<MantineProvider>{ui}</MantineProvider>);
