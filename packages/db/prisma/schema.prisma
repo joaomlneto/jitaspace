@@ -305,7 +305,6 @@ model TypeAttribute {
   isDeleted   Boolean        @default(false)
 
   @@id([typeId, attributeId])
-  @@index([typeId])
   @@index([attributeId])
 }
 
@@ -323,7 +322,6 @@ model TypeEffect {
   isDeleted Boolean     @default(false)
 
   @@id([typeId, effectId])
-  @@index([typeId])
   @@index([effectId])
 }
 
@@ -535,7 +533,6 @@ model DogmaEffectModifier {
   isDeleted            Boolean         @default(false)
 
   @@id([effectId, modifierIndex])
-  @@index([effectId])
   @@index([targetEffectId])
   @@index([modifiedAttributeId])
   @@index([modifyingAttributeId])
@@ -740,7 +737,9 @@ model Corporation {
 
   @@index([creatorId])
   @@index([factionId])
-  @@index([enlistedFactionId])
+  // Faction warfare pages: enlisted corporations, NPC ones excluded, largest first.
+  // Its leading column also serves plain enlistedFactionId lookups.
+  @@index([enlistedFactionId, factionId, memberCount])
   @@index([homeStationId])
   @@index([allianceId])
   @@index([ceoId])
@@ -1361,7 +1360,6 @@ model LoyaltyStoreOfferRequiredItem {
   isDeleted     Boolean           @default(false)
 
   @@id([offerId, corporationId, typeId])
-  @@index([offerId, corporationId])
   @@index([typeId])
   @@index([corporationId])
 }
@@ -1442,7 +1440,6 @@ model KillmailAttacker {
   faction     Faction?     @relation("KillmailAttackerFaction", fields: [factionId], references: [factionId])
 
   @@id([killmailId, attackerIndex])
-  @@index([killmailId])
   @@index([characterId])
   @@index([corporationId])
   @@index([allianceId])
@@ -1510,7 +1507,6 @@ model KillmailVictimItems {
   quantityDropped   Int?
   /**
    * Whether the item was a blueprint copy: 0 = ordinary item, 2 = blueprint copy.
-   *
    * Despite the name this is not an item ID, and it is not the assets API's
    * `is_singleton` boolean either — fitted, assembled modules also report 0.
    * ESI documents no values for it, but across a full day of killmails
@@ -1531,7 +1527,6 @@ model KillmailVictimItems {
 
   @@id([killmailId, itemIndex])
   @@index([typeId])
-  @@index([killmailId])
   @@index([killmailId, parentItemIndex])
 }
 
@@ -2116,7 +2111,6 @@ model TypeMaterial {
   isDeleted      Boolean  @default(false)
 
   @@id([typeId, materialTypeId])
-  @@index([typeId])
   @@index([materialTypeId])
 }
 
@@ -2135,7 +2129,6 @@ model ContrabandType {
   isDeleted        Boolean  @default(false)
 
   @@id([typeId, factionId])
-  @@index([typeId])
   @@index([factionId])
 }
 
@@ -2171,7 +2164,6 @@ model CertificateSkill {
   isDeleted     Boolean     @default(false)
 
   @@id([certificateId, skillTypeId])
-  @@index([certificateId])
   @@index([skillTypeId])
 }
 
@@ -2186,7 +2178,6 @@ model CertificateRecommendation {
   isDeleted     Boolean     @default(false)
 
   @@id([certificateId, typeId])
-  @@index([certificateId])
   @@index([typeId])
 }
 
@@ -2202,7 +2193,6 @@ model Mastery {
   isDeleted     Boolean     @default(false)
 
   @@id([typeId, masteryLevel, certificateId])
-  @@index([typeId])
   @@index([certificateId])
 }
 
@@ -2253,7 +2243,6 @@ model SkinType {
   isDeleted Boolean  @default(false)
 
   @@id([skinId, typeId])
-  @@index([skinId])
   @@index([typeId])
 }
 
@@ -2303,7 +2292,6 @@ model TypeListEntry {
   isDeleted  Boolean         @default(false)
 
   @@id([typeListId, included, refType, refId])
-  @@index([typeListId])
 }
 
 /// An NPC corporation activity category (corporationActivities.yaml).
@@ -2388,7 +2376,6 @@ model FreelanceJobSchemaTag {
   isDeleted                 Boolean            @default(false)
 
   @@id([freelanceJobSchemaGroupId, name, tag])
-  @@index([freelanceJobSchemaGroupId, name])
 }
 
 // ---------------------------------------------------------------------------
@@ -2552,7 +2539,6 @@ model TypeBonusLine {
   isDeleted   Boolean       @default(false)
 
   @@id([typeId, kind, skillTypeId, sequence])
-  @@index([typeId])
 }
 
 /// A control tower (POS) fuel/resource requirement line (controlTowerResources.yaml).
@@ -4281,7 +4267,6 @@ model FreelanceJobSchemaParameter {
   isDeleted                 Boolean                                @default(false)
 
   @@id([freelanceJobSchemaGroupId, name, paramKey])
-  @@index([freelanceJobSchemaGroupId, name])
 }
 
 /// A value type a matcher parameter accepts
@@ -4297,7 +4282,6 @@ model FreelanceJobSchemaParameterValueType {
   isDeleted                 Boolean                     @default(false)
 
   @@id([freelanceJobSchemaGroupId, name, paramKey, valueType])
-  @@index([freelanceJobSchemaGroupId, name, paramKey])
 }
 
 /// A skill an NPC character offers (npcCharacters.yaml `skills[]`). Hangs off
