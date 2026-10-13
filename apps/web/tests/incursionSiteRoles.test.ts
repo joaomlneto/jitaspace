@@ -55,9 +55,15 @@ describe("incursionSiteRole", () => {
     expect(incursionSiteRole(solarSystemId)).toBe(role);
   });
 
+  it("completes Ganoure's current layout, not the wiki's older one", () => {
+    expect(incursionSiteRole(30003819)).toBe("vanguard"); // Barleguet
+    expect(incursionSiteRole(30003823)).toBe("headquarters"); // Kenninck
+    expect(incursionSiteRole(30003822)).toBeUndefined(); // Espigoure, staging
+  });
+
   it("leaves out what the wiki gets wrong or lost to Pochven", () => {
-    // Barleguet (Ganoure): ESI's staging contradicts the wiki's layout.
-    expect(incursionSiteRole(30003819)).toBeUndefined();
+    // BB-EKF: 50-5UD's staging system, also listed as a vanguard.
+    expect(incursionSiteRole(30004851)).toBeUndefined();
     // Raravoss: moved to Pochven.
     expect(incursionSiteRole(30003495)).toBeUndefined();
   });
