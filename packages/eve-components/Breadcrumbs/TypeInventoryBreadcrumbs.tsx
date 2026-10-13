@@ -2,7 +2,6 @@
 
 import type { BreadcrumbsProps } from "@mantine/core";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
 import {
@@ -10,6 +9,7 @@ import {
   CategoryName,
   GroupAnchor,
   GroupName,
+  HoverPrefetchLink,
 } from "@jitaspace/ui";
 
 import { TypeAnchor } from "../Anchor";
@@ -39,7 +39,7 @@ export const TypeInventoryBreadcrumbs = memo(
   }: TypeInventoryBreadcrumbsProps) => {
     return (
       <Breadcrumbs {...otherProps}>
-        <Anchor component={Link} href="/categories">
+        <Anchor component={HoverPrefetchLink} href="/categories">
           <Text>Inventory</Text>
         </Anchor>
         <CategoryAnchor categoryId={categoryId}>

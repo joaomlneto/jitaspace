@@ -2,10 +2,10 @@
 
 import type { BreadcrumbsProps } from "@mantine/core";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
 import { CategoryAnchor } from "../Anchor";
+import { HoverPrefetchLink } from "../Link";
 import { CategoryName } from "../Text";
 
 export type CategoryBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
@@ -17,7 +17,7 @@ export const CategoryBreadcrumbs = memo(
   ({ categoryId, categoryName, ...otherProps }: CategoryBreadcrumbsProps) => {
     return (
       <Breadcrumbs {...otherProps}>
-        <Anchor component={Link} href="/categories">
+        <Anchor component={HoverPrefetchLink} href="/categories">
           <Text>Inventory</Text>
         </Anchor>
         <CategoryAnchor categoryId={categoryId}>

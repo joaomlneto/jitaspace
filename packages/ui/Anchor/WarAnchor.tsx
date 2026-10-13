@@ -4,8 +4,9 @@ import type { AnchorProps } from "@mantine/core";
 import type { LinkProps } from "next/link";
 import type React from "react";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor } from "@mantine/core";
+
+import { HoverPrefetchLink } from "../Link";
 
 export type WarAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -16,7 +17,11 @@ export type WarAnchorProps = AnchorProps &
 export const WarAnchor = memo(
   ({ warId, children, ...otherProps }: WarAnchorProps) => {
     return (
-      <Anchor component={Link} href={`/war/${warId}`} {...otherProps}>
+      <Anchor
+        component={HoverPrefetchLink}
+        href={`/war/${warId}`}
+        {...otherProps}
+      >
         {children}
       </Anchor>
     );
