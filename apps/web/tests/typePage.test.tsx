@@ -52,21 +52,9 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
 }));
 
 // Stub every @jitaspace/ui export to render nothing. The Proxy factory has no
-// external closure so it is hoist-safe.
-jest.mock("@jitaspace/ui", () => {
-  // The page's internal links (Compare, type lists) render through this, so it
-  // stays real; every other @jitaspace/ui component renders nothing.
-  const { HoverPrefetchLink } = jest.requireActual<{
-    HoverPrefetchLink: unknown;
-  }>("@jitaspace/ui");
-  return new Proxy(
-    {},
-    {
-      get: (_target, key) =>
-        key === "HoverPrefetchLink" ? HoverPrefetchLink : () => null,
-    },
-  );
-});
+// external closure so it is hoist-safe. The page's internal links (Compare,
+// type lists) render through ~/components/Link, which stays real.
+jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
 
 jest.mock("~/components/Compare/ItemVariations", () => ({
   ItemVariations: ({ typeId }: { typeId: number }) => (

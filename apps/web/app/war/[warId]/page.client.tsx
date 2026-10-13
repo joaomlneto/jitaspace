@@ -14,9 +14,7 @@ import {
   useWarKillmails,
 } from "@jitaspace/hooks";
 import {
-  AllianceAnchor,
   AllianceAvatar,
-  CorporationAnchor,
   CorporationAvatar,
   DateHoverCard,
   FormattedDateText,
@@ -24,7 +22,12 @@ import {
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
-import { WarAggressorAnchor, WarDefenderAnchor } from "~/components/Anchor";
+import {
+  AllianceAnchor,
+  CorporationAnchor,
+  WarAggressorAnchor,
+  WarDefenderAnchor,
+} from "~/components/Anchor";
 import { WarAggressorAvatar, WarDefenderAvatar } from "~/components/Avatar";
 import {
   AllianceTickerBadge,

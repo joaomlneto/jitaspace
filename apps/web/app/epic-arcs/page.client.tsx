@@ -10,21 +10,17 @@ import {
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import {
-  CharacterAnchor,
-  FactionAnchor,
-  SolarSystemAnchor,
-} from "@jitaspace/eve-components";
 import { JournalIcon } from "@jitaspace/eve-icons";
-import {
-  EpicArcAnchor,
-  EveIconAvatar,
-  FactionAvatar,
-  ISKAmount,
-} from "@jitaspace/ui";
+import { EveIconAvatar, FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type { EpicArcSummary } from "~/lib/epicArcs";
 import type { AgentRef } from "~/lib/missionRefs";
+import {
+  CharacterAnchor,
+  EpicArcAnchor,
+  FactionAnchor,
+  SolarSystemAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { StatCard } from "~/components/EntityPage";
 import { isRepeatable } from "~/lib/epicArcs";

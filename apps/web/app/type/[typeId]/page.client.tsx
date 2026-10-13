@@ -34,7 +34,7 @@ import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeName } from "@jitaspace/eve-components";
 import {
   CategoryIskIcon,
   WindowInfoIcon,
@@ -47,17 +47,7 @@ import {
   useType,
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CategoryAnchor,
-  DogmaAttributeAnchor,
-  DogmaAttributeValue,
-  DogmaEffectAnchor,
-  EveIconAvatar,
-  GroupAnchor,
-  HoverPrefetchLink,
-  ISKAmount,
-  MarketGroupAnchor,
-} from "@jitaspace/ui";
+import { DogmaAttributeValue, EveIconAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type {
   TypeDogmaAttributeMeta,
@@ -71,6 +61,14 @@ import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
+  CategoryAnchor,
+  DogmaAttributeAnchor,
+  DogmaEffectAnchor,
+  GroupAnchor,
+  MarketGroupAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
+import {
   TypeInventoryBreadcrumbs,
   TypeMarketBreadcrumbs,
 } from "~/components/Breadcrumbs";
@@ -83,6 +81,7 @@ import {
   StatCard,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   DamageTypeLegend,
   NpcCombatStats,

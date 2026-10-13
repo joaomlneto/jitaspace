@@ -26,13 +26,7 @@ import {
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import {
-  ConstellationAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   CategoryCorporationIcon,
   WindowAgentIcon,
@@ -41,12 +35,7 @@ import {
   WindowReprocessingIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
-import {
-  ISKAmount,
-  RaceAnchor,
-  SolarSystemSecurityStatusBadge,
-  StarAnchor,
-} from "@jitaspace/ui";
+import { ISKAmount, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
 
 import type { StationPageTab } from "./tabs";
 import type {
@@ -61,6 +50,14 @@ import {
   SetAutopilotDestinationActionIcon,
 } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
+import {
+  ConstellationAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StarAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import {
   CorporationLine,
   EntityLine,

@@ -4,9 +4,9 @@ import { useMemo } from "react";
 import { Stack, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { TypeListAnchor } from "@jitaspace/ui";
 
 import type { NamedTypeListMatch } from "~/lib/typeLists";
+import { TypeListAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { TYPE_LIST_REF_TYPE_LABELS } from "~/lib/typeLists";
 import { TypeListMatchBadges } from "./TypeListMatchBadges";

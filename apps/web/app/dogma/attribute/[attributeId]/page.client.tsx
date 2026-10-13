@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   WindowAttributesIcon,
   WindowFittingIcon,
@@ -23,13 +23,7 @@ import {
   WindowItemsIcon,
 } from "@jitaspace/eve-icons";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CategoryAnchor,
-  DogmaAttributeValue,
-  DogmaEffectAnchor,
-  EveIconAvatar,
-  GroupAnchor,
-} from "@jitaspace/ui";
+import { DogmaAttributeValue, EveIconAvatar } from "@jitaspace/ui";
 
 import type {
   DogmaAttributeLabel,
@@ -39,6 +33,12 @@ import type {
   DogmaAttributeTypeRow,
   DogmaAttributeTypesPayload,
 } from "~/lib/dogmaAttributeTypes";
+import {
+  CategoryAnchor,
+  DogmaEffectAnchor,
+  GroupAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { AttributeLink, ModifierSentence } from "~/components/Dogma";
 import {

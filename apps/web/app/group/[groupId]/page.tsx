@@ -10,8 +10,9 @@ import {
   Title,
 } from "@mantine/core";
 
-import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 
+import { TypeAnchor } from "~/components/Anchor";
 import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";

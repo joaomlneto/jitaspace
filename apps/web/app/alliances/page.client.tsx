@@ -5,12 +5,9 @@ import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { AlliancesIcon } from "@jitaspace/eve-icons";
-import {
-  AllianceAnchor,
-  AllianceAvatar,
-  CorporationAnchor,
-} from "@jitaspace/ui";
+import { AllianceAvatar } from "@jitaspace/ui";
 
+import { AllianceAnchor, CorporationAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { formatInteger } from "~/lib/format";
 

@@ -27,28 +27,14 @@ import {
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import {
-  FactionAnchor,
-  SolarSystemAnchor,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   AgencyIcon,
   CategoryAgentMissionIcon,
   WindowAgentIcon,
   WindowInfoIcon,
 } from "@jitaspace/eve-icons";
-import {
-  CorporationAnchor,
-  DungeonAnchor,
-  EpicArcAnchor,
-  FactionAvatar,
-  GroupAnchor,
-  ISKAmount,
-  MissionAnchor,
-  TypeListAnchor,
-} from "@jitaspace/ui";
+import { FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type {
   DungeonAgentInSpace,
@@ -59,6 +45,17 @@ import type {
 } from "./data";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { FactionRef } from "~/lib/missionRefs";
+import {
+  CorporationAnchor,
+  DungeonAnchor,
+  EpicArcAnchor,
+  FactionAnchor,
+  GroupAnchor,
+  MissionAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+  TypeListAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {

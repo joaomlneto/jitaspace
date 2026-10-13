@@ -8,8 +8,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
-import { HoverPrefetchLink, LoginWithEveOnlineButton } from "@jitaspace/ui";
+import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import { ServerStatusIndicator } from "~/components/ServerStatus/ServerStatusIndicator";
 import { jitaApps } from "~/config/apps";
 import UserButton from "~/layouts/MainLayout/UserButton";

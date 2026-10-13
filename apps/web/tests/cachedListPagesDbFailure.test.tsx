@@ -106,9 +106,13 @@ jest.mock("@jitaspace/eve-icons", () => ({
   MapIcon: () => <span />,
   AgentFinderIcon: () => <span />,
 }));
+
 // The anchors keep their entity id in a data attribute so the tests can assert
 // where a link points, not merely that a label rendered.
-jest.mock("@jitaspace/ui", () => ({
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   CategoryAnchor: ({
     categoryId,
     children,
@@ -116,8 +120,6 @@ jest.mock("@jitaspace/ui", () => ({
     categoryId?: number;
     children?: React.ReactNode;
   }) => <span data-entity-id={categoryId}>{children}</span>,
-}));
-jest.mock("@jitaspace/eve-components", () => ({
   RegionAnchor: ({
     regionId,
     children,

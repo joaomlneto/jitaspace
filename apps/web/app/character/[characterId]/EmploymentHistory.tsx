@@ -3,9 +3,10 @@
 import { Badge, Group, Skeleton, Stack, Text, Timeline } from "@mantine/core";
 
 import { CorporationName } from "@jitaspace/eve-components";
-import { CorporationAnchor, CorporationAvatar } from "@jitaspace/ui";
+import { CorporationAvatar } from "@jitaspace/ui";
 
 import type { Stint } from "./employment";
+import { CorporationAnchor } from "~/components/Anchor";
 import { formatDate } from "~/lib/format";
 import { formatDays } from "./employment";
 

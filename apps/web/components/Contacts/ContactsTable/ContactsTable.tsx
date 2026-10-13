@@ -9,12 +9,10 @@ import type {
   CorporationContact,
   CorporationContactLabel,
 } from "@jitaspace/hooks";
-import {
-  EveEntityAnchor,
-  EveEntityAvatar,
-  EveEntityName,
-} from "@jitaspace/eve-components";
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
+
+import { EveEntityAnchor } from "~/components/Anchor";
 
 export interface ContactsTableProps {
   contacts?: (AllianceContact & CorporationContact & CharacterContact)[];

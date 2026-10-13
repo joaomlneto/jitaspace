@@ -9,59 +9,19 @@
  * Tests that need custom mock behaviour (e.g. dataTables.test.tsx) can still
  * call jest.mock("@jitaspace/ui", factory) — the explicit factory overrides
  * this stub for that test file.
+ *
+ * The entity anchors and HoverPrefetchLink moved to apps/web; their stubs live
+ * in __mocks__/components/Anchor.tsx.
  */
 import React from "react";
-
-// The real component, not a stub: it only needs React and next/link, so it
-// loads fine here, and the layout tests assert its prefetch behaviour.
-export { HoverPrefetchLink } from "../../../../packages/ui/Link/HoverPrefetchLink";
-
-// Entity anchors render a real <a> so tests can assert the destination. The
-// href is omitted while the id is nullish, mirroring the real components —
-// emitting `/race/undefined` is precisely the bug these stubs must not hide.
-const anchorStub =
-  (path: string, idProp: string, testid?: string) =>
-  ({
-    children,
-    ...props
-  }: Record<string, unknown> & { children?: React.ReactNode }) => {
-    const id = props[idProp] as string | number | null | undefined;
-    return React.createElement(
-      "a",
-      {
-        ...(testid ? { "data-testid": testid } : null),
-        ...(id === null || id === undefined ? null : { href: `${path}/${id}` }),
-      },
-      children,
-    );
-  };
-
-// --- Corporation ---
-export const CorporationAnchor = anchorStub(
-  "/corporation",
-  "corporationId",
-  "corp-anchor",
-);
 
 // --- Dogma (the value formatter is pure, so the real one is used) ---
 export {
   dogmaAttributeDisplayValue,
   formatDogmaAttributeValue,
 } from "../../../../packages/ui/Text/DogmaAttributeValue";
-export const DogmaAttributeAnchor = anchorStub(
-  "/dogma/attribute",
-  "attributeId",
-);
-export const GroupAnchor = anchorStub("/group", "groupId");
-export const TypeListAnchor = anchorStub("/type-list", "typeListId");
-export const MissionAnchor = anchorStub("/mission", "missionId");
-export const DungeonAnchor = anchorStub("/dungeon", "dungeonId");
-export const EpicArcAnchor = anchorStub("/epic-arc", "epicArcId");
 
-// --- Race / Bloodline (SDE reference data, not ESI-resolvable entities) ---
-export const RaceAnchor = anchorStub("/race", "raceId");
-export const BloodlineAnchor = anchorStub("/bloodline", "bloodlineId");
-
+// --- Corporation ---
 export const CorporationAvatar = () =>
   React.createElement("span", { "data-testid": "corp-avatar" });
 
@@ -81,9 +41,6 @@ export const EveIconAvatar = () =>
   React.createElement("span", { "data-testid": "eve-icon-avatar" });
 
 // --- Type (item) ---
-export const TypeAnchor = ({ children }: { children?: React.ReactNode }) =>
-  React.createElement("span", { "data-testid": "type-anchor" }, children);
-
 // The TypeAvatar split left a presentational twin in @jitaspace/ui (the smart
 // one lives in @jitaspace/eve-components and has its own stub). It is the only
 // name both real packages export, so both stubs must cover it.
@@ -143,10 +100,6 @@ export const ISKAmount = ({
 export const EveEntitySelect = () => null;
 export const AllianceTickerBadge = () => null;
 export const StationName = () => null;
-export const StationAnchor = ({ children }: { children?: React.ReactNode }) =>
-  React.createElement("span", null, children);
-export const CharacterAnchor = ({ children }: { children?: React.ReactNode }) =>
-  React.createElement("span", null, children);
 export const CharacterAvatar = () => null;
 export const CharacterName = ({ characterId }: { characterId?: number }) =>
   React.createElement("span", null, `char-${characterId}`);

@@ -1311,12 +1311,6 @@ importers:
       '@mantine/hooks':
         specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
-      date-fns:
-        specifier: ^4.3.0
-        version: 4.3.0
-      next:
-        specifier: 16.2.11
-        version: 16.2.11(@opentelemetry/api@1.9.1)(@types/node@24.12.4)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: ^19.2.6
         version: 19.2.6
