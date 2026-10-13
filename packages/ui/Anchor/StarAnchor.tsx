@@ -3,8 +3,9 @@
 import type { AnchorProps } from "@mantine/core";
 import type { LinkProps } from "next/link";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor } from "@mantine/core";
+
+import { HoverPrefetchLink } from "../Link";
 
 export type StarNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -15,7 +16,11 @@ export type StarNameAnchorProps = AnchorProps &
 export const StarAnchor = memo(
   ({ starId, children, ...otherProps }: StarNameAnchorProps) => {
     return (
-      <Anchor component={Link} href={`/star/${starId}`} {...otherProps}>
+      <Anchor
+        component={HoverPrefetchLink}
+        href={`/star/${starId}`}
+        {...otherProps}
+      >
         {children}
       </Anchor>
     );

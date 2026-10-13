@@ -3,8 +3,9 @@
 import type { AnchorProps } from "@mantine/core";
 import type { LinkProps } from "next/link";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor } from "@mantine/core";
+
+import { HoverPrefetchLink } from "../Link";
 
 export type EpicArcAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -19,7 +20,11 @@ export const EpicArcAnchor = memo(
     }
 
     return (
-      <Anchor component={Link} href={`/epic-arc/${epicArcId}`} {...otherProps}>
+      <Anchor
+        component={HoverPrefetchLink}
+        href={`/epic-arc/${epicArcId}`}
+        {...otherProps}
+      >
         {children}
       </Anchor>
     );

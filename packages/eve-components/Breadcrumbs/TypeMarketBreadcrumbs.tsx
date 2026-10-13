@@ -2,10 +2,13 @@
 
 import type { BreadcrumbsProps } from "@mantine/core";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
-import { MarketGroupAnchor, MarketGroupName } from "@jitaspace/ui";
+import {
+  HoverPrefetchLink,
+  MarketGroupAnchor,
+  MarketGroupName,
+} from "@jitaspace/ui";
 
 import { TypeAnchor } from "../Anchor";
 import { TypeName } from "../Text";
@@ -30,7 +33,7 @@ export const TypeMarketBreadcrumbs = memo(
   }: TypeMarketBreadcrumbsProps) => {
     return (
       <Breadcrumbs {...otherProps}>
-        <Anchor component={Link} href="/market">
+        <Anchor component={HoverPrefetchLink} href="/market">
           <Text>Market</Text>
         </Anchor>
         {(marketGroups ?? []).map((marketGroup) => (

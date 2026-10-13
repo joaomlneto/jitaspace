@@ -176,9 +176,16 @@ function load(): SitemapModule {
   return require("~/app/sitemap") as SitemapModule;
 }
 
+interface RobotsRule {
+  userAgent?: string | string[];
+  allow?: string | string[];
+  disallow?: string | string[];
+  crawlDelay?: number;
+}
+
 interface RobotsModule {
   default: () => {
-    rules: { disallow?: string[] };
+    rules: RobotsRule[];
     sitemap?: string | string[];
   };
 }
@@ -372,7 +379,9 @@ describe("sitemap", () => {
     // sitemap/robots contradiction.
     const locs = await allLocs(load());
     const { rules } = loadRobots().default();
-    const disallow = rules.disallow ?? [];
+    const disallow = [
+      rules.find((rule) => rule.userAgent === "*")?.disallow ?? [],
+    ].flat();
 
     expect(disallow.length).toBeGreaterThan(0);
     expect([...disallow].sort()).toEqual([...CRAWLER_DISALLOWED_PATHS].sort());
