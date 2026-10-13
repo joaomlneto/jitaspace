@@ -141,7 +141,9 @@ describe.each(anchors)("$name", ({ path, Component, idProp }) => {
   it("keeps the next/link prefetch prop out of the DOM when unlinked", () => {
     // `prefetch` is destructured off before the unlinked branch spreads the
     // rest onto a plain Mantine Anchor, so it can never reach the element.
-    renderAnchor(undefined, { prefetch: true });
+    // A string value: React drops a boolean one from an unknown attribute by
+    // itself, which would let this pass even without the destructuring.
+    renderAnchor(undefined, { prefetch: "auto" });
     expect(anchorEl()).not.toHaveAttribute("prefetch");
   });
 
