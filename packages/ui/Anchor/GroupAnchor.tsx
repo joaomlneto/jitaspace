@@ -3,8 +3,9 @@
 import type { AnchorProps } from "@mantine/core";
 import type { LinkProps } from "next/link";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor } from "@mantine/core";
+
+import { HoverPrefetchLink } from "../Link";
 
 export type GroupNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -19,7 +20,11 @@ export const GroupAnchor = memo(
     }
 
     return (
-      <Anchor component={Link} href={`/group/${groupId}`} {...otherProps}>
+      <Anchor
+        component={HoverPrefetchLink}
+        href={`/group/${groupId}`}
+        {...otherProps}
+      >
         {children}
       </Anchor>
     );

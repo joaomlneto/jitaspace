@@ -54,6 +54,7 @@ import {
   DogmaEffectAnchor,
   EveIconAvatar,
   GroupAnchor,
+  HoverPrefetchLink,
   ISKAmount,
   MarketGroupAnchor,
 } from "@jitaspace/ui";
@@ -574,7 +575,7 @@ export default function TypePage({
           <Group gap="xs">
             {isComparable && (
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`/compare?types=${typeId}`}
                 size="xs"
                 variant="light"
@@ -1017,7 +1018,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <Text size="sm" c="dimmed">
                   The game uses{" "}
-                  <Anchor component={Link} href="/type-lists" size="sm">
+                  <Anchor
+                    component={HoverPrefetchLink}
+                    href="/type-lists"
+                    size="sm"
+                  >
                     type lists
                   </Anchor>{" "}
                   to decide which items a rule applies to. A list names the

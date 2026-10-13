@@ -3,8 +3,9 @@
 import type { AnchorProps } from "@mantine/core";
 import type { LinkProps } from "next/link";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor } from "@mantine/core";
+
+import { HoverPrefetchLink } from "../Link";
 
 export type DogmaEffectAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -16,7 +17,7 @@ export const DogmaEffectAnchor = memo(
   ({ effectId, children, ...otherProps }: DogmaEffectAnchorProps) => {
     return (
       <Anchor
-        component={Link}
+        component={HoverPrefetchLink}
         href={`/dogma/effect/${effectId}`}
         {...otherProps}
       >

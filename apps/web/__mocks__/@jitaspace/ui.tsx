@@ -12,6 +12,10 @@
  */
 import React from "react";
 
+// The real component, not a stub: it only needs React and next/link, so it
+// loads fine here, and the layout tests assert its prefetch behaviour.
+export { HoverPrefetchLink } from "../../../../packages/ui/Link/HoverPrefetchLink";
+
 // Entity anchors render a real <a> so tests can assert the destination. The
 // href is omitted while the id is nullish, mirroring the real components —
 // emitting `/race/undefined` is precisely the bug these stubs must not hide.

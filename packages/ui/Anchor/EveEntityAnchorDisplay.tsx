@@ -3,8 +3,9 @@
 import type { AnchorProps } from "@mantine/core";
 import type { LinkProps } from "next/link";
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor } from "@mantine/core";
+
+import { HoverPrefetchLink } from "../Link";
 
 export type EveEntityAnchorDisplayProps = Omit<
   AnchorProps,
@@ -25,7 +26,7 @@ export type EveEntityAnchorDisplayProps = Omit<
 export const EveEntityAnchorDisplay = memo(
   ({ href, children, ...props }: EveEntityAnchorDisplayProps) => {
     return (
-      <Anchor component={Link} href={href} {...props}>
+      <Anchor component={HoverPrefetchLink} href={href} {...props}>
         {children}
       </Anchor>
     );

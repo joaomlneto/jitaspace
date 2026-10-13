@@ -2,11 +2,10 @@
 
 import type { TimelineProps } from "@mantine/core";
 import { memo, useMemo } from "react";
-import Link from "next/link";
 import { Anchor, Badge, Group, Text, Timeline } from "@mantine/core";
 import { format } from "date-fns";
 
-import { AllianceAvatar } from "@jitaspace/ui";
+import { AllianceAvatar, HoverPrefetchLink } from "@jitaspace/ui";
 
 import { AllianceName } from "../Text";
 
@@ -75,7 +74,7 @@ export const CorporationAllianceHistoryTimeline = memo(
               <Group>
                 {allianceMembership.alliance_id ? (
                   <Anchor
-                    component={Link}
+                    component={HoverPrefetchLink}
                     href={`/alliance/${allianceMembership.alliance_id}`}
                   >
                     <AllianceName
