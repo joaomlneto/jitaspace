@@ -3,6 +3,7 @@
 import type { AnchorProps } from "@mantine/core";
 import type { LinkProps } from "next/link";
 import { memo, useMemo } from "react";
+import { Anchor } from "@mantine/core";
 
 import type { ResolvableEntityCategory } from "@jitaspace/hooks";
 import { useEsiName } from "@jitaspace/hooks";
@@ -21,6 +22,7 @@ export const EveEntityAnchor = memo(
     entityId,
     category: categoryHint,
     children,
+    prefetch,
     ...props
   }: EveEntityAnchorProps) => {
     const { category: resolvedCategory } = useEsiName(
@@ -32,11 +34,11 @@ export const EveEntityAnchor = memo(
     // stays undefined until the name lookup lands. Callers like `TypeAnchor`
     // and `CharacterAnchor` already know the category statically, and the
     // destination follows from the id alone — so prefer the hint and emit a
-    // real href on first render instead of parking the link on "#".
+    // real href on first render instead of rendering it unlinked.
     const category = categoryHint ?? resolvedCategory;
 
     const url = useMemo(() => {
-      if (!entityId || !category) return "#";
+      if (!entityId || !category) return undefined;
       switch (category) {
         case "agent":
           return `/character/${entityId}`;
@@ -54,12 +56,20 @@ export const EveEntityAnchor = memo(
         case "solar_system":
           return `/system/${entityId}`;
         default:
-          return "#";
+          return undefined;
       }
     }, [category, entityId]);
 
+    // No destination yet (no id, an unresolved or unroutable category): render
+    // the children unlinked rather than linking "#", which would point at, and
+    // on hover prefetch, the current page. Like CorporationAnchor, `prefetch`
+    // stays off the plain Anchor so it never reaches the DOM.
+    if (url === undefined) {
+      return <Anchor {...props}>{children}</Anchor>;
+    }
+
     return (
-      <EveEntityAnchorDisplay href={url} {...props}>
+      <EveEntityAnchorDisplay href={url} prefetch={prefetch} {...props}>
         {children}
       </EveEntityAnchorDisplay>
     );

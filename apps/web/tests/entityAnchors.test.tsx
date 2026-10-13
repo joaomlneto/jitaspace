@@ -31,7 +31,7 @@ import { WarDefenderAnchorDisplay } from "~/components/Anchor/WarDefenderAnchorD
 // EveEntityAnchor (and everything that delegates to it) calls useEsiName to
 // resolve an entity category. We echo the category hint back so each anchor
 // exercises its own branch in the EveEntityAnchor href switch. When no hint is
-// given we still return a category so a real href ("#" otherwise) is built.
+// given we still return a category so a real href (none otherwise) is built.
 jest.mock("@jitaspace/hooks", () => ({
   useEsiName: (_id?: string | number, categoryHint?: string) => ({
     name: "Resolved Name",
@@ -52,6 +52,15 @@ const renderWithMantine = (ui: ReactElement) =>
 
 const hrefOf = (text: string) =>
   screen.getByText(text).closest("a")?.getAttribute("href");
+
+// Without a destination an anchor still renders its children inside an <a>, so
+// the row keeps its styling, but the <a> carries no href: "#" would point at,
+// and on hover prefetch, the current page.
+const expectUnlinked = (text: string) => {
+  const anchor = screen.getByText(text).closest("a");
+  expect(anchor).not.toBeNull();
+  expect(anchor).not.toHaveAttribute("href");
+};
 
 describe("Anchor components", () => {
   // Every anchor receives an id and some children text. We assert the children
@@ -193,29 +202,42 @@ describe("Anchor components", () => {
       expect(hrefOf("Entity")).toBe(href);
     });
 
-    it("falls back to '#' for an unknown category", () => {
+    it("renders unlinked for an unroutable category", () => {
       renderWithMantine(
         <EveEntityAnchor entityId={13} category={"war" as never}>
           Unknown
         </EveEntityAnchor>,
       );
-      expect(hrefOf("Unknown")).toBe("#");
+      expectUnlinked("Unknown");
     });
 
-    it("falls back to '#' when no entityId is provided", () => {
+    it("renders unlinked when no entityId is provided", () => {
       renderWithMantine(
         <EveEntityAnchor category="character">NoId</EveEntityAnchor>,
       );
-      expect(hrefOf("NoId")).toBe("#");
+      expectUnlinked("NoId");
     });
 
-    it("renders children even with a null entityId", () => {
+    it("renders its children unlinked with a null entityId", () => {
       renderWithMantine(
         <EveEntityAnchor entityId={null} category="character">
           NullId
         </EveEntityAnchor>,
       );
-      expect(screen.getByText("NullId")).toBeInTheDocument();
+      expectUnlinked("NullId");
+    });
+
+    it("keeps the next/link prefetch prop out of the DOM when unlinked", () => {
+      // A string value, because React drops a boolean one from an unknown
+      // attribute by itself, which would let this pass without the fix.
+      renderWithMantine(
+        <EveEntityAnchor category="character" prefetch="auto">
+          NoIdPrefetch
+        </EveEntityAnchor>,
+      );
+      expect(screen.getByText("NoIdPrefetch").closest("a")).not.toHaveAttribute(
+        "prefetch",
+      );
     });
   });
 
@@ -294,8 +316,8 @@ describe("Anchor components", () => {
           Aggressor Unknown
         </WarAggressorAnchorDisplay>,
       );
-      // EveEntityAnchor with no entityId resolves to '#'.
-      expect(hrefOf("Aggressor Unknown")).toBe("#");
+      // EveEntityAnchor with no entityId renders unlinked.
+      expectUnlinked("Aggressor Unknown");
     });
   });
 
@@ -322,7 +344,7 @@ describe("Anchor components", () => {
       renderWithMantine(
         <WarDefenderAnchorDisplay>Defender Unknown</WarDefenderAnchorDisplay>,
       );
-      expect(hrefOf("Defender Unknown")).toBe("#");
+      expectUnlinked("Defender Unknown");
     });
   });
 });
