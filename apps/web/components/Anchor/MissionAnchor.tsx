@@ -10,12 +10,12 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type MissionAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    missionId?: string | number;
+    missionId?: string | number | null;
   };
 
 export const MissionAnchor = memo(
   ({ missionId, children, ...otherProps }: MissionAnchorProps) => {
-    if (missionId === undefined) {
+    if (missionId === null || missionId === undefined) {
       return children;
     }
 

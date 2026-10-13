@@ -21,8 +21,11 @@ const childrenStub =
     React.createElement("span", null, children);
 
 // Entity anchors render a real <a> so tests can assert the destination. The
-// href is omitted while the id is nullish, mirroring the real components —
-// emitting `/race/undefined` is precisely the bug these stubs must not hide.
+// href is omitted while the id is nullish. No real anchor emits
+// `/race/undefined` either, which is precisely the bug these stubs must not
+// hide: the id-to-route anchors render unlinked (see
+// tests/entityIdAnchors.test.tsx), and the ones built on EveEntityAnchor
+// (Character, Faction, SolarSystem, Type) link to "#".
 const anchorStub =
   (path: string, idProp: string, testid?: string) =>
   ({ children, ...props }: AnyProps) => {

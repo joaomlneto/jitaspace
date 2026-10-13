@@ -88,3 +88,25 @@ describe("HoverPrefetchLink", () => {
     );
   });
 });
+
+// The menus' "Character Page" / "Corporation Page" items link through these.
+describe.each([
+  ["CharacterPageLink", { characterId: 123 }, "/character/123"],
+  ["CorporationPageLink", { corporationId: 456 }, "/corporation/456"],
+])("%s", (name, props, href) => {
+  it("links to the entity page and prefetches it only on intent", () => {
+    const Component = (
+      require("~/components/Link") as Record<
+        string,
+        (p: Record<string, unknown>) => ReactNode
+      >
+    )[name]!;
+    render(<Component {...props}>Page</Component>);
+    const link = screen.getByRole("link", { name: "Page" });
+
+    expect(link).toHaveAttribute("href", href);
+    expect(link).toHaveAttribute("data-prefetch", "false");
+    fireEvent.mouseEnter(link);
+    expect(link).toHaveAttribute("data-prefetch", "null");
+  });
+});

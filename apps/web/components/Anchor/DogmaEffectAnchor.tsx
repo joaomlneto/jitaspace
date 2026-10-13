@@ -10,15 +10,22 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type DogmaEffectAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    effectId: string | number;
+    effectId?: string | number | null;
   };
 
 export const DogmaEffectAnchor = memo(
-  ({ effectId, children, ...otherProps }: DogmaEffectAnchorProps) => {
+  ({ effectId, children, prefetch, ...otherProps }: DogmaEffectAnchorProps) => {
+    // While the id is nullish the children render unlinked, so the href never
+    // reads `/dogma/effect/undefined` (see CorporationAnchor).
+    if (effectId === null || effectId === undefined) {
+      return <Anchor {...otherProps}>{children}</Anchor>;
+    }
+
     return (
       <Anchor
         component={HoverPrefetchLink}
         href={`/dogma/effect/${effectId}`}
+        prefetch={prefetch}
         {...otherProps}
       >
         {children}

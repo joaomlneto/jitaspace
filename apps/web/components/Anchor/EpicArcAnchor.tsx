@@ -10,12 +10,12 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type EpicArcAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    epicArcId?: string | number;
+    epicArcId?: string | number | null;
   };
 
 export const EpicArcAnchor = memo(
   ({ epicArcId, children, ...otherProps }: EpicArcAnchorProps) => {
-    if (epicArcId === undefined) {
+    if (epicArcId === null || epicArcId === undefined) {
       return children;
     }
 

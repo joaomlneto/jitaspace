@@ -10,12 +10,12 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type GroupNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    groupId?: string | number;
+    groupId?: string | number | null;
   };
 
 export const GroupAnchor = memo(
   ({ groupId, children, ...otherProps }: GroupNameAnchorProps) => {
-    if (groupId === undefined) {
+    if (groupId === null || groupId === undefined) {
       return children;
     }
 

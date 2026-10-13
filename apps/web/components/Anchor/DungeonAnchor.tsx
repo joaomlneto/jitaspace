@@ -10,12 +10,12 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type DungeonAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    dungeonId?: string | number;
+    dungeonId?: string | number | null;
   };
 
 export const DungeonAnchor = memo(
   ({ dungeonId, children, ...otherProps }: DungeonAnchorProps) => {
-    if (dungeonId === undefined) {
+    if (dungeonId === null || dungeonId === undefined) {
       return children;
     }
 

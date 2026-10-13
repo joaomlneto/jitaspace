@@ -6,9 +6,21 @@ import { describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
+import { AllianceAnchor } from "~/components/Anchor/AllianceAnchor";
 import { BloodlineAnchor } from "~/components/Anchor/BloodlineAnchor";
+import { CategoryAnchor } from "~/components/Anchor/CategoryAnchor";
 import { CorporationAnchor } from "~/components/Anchor/CorporationAnchor";
+import { DogmaAttributeAnchor } from "~/components/Anchor/DogmaAttributeAnchor";
+import { DogmaEffectAnchor } from "~/components/Anchor/DogmaEffectAnchor";
+import { DungeonAnchor } from "~/components/Anchor/DungeonAnchor";
+import { EpicArcAnchor } from "~/components/Anchor/EpicArcAnchor";
+import { GroupAnchor } from "~/components/Anchor/GroupAnchor";
+import { MarketGroupAnchor } from "~/components/Anchor/MarketGroupAnchor";
+import { MissionAnchor } from "~/components/Anchor/MissionAnchor";
 import { RaceAnchor } from "~/components/Anchor/RaceAnchor";
+import { StarAnchor } from "~/components/Anchor/StarAnchor";
+import { TypeListAnchor } from "~/components/Anchor/TypeListAnchor";
+import { WarAnchor } from "~/components/Anchor/WarAnchor";
 
 const renderWithMantine = (ui: ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
@@ -38,6 +50,31 @@ const anchors = [
     path: "/corporation",
     Component: CorporationAnchor,
     idProp: "corporationId",
+  },
+  {
+    name: "AllianceAnchor",
+    path: "/alliance",
+    Component: AllianceAnchor,
+    idProp: "allianceId",
+  },
+  {
+    name: "StarAnchor",
+    path: "/star",
+    Component: StarAnchor,
+    idProp: "starId",
+  },
+  { name: "WarAnchor", path: "/war", Component: WarAnchor, idProp: "warId" },
+  {
+    name: "DogmaEffectAnchor",
+    path: "/dogma/effect",
+    Component: DogmaEffectAnchor,
+    idProp: "effectId",
+  },
+  {
+    name: "DogmaAttributeAnchor",
+    path: "/dogma/attribute",
+    Component: DogmaAttributeAnchor,
+    idProp: "attributeId",
   },
 ] as const;
 
@@ -115,5 +152,94 @@ describe.each(anchors)("$name", ({ path, Component, idProp }) => {
 
     renderAnchor(undefined, { c: "dimmed", underline: "never" });
     expect(anchorEl()).toHaveAttribute("data-underline", "never");
+  });
+});
+
+/**
+ * These anchors render their bare children, with no <a> at all, while the id
+ * is nullish. `null` must count as "not loaded" as well as `undefined`, or the
+ * href reads `/category/null`.
+ */
+const bareAnchors = [
+  {
+    name: "CategoryAnchor",
+    path: "/category",
+    Component: CategoryAnchor,
+    idProp: "categoryId",
+  },
+  {
+    name: "GroupAnchor",
+    path: "/group",
+    Component: GroupAnchor,
+    idProp: "groupId",
+  },
+  {
+    name: "MarketGroupAnchor",
+    path: "/market-group",
+    Component: MarketGroupAnchor,
+    idProp: "marketGroupId",
+  },
+  {
+    name: "DungeonAnchor",
+    path: "/dungeon",
+    Component: DungeonAnchor,
+    idProp: "dungeonId",
+  },
+  {
+    name: "EpicArcAnchor",
+    path: "/epic-arc",
+    Component: EpicArcAnchor,
+    idProp: "epicArcId",
+  },
+  {
+    name: "MissionAnchor",
+    path: "/mission",
+    Component: MissionAnchor,
+    idProp: "missionId",
+  },
+  {
+    name: "TypeListAnchor",
+    path: "/type-list",
+    Component: TypeListAnchor,
+    idProp: "typeListId",
+  },
+] as const;
+
+describe.each(bareAnchors)("$name", ({ path, Component, idProp }) => {
+  const renderAnchor = (id: string | number | null | undefined) =>
+    renderWithMantine(
+      createElement(
+        Component as ComponentType<Record<string, unknown>>,
+        { [idProp]: id },
+        "Label",
+      ),
+    );
+
+  it.each([
+    ["42", 42],
+    ["a string id", "42"],
+  ])("links to the entity page for %s", (_label, id) => {
+    renderAnchor(id);
+    expect(screen.getByText("Label").closest("a")).toHaveAttribute(
+      "href",
+      `${path}/42`,
+    );
+  });
+
+  it("still links when the id is 0", () => {
+    renderAnchor(0);
+    expect(screen.getByText("Label").closest("a")).toHaveAttribute(
+      "href",
+      `${path}/0`,
+    );
+  });
+
+  it.each([
+    ["undefined", undefined],
+    ["null", null],
+  ])("renders its bare children while the id is %s", (_label, id) => {
+    renderAnchor(id);
+    expect(screen.getByText("Label")).toBeInTheDocument();
+    expect(document.querySelector("a")).toBeNull();
   });
 });

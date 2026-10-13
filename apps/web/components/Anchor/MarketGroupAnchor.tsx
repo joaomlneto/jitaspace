@@ -10,12 +10,12 @@ import { HoverPrefetchLink } from "~/components/Link";
 export type MarketGroupNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    marketGroupId?: string | number;
+    marketGroupId?: string | number | null;
   };
 
 export const MarketGroupAnchor = memo(
   ({ marketGroupId, children, ...otherProps }: MarketGroupNameAnchorProps) => {
-    if (marketGroupId === undefined) {
+    if (marketGroupId === null || marketGroupId === undefined) {
       return children;
     }
 
