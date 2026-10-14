@@ -38,15 +38,16 @@ model Character {
   ancestryId            Int?
   /// Whether the character name is globally unique (npcCharacters.yaml `uniqueName`).
   isUnique              Boolean?
+  issuedContracts       Contract[]                       @relation("CharacterContractIssuer")
   createdAt             DateTime                         @default(now())
   updatedAt             DateTime                         @updatedAt()
   isDeleted             Boolean                          @default(false)
   Agent                 Agent?                           @relation("AgentCharacter")
   researchAgents        ResearchAgent[]                  @relation("ResearchAgentCharacter")
   corporationMembership CharacterCorporationMembership[] @relation("CharacterCorporationMembershipEntry")
-  Contract              Contract[]                       @relation("CharacterContractIssuer")
   killmailVictims       KillmailVictim[]                 @relation("KillmailVictimCharacter")
   killmailAttackers     KillmailAttacker[]               @relation("KillmailAttackerCharacter")
+  createdDynamicItems   DynamicItem[]                    @relation("DynamicItemCreator")
 
   @@index([bloodlineId])
   @@index([corporationId])
@@ -210,6 +211,7 @@ model Type {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  contractItems                   ContractItem[]                  @relation("ContractItemType")
   createdAt                       DateTime                        @default(now())
   // When was this record last updated
   updatedAt                       DateTime                        @updatedAt()
@@ -250,6 +252,8 @@ model Type {
   certificateRecommendations      CertificateRecommendation[]
   masteries                       Mastery[]
   skinTypes                       SkinType[]
+  dynamicItemsAsSource            DynamicItem[]                   @relation("DynamicItemSourceType")
+  dynamicItemsAsMutator           DynamicItem[]                   @relation("DynamicItemMutatorType")
 
   /// Covering index for the market-tree sidebar, which reads every type that
   /// belongs to a market group. `name` is in the key on purpose: with a bare
@@ -350,7 +354,7 @@ model Graphic {
 }
 
 model DogmaAttribute {
-  attributeId                  Int                     @id
+  attributeId                  Int                         @id
   defaultValue                 Float?
   description                  String?
   displayName                  String?
@@ -373,10 +377,10 @@ model DogmaAttribute {
   chargeRechargeTimeId         Int?
   // The attribute's grouping on the type page. SDE-only: ESI's dogma attribute
   // endpoint exposes no category.
-  attributeCategory            DogmaAttributeCategory? @relation(fields: [attributeCategoryId], references: [attributeCategoryId])
+  attributeCategory            DogmaAttributeCategory?     @relation(fields: [attributeCategoryId], references: [attributeCategoryId])
   attributeCategoryId          Int?
-  Icon                         Icon?                   @relation(fields: [iconId], references: [iconId])
-  DogmaUnit                    DogmaUnit?              @relation(fields: [unitId], references: [unitId])
+  Icon                         Icon?                       @relation(fields: [iconId], references: [iconId])
+  DogmaUnit                    DogmaUnit?                  @relation(fields: [unitId], references: [unitId])
   /// Not from CCP: a plain-language description written by us (AI-generated
   /// for now), shown as the attribute's main description next to CCP's own
   /// tooltip and note. EVE HTML: text plus links. No ingest writes it —
@@ -386,22 +390,23 @@ model DogmaAttribute {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt                    DateTime                @default(now())
-  updatedAt                    DateTime                @updatedAt()
-  isDeleted                    Boolean                 @default(false)
+  createdAt                    DateTime                    @default(now())
+  updatedAt                    DateTime                    @updatedAt()
+  isDeleted                    Boolean                     @default(false)
   TypeAttributes               TypeAttribute[]
-  DischargeAttribute           DogmaEffect[]           @relation("DischargeAttribute")
-  DurationAttribute            DogmaEffect[]           @relation("DurationAttribute")
-  FalloffAttribute             DogmaEffect[]           @relation("FalloffAttribute")
-  RangeAttribute               DogmaEffect[]           @relation("RangeAttribute")
-  TrackingSpeedAttribute       DogmaEffect[]           @relation("TrackingSpeedAttribute")
-  DogmaEffectsModified         DogmaEffectModifier[]   @relation("DogmaEffectsModified")
-  DogmaEffectsModifying        DogmaEffectModifier[]   @relation("DogmaEffectsModifying")
+  DischargeAttribute           DogmaEffect[]               @relation("DischargeAttribute")
+  DurationAttribute            DogmaEffect[]               @relation("DurationAttribute")
+  FalloffAttribute             DogmaEffect[]               @relation("FalloffAttribute")
+  RangeAttribute               DogmaEffect[]               @relation("RangeAttribute")
+  TrackingSpeedAttribute       DogmaEffect[]               @relation("TrackingSpeedAttribute")
+  DogmaEffectsModified         DogmaEffectModifier[]       @relation("DogmaEffectsModified")
+  DogmaEffectsModifying        DogmaEffectModifier[]       @relation("DogmaEffectsModifying")
   // Back-relations for the SDE-only attribute references on DogmaEffect.
-  ResistanceAttribute          DogmaEffect[]           @relation("ResistanceAttribute")
-  NpcActivationChanceAttribute DogmaEffect[]           @relation("NpcActivationChanceAttribute")
-  FittingUsageChanceAttribute  DogmaEffect[]           @relation("FittingUsageChanceAttribute")
-  NpcUsageChanceAttribute      DogmaEffect[]           @relation("NpcUsageChanceAttribute")
+  ResistanceAttribute          DogmaEffect[]               @relation("ResistanceAttribute")
+  NpcActivationChanceAttribute DogmaEffect[]               @relation("NpcActivationChanceAttribute")
+  FittingUsageChanceAttribute  DogmaEffect[]               @relation("FittingUsageChanceAttribute")
+  NpcUsageChanceAttribute      DogmaEffect[]               @relation("NpcUsageChanceAttribute")
+  dynamicItemValues            DynamicItemDogmaAttribute[] @relation("DynamicItemDogmaAttribute")
 
   @@index([unitId])
   @@index([iconId])
@@ -489,12 +494,13 @@ model DogmaEffect {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt()
-  isDeleted            Boolean               @default(false)
-  DogmaEffectModifiers DogmaEffectModifier[] @relation("DogmaEffectModifiers")
-  ModifiedDogmaEffect  DogmaEffectModifier[] @relation("ModifiedDogmaEffect")
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt()
+  isDeleted            Boolean                  @default(false)
+  DogmaEffectModifiers DogmaEffectModifier[]    @relation("DogmaEffectModifiers")
+  ModifiedDogmaEffect  DogmaEffectModifier[]    @relation("ModifiedDogmaEffect")
   TypeEffect           TypeEffect[]
+  dynamicItemEffects   DynamicItemDogmaEffect[] @relation("DynamicItemDogmaEffect")
 
   @@index([dischargeAttributeId])
   @@index([durationAttributeId])
@@ -715,6 +721,7 @@ model Corporation {
   solarSystemId              Int?
   raceId                     Int?
   iconId                     Int?
+  issuedContracts            Contract[]                   @relation("CorporationContractIssuer")
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt()
   isDeleted                  Boolean                      @default(false)
@@ -731,7 +738,6 @@ model Corporation {
   warsDefender        War[]                            @relation("WarDefenderCorporation")
   warsAllies          CorporationWarAlly[]             @relation("CorporationWarAllies")
   characterMembership CharacterCorporationMembership[] @relation("CorporationCharacterMembershipEntry")
-  Contract            Contract[]                       @relation("CorporationContractIssuer")
   killmailVictims     KillmailVictim[]                 @relation("KillmailVictimCorporation")
   killmailAttackers   KillmailAttacker[]               @relation("KillmailAttackerCorporation")
 
@@ -787,9 +793,7 @@ model Station {
   stationServices          StationService[]
   corporationHomeStations  Corporation[]    @relation("CorporationHomeStation")
   Agent                    Agent[]          @relation("AgentStation")
-
-  CourierContractStartLocation CourierContract[] @relation("CourierContractStartLocation")
-  CourierContractEndLocation   CourierContract[] @relation("CourierContractEndLocation")
+  contracts                Contract[]       @relation("ContractStation")
 
   @@index([solarSystemId])
   @@index([typeId])
@@ -860,6 +864,7 @@ model Region {
   updatedAt       DateTime        @updatedAt()
   isDeleted       Boolean         @default(false)
   constellations  Constellation[]
+  contracts       Contract[]      @relation("ContractRegion")
 
   @@index([name])
   @@index([nebulaGraphicId])
@@ -940,6 +945,7 @@ model SolarSystem {
   AgentInSpace               AgentInSpace[]                        @relation("AgentInSpaceSolarSystem")
   Killmail                   Killmail[]                            @relation("KillmailSolarSystem")
   sovereignty                SolarSystemSovereignty?               @relation("SolarSystemSovereigntySolarSystem")
+  contracts                  Contract[]                            @relation("ContractSolarSystem")
 
   @@index([constellationId])
   @@index([factionId])
@@ -1906,40 +1912,85 @@ model CorporationWarAlly {
   @@id([warId, corporationId])
 }
 
+/// A public contract, as listed by ESI's public contracts endpoint (and captured
+/// every 30 minutes since 2019-04-10 by EVE Ref's public-contracts history).
+///
+/// The three former per-type tables (Auction/Courier/ItemExchangeContract) are
+/// folded in here: a contract has at most one price, reward, collateral and buyout,
+/// and every reader wants them alongside the header.
 model Contract {
-  /**
-   * Unique identifier for the contract
-   */
   contractId          Int          @id
-  /**
-   * Expiration date of the contract
-   */
-  dateExpired         DateTime
-  /**
-   * Сreation date of the contract
-   */
-  dateIssued          DateTime
-  /**
-   * Number of days to perform the contract
-   */
-  daysToComplete      Int?
-  /**
-   * true if the contract was issued on behalf of the issuer's corporation
-   */
-  forCorporation      Boolean
-  issuerCorporationId Int?
-  issuerCorporation   Corporation? @relation("CorporationContractIssuer", fields: [issuerCorporationId], references: [corporationId])
+  type                ContractType
+  /// Issuers are always stored rows. One ESI cannot resolve (deleted) is added as a
+  /// stub with isDeleted = true, so the contract keeps its foreign keys.
   issuerId            Int
   issuer              Character    @relation("CharacterContractIssuer", fields: [issuerId], references: [characterId])
+  issuerCorporationId Int
+  issuerCorporation   Corporation  @relation("CorporationContractIssuer", fields: [issuerCorporationId], references: [corporationId])
+  /// True if issued on behalf of the issuer's corporation.
+  forCorporation      Boolean
   title               String
-  type                ContractType
+  dateIssued          DateTime
+  dateExpired         DateTime
+  /// Days the acceptor has to complete the contract, as ESI reports it (couriers
+  /// always; some item exchanges set it too).
+  daysToComplete      Int?
   volume              Float?
+
+  /// NPC station or Upwell structure ID; structures exceed 2^31 and are not in any
+  /// table, hence BigInt and no foreign key. ESI reports an end location for every
+  /// type; it differs from the start mostly for couriers.
+  startLocationId BigInt?
+  endLocationId   BigInt?
+  /// Always known: ESI lists public contracts per region (EVE Ref's 2019 snapshots
+  /// group them by region). System and station are null for contracts in player
+  /// structures, and for the 2019 snapshots, which carry neither.
+  regionId        Int
+  region          Region       @relation("ContractRegion", fields: [regionId], references: [regionId])
+  solarSystemId   Int?
+  solarSystem     SolarSystem? @relation("ContractSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  /// The NPC station the contract is in, when it is in one.
+  stationId       Int?
+  station         Station?     @relation("ContractStation", fields: [stationId], references: [stationId])
+
+  /// ISK amounts, stored as ESI types them (number/double), like InsurancePrice and
+  /// War ISK. Any type may set any of them: item exchanges use reward for "want to
+  /// buy" contracts, and some carry collateral too.
+  price      Float?
+  reward     Float?
+  collateral Float?
+  /// Auction buyout; null when the auction has none (ESI reports 0).
+  buyout     Float?
+
+  /// Timeline, from the snapshots a contract appears in. Public contracts leave the
+  /// listing when accepted, completed, deleted or expired, and the public data cannot
+  /// tell the first three apart, so `endReason` only separates expiry from the rest.
+  firstSeenAt DateTime?
+  lastSeenAt  DateTime?
+  endReason   ContractEndReason?
+
+  items        ContractItem[]
+  bids         ContractBid[]
+  dynamicItems ContractDynamicItem[]
+
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt()
-  isDeleted           Boolean      @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  /// True once ESI's public listing no longer shows the contract; endReason says why.
+  isDeleted Boolean  @default(false)
+
+  @@index([issuerId])
+  @@index([issuerCorporationId])
+  @@index([regionId, type])
+  @@index([dateIssued])
+  /// "Outstanding at time T": firstSeenAt <= T AND lastSeenAt >= T.
+  @@index([firstSeenAt, lastSeenAt])
+  /// "Currently outstanding" (isDeleted = false), by region and type.
+  @@index([isDeleted, regionId, type])
+  @@index([solarSystemId])
+  @@index([stationId])
 }
 
 enum ContractType {
@@ -1950,49 +2001,108 @@ enum ContractType {
   Loan
 }
 
-model AuctionContract {
-  contractId Int      @id
-  /**
-   * Buyout price
-   */
-  buyout     BigInt
-  price      BigInt
-  /**
-   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
-   */
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt()
-  isDeleted  Boolean  @default(false)
+enum ContractEndReason {
+  /// Last seen at or after its expiry date.
+  Expired
+  /// Gone before expiry: accepted, completed or deleted (indistinguishable publicly).
+  RemovedBeforeExpiry
 }
 
-model CourierContract {
-  contractId      Int      @id
-  /**
-   * The collateral for the courier contract
-   */
-  collateral      BigInt
-  startLocationId Int
-  startLocation   Station  @relation("CourierContractStartLocation", fields: [startLocationId], references: [stationId])
-  endLocation     Station  @relation("CourierContractEndLocation", fields: [endLocationId], references: [stationId])
-  endLocationId   Int
-  reward          BigInt
-  /**
-   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
-   */
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt()
-  isDeleted       Boolean  @default(false)
+/// An item offered (isIncluded) or asked for (!isIncluded) in a public contract.
+model ContractItem {
+  contractId         Int
+  contract           Contract @relation(fields: [contractId], references: [contractId], onDelete: Cascade)
+  /// ESI record_id: unique per item line.
+  recordId           BigInt
+  typeId             Int
+  type               Type     @relation("ContractItemType", fields: [typeId], references: [typeId])
+  quantity           Int
+  isIncluded         Boolean
+  /// The specific item's ID, when ESI exposes it (offered items only).
+  itemId             BigInt?
+  isBlueprintCopy    Boolean?
+  materialEfficiency Int?
+  timeEfficiency     Int?
+  runs               Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt()
+
+  @@id([contractId, recordId])
+  @@index([typeId])
+  /// Finds every contract a specific item (e.g. a mutated one) was listed in.
+  @@index([itemId])
 }
 
-model ItemExchangeContract {
-  contractId Int      @id
-  price      BigInt
-  /**
-   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
-   */
+/// A bid on a public auction contract.
+model ContractBid {
+  bidId      Int      @id
+  contractId Int
+  contract   Contract @relation(fields: [contractId], references: [contractId], onDelete: Cascade)
+  amount     Float
+  dateBid    DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
-  isDeleted  Boolean  @default(false)
+
+  @@index([contractId])
+}
+
+/// A mutated (abyssal) item. Its rolled dogma never changes, so it is stored once,
+/// however many contracts it is listed in (relisting is routine: 65 of 13,722 moved
+/// contract within one day in October 2026).
+model DynamicItem {
+  itemId        BigInt                      @id
+  /// The module or drone that was mutated.
+  sourceTypeId  Int
+  sourceType    Type                        @relation("DynamicItemSourceType", fields: [sourceTypeId], references: [typeId])
+  /// The mutaplasmid used.
+  mutatorTypeId Int
+  mutatorType   Type                        @relation("DynamicItemMutatorType", fields: [mutatorTypeId], references: [typeId])
+  /// The character who applied the mutaplasmid.
+  createdById   Int
+  createdBy     Character                   @relation("DynamicItemCreator", fields: [createdById], references: [characterId])
+  attributes    DynamicItemDogmaAttribute[]
+  effects       DynamicItemDogmaEffect[]
+  contracts     ContractDynamicItem[]
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt()
+
+  @@index([sourceTypeId])
+  @@index([mutatorTypeId])
+  @@index([createdById])
+}
+
+model DynamicItemDogmaAttribute {
+  itemId      BigInt
+  item        DynamicItem    @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+  attributeId Int
+  attribute   DogmaAttribute @relation("DynamicItemDogmaAttribute", fields: [attributeId], references: [attributeId])
+  value       Float
+
+  @@id([itemId, attributeId])
+  @@index([attributeId])
+}
+
+model DynamicItemDogmaEffect {
+  itemId    BigInt
+  item      DynamicItem @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+  effectId  Int
+  effect    DogmaEffect @relation("DynamicItemDogmaEffect", fields: [effectId], references: [effectId])
+  isDefault Boolean
+
+  @@id([itemId, effectId])
+  @@index([effectId])
+}
+
+/// Which mutated items a contract lists. The same item appears in every contract
+/// it is relisted in.
+model ContractDynamicItem {
+  contractId Int
+  contract   Contract    @relation(fields: [contractId], references: [contractId], onDelete: Cascade)
+  itemId     BigInt
+  item       DynamicItem @relation(fields: [itemId], references: [itemId])
+
+  @@id([contractId, itemId])
+  @@index([itemId])
 }
 
 // EVE Online manufacturing/research blueprints (from the SDE blueprints.yaml).
