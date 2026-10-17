@@ -75,6 +75,9 @@ describe("incursionSiteRole", () => {
     ["Ziriert (Jakemhih), a gap in the wiki's row", 30003562, "vanguard"],
     ["E1-4YH (T-1WDH), in two of the wiki's roles", 30001214, "assault"],
     ["U-O2DA (X-FHU3), in two of the wiki's roles", 30003637, "headquarters"],
+    ["Y7-XFD (Q-PVMK), last seen in 2022-02", 30000947, "headquarters"],
+    ["Q2FL-T (Q-PVMK), the wiki's older headquarters", 30000946, "vanguard"],
+    ["Zatamaka (Comadu), one of two low-sec systems", 30005079, "headquarters"],
   ])("maps %s by the layout rule", (_name, solarSystemId, role) => {
     expect(incursionSiteRole(solarSystemId)).toBe(role);
   });
