@@ -34,6 +34,7 @@
  */
 
 import { EVE_UNIVERSITY_SYSTEMS_BY_ROLE } from "./siteRolesEveUniversity";
+import { INFERRED_SYSTEMS_BY_ROLE } from "./siteRolesInferred";
 
 export type IncursionSiteRole = "vanguard" | "assault" | "headquarters";
 
@@ -171,7 +172,7 @@ const entries = (byRole: Record<IncursionSiteRole, readonly number[]>) =>
   );
 
 /**
- * Where we depart from eve-incursions.de's map; `undefined` drops a system.
+ * Where we depart from either map; `undefined` drops a system.
  *
  * - Intaki is high-sec, in low-sec Viriette, and ESI has never listed it among
  *   an incursion's systems.
@@ -179,6 +180,27 @@ const entries = (byRole: Record<IncursionSiteRole, readonly number[]>) =>
  *   wiki's vanguard and assault systems. Its split follows the rule the rest of
  *   the map does (four such systems: three vanguard, one assault), and in Enka
  *   its vanguards are the ones next to the staging system.
+ * - 2FYX-H, G2E-RJ and 5ZAB-N (null-sec, from the wiki) had two roles swapped.
+ *   Every other known layout follows one rule: order the systems by jumps from
+ *   staging inside the incursion, then by descending system id; the first are
+ *   the vanguards (as many as the count rule above gives), the last is the
+ *   headquarters, the rest are assaults. The wiki's rows broke it, and in
+ *   2FYX-H (8 incursions since 2018) and G2E-RJ (3 since 2021) zKillboard's
+ *   killmails side with the rule: players died to assault-site NPCs (Ostingele
+ *   Tectum, Auga Hypophysis, Arnon Epithalamus) in L1YK-V and 9-F0B2, and only
+ *   to vanguard NPCs (Renyn Meten, Yulai Crus Cerebi, Eystur Rhomben, Uitra
+ *   Telen) in R3P0-Z and 4B-NQN. 5ZAB-N's two incursions left too few kills to
+ *   tell its headquarters from an assault, so it takes the rule's: no similar
+ *   ordering that fits the other layouts gives the wiki's.
+ * - Ganoure's layout changed between 2020-09 and 2022-04. Before, Kenninck was
+ *   the staging system and Espigoure the headquarters, as the wiki still has
+ *   it: killmails show assault-site NPCs in Espigoure and none in Kenninck.
+ *   Since, ESI names Espigoure as the staging system, and the headquarters
+ *   NPCs (Deltole Tegmentum, Outuni Mesen) kill in Kenninck. eve-incursions.de
+ *   maps three of its systems; Barleguet, a vanguard throughout, and Kenninck
+ *   complete the layout as the rule gives it.
+ * - The wiki lists 50-5UD's staging system, BB-EKF, among its vanguards too.
+ *   The other six follow the rule, and no incursion NPC has a kill in BB-EKF.
  */
 const CORRECTIONS = new Map<number, IncursionSiteRole | undefined>([
   [30002961, "vanguard"], // Oyeman (Semou)
@@ -193,10 +215,23 @@ const CORRECTIONS = new Map<number, IncursionSiteRole | undefined>([
   [30003006, "vanguard"], // Nidebora (Enka)
   [30003002, "assault"], // Faktun (Enka)
   [30003003, "assault"], // Halenan (Enka)
+  [30001806, "vanguard"], // R3P0-Z (2FYX-H)
+  [30001809, "assault"], // L1YK-V (2FYX-H)
+  [30003706, "vanguard"], // 4B-NQN (G2E-RJ)
+  [30003704, "assault"], // 9-F0B2 (G2E-RJ)
+  [30004219, "headquarters"], // 9-7SRQ (5ZAB-N)
+  [30004221, "assault"], // 4T-VDE (5ZAB-N)
+  [30003819, "vanguard"], // Barleguet (Ganoure)
+  [30003823, "headquarters"], // Kenninck (Ganoure)
+  [30004851, undefined], // BB-EKF (50-5UD), the staging system
 ]);
 
-/** eve-incursions.de's map, corrected, then the EVE University wiki's. */
+/**
+ * eve-incursions.de's map, corrected, then the EVE University wiki's, then the
+ * layouts neither has.
+ */
 const ROLE_BY_SYSTEM = new Map<number, IncursionSiteRole>([
+  ...entries(INFERRED_SYSTEMS_BY_ROLE),
   ...entries(EVE_UNIVERSITY_SYSTEMS_BY_ROLE),
   ...entries(EVE_INCURSIONS_SYSTEMS_BY_ROLE),
 ]);
