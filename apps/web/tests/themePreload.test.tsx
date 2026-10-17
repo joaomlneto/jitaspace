@@ -111,7 +111,7 @@ describe("THEME_PRELOAD_SCRIPT", () => {
     runScript();
     expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("caldari");
     expect(html.style.getPropertyValue("--app-pending-body")).toBe(
-      "light-dark(#f2f7fb, #111111)",
+      "light-dark(#f1f1f1, #101010)",
     );
     expect(html.style.getPropertyValue("--app-pending-background")).toBe(
       THEME_PRELOAD.caldari.background,

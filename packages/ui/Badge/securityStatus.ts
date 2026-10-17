@@ -25,8 +25,20 @@ const SECURITY_STATUS_COLORS: Record<string, string> = {
   "0.0": NULL_SEC_COLOR,
 };
 
-/** Rounded tiers whose bright backgrounds need dark text for contrast. */
-const LIGHT_SECURITY_TIERS = new Set(["0.5", "0.6", "0.7", "0.8"]);
+/**
+ * Rounded tiers whose backgrounds need dark text for contrast: those where
+ * dark text beats white. 0.9 is 6.3:1 dark against 2.7:1 white, and 0.4 is
+ * 5.5:1 against 3.1:1. 1.0 is a near-tie (about 4.1:1 either way) and stays
+ * white.
+ */
+const LIGHT_SECURITY_TIERS = new Set([
+  "0.4",
+  "0.5",
+  "0.6",
+  "0.7",
+  "0.8",
+  "0.9",
+]);
 
 /**
  * Round a raw security status to its displayed tier (one decimal, clamped at
