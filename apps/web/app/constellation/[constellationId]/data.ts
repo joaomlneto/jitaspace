@@ -32,10 +32,12 @@ export async function readConstellation(
       region: { select: { name: true } },
       factionId: true,
       wormholeClassId: true,
+      isDeleted: true,
     },
     where: { constellationId },
   });
-  if (!constellation) return null;
+  // One ESI no longer lists is gone from EVE, as on the faction page.
+  if (!constellation || constellation.isDeleted) return null;
 
   const [faction, systems] = await Promise.all([
     constellation.factionId === null

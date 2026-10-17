@@ -263,6 +263,57 @@ describe("readConstellation", () => {
     expect(prismaMock.solarSystem.findMany).not.toHaveBeenCalled();
   });
 
+  it("is null for a constellation ESI no longer lists", async () => {
+    mockSdeReads();
+    prismaMock.constellation.findUnique.mockResolvedValue({
+      name: "Jayai",
+      regionId: DEVOID,
+      region: { name: "Devoid" },
+      factionId: null,
+      wormholeClassId: null,
+      isDeleted: true,
+    });
+    await expect(loadData().readConstellation(JAYAI)).resolves.toBeNull();
+  });
+
+  it("lists only the systems ESI still lists", async () => {
+    mockSdeReads();
+    await loadData().readConstellation(JAYAI);
+    expect(prismaMock.solarSystem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { constellationId: JAYAI, isDeleted: false },
+      }),
+    );
+  });
+
+  it("leaves out a gate whose far side ESI no longer lists", async () => {
+    mockSdeReads();
+    const there = (isDeleted: boolean) => ({
+      solarSystemId: 30002982,
+      name: "Rahadalon",
+      isDeleted,
+      constellationId: NEIGHBOUR,
+      constellation: {
+        name: "Kabo",
+        regionId: DEVOID,
+        region: { name: "Devoid" },
+      },
+    });
+    prismaMock.stargate.findMany.mockResolvedValue([
+      // A deleted destination gate, then a gate into a deleted system.
+      {
+        solarSystem: { solarSystemId: TARARAN, name: "Tararan" },
+        DestinationStargate: { isDeleted: true, solarSystem: there(false) },
+      },
+      {
+        solarSystem: { solarSystemId: LABAPI, name: "Labapi" },
+        DestinationStargate: { isDeleted: false, solarSystem: there(true) },
+      },
+    ]);
+    const constellation = await loadData().readConstellation(JAYAI);
+    expect(constellation?.neighbours).toEqual([]);
+  });
+
   it("gathers its systems, their stations and site roles, and its faction", async () => {
     mockSdeReads();
     const constellation = await loadData().readConstellation(JAYAI);

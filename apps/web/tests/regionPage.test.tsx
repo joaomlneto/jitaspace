@@ -247,6 +247,19 @@ describe("readRegion", () => {
     expect(prismaMock.constellation.findMany).not.toHaveBeenCalled();
   });
 
+  it("is null for a region ESI no longer lists", async () => {
+    mockSdeReads();
+    prismaMock.region.findUnique.mockResolvedValue({
+      name: "Devoid",
+      description: null,
+      factionId: null,
+      wormholeClassId: null,
+      isDeleted: true,
+    });
+    await expect(loadData().readRegion(DEVOID)).resolves.toBeNull();
+    expect(prismaMock.constellation.findMany).not.toHaveBeenCalled();
+  });
+
   it("gathers its faction, constellations and the systems in them", async () => {
     mockSdeReads();
     const region = await loadData().readRegion(DEVOID);
@@ -316,6 +329,12 @@ describe("readRegionIncursions", () => {
     ]);
     mockIncursions();
     const { incursions } = await loadData().readRegionIncursions(DEVOID);
+    // Only the constellations ESI still lists.
+    expect(prismaMock.constellation.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { regionId: DEVOID, isDeleted: false },
+      }),
+    );
     expect(prismaMock.incursion.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { constellationId: { in: [JAYAI, KABO] } },

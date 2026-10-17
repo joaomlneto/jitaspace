@@ -54,10 +54,12 @@ export async function readGateNeighbours(
       solarSystem: { select: { solarSystemId: true, name: true } },
       DestinationStargate: {
         select: {
+          isDeleted: true,
           solarSystem: {
             select: {
               solarSystemId: true,
               name: true,
+              isDeleted: true,
               constellationId: true,
               constellation: {
                 select: {
@@ -77,7 +79,10 @@ export async function readGateNeighbours(
   const neighbours = new Map<number, GateNeighbour>();
   for (const gate of gates) {
     const there = gate.DestinationStargate?.solarSystem;
-    if (!there) continue;
+    // Neither a gate nor a system ESI no longer lists leads anywhere.
+    if (!there || gate.DestinationStargate?.isDeleted || there.isDeleted) {
+      continue;
+    }
     const { constellation } = there;
     const neighbour =
       by === "constellation"

@@ -30,10 +30,12 @@ export async function readRegion(
       description: true,
       factionId: true,
       wormholeClassId: true,
+      isDeleted: true,
     },
     where: { regionId },
   });
-  if (!region) return null;
+  // One ESI no longer lists is gone from EVE, as on the faction page.
+  if (!region || region.isDeleted) return null;
 
   const [faction, constellations] = await Promise.all([
     region.factionId === null
