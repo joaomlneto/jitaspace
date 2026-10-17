@@ -1,8 +1,9 @@
 import type { LinkProps } from "next/link";
-import Link from "next/link";
+
+import { HoverPrefetchLink } from "./HoverPrefetchLink";
 
 export type CorporationPageLinkProps = Omit<LinkProps, "href"> & {
-  corporationId: number | string | null;
+  corporationId: number | string;
 };
 
 export const CorporationPageLink = ({
@@ -10,9 +11,6 @@ export const CorporationPageLink = ({
   ...otherProps
 }: CorporationPageLinkProps) => {
   return (
-    <Link
-      href={corporationId ? `/corporation/${corporationId}` : "#"}
-      {...otherProps}
-    />
+    <HoverPrefetchLink href={`/corporation/${corporationId}`} {...otherProps} />
   );
 };

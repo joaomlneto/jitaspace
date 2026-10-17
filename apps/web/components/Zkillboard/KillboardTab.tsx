@@ -24,12 +24,9 @@ import {
 } from "@tabler/icons-react";
 
 import {
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  SolarSystemAnchor,
   SolarSystemName,
-  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
@@ -38,13 +35,7 @@ import {
   CategoryTrophyIcon,
   WindowMapIcon,
 } from "@jitaspace/eve-icons";
-import {
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-  GroupAnchor,
-  ISKAmount,
-} from "@jitaspace/ui";
+import { CharacterAvatar, CorporationAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type {
   ZkbEntity,
@@ -52,6 +43,13 @@ import type {
   ZkbStats,
   ZkbTopEntry,
 } from "./zkillboard";
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  GroupAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import { GroupName } from "~/components/Text";
 import { formatDecimal, formatInteger, formatPercent } from "~/lib/format";

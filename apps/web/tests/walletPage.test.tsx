@@ -28,6 +28,12 @@ jest.mock("@jitaspace/eve-components", () => ({
   EveEntityName: ({ entityId }: { entityId?: number }) => (
     <span>{`entity-${entityId}`}</span>
   ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   EveEntityAnchor: ({ children }: { children?: ReactNode }) => children,
 }));
 

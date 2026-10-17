@@ -31,12 +31,7 @@ import type { CorporationsDetail } from "@jitaspace/esi-client";
 import { isNpcCorporationId } from "@jitaspace/esi-metadata";
 import {
   AllianceName,
-  CharacterAnchor,
   CharacterName,
-  FactionAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
 import {
@@ -50,10 +45,8 @@ import {
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAnchor,
   CorporationAvatar,
   ISKAmount,
-  RaceAnchor,
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
@@ -61,6 +54,15 @@ import type { CorporationPageTab } from "./tabs";
 import type { CorporationPageData } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
+import {
+  AllianceAnchor,
+  CharacterAnchor,
+  FactionAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StationAnchor,
+} from "~/components/Anchor";
 import {
   corporationPaletteClasses,
   CorporationPaletteStripe,

@@ -11,9 +11,12 @@ import { render, screen } from "@testing-library/react";
 // attribute. No hooks/params are read, so it renders directly with props.
 // ---------------------------------------------------------------------------
 
-// DogmaAttributeAnchor (from @jitaspace/ui) is used inside the Name cell; pass
-// its children through so attribute names remain assertable.
-jest.mock("@jitaspace/ui", () => ({
+// DogmaAttributeAnchor (from ~/components/Anchor) is used inside the Name cell;
+// pass its children through so attribute names remain assertable.
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   DogmaAttributeAnchor: ({ children }: { children?: React.ReactNode }) => (
     <span data-testid="attr-anchor">{children}</span>
   ),

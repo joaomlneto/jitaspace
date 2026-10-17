@@ -6,13 +6,13 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen, within } from "@testing-library/react";
 
 import type { NamedTypeListMatch } from "~/lib/typeLists";
+// The real anchor, not the ~/components/Anchor stub: it is part of this feature.
+import { TypeListAnchor } from "~/components/Anchor/TypeListAnchor";
 import {
   TypeListMatchBadges,
   TypeListMatchTable,
   TypeListRuleSummary,
 } from "~/components/TypeLists";
-// The real anchor, not the @jitaspace/ui stub: it is part of this feature.
-import { TypeListAnchor } from "../../../packages/ui/Anchor/TypeListAnchor";
 
 const renderWithMantine = (ui: ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);

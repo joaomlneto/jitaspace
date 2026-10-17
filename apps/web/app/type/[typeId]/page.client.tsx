@@ -18,6 +18,7 @@ import {
   Tabs,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import {
   IconArrowsDiff,
@@ -33,7 +34,7 @@ import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeName } from "@jitaspace/eve-components";
 import {
   CategoryIskIcon,
   WindowInfoIcon,
@@ -46,24 +47,27 @@ import {
   useType,
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CategoryAnchor,
-  DogmaAttributeAnchor,
-  DogmaAttributeValue,
-  DogmaEffectAnchor,
-  EveIconAvatar,
-  GroupAnchor,
-  ISKAmount,
-  MarketGroupAnchor,
-} from "@jitaspace/ui";
+import { DogmaAttributeValue, EveIconAvatar, ISKAmount } from "@jitaspace/ui";
 
-import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
+import type {
+  TypeDogmaAttributeMeta,
+  TypeDogmaEffectMeta,
+  TypeDogmaMeta,
+} from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
+import {
+  CategoryAnchor,
+  DogmaAttributeAnchor,
+  DogmaEffectAnchor,
+  GroupAnchor,
+  MarketGroupAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import {
   TypeInventoryBreadcrumbs,
   TypeMarketBreadcrumbs,
@@ -77,6 +81,7 @@ import {
   StatCard,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   DamageTypeLegend,
   NpcCombatStats,
@@ -204,6 +209,52 @@ function AttributeValue({
         />
       );
   }
+}
+
+/**
+ * An effect's name, linked to its page, with its description underneath: CCP's
+ * own, else our AI-generated one, labelled as such. Falls back to ESI's name
+ * when our database has no row for the effect.
+ */
+function TypeEffectCell({
+  effectId,
+  meta,
+}: Readonly<{
+  effectId: number;
+  meta: TypeDogmaEffectMeta | undefined;
+}>) {
+  const description = meta?.description;
+  return (
+    <Stack gap={2}>
+      <DogmaEffectAnchor effectId={effectId}>
+        {meta?.name ?? <DogmaEffectName span effectId={effectId} />}
+      </DogmaEffectAnchor>
+      {description && (
+        <Group gap={6} align="flex-start" wrap="nowrap">
+          <Text component="div" size="xs" c="dimmed">
+            <MailMessageViewer
+              content={sanitizeFormattedEveString(description.text)}
+            />
+          </Text>
+          {description.source === "ai" && (
+            <Tooltip
+              label="AI-generated from this effect's data, not written by CCP"
+              withArrow
+            >
+              <Badge
+                size="xs"
+                variant="light"
+                color="gray"
+                style={{ flexShrink: 0, cursor: "help" }}
+              >
+                AI
+              </Badge>
+            </Tooltip>
+          )}
+        </Group>
+      )}
+    </Stack>
+  );
 }
 
 /** No history to show; one stable promise, so `use()` never sees a new one. */
@@ -523,7 +574,7 @@ export default function TypePage({
           <Group gap="xs">
             {isComparable && (
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`/compare?types=${typeId}`}
                 size="xs"
                 variant="light"
@@ -840,11 +891,10 @@ export default function TypePage({
                           {sortedDogmaEffects.map((effect) => (
                             <Table.Tr key={effect.effect_id}>
                               <Table.Td>
-                                <DogmaEffectAnchor effectId={effect.effect_id}>
-                                  <DogmaEffectName
-                                    effectId={effect.effect_id}
-                                  />
-                                </DogmaEffectAnchor>
+                                <TypeEffectCell
+                                  effectId={effect.effect_id}
+                                  meta={dogmaMeta.effects[effect.effect_id]}
+                                />
                               </Table.Td>
                               <Table.Td ta="right">
                                 {booleanBadge(effect.is_default)}
@@ -967,7 +1017,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <Text size="sm" c="dimmed">
                   The game uses{" "}
-                  <Anchor component={Link} href="/type-lists" size="sm">
+                  <Anchor
+                    component={HoverPrefetchLink}
+                    href="/type-lists"
+                    size="sm"
+                  >
                     type lists
                   </Anchor>{" "}
                   to decide which items a rule applies to. A list names the

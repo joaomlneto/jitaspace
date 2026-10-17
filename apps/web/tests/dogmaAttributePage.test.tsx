@@ -1,16 +1,15 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
-// ---------------------------------------------------------------------------
-// The Dogma attribute page client is presentational: it receives the attribute
-// metadata + the types/groups that use it as props (the route's async Server
-// Component fetches them via Prisma). No hooks/useParams are read, so it can be
-// rendered directly with realistic props.
-// ---------------------------------------------------------------------------
+import type {
+  AttributeModifierRow,
+  PageProps,
+} from "~/app/dogma/attribute/[attributeId]/page.client";
+import { packTypeRows } from "~/lib/dogmaAttributeTypes";
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => s,
@@ -29,142 +28,286 @@ jest.mock("next/navigation", () => ({
   },
 }));
 
-// DogmaAttributeValue renders its numeric value; TypeAnchor passes children
-// through so type names remain assertable; TypeAvatar is a leaf.
-jest.mock("@jitaspace/ui", () => ({
-  DogmaAttributeValue: ({ value }: { value?: number }) => (
-    <span data-testid="dogma-value">{String(value)}</span>
-  ),
-  TypeAnchor: ({ children }: { children?: React.ReactNode }) => (
-    <span>{children}</span>
-  ),
+// Anchors render their text; DogmaAttributeValue renders its raw value.
+jest.mock(
+  "@jitaspace/ui",
+  () =>
+    new Proxy(
+      {},
+      {
+        get:
+          () =>
+          ({ children, value }: { children?: ReactNode; value?: number }) =>
+            children ?? (value === undefined ? null : `value:${value}`),
+      },
+    ),
+);
+jest.mock("@jitaspace/eve-components", () => ({
+  TypeAvatar: () => null,
 }));
 
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
+  TypeAnchor: ({ children }: { children?: ReactNode }) => <>{children}</>,
+}));
+jest.mock(
+  "@jitaspace/eve-icons",
+  () => new Proxy({}, { get: () => () => null }),
+);
 jest.mock("~/components/EveMail", () => ({
   MailMessageViewer: ({ content }: { content?: string }) => (
     <div data-testid="mail-viewer">{content}</div>
   ),
 }));
 
-const TYPES = [
-  { typeId: 587, name: "Rifter", value: 100, groupId: 25 },
-  { typeId: 588, name: "Breacher", value: 200, groupId: 25 },
-  { typeId: 621, name: "Caracal", value: 350, groupId: 26 },
-];
+// Render every visible cell, so the columns are exercised without an engine.
+jest.mock("~/components/DataTable", () => ({
+  DataTable: ({
+    data,
+    columns,
+    isLoading,
+  }: {
+    data: object[];
+    isLoading?: boolean;
+    columns: {
+      id: string;
+      header: string;
+      cell?: (row: object) => ReactNode;
+      defaultVisible?: boolean;
+    }[];
+  }) =>
+    isLoading ? (
+      <div data-testid="table-loading" />
+    ) : (
+      <table>
+        <tbody>
+          {data.map((row, index) => (
+            <tr key={index}>
+              {columns
+                .filter((column) => column.defaultVisible !== false)
+                .map((column) => (
+                  <td key={column.id}>{column.cell?.(row)}</td>
+                ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ),
+}));
 
-const GROUPS = [
-  { groupId: 25, name: "Frigate" },
-  { groupId: 26, name: "Cruiser" },
-];
+const mockUseEntityTable = jest.fn();
+jest.mock("~/components/EntityPage", () => ({
+  ...jest.requireActual<object>("~/components/EntityPage"),
+  useEntityTable: (...args: unknown[]) => mockUseEntityTable(...args),
+}));
 
-function renderPage(props: Record<string, unknown> = {}) {
+const modifier = (
+  overrides: Partial<AttributeModifierRow>,
+): AttributeModifierRow => ({
+  effectId: 5189,
+  effectName: "trackingSpeedBonusEffectLasers",
+  carrierCount: 58,
+  modifierIndex: 0,
+  func: "LocationGroupModifier",
+  domain: "shipID",
+  operator: 6,
+  modifiedAttributeId: 160,
+  modifyingAttributeId: 767,
+  groupId: 53,
+  groupName: "Energy Weapon",
+  skillTypeId: null,
+  skillName: null,
+  targetEffectId: null,
+  targetEffectName: null,
+  ...overrides,
+});
+
+const PROPS: PageProps = {
+  attributeId: 160,
+  name: "trackingSpeed",
+  displayName: "Turret Tracking",
+  customDescription:
+    'How fast a turret can follow its target; raised by the <a href="/dogma/attribute/767">Tracking Speed Bonus</a>.',
+  description: "Weapon accuracy",
+  tooltipTitle: "Turret Tracking",
+  tooltipDescription: "How fast a turret can follow a moving target.",
+  defaultValue: 0,
+  highIsGood: true,
+  published: true,
+  stackable: false,
+  displayWhenZero: false,
+  dataType: 5,
+  iconId: null,
+  unit: {
+    unitId: 117,
+    name: "radians/second",
+    displayName: null,
+    description: null,
+  },
+  category: {
+    categoryId: 7,
+    name: "Turrets",
+    description: "Turret attributes",
+  },
+  minAttribute: null,
+  maxAttribute: {
+    attributeId: 2033,
+    name: "maxTrackingSpeed",
+    displayName: "Maximum Tracking",
+  },
+  chargeRechargeTimeAttribute: null,
+  itemCount: 2,
+  valueRange: { min: 0.01, max: 0.5 },
+  attributes: [
+    {
+      attributeId: 160,
+      name: "trackingSpeed",
+      displayName: "Turret Tracking",
+      unitId: null,
+      unitSymbol: null,
+    },
+    {
+      attributeId: 767,
+      name: "trackingSpeedBonus",
+      displayName: "Tracking Speed Bonus",
+      unitId: 105,
+      unitSymbol: "%",
+    },
+  ],
+  modifiedBy: [modifier({})],
+  modifies: [],
+  statOf: [{ effectId: 10, effectName: "targetAttack", role: "Tracking" }],
+};
+
+function renderPage(props: Partial<PageProps> = {}) {
   const Page =
     require("~/app/dogma/attribute/[attributeId]/page.client").default;
-  const defaults = {
-    attributeId: 9,
-    title: "Structure Hitpoints",
-    name: "hp",
-    displayName: "Structure Hitpoints",
-    description: "The base structure hitpoints of the item.",
-    defaultValue: 1000,
-    highIsGood: true,
-    published: true,
-    stackable: false,
-    unit: "HP",
-    unitId: 1,
-    iconId: 42,
-    types: TYPES,
-    groups: GROUPS,
-  };
   return render(
-    <MantineProvider>
-      <Page {...defaults} {...props} />
+    <MantineProvider env="test">
+      <Page {...PROPS} {...props} />
     </MantineProvider>,
   );
 }
 
 describe("Dogma attribute page (client)", () => {
-  it("renders the title, description and every detail field with full data", () => {
-    renderPage();
-
-    // "Structure Hitpoints" appears as both the page title and the Display
-    // Name detail value.
-    expect(
-      screen.getAllByText("Structure Hitpoints").length,
-    ).toBeGreaterThanOrEqual(2);
-
-    // Description paper -> mail viewer
-    expect(screen.getByText("Description")).toBeInTheDocument();
-    expect(screen.getByTestId("mail-viewer")).toHaveTextContent(
-      "The base structure hitpoints of the item.",
-    );
-
-    // Detail labels (uppercased via CSS, text stays original-case in the DOM)
-    expect(screen.getByText("Attribute ID")).toBeInTheDocument();
-    expect(screen.getByText("Name")).toBeInTheDocument();
-    expect(screen.getByText("Display Name")).toBeInTheDocument();
-    expect(screen.getByText("Default Value")).toBeInTheDocument();
-    expect(screen.getByText("High is Good")).toBeInTheDocument();
-    expect(screen.getByText("Published")).toBeInTheDocument();
-    expect(screen.getByText("Stackable")).toBeInTheDocument();
-    expect(screen.getByText("Unit")).toBeInTheDocument();
-    expect(screen.getByText("Icon ID")).toBeInTheDocument();
-
-    // Boolean badges: High is Good (Yes), Stackable (No)
-    expect(screen.getAllByText("Yes").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("No").length).toBeGreaterThanOrEqual(1);
-
-    // Types section grouped by group name, with per-type values.
-    expect(screen.getByText("Types")).toBeInTheDocument();
-    expect(screen.getByText("Frigate")).toBeInTheDocument();
-    expect(screen.getByText("Cruiser")).toBeInTheDocument();
-    expect(screen.getByText("Rifter")).toBeInTheDocument();
-    expect(screen.getByText("Breacher")).toBeInTheDocument();
-    expect(screen.getByText("Caracal")).toBeInTheDocument();
-    // Per-type DogmaAttributeValue renders the numeric values.
-    expect(screen.getByText("100")).toBeInTheDocument();
-    expect(screen.getByText("200")).toBeInTheDocument();
-    expect(screen.getByText("350")).toBeInTheDocument();
+  beforeEach(() => {
+    mockUseEntityTable.mockReset().mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: packTypeRows([
+        {
+          typeId: 2185,
+          name: "Small Focused Pulse Laser I",
+          published: true,
+          groupId: 53,
+          groupName: "Energy Weapon",
+          categoryId: 7,
+          categoryName: "Module",
+          value: 0.5,
+        },
+        {
+          typeId: 3300,
+          name: "Gunnery",
+          published: true,
+          groupId: 255,
+          groupName: "Gunnery",
+          categoryId: 16,
+          categoryName: "Skill",
+          value: 0.01,
+        },
+      ]),
+    });
   });
 
-  it("falls back to a generated title and omits optional rows when data is null", () => {
-    renderPage({
-      title: null,
-      name: null,
-      displayName: null,
-      description: null,
-      defaultValue: null,
-      highIsGood: null,
-      published: null,
-      stackable: null,
-      unit: null,
-      unitId: null,
-      iconId: null,
-      types: [],
-      groups: [],
-    });
+  it("names the attribute and badges what players need to know", () => {
+    renderPage();
+    expect(
+      screen.getByRole("heading", { name: "Turret Tracking" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("trackingSpeed").length).toBeGreaterThan(0);
+    expect(screen.getByText("Turrets")).toBeInTheDocument();
+    expect(screen.getByText("Higher is better")).toBeInTheDocument();
+    expect(screen.getByText("Stacking penalised")).toBeInTheDocument();
+    expect(screen.getByText("1 effect")).toBeInTheDocument();
+  });
 
-    // Generated title fallback "Attribute {id}".
-    expect(screen.getByText("Attribute 9")).toBeInTheDocument();
+  it("leads with our description, with CCP's tooltip and note beside it", () => {
+    renderPage();
+    const viewers = screen.getAllByTestId("mail-viewer");
+    expect(viewers[0]).toHaveTextContent(
+      "How fast a turret can follow its target",
+    );
+    expect(screen.getByText("AI-generated")).toBeInTheDocument();
+    expect(screen.getByText("In-game tooltip")).toBeInTheDocument();
+    expect(screen.getByText("CCP's note")).toBeInTheDocument();
+    expect(viewers).toHaveLength(3);
+  });
 
-    // No description block when description is null.
-    expect(screen.queryByText("Description")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("mail-viewer")).not.toBeInTheDocument();
+  it("shows CCP's text alone when we have none", () => {
+    renderPage({ customDescription: null, description: null });
+    expect(screen.queryByText("AI-generated")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("mail-viewer")).toHaveLength(1);
+  });
 
-    // Optional rows are skipped.
-    expect(screen.queryByText("Name")).not.toBeInTheDocument();
-    expect(screen.queryByText("Display Name")).not.toBeInTheDocument();
-    expect(screen.queryByText("Default Value")).not.toBeInTheDocument();
-    expect(screen.queryByText("Unit")).not.toBeInTheDocument();
-    expect(screen.queryByText("Icon ID")).not.toBeInTheDocument();
+  it("reads each changing modifier as a sentence", () => {
+    renderPage();
+    expect(
+      screen.getByRole("heading", { name: "Changed by" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element?.tagName === "P" &&
+          element.textContent ===
+            "Energy Weapon on the ship›Turret Tracking + Tracking Speed Bonus %",
+      ),
+    ).toBeInTheDocument();
+    // Nothing reads this attribute, so that section is left out.
+    expect(
+      screen.queryByRole("heading", { name: "Changes" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Used as a stat by effects")).toBeInTheDocument();
+    expect(screen.getByText("targetAttack")).toBeInTheDocument();
+  });
 
-    // Boolean badges show "Unknown" for null values.
-    expect(screen.getAllByText("Unknown").length).toBeGreaterThanOrEqual(1);
+  it("fetches the item list and shows each item's value", () => {
+    renderPage();
+    expect(mockUseEntityTable).toHaveBeenCalledWith(
+      "/api/dogma/attribute/160/types",
+      true,
+    );
+    expect(screen.getByText(/2 items have this attribute/)).toBeInTheDocument();
+    expect(screen.getByText("Small Focused Pulse Laser I")).toBeInTheDocument();
+    expect(screen.getAllByText("value:0.5").length).toBeGreaterThan(0);
+    // A skill's value is shown as it is: whether it is per level depends on
+    // the attribute.
+    expect(screen.queryByText("/ level")).not.toBeInTheDocument();
+  });
 
-    // Mandatory rows are still present.
-    expect(screen.getByText("Attribute ID")).toBeInTheDocument();
-    expect(screen.getByText("High is Good")).toBeInTheDocument();
-    expect(screen.getByText("Types")).toBeInTheDocument();
+  it("skips the fetch when no item has the attribute", () => {
+    renderPage({ itemCount: 0, valueRange: null });
+    expect(mockUseEntityTable).toHaveBeenCalledWith(
+      "/api/dogma/attribute/160/types",
+      false,
+    );
+    expect(screen.getByText("No item has this attribute.")).toBeInTheDocument();
+  });
+
+  it("lists the raw fields, linking related attributes", () => {
+    renderPage();
+    expect(screen.getByText("Details")).toBeInTheDocument();
+    expect(screen.getByText("Turrets (7)")).toBeInTheDocument();
+    expect(screen.getByText("radians/second (117)")).toBeInTheDocument();
+    expect(screen.getByText("Maximum Tracking")).toBeInTheDocument();
+  });
+
+  it("falls back to the attribute id when it has no name", () => {
+    renderPage({ name: null, displayName: null });
+    expect(
+      screen.getByRole("heading", { name: "Attribute 160" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -182,8 +325,9 @@ async function resolvePageContent(attributeId: string) {
 }
 
 // The guard used to be `Number.isFinite`, which let `/dogma/attribute/-1` and
-// `/dogma/attribute/04` render a 200 apiece — extra URLs for a page that is far
-// too heavy to be crawled twice (attribute 4 measures 29.8 MB).
+// `/dogma/attribute/04` render a 200 apiece — extra URLs for a page that was
+// far too heavy to be crawled twice (attribute 4 measured 29.8 MB before its
+// item list moved to an API route).
 describe("dogma attribute page id validation", () => {
   it.each(["0", "-1", "04", "4.0", "bad", ""])(
     "404s rather than serving a second URL for %p",

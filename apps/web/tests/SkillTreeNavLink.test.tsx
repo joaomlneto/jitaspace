@@ -19,12 +19,18 @@ jest.mock("@jitaspace/ui", () => ({
   SkillBar: () => null,
 }));
 
-// TypeAnchor / TypeName moved to @jitaspace/eve-components.
+// TypeName comes from @jitaspace/eve-components.
 jest.mock("@jitaspace/eve-components", () => ({
+  TypeName: ({ typeId }: { typeId: number }) => <span>{`Type ${typeId}`}</span>,
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   TypeAnchor: ({ children }: { children?: ReactNode }) => (
     <span>{children}</span>
   ),
-  TypeName: ({ typeId }: { typeId: number }) => <span>{`Type ${typeId}`}</span>,
 }));
 
 const group = {

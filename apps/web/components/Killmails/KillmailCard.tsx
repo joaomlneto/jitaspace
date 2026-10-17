@@ -7,25 +7,27 @@ import { IconExternalLink } from "@tabler/icons-react";
 
 import {
   AllianceName,
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  SolarSystemAnchor,
   SolarSystemName,
   SolarSystemSovereigntyAvatar,
-  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useKillmail } from "@jitaspace/hooks";
 import {
-  AllianceAnchor,
   AllianceAvatar,
   CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
 } from "@jitaspace/ui";
 
+import {
+  AllianceAnchor,
+  CharacterAnchor,
+  CorporationAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { EsiKillmailFittingCard } from "~/components/Fitting";
 
 interface KillmailCardProps {

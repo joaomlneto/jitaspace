@@ -50,6 +50,15 @@ jest.mock("react-markdown", () => ({
 
 // Names come from ESI in the app; here, the id is enough to tell them apart.
 jest.mock("@jitaspace/eve-components", () => ({
+  CharacterName: ({ characterId }: { characterId: number }) => (
+    <span>{`Character ${characterId}`}</span>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   CharacterAnchor: ({
     characterId,
     children,
@@ -57,9 +66,6 @@ jest.mock("@jitaspace/eve-components", () => ({
     characterId: number;
     children?: React.ReactNode;
   }) => <a href={`/character/${characterId}`}>{children}</a>,
-  CharacterName: ({ characterId }: { characterId: number }) => (
-    <span>{`Character ${characterId}`}</span>
-  ),
 }));
 jest.mock("@jitaspace/ui", () => ({
   CharacterAvatar: ({ characterId }: { characterId: number }) => (

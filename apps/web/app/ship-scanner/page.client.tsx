@@ -22,13 +22,10 @@ import { IconX } from "@tabler/icons-react";
 
 import type { FittingItemFlag } from "@jitaspace/hooks";
 import { itemsFlagEnum } from "@jitaspace/esi-client";
-import {
-  EveEntitySelect,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
+import { EveEntitySelect, TypeAvatar } from "@jitaspace/eve-components";
 import { useEsiTypeIdsFromNames } from "@jitaspace/hooks";
 
+import { TypeAnchor } from "~/components/Anchor";
 import { ShipFittingCard } from "~/components/Fitting";
 
 export interface PageProps {

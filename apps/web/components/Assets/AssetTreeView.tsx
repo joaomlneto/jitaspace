@@ -14,14 +14,11 @@ import {
 import { IconChevronRight, IconMapPin } from "@tabler/icons-react";
 
 import type { CharacterAsset } from "@jitaspace/hooks";
-import {
-  EveEntityName,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
+import { EveEntityName, TypeAvatar } from "@jitaspace/eve-components";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type { AssetLocationSummary, AssetTree } from "./assetTree";
+import { TypeAnchor } from "~/components/Anchor";
 import { groupBySection, isFlatSectioning } from "./assetTree";
 import classes from "./AssetTreeView.module.css";
 

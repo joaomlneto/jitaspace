@@ -10,8 +10,8 @@ import {
   Title,
 } from "@mantine/core";
 
-import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
-
+import { GroupAnchor } from "~/components/Anchor";
+import { CategoryBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";

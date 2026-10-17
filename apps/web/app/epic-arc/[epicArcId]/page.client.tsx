@@ -24,23 +24,18 @@ import {
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import { FactionAnchor } from "@jitaspace/eve-components";
 import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
   WindowAgentIcon,
   WindowInfoIcon,
 } from "@jitaspace/eve-icons";
-import {
-  EveIconAvatar,
-  FactionAvatar,
-  ISKAmount,
-  MissionAnchor,
-} from "@jitaspace/ui";
+import { EveIconAvatar, FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type { EpicArc, EpicArcStep, EpicArcSummary } from "~/lib/epicArcs";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { MissionKind } from "~/lib/missions";
+import { FactionAnchor, MissionAnchor } from "~/components/Anchor";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
   AgentLabel,

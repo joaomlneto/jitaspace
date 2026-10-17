@@ -13,10 +13,11 @@ import {
 } from "@mantine/core";
 import { IconArrowsDiff } from "@tabler/icons-react";
 
-import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import { ISKAmount } from "@jitaspace/ui";
 
+import { TypeAnchor } from "~/components/Anchor";
 import { SHIP_CATEGORY_ID } from "./catalog";
 import classes from "./Compare.module.css";
 import { compareHref } from "./CompareEmptyState";

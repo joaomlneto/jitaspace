@@ -3,6 +3,9 @@ import type { ReadableStream as NodeWebReadableStream } from "node:stream/web";
 import tar from "tar-stream";
 import bz2 from "unbzip2-stream";
 
+/** Sent on every request to data.everef.net, so EVE Ref can tell who we are. */
+export const EVEREF_USER_AGENT = "JitaSpace (https://www.jita.space)";
+
 /**
  * Downloads a .tar.bz2 file from a given URL, extracts its contents,
  * and returns the list of files in the archive as an array of objects
@@ -12,7 +15,7 @@ export const downloadTarBz2FileAndParseJson = async (url: string) => {
   // Fetch the data
   const response = await fetch(url, {
     headers: {
-      "User-Agent": "jitaspace/eve-scrape",
+      "User-Agent": EVEREF_USER_AGENT,
     },
   });
 

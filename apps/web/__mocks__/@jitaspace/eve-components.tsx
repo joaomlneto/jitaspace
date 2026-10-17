@@ -16,8 +16,8 @@ import React from "react";
 
 type AnyProps = Record<string, unknown> & { children?: React.ReactNode };
 
-// Wrapper components (anchors, the online indicator) render their children so
-// the linked label still appears in the DOM.
+// Wrapper components (the online indicator) render their children so they
+// still appear in the DOM.
 const childrenStub =
   (testid?: string) =>
   ({ children }: AnyProps) =>
@@ -27,39 +27,9 @@ const childrenStub =
       children,
     );
 
-// Entity anchors render a real <a> so tests can assert the destination. The
-// href is omitted while the id is nullish, mirroring the real components —
-// emitting `/type/undefined` is precisely the bug these stubs must not hide.
-const anchorStub =
-  (path: string, idProp: string, testid?: string) =>
-  ({ children, ...props }: AnyProps) => {
-    const id = props[idProp] as string | number | null | undefined;
-    return React.createElement(
-      "a",
-      {
-        ...(testid ? { "data-testid": testid } : null),
-        ...(id === null || id === undefined ? null : { href: `${path}/${id}` }),
-      },
-      children,
-    );
-  };
-
-// --- Anchors (render children) ---
-export const CharacterAnchor = anchorStub("/character", "characterId");
-export const ConstellationAnchor = childrenStub();
-export const EveEntityAnchor = childrenStub();
-export const EveEntityNameAnchor = childrenStub();
-export const EveMailSenderAnchor = childrenStub();
-export const FactionAnchor = anchorStub("/faction", "factionId");
-export const RegionAnchor = childrenStub();
-export const SolarSystemAnchor = anchorStub("/system", "solarSystemId");
-export const StargateDestinationAnchor = childrenStub();
-export const StationAnchor = childrenStub();
-export const TypeAnchor = anchorStub("/type", "typeId", "type-anchor");
+// --- Avatars ---
 export const TypeAvatar = () =>
   React.createElement("span", { "data-testid": "type-avatar" });
-export const WarAggressorAnchor = childrenStub();
-export const WarDefenderAnchor = childrenStub();
 
 // --- Names (mirror the prior @jitaspace/ui stub output that tests assert on) ---
 export const CharacterName = ({ characterId }: AnyProps) =>
@@ -89,25 +59,17 @@ export const StructureName = () => null;
 export const WarAggressorName = () => null;
 export const WarDefenderName = () => null;
 
-// --- Avatars / cards / selects / breadcrumbs / timeline (render nothing) ---
+// --- Avatars / selects (render nothing) ---
 export const EveEntityAvatar = () => null;
 export const EveMailSenderAvatar = () => null;
 export const SolarSystemSovereigntyAvatar = () => null;
 export const CalendarEventAttendeesAvatarGroup = () => null;
-export const SolarSystemBreadcrumbs = () => null;
-export const TypeInventoryBreadcrumbs = () => null;
-export const TypeMarketBreadcrumbs = () => null;
-export const AllianceCard = () => null;
-export const CharacterCard = () => null;
-export const EveEntityCard = () => null;
-export const EveMailSenderCard = () => null;
 export const EmailRecipientSearchMultiSelect = () => null;
 export const EsiSearchMultiSelect = () => null;
 export const EsiSearchMultiSelectItem = () => null;
 export const AssetLocationSelect = () => null;
 export const EsiSearchSelect = () => null;
 export const EveEntitySelect = () => null;
-export const CorporationAllianceHistoryTimeline = () => null;
 
 // --- Wrappers that render children ---
 export const CharacterOnlineIndicator = childrenStub();

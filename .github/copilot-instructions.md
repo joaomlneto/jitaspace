@@ -50,7 +50,7 @@ pnpm db:diff          # read-only — review the pending change
 pnpm db:push          # apply it, then merge
 ```
 
-Never pass `--accept-data-loss`. Run both commands against the direct database URL (port 5432), not PgBouncer's 6432. See CLAUDE.md → "Applying schema changes to the database" and "Production database".
+Never pass `--accept-data-loss`. Run both commands against the direct database URL (port 5432), not PgBouncer's 6432, as the role that owns the tables — any other role fails with `must be owner of table`. See CLAUDE.md → "Applying schema changes to the database" and "Production database".
 
 ---
 

@@ -22,24 +22,18 @@ import useSWR from "swr";
 
 import {
   AllianceName,
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  FactionAnchor,
   FactionName,
-  SolarSystemAnchor,
   SolarSystemName,
   SolarSystemSovereigntyAvatar,
-  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useKillmail } from "@jitaspace/hooks";
 import {
-  AllianceAnchor,
   AllianceAvatar,
   CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
   DateHoverCard,
   FactionAvatar,
@@ -47,6 +41,14 @@ import {
   TimeAgoText,
 } from "@jitaspace/ui";
 
+import {
+  AllianceAnchor,
+  CharacterAnchor,
+  CorporationAnchor,
+  FactionAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { EsiKillmailFittingCard } from "~/components/Fitting";
 
 interface ZkillboardKill {

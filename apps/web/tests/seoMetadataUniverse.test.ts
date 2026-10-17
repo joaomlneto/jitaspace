@@ -22,6 +22,15 @@ jest.mock("~/app/planet/[planetId]/page.client", () => ({
 jest.mock("~/app/station/[stationId]/page.client", () => ({
   default: () => null,
 }));
+// The station page reads through its own cached data module, which joins a
+// dozen tables; its tests live in stationPage.test.tsx.
+const mockReadStation = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.mock("~/app/station/[stationId]/data", () => ({
+  readStation: (...a: unknown[]) => mockReadStation(...a),
+}));
+jest.mock("~/lib/history-entity-page", () => ({
+  loadEntityHistory: () => Promise.resolve(null),
+}));
 jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
 // ---------------------------------------------------------------------------
@@ -37,8 +46,6 @@ const mockSolarSystemFindUnique =
 const mockStarFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockPlanetFindUnique =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockStationFindUnique =
-  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -48,10 +55,12 @@ jest.mock("~/lib/db", () => ({
     },
     solarSystem: {
       findUnique: (...a: unknown[]) => mockSolarSystemFindUnique(...a),
+      // The constellation page lists its systems and their stargates.
+      findMany: () => Promise.resolve([]),
     },
+    stargate: { findMany: () => Promise.resolve([]) },
     star: { findUnique: (...a: unknown[]) => mockStarFindUnique(...a) },
     planet: { findUnique: (...a: unknown[]) => mockPlanetFindUnique(...a) },
-    station: { findUnique: (...a: unknown[]) => mockStationFindUnique(...a) },
   },
 }));
 
@@ -140,8 +149,10 @@ describe("constellation/[constellationId] generateMetadata", () => {
   it("returns constellation name", async () => {
     mockConstellationFindUnique.mockResolvedValue({
       name: "Kimotoro",
+      regionId: 10000002,
       region: { name: "The Forge" },
-      _count: { solarSystems: 8 },
+      factionId: null,
+      wormholeClassId: null,
     });
     const { generateMetadata } =
       await import("~/app/constellation/[constellationId]/page");
@@ -168,13 +179,13 @@ describe("constellation/[constellationId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockConstellationFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } =
       await import("~/app/constellation/[constellationId]/page");
-    expect(
-      await generateMetadata({ params: rp({ constellationId: "20000001" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ constellationId: "20000001" }) }),
+    ).rejects.toThrow("db");
   });
 });
 
@@ -328,12 +339,16 @@ describe("planet/[planetId] generateMetadata", () => {
 describe("station/[stationId] generateMetadata", () => {
   beforeEach(() => {
     jest.resetModules();
-    mockStationFindUnique.mockReset();
+    mockReadStation.mockReset();
   });
 
   it("returns station name", async () => {
-    mockStationFindUnique.mockResolvedValue({
+    mockReadStation.mockResolvedValue({
       name: "Jita IV - Moon 4 - Caldari Navy Assembly Plant",
+      type: { id: 52678, name: "Caldari Navy Assembly Plant" },
+      location: null,
+      owner: null,
+      agents: [],
     });
     const { generateMetadata } = await import("~/app/station/[stationId]/page");
     const result = await generateMetadata({
@@ -350,18 +365,19 @@ describe("station/[stationId] generateMetadata", () => {
   });
 
   it("returns empty when not found", async () => {
-    mockStationFindUnique.mockResolvedValue(null);
+    mockReadStation.mockResolvedValue(null);
     const { generateMetadata } = await import("~/app/station/[stationId]/page");
     expect(
       await generateMetadata({ params: rp({ stationId: "60003760" }) }),
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
-    mockStationFindUnique.mockRejectedValue(new Error("db"));
+  it("lets a database failure throw rather than store generic metadata", async () => {
+    // The page is cached whole (ISR): empty metadata would be stored with it.
+    mockReadStation.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/station/[stationId]/page");
-    expect(
-      await generateMetadata({ params: rp({ stationId: "60003760" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ stationId: "60003760" }) }),
+    ).rejects.toThrow("db");
   });
 });

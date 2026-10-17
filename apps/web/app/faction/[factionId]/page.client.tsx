@@ -37,15 +37,7 @@ import {
   useGetFwSystems,
   useGetFwWars,
 } from "@jitaspace/esi-client";
-import {
-  ConstellationAnchor,
-  FactionAnchor,
-  FactionName,
-  RegionAnchor,
-  SolarSystemAnchor,
-  SolarSystemName,
-  TypeAnchor,
-} from "@jitaspace/eve-components";
+import { FactionName, SolarSystemName } from "@jitaspace/eve-components";
 import {
   CategoryAgentMissionIcon,
   CategoryCombatSitesIcon,
@@ -64,14 +56,10 @@ import { useEsiNameLookup } from "@jitaspace/hooks";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAnchor,
   AllianceAvatar,
-  CategoryAnchor,
   EveIconAvatar,
   FactionAvatar,
   formatSecurityStatus,
-  GroupAnchor,
-  RaceAnchor,
   SolarSystemSecurityStatusBadge,
   TypeAvatar,
 } from "@jitaspace/ui";
@@ -88,6 +76,17 @@ import type {
   FactionTables,
 } from "./types";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
+import {
+  AllianceAnchor,
+  CategoryAnchor,
+  ConstellationAnchor,
+  FactionAnchor,
+  GroupAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import {
   CorporationLink,

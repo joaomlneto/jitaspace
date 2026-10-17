@@ -1,7 +1,6 @@
 "use client";
 
 import type { LinkProps } from "next/link";
-import Link from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -13,6 +12,7 @@ import {
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import { PartnerBadge } from "~/components/Badge";
+import { HoverPrefetchLink } from "~/components/Link";
 import { env } from "~/env";
 import classes from "./FooterWithLinks.module.css";
 
@@ -35,13 +35,12 @@ export function FooterWithLinks() {
   const items = links.map((link) => (
     <Anchor
       key={link.label}
-      component={Link}
+      component={HoverPrefetchLink}
       href={link.link}
-      // The footer renders on every page, so prefetching these would fetch
-      // /about, /support and /status on every single page view — four PPR
-      // segment requests each. Almost nobody navigates here, so the prefetch
-      // was pure waste (~400k requests/day in production).
-      prefetch={false}
+      // The footer renders on every page, so prefetching these on sight would
+      // fetch /about, /support and /status on every single page view — four
+      // PPR segment requests each (~400k requests/day in production). They
+      // prefetch on hover instead.
       size="xs"
       c="dimmed"
     >

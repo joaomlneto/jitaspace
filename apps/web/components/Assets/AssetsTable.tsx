@@ -2,14 +2,10 @@ import { memo } from "react";
 import { Badge, Group, Table } from "@mantine/core";
 
 import type { CharacterAsset } from "@jitaspace/hooks";
-import {
-  EveEntityAnchor,
-  EveEntityName,
-  TypeAnchor,
-  TypeAvatar,
-  TypeName,
-} from "@jitaspace/eve-components";
+import { EveEntityName, TypeAvatar, TypeName } from "@jitaspace/eve-components";
 import { ISKAmount } from "@jitaspace/ui";
+
+import { EveEntityAnchor, TypeAnchor } from "~/components/Anchor";
 
 interface AssetsTableProps {
   assets: (CharacterAsset & {

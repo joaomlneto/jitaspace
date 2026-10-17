@@ -52,17 +52,9 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
 }));
 
 // Stub every @jitaspace/ui export to render nothing. The Proxy factory has no
-// external closure so it is hoist-safe.
-jest.mock(
-  "@jitaspace/ui",
-  () =>
-    new Proxy(
-      {},
-      {
-        get: () => () => null,
-      },
-    ),
-);
+// external closure so it is hoist-safe. The page's internal links (Compare,
+// type lists) render through ~/components/Link, which stays real.
+jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
 
 jest.mock("~/components/Compare/ItemVariations", () => ({
   ItemVariations: ({ typeId }: { typeId: number }) => (
@@ -133,6 +125,10 @@ interface DogmaMetaStub {
   attributes: Record<number, { categoryId?: number; unitId?: number }>;
   unitSymbols: Record<number, string>;
   categoryNames: Record<number, string>;
+  effects: Record<
+    number,
+    { name?: string; description?: { text: string; source: "ccp" | "ai" } }
+  >;
 }
 
 interface TypePageProps {
@@ -154,6 +150,19 @@ const DEFAULT_DOGMA_META: DogmaMetaStub = {
   attributes: { 4: { categoryId: 7 }, 161: { categoryId: 7 }, 999: {} },
   unitSymbols: {},
   categoryNames: { 7: "Armor" },
+  effects: {
+    11: {
+      name: "Low power",
+      description: { text: "Requires a low power slot", source: "ccp" },
+    },
+    12: {
+      name: "trackingSpeedBonusEffectLasers",
+      description: {
+        text: "Increases the Turret Tracking of lasers.",
+        source: "ai",
+      },
+    },
+  },
 };
 
 // Require the page lazily so the jest.mock(...) factories above are active
@@ -411,6 +420,20 @@ describe("Type page (client)", () => {
     expect(screen.getByText("Effects")).toBeInTheDocument();
   });
 
+  it("describes each effect under its name, labelling ours as AI", () => {
+    renderPage();
+    clickTab(/Attributes/);
+
+    // Names live in DogmaEffectAnchor, which this suite stubs out; the
+    // server-side test covers them. The descriptions sit outside the link.
+    expect(screen.getByText("Requires a low power slot")).toBeInTheDocument();
+    expect(
+      screen.getByText("Increases the Turret Tracking of lasers."),
+    ).toBeInTheDocument();
+    // Only our own text carries the badge; CCP's does not.
+    expect(screen.getAllByText("AI")).toHaveLength(1);
+  });
+
   it("sorts categories numerically and places the uncategorized bucket last", () => {
     mockUseType.mockReturnValue({
       data: {
@@ -433,6 +456,7 @@ describe("Type page (client)", () => {
         },
         unitSymbols: {},
         categoryNames: { 3: "Fitting", 9: "Required Skills" },
+        effects: {},
       },
     });
     clickTab(/Attributes/);
@@ -458,6 +482,7 @@ describe("Type page (client)", () => {
         unitSymbols: {},
         // No name for category 7 -> the page generates "Category 7".
         categoryNames: {},
+        effects: {},
       },
     });
     clickTab(/Attributes/);

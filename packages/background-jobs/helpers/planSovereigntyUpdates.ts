@@ -1,6 +1,6 @@
 /**
  * Pure diff between ESI's sovereignty claims and the SolarSystemSovereignty
- * table, used by the hourly `esi-update-alliances` job. Kept free of
+ * table, used by the 5-minute `esi-track-sovereignty` job. Kept free of
  * ESI/Prisma runtime imports so it can be unit-tested directly.
  */
 import type { SovereigntySystemsSolarsystem } from "@jitaspace/esi-client";

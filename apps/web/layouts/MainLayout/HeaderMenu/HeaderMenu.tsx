@@ -2,7 +2,6 @@
 
 import { Suspense, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Box, Burger, Container, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -11,6 +10,7 @@ import { openContextModal } from "@mantine/modals";
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import { ServerStatusIndicator } from "~/components/ServerStatus/ServerStatusIndicator";
 import { jitaApps } from "~/config/apps";
 import UserButton from "~/layouts/MainLayout/UserButton";
@@ -107,14 +107,16 @@ export function HeaderMenu() {
           <Group justify="space-between" h="100%" gap="xs" wrap="nowrap">
             <Group h="100%" gap="lg" wrap="nowrap">
               <Group h="100%" gap="sm" wrap="nowrap">
-                <Link href="/" className={classes.logo}>
+                {/* In every page's header, so it prefetches on intent rather
+                    than on sight (see HoverPrefetchLink). */}
+                <HoverPrefetchLink href="/" className={classes.logo}>
                   <Image
                     src="/logo.png"
                     alt="Jita logo"
                     width={32}
                     height={32}
                   />
-                </Link>
+                </HoverPrefetchLink>
                 <ServerStatusIndicator />
               </Group>
 

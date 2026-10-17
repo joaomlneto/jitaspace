@@ -13,10 +13,9 @@ import {
 } from "../../../helpers/insurancePriceBackfill.ts";
 import { parseInsurancePriceList } from "../../../helpers/planInsurancePriceUpdates.ts";
 import { recordInsurancePriceSnapshot } from "../../../helpers/recordInsurancePriceSnapshot.ts";
+import { EVEREF_USER_AGENT } from "../../../utils/downloadFile.ts";
 
 const EVEREF_HISTORY_URL = "https://data.everef.net/insurance-prices/history";
-/** EVE Ref asks to be told who is downloading. */
-export const EVEREF_USER_AGENT = "JitaSpace (https://www.jita.space)";
 /** The first day EVE Ref archived. */
 export const EVEREF_INSURANCE_HISTORY_START = new Date("2022-12-16T00:00:00Z");
 /** EVE Ref rate-limits bursts; three requests at a time stays under it. */
