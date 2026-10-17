@@ -57,29 +57,31 @@ export const eveCompactTheme = createTheme({
  * left as they are. Still clear of the 24px minimum target size (WCAG 2.5.8),
  * but for a mouse, not a finger.
  */
-const isDefaultSize = (size: unknown) => size === undefined || size === "sm";
+// The CSS variables a 30px control needs for its size: the default (`sm`, or
+// none given) is shortened; `xs`, already 30px, takes 14px text; others keep
+// Mantine's own.
+const at30px = (
+  size: unknown,
+  component: "button" | "input",
+): Record<string, string> => {
+  if (size === undefined || size === "sm") {
+    return { [`--${component}-height`]: `var(--${component}-height-xs)` };
+  }
+  if (size === "xs") {
+    return { [`--${component}-fz`]: "var(--mantine-font-size-sm)" };
+  }
+  return {};
+};
 
 export const eveCompactControlsTheme = createTheme({
   components: {
     Button: Button.extend({
-      vars: (_theme, { size }) => ({
-        root: isDefaultSize(size)
-          ? { "--button-height": "var(--button-height-xs)" }
-          : size === "xs"
-            ? { "--button-fz": "var(--mantine-font-size-sm)" }
-            : {},
-      }),
+      vars: (_theme, { size }) => ({ root: at30px(size, "button") }),
     }),
     // Every input renders an Input, whatever its own default size
     // (TextInput has none; Select, NumberInput and most others say `sm`).
     Input: Input.extend({
-      vars: (_theme, { size }) => ({
-        wrapper: isDefaultSize(size)
-          ? { "--input-height": "var(--input-height-xs)" }
-          : size === "xs"
-            ? { "--input-fz": "var(--mantine-font-size-sm)" }
-            : {},
-      }),
+      vars: (_theme, { size }) => ({ wrapper: at30px(size, "input") }),
     }),
     SegmentedControl: { defaultProps: { size: "xs" } },
     Badge: { defaultProps: { size: "sm" } },
