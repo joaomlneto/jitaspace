@@ -19,8 +19,8 @@
  *   in the assault and headquarters systems, and next to none in the
  *   vanguards. The headquarters NPCs (Outuni Mesen, Deltole Tegmentum) kill
  *   in Jayai's and Jakemhih's headquarters, and the Yulai Crus Cerebi that
- *   farm rookie ships do so in four of these headquarters (171 of the 182
- *   such kills since 2015).
+ *   farm rookie ships do so in four of these headquarters (172 of the 186
+ *   such kills since 2015 in the systems checked).
  *
  * It also lays out 24 constellations that last had an incursion before
  * 2022-12, which neither map covers either: eve-incursions.de names only the
@@ -29,8 +29,9 @@
  * staging system's security band, as they are in 452 of the 458
  * constellations ESI has listed. Each is the layout the rule gives today;
  * their own incursions may have run on an older one, as Ganoure's and, by
- * the wiki's row, Q-PVMK's did. Vaarma, with no single staging system, and
- * the constellations Pochven took systems from stay unmapped.
+ * the wiki's row, Q-PVMK's did. Vaarma, with no single staging system, gets
+ * no layout here, and nor do the constellations Pochven took systems from
+ * (Ihilakken and Kainokai keep the sites eve-incursions.de maps).
  *
  * The wiki rows this was checked against are licensed under the Creative
  * Commons Attribution-ShareAlike 4.0 licence
