@@ -34,6 +34,28 @@ function ThemePrimaryColorText() {
   return <Text data-testid="theme-primary-color">{theme.primaryColor}</Text>;
 }
 
+function ThemeButtonSizeText() {
+  const theme = useMantineTheme();
+  const defaultProps = theme.components.Button?.defaultProps as
+    | { size?: string }
+    | undefined;
+  const size = defaultProps?.size;
+
+  return <Text data-testid="theme-button-size">{size ?? "none"}</Text>;
+}
+
+/** Makes `matchMedia` report a coarse pointer, or not, for the next render. */
+const mockTouch = (touch: boolean) => {
+  const original = window.matchMedia;
+  window.matchMedia = (query: string) => ({
+    ...original(query),
+    matches: touch && query.includes("coarse"),
+  });
+  return () => {
+    window.matchMedia = original;
+  };
+};
+
 describe("AppMantineProvider", () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -162,6 +184,33 @@ describe("AppMantineProvider", () => {
       );
     });
   });
+
+  it.each([
+    [false, "xs"],
+    [true, "none"],
+  ])(
+    "gives EVE (compact) small controls only without a touchscreen (touch: %s)",
+    async (touch, size) => {
+      const restore = mockTouch(touch);
+      window.localStorage.setItem(
+        PREFERENCES_STORAGE_KEY,
+        JSON.stringify({ state: { appTheme: "eve_compact" }, version: 0 }),
+      );
+
+      render(
+        <AppMantineProvider>
+          <ThemeButtonSizeText />
+        </AppMantineProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("theme-button-size")).toHaveTextContent(
+          new RegExp(`^${size}$`),
+        );
+      });
+      restore();
+    },
+  );
 
   it("updates theme when app theme is changed", async () => {
     render(
