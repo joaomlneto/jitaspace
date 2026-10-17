@@ -4,21 +4,23 @@ import { Anchor, Badge, Group, Stack, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  FactionAnchor,
   FactionName,
-  StationAnchor,
 } from "@jitaspace/eve-components";
 import {
   CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
   FactionAvatar,
 } from "@jitaspace/ui";
 
 import type { CorporationRow } from "./corporations";
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  FactionAnchor,
+  StationAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { formatDate, formatInteger, formatPercent } from "~/lib/format";
 

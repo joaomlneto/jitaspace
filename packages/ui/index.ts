@@ -2,7 +2,6 @@ export * from "./ActionIcon";
 export * from "./Anchor";
 export * from "./Avatar";
 export * from "./Badge";
-export * from "./Breadcrumbs";
 export * from "./Button";
 export * from "./ColorSwatch";
 export * from "./DateText";

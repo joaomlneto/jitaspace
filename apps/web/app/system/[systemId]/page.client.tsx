@@ -33,7 +33,6 @@ import {
   FactionName,
   SolarSystemName,
   SolarSystemSovereigntyAvatar,
-  StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
 import {
@@ -65,6 +64,7 @@ import {
 
 import type { SolarSystemSdeInfo } from "./types";
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
+import { StationAnchor } from "~/components/Anchor";
 import {
   PlanetAvatar,
   SolarSystemStarAvatar,

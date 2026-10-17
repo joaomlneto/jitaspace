@@ -24,12 +24,9 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { GetAlliancesAllianceIdQueryResponse } from "@jitaspace/esi-client";
 import {
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  FactionAnchor,
   FactionName,
-  SolarSystemAnchor,
 } from "@jitaspace/eve-components";
 import {
   CategoryCorporationIcon,
@@ -43,12 +40,7 @@ import {
   useEsiAllianceMemberCorporations,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
-import {
-  AllianceAvatar,
-  CharacterAvatar,
-  CorporationAnchor,
-  FactionAvatar,
-} from "@jitaspace/ui";
+import { AllianceAvatar, CharacterAvatar, FactionAvatar } from "@jitaspace/ui";
 
 import type { CorporationRow } from "./corporations";
 import type { AlliancePageTab } from "./tabs";
@@ -58,6 +50,12 @@ import type {
   CompositionEntry,
 } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  FactionAnchor,
+  SolarSystemAnchor,
+} from "~/components/Anchor";
 import {
   CorporationLine,
   EntityLine,

@@ -4,9 +4,9 @@ import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { ItemsIcon } from "@jitaspace/eve-icons";
-import { TypeListAnchor } from "@jitaspace/ui";
 
 import type { TypeListRefType } from "~/lib/typeLists";
+import { TypeListAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { TypeListRuleSummary } from "~/components/TypeLists";
 

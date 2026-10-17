@@ -1,14 +1,12 @@
 import { memo } from "react";
 import { Group, Popover, Text, UnstyledButton } from "@mantine/core";
 
-import {
-  CharacterCard,
-  CharacterOnlineIndicator,
-} from "@jitaspace/eve-components";
+import { CharacterOnlineIndicator } from "@jitaspace/eve-components";
 import { useEsiCharacter } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 import { ConditionalWrapper } from "@jitaspace/utils";
 
+import { CharacterCard } from "~/components/Card";
 import classes from "./Button.module.css";
 
 export interface CharacterButtonProps {

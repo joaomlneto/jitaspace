@@ -16,12 +16,6 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
-  AllianceAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
-  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
   AllianceAvatar: ({ allianceId }: { allianceId: number | string }) => (
     <span>{`Alliance Avatar ${allianceId}`}</span>
   ),
@@ -30,13 +24,19 @@ jest.mock("@jitaspace/ui", () => ({
   ),
 }));
 
-jest.mock("../../../packages/eve-components/Anchor", () => ({
+jest.mock("~/components/Anchor", () => ({
+  AllianceAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
   CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
+  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
     <a href="#">{children}</a>
   ),
 }));
 
-jest.mock("../../../packages/eve-components/Text", () => ({
+jest.mock("@jitaspace/eve-components", () => ({
   AllianceName: ({ allianceId }: { allianceId: number | string }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
@@ -83,9 +83,7 @@ describe("AllianceCard", () => {
       },
     });
 
-    const {
-      AllianceCard,
-    } = require("../../../packages/eve-components/Card/AllianceCard");
+    const { AllianceCard } = require("~/components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard allianceId={9900} />
@@ -126,9 +124,7 @@ describe("AllianceCard", () => {
       },
     });
 
-    const {
-      AllianceCard,
-    } = require("../../../packages/eve-components/Card/AllianceCard");
+    const { AllianceCard } = require("~/components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard allianceId={9901} />
@@ -155,9 +151,7 @@ describe("AllianceCard", () => {
       },
     });
 
-    const {
-      AllianceCard,
-    } = require("../../../packages/eve-components/Card/AllianceCard");
+    const { AllianceCard } = require("~/components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard

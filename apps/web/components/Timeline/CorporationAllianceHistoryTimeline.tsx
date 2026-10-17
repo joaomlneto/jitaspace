@@ -3,8 +3,9 @@
 import type { TimelineProps } from "@mantine/core";
 import { memo } from "react";
 
-import { CorporationAllianceHistoryTimeline as UICorporationAllianceHistoryTimeline } from "@jitaspace/eve-components";
 import { useCorporationAllianceHistory } from "@jitaspace/hooks";
+
+import { CorporationAllianceHistoryTimelineDisplay } from "./CorporationAllianceHistoryTimelineDisplay";
 
 export type CorporationAllianceHistoryTimelineProps = Omit<
   TimelineProps,
@@ -20,7 +21,7 @@ export const CorporationAllianceHistoryTimeline = memo(
   }: CorporationAllianceHistoryTimelineProps) => {
     const { data } = useCorporationAllianceHistory(corporationId ?? 0);
     return (
-      <UICorporationAllianceHistoryTimeline
+      <CorporationAllianceHistoryTimelineDisplay
         history={data?.data}
         {...otherProps}
       />

@@ -26,9 +26,9 @@ import {
   DateHoverCard,
   FactionAvatar,
   TimeAgoText,
-  WarAnchor,
 } from "@jitaspace/ui";
 
+import { WarAnchor } from "~/components/Anchor";
 import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
 interface KillButtonProps {

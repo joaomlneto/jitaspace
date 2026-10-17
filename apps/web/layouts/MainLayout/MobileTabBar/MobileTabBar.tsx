@@ -2,7 +2,6 @@
 
 import type { TablerIcon } from "@tabler/icons-react";
 import { Suspense } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Text } from "@mantine/core";
 import {
@@ -12,6 +11,7 @@ import {
   IconShoppingCart,
 } from "@tabler/icons-react";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import classes from "./MobileTabBar.module.css";
 
 interface Tab {
@@ -52,7 +52,11 @@ function TabBarLinks({ pathname }: Readonly<{ pathname: string | null }>) {
       {tabs.map((tab) => {
         const active = isActive(pathname, tab);
         return (
-          <Link
+          // The bar is in the DOM on every page and viewport (CSS only hides
+          // it on desktop), so letting these prefetch on sight cost four PPR
+          // segment requests per link on every page view. They prefetch on
+          // touch or hover instead.
+          <HoverPrefetchLink
             key={tab.href}
             href={tab.href}
             className={classes.tab}
@@ -63,7 +67,7 @@ function TabBarLinks({ pathname }: Readonly<{ pathname: string | null }>) {
             <Text size="0.625rem" fw={500} className={classes.label}>
               {tab.label}
             </Text>
-          </Link>
+          </HoverPrefetchLink>
         );
       })}
     </nav>

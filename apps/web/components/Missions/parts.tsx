@@ -4,17 +4,17 @@ import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { Badge, Box, Group, Stack, Text } from "@mantine/core";
 
+import { TypeAvatar } from "@jitaspace/eve-components";
+import { CharacterAvatar, ISKAmount } from "@jitaspace/ui";
+
+import type { AgentRef, TypeRef } from "~/lib/missionRefs";
+import type { MissionKind, MissionTextValues } from "~/lib/missions";
 import {
   CharacterAnchor,
   SolarSystemAnchor,
   StationAnchor,
   TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
-import { CharacterAvatar, ISKAmount } from "@jitaspace/ui";
-
-import type { AgentRef, TypeRef } from "~/lib/missionRefs";
-import type { MissionKind, MissionTextValues } from "~/lib/missions";
+} from "~/components/Anchor";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
   ISK_TYPE_ID,

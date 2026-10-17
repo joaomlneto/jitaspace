@@ -14,22 +14,25 @@ dependency graph (`@jitaspace/hooks`, `@jitaspace/esi-client`, …).
 
 ## Split-component pattern
 
-Each pure rendering twin lives in `@jitaspace/ui` (e.g. `EveEntityNameDisplay`,
-`EveEntityAnchorDisplay`), while the data-fetching wrapper that resolves ids and
-feeds the twin lives here (e.g. `EveEntityName`, `EveEntityAnchor`). The
-ergonomic call-site API is unchanged from when these components lived in
-`@jitaspace/ui`:
+Each pure rendering twin lives in `@jitaspace/ui` (e.g. `EveEntityNameDisplay`),
+while the data-fetching wrapper that resolves ids and feeds the twin lives here
+(e.g. `EveEntityName`). The ergonomic call-site API is unchanged from when these
+components lived in `@jitaspace/ui`:
 
 ```tsx
-import { CharacterName, EveEntityAvatar, TypeAnchor } from "@jitaspace/eve-components";
+import { CharacterName, EveEntityAvatar } from "@jitaspace/eve-components";
 
 <CharacterName characterId={12345678} />
-<TypeAnchor typeId={587}>Rifter</TypeAnchor>
 <EveEntityAvatar entityId={12345678} />
 ```
 
 This keeps `<CharacterName characterId={123} />` ergonomics intact while moving
 the ESI coupling up one layer.
+
+Nothing here links to a page. Components that know the web app's routes or
+render `next/link` — the entity anchors (`TypeAnchor`, `EveEntityAnchor`, …),
+breadcrumbs, entity cards and the alliance-history timeline — live in
+`apps/web/components`.
 
 ## Dependencies
 

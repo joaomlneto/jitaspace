@@ -1,9 +1,9 @@
 import React from "react";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 
-import { RegionAnchor } from "@jitaspace/eve-components";
 import { MapIcon } from "@jitaspace/eve-icons";
 
+import { RegionAnchor } from "~/components/Anchor";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
 import { cacheSdeRead } from "~/lib/sdeCache";

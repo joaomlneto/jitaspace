@@ -11,22 +11,19 @@ import {
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import {
-  FactionAnchor,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import { JournalIcon } from "@jitaspace/eve-icons";
+import { FactionAvatar, ISKAmount } from "@jitaspace/ui";
+
+import type { MissionKind } from "~/lib/missions";
 import {
   CorporationAnchor,
   DungeonAnchor,
   EpicArcAnchor,
-  FactionAvatar,
-  ISKAmount,
+  FactionAnchor,
   MissionAnchor,
-} from "@jitaspace/ui";
-
-import type { MissionKind } from "~/lib/missions";
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { StatCard } from "~/components/EntityPage";
 import { BooleanBadge, MissionKindBadge } from "~/components/Missions";

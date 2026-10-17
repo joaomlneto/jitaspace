@@ -34,7 +34,7 @@ import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeName } from "@jitaspace/eve-components";
 import {
   CategoryIskIcon,
   WindowInfoIcon,
@@ -47,16 +47,7 @@ import {
   useType,
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CategoryAnchor,
-  DogmaAttributeAnchor,
-  DogmaAttributeValue,
-  DogmaEffectAnchor,
-  EveIconAvatar,
-  GroupAnchor,
-  ISKAmount,
-  MarketGroupAnchor,
-} from "@jitaspace/ui";
+import { DogmaAttributeValue, EveIconAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type {
   TypeDogmaAttributeMeta,
@@ -70,6 +61,14 @@ import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
+  CategoryAnchor,
+  DogmaAttributeAnchor,
+  DogmaEffectAnchor,
+  GroupAnchor,
+  MarketGroupAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
+import {
   TypeInventoryBreadcrumbs,
   TypeMarketBreadcrumbs,
 } from "~/components/Breadcrumbs";
@@ -82,6 +81,7 @@ import {
   StatCard,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   DamageTypeLegend,
   NpcCombatStats,
@@ -574,7 +574,7 @@ export default function TypePage({
           <Group gap="xs">
             {isComparable && (
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`/compare?types=${typeId}`}
                 size="xs"
                 variant="light"
@@ -1017,7 +1017,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <Text size="sm" c="dimmed">
                   The game uses{" "}
-                  <Anchor component={Link} href="/type-lists" size="sm">
+                  <Anchor
+                    component={HoverPrefetchLink}
+                    href="/type-lists"
+                    size="sm"
+                  >
                     type lists
                   </Anchor>{" "}
                   to decide which items a rule applies to. A list names the

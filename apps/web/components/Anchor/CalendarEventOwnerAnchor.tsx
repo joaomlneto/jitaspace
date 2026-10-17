@@ -5,8 +5,9 @@ import type { LinkProps } from "next/link";
 import type React from "react";
 import { memo } from "react";
 
-import { EveEntityAnchor } from "@jitaspace/eve-components";
 import { useCalendarEvent } from "@jitaspace/hooks";
+
+import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type CalendarEventOwnerAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &

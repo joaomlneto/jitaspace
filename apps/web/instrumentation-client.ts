@@ -41,8 +41,10 @@ Sentry.init({
   denyUrls: SENTRY_DENY_URLS,
   ignoreErrors: SENTRY_IGNORE_ERRORS,
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Define how likely traces are sampled. Every sampled trace is a billed
+  // Sentry transaction (plus its spans) and, in the browser, a request through
+  // the /monitoring tunnel; at 1 this scaled with every page view and prefetch.
+  tracesSampleRate: 0.1,
   // Enable logs to be sent to Sentry
   enableLogs: true,
 

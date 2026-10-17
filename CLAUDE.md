@@ -101,7 +101,7 @@ Copy `.env.example` to `.env` at the repo root. `apps/web/env.ts` validates env 
 
 Workspaces are `apps/*`, `packages/*` and `tooling/*`; each `package.json` describes its package. What the layout does not tell you:
 
-- `packages/ui` is presentational and dependency-light: no hooks, no data fetching. Data-aware components go in `packages/eve-components`.
+- `packages/ui` is presentational and dependency-light: no hooks, no data fetching. Data-aware components go in `packages/eve-components`. Neither knows the web app's routes: anything that links to a page (entity anchors such as `TypeAnchor`, breadcrumbs, entity cards) lives in `apps/web/components` and links through `HoverPrefetchLink` (`apps/web/components/Link`), which prefetches on hover, touch or focus rather than on sight.
 - `tooling/eslint`, `tooling/prettier` and `tooling/tsconfig` are shared presets: extend them, don't redefine them.
 - There is no `apps/worker`. Background jobs run on Trigger.dev: the logic lives in `@jitaspace/background-jobs`, and the `@jitaspace/background-jobs-triggerdev` adapter runs it.
 - `packages/eve-icons` **commits CCP artwork** (`assets/*.png`, copied from the live client) and is publishable. Its LICENSE splits the terms: the code is MIT, the art is © CCP hf. / Fenris Creations and is not. Refresh the art with `pnpm --filter @jitaspace/eve-icons icons:sync` and review the diff: an icon CCP renames or removes is a breaking change for importers. The components in `src/generated/` are built from the PNGs by its `kubb:generate` script, which only reuses that task name. `apps/eve-icons-gallery` is a static site for browsing them (not deployed anywhere yet).

@@ -44,6 +44,9 @@ jest.mock("~/components/ActionIcon", () => ({
 }));
 
 jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   WarAggressorAnchor: ({ children }: { children?: ReactNode }) => (
     <span>{children}</span>
   ),

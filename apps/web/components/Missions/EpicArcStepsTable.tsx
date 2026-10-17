@@ -3,9 +3,10 @@
 import type { ReactNode } from "react";
 import { Paper, Stack, Table, Text } from "@mantine/core";
 
-import { ISKAmount, MissionAnchor } from "@jitaspace/ui";
+import { ISKAmount } from "@jitaspace/ui";
 
 import type { EpicArcStep } from "~/lib/epicArcs";
+import { MissionAnchor } from "~/components/Anchor";
 import { AgentLabel, MissionKindBadge, notAvailableText } from "./parts";
 
 /** Where a failed step leads: nowhere, the same step again, or another. */

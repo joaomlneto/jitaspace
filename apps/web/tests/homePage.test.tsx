@@ -25,14 +25,10 @@ jest.mock("@jitaspace/ui", () => ({
   CharacterAvatar: () => <div>Character Avatar</div>,
 }));
 
-// AllianceCard moved to @jitaspace/eve-components.
-jest.mock("@jitaspace/eve-components", () => ({
+jest.mock("~/components/Card", () => ({
   AllianceCard: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
-}));
-
-jest.mock("~/components/Card", () => ({
   AuthenticatedCharacterCard: ({ characterId }: { characterId: number }) => (
     <div>{`Character ${characterId}`}</div>
   ),

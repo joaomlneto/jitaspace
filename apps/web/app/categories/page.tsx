@@ -8,8 +8,8 @@ import {
 } from "@mantine/core";
 
 import { ItemsIcon } from "@jitaspace/eve-icons";
-import { CategoryAnchor } from "@jitaspace/ui";
 
+import { CategoryAnchor } from "~/components/Anchor";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
 import { cacheSdeRead } from "~/lib/sdeCache";

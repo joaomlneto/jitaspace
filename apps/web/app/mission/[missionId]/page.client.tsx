@@ -30,7 +30,6 @@ import {
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { FactionAnchor } from "@jitaspace/eve-components";
 import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
@@ -40,13 +39,9 @@ import {
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
-  DungeonAnchor,
-  EpicArcAnchor,
   EveIconAvatar,
   FactionAvatar,
-  MissionAnchor,
 } from "@jitaspace/ui";
 
 import type { MissionDetail, MissionVariant } from "./data";
@@ -54,6 +49,13 @@ import type { EpicArc } from "~/lib/epicArcs";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { CorporationRef, FactionRef, TypeRef } from "~/lib/missionRefs";
 import type { MissionMessageSpeaker, MissionTextValues } from "~/lib/missions";
+import {
+  CorporationAnchor,
+  DungeonAnchor,
+  EpicArcAnchor,
+  FactionAnchor,
+  MissionAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {

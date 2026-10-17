@@ -46,11 +46,15 @@ const anchor =
     <span data-testid={testId}>{children}</span>
   );
 jest.mock("@jitaspace/ui", () => ({
-  CorporationAnchor: anchor("corporation-anchor"),
   FactionAvatar: () => <span data-testid="faction-avatar" />,
   SolarSystemSecurityStatusBadge: () => <span data-testid="sec-badge" />,
 }));
-jest.mock("@jitaspace/eve-components", () => ({
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
+  CorporationAnchor: anchor("corporation-anchor"),
   FactionAnchor: anchor("faction-anchor"),
   RegionAnchor: anchor("region-anchor"),
   SolarSystemAnchor: anchor("system-anchor"),

@@ -1,9 +1,8 @@
 "use client";
 
-import { WarAnchor } from "@jitaspace/ui";
-
 import type { WarRoomWar } from "./types";
 import type { SortKey } from "./utils";
+import { WarAnchor } from "~/components/Anchor";
 import { BalanceBar, cx, IskFigure, StatusPill, WarEntity } from "./parts";
 import { formatDuration } from "./utils";
 import classes from "./WarRoom.module.css";
