@@ -37,6 +37,7 @@ import { ConstellationAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { FactionLine, HeroCard, HeroStat } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   ActiveIncursionBadge,
   ActiveIncursionCard,
@@ -424,7 +425,11 @@ export default function RegionPage({
                 <Text size="sm" c="dimmed">
                   Where each site spawns is on each constellation&apos;s page,
                   and in the{" "}
-                  <Anchor component={Link} href="/incursions#layouts" size="sm">
+                  <Anchor
+                    component={HoverPrefetchLink}
+                    href="/incursions#layouts"
+                    size="sm"
+                  >
                     layouts of every constellation
                   </Anchor>
                   .

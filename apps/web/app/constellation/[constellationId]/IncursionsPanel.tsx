@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Anchor, SimpleGrid, Stack, Text } from "@mantine/core";
 
 import { IncursionsIcon } from "@jitaspace/eve-icons";
@@ -11,6 +10,7 @@ import type {
   UniverseSystem,
 } from "~/components/UniversePage/types";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   ActiveIncursionCard,
   activeIncursions,
@@ -110,7 +110,11 @@ export function IncursionsPanel({
         )}
         <Text size="xs" c="dimmed">
           CCP does not publish where each site spawns; see the{" "}
-          <Anchor component={Link} href="/incursions#layouts" size="xs">
+          <Anchor
+            component={HoverPrefetchLink}
+            href="/incursions#layouts"
+            size="xs"
+          >
             layouts of every constellation
           </Anchor>{" "}
           and where they come from.

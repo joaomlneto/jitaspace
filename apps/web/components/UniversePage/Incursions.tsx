@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import { Anchor, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -23,6 +22,7 @@ import {
 import { ConstellationAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import { formatDate, formatInteger } from "~/lib/format";
 import { SystemLink } from "./parts";
 
@@ -80,7 +80,7 @@ export function ActiveIncursionCard({
           {incursion.influence !== null &&
             `, influence ${percent(incursion.influence)}`}
           .{" "}
-          <Anchor component={Link} href="/incursions" size="sm">
+          <Anchor component={HoverPrefetchLink} href="/incursions" size="sm">
             Follow it live on the incursions page
           </Anchor>
         </Text>

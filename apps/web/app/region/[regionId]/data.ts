@@ -74,14 +74,17 @@ export async function readRegion(
 /**
  * Every incursion that spawned in the region, ours and imported (back to 2015),
  * most recent first. Not SDE data: `esi-track-incursions` writes it every 5
- * minutes, so it keeps a short lifetime of its own. Uncaught, like the region
+ * minutes, so it keeps a lifetime of its own. Uncaught, like the region
  * read.
  */
 export async function readRegionIncursions(
   regionId: number,
 ): Promise<RegionIncursions> {
   "use cache";
-  cacheLife("minutes");
+  // Hours, not the incursions page's minutes: this lifetime is the whole
+  // page's, and each regeneration re-runs every query above. An incursion
+  // lasts days.
+  cacheLife("hours");
   // Constellation and system names in the tab come from the SDE read.
   cacheTag(SDE_CACHE_TAG);
 
