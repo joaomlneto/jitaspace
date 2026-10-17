@@ -1,8 +1,7 @@
 "use client";
 
-import { Fragment, useMemo } from "react";
-import Link from "next/link";
-import { Alert, Anchor, Stack, Text } from "@mantine/core";
+import { useMemo } from "react";
+import { Alert, Stack, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { securityStatusBand } from "@jitaspace/ui";
@@ -22,33 +21,31 @@ interface LayoutRow extends IncursionLayout {
   constellationName: string;
   regionName: string | null;
   security: string | null;
+  stagingName: string | null;
   isMapped: boolean;
+  siteCount: number;
+  vanguardCount: number;
+  assaultCount: number;
   vanguardNames: string;
   assaultNames: string;
   headquartersNames: string;
 }
 
-/** A constellation's systems of one site type, as links. */
+/** A constellation's systems of one site type, one per line. */
 function SiteSystems({
   solarSystemIds,
   names,
 }: Readonly<{ solarSystemIds: readonly number[]; names: Names }>) {
   return (
-    <Text span size="sm">
-      {solarSystemIds.map((solarSystemId, index) => (
-        <Fragment key={solarSystemId}>
-          {index > 0 && ", "}
-          <Anchor
-            component={Link}
-            href={`/system/${solarSystemId}`}
-            size="sm"
-            style={{ whiteSpace: "nowrap" }}
-          >
-            {names.system(solarSystemId)?.name ?? solarSystemId}
-          </Anchor>
-        </Fragment>
+    <Stack gap={4}>
+      {solarSystemIds.map((solarSystemId) => (
+        <SystemLink
+          key={solarSystemId}
+          solarSystemId={solarSystemId}
+          names={names}
+        />
       ))}
-    </Text>
+    </Stack>
   );
 }
 
@@ -66,6 +63,7 @@ const siteColumn = (
   id: role,
   header,
   accessor: `${role}Names`,
+  filter: { type: "text" },
   cell: (row) => {
     if (row[role].length > 0) {
       return <SiteSystems solarSystemIds={row[role]} names={names} />;
@@ -92,6 +90,9 @@ const layoutColumnsFor = (names: Names): DataTableColumn<LayoutRow>[] => [
   {
     id: "staging",
     header: "Staging",
+    accessor: "stagingName",
+    sortable: true,
+    filter: { type: "text" },
     cell: (row) =>
       row.stagingSolarSystemId === null ? (
         <Dash />
@@ -103,17 +104,45 @@ const layoutColumnsFor = (names: Names): DataTableColumn<LayoutRow>[] => [
   siteColumn("assault", "Assault", names),
   siteColumn("headquarters", "Headquarters", names),
   {
+    id: "siteCount",
+    header: "Sites",
+    accessor: "siteCount",
+    sortable: true,
+    align: "right",
+    filter: { type: "range", min: 0 },
+  },
+  {
+    id: "vanguardCount",
+    header: "Vanguard sites",
+    accessor: "vanguardCount",
+    sortable: true,
+    align: "right",
+    filter: { type: "range", min: 0 },
+    defaultVisible: false,
+  },
+  {
+    id: "assaultCount",
+    header: "Assault sites",
+    accessor: "assaultCount",
+    sortable: true,
+    align: "right",
+    filter: { type: "range", min: 0 },
+    defaultVisible: false,
+  },
+  {
     id: "incursionCount",
     header: "Incursions",
     accessor: "incursionCount",
     sortable: true,
     align: "right",
+    filter: { type: "range", min: 0 },
   },
   {
     id: "lastSeenAt",
     header: "Last incursion (EVE)",
     accessor: "lastSeenAt",
     sortable: true,
+    filter: { type: "date-range" },
     cell: (row) => (row.lastSeenAt ? <EveTime iso={row.lastSeenAt} /> : null),
   },
 ];
@@ -148,7 +177,14 @@ export function LayoutsTab() {
           constellationName: names.constellation(layout.constellationId),
           regionName: names.region(layout.constellationId)?.name ?? null,
           security: staging ? securityStatusBand(staging.securityStatus) : null,
+          stagingName: staging?.name ?? null,
           isMapped: layout.headquarters.length > 0,
+          siteCount:
+            layout.vanguard.length +
+            layout.assault.length +
+            layout.headquarters.length,
+          vanguardCount: layout.vanguard.length,
+          assaultCount: layout.assault.length,
           vanguardNames: systemNames(layout.vanguard),
           assaultNames: systemNames(layout.assault),
           headquartersNames: systemNames(layout.headquarters),
@@ -179,10 +215,12 @@ export function LayoutsTab() {
           columns={columns}
           rowId={(row) => row.constellationId}
           withGlobalFilter
+          withColumnVisibility
           withPagination
           defaultPageSize={25}
           initialSort={{ columnId: "incursionCount", direction: "desc" }}
           verticalSpacing="xs"
+          withTableBorder
           highlightOnHover
           striped
         />
