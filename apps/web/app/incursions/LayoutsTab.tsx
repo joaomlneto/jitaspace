@@ -11,7 +11,12 @@ import type { Names } from "./parts";
 import type { IncursionLayout } from "./types";
 import { DataTable } from "~/components/DataTable";
 import { useIncursionLayouts } from "./history";
-import { ConstellationLink, EveTime, SystemLink, useNames } from "./parts";
+import {
+  constellationColumnsFor,
+  EveTime,
+  SystemLink,
+  useNames,
+} from "./parts";
 
 interface LayoutRow extends IncursionLayout {
   constellationName: string;
@@ -76,31 +81,7 @@ const siteColumn = (
 });
 
 const layoutColumnsFor = (names: Names): DataTableColumn<LayoutRow>[] => [
-  {
-    id: "constellation",
-    header: "Constellation",
-    accessor: "constellationName",
-    sortable: true,
-    filter: { type: "text" },
-    cell: (row) => (
-      <ConstellationLink constellationId={row.constellationId} names={names} />
-    ),
-  },
-  {
-    id: "region",
-    header: "Region",
-    accessor: "regionName",
-    sortable: true,
-    cell: (row) => {
-      const region = names.region(row.constellationId);
-      return region ? (
-        <Anchor component={Link} href={`/region/${region.regionId}`} size="sm">
-          {region.name}
-        </Anchor>
-      ) : null;
-    },
-    filter: { type: "multi-select" },
-  },
+  ...constellationColumnsFor<LayoutRow>(names),
   {
     id: "security",
     header: "Security",
