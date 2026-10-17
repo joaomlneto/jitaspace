@@ -1,7 +1,5 @@
 "use client";
 
-import type {} from "@mantine/core";
-
 import type { MantineThemeOverride } from "@mantine/core";
 import { Avatar, createTheme, mergeThemeOverrides } from "@mantine/core";
 

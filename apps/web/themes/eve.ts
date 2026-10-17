@@ -1,9 +1,21 @@
-import type { MantineColorsTuple, VariantColorsResolver } from "@mantine/core";
+import type {
+  MantineColorsTuple,
+  MantineTheme,
+  VariantColorsResolver,
+} from "@mantine/core";
 import {
+  Checkbox,
+  CheckboxIndicator,
   createTheme,
   defaultVariantColorsResolver,
+  Indicator,
   luminance,
+  Pagination,
   parseThemeColor,
+  Radio,
+  RadioIndicator,
+  Stepper,
+  Timeline,
 } from "@mantine/core";
 
 import classes from "./eve.module.css";
@@ -160,6 +172,49 @@ const contrast = (a: number, b: number) =>
 
 type Scheme = "light" | "dark";
 
+const WHITE_TEXT = "var(--mantine-color-white)";
+const BLACK_TEXT = "var(--mantine-color-black)";
+
+/** Whichever of the theme's black and white contrasts more with a fill. */
+const bestText = (theme: MantineTheme, fill: string) => {
+  const l = luminance(fill);
+  const onBlack = contrast(l, luminance(theme.black));
+  const onWhite = contrast(l, luminance(theme.white));
+  return {
+    text: onBlack >= onWhite ? BLACK_TEXT : WHITE_TEXT,
+    ratio: Math.max(onBlack, onWhite),
+  };
+};
+
+/**
+ * The text for a colour's own fill (`--mantine-color-<color>-filled`, its
+ * primary shade on each scheme), per scheme. For the components that take
+ * their text colour straight from Mantine's getContrastColor, which reads
+ * the light scheme's shade alone: on the dark scheme that put white on the
+ * light teal (#5ccbcb), about 1.8:1, on the active page of a Pagination, a
+ * ticked Checkbox and the rest. (Pill Tabs read it too, but none are used
+ * and Mantine's types leave out their variable.)
+ */
+const filledText = (theme: MantineTheme, color: string | undefined) => {
+  const textOn = (colorScheme: Scheme) => {
+    const { value } = parseThemeColor({
+      color: color ?? theme.primaryColor,
+      theme,
+      colorScheme,
+    });
+    // A CSS variable (a virtual colour) cannot be measured here.
+    return value.startsWith("var(") ? WHITE_TEXT : bestText(theme, value).text;
+  };
+  return lightDark(textOn("light"), textOn("dark"));
+};
+
+/** `filledText`, unless the component opts out of autoContrast. */
+const autoContrastText = (
+  theme: MantineTheme,
+  { color, autoContrast }: { color?: string; autoContrast?: boolean },
+) =>
+  (autoContrast ?? theme.autoContrast) ? filledText(theme, color) : undefined;
+
 // Mantine's autoContrast picks a filled control's text colour once, from the
 // light scheme's shade, and uses it on both; and it picks by a luminance
 // threshold, which gives mid-tone fills such as blue.6 light text at 3.1:1.
@@ -177,20 +232,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
       : theme.autoContrast;
   if (input.variant !== "filled" || !autoContrast) return result;
 
-  const black = luminance(theme.black);
-  const white = luminance(theme.white);
-  const textFor = (fill: string) => {
-    const l = luminance(fill);
-    const onBlack = contrast(l, black);
-    const onWhite = contrast(l, white);
-    return {
-      text:
-        onBlack >= onWhite
-          ? "var(--mantine-color-black)"
-          : "var(--mantine-color-white)",
-      ratio: Math.max(onBlack, onWhite),
-    };
-  };
+  const textFor = (fill: string) => bestText(theme, fill);
 
   const pick = (colorScheme: Scheme) => {
     const parsed = parseThemeColor({
@@ -199,9 +241,7 @@ const variantColorResolver: VariantColorsResolver = (input) => {
       colorScheme,
     });
     // A CSS variable (a virtual colour) cannot be measured here.
-    if (parsed.value.startsWith("var(")) {
-      return { text: "var(--mantine-color-white)" };
-    }
+    if (parsed.value.startsWith("var(")) return { text: WHITE_TEXT };
     // A colour with an explicit shade (`red.3`) or a plain CSS colour keeps
     // its fill; only its text is chosen.
     if (!parsed.isThemeColor || parsed.shade !== undefined) {
@@ -438,6 +478,57 @@ export const eveTheme = createTheme({
     Anchor: {
       classNames: { root: classes.anchor },
     },
+
+    // Text on a filled colour, for the components that bypass the
+    // variantColorResolver (see `filledText`). An explicit iconColor wins.
+    Pagination: Pagination.extend({
+      vars: (theme, props) => ({
+        root: { "--pagination-active-color": autoContrastText(theme, props) },
+      }),
+    }),
+    Indicator: Indicator.extend({
+      vars: (theme, props) => ({
+        root: { "--indicator-text-color": autoContrastText(theme, props) },
+      }),
+    }),
+    Stepper: Stepper.extend({
+      vars: (theme, props) => ({
+        root: { "--stepper-icon-color": autoContrastText(theme, props) },
+      }),
+    }),
+    Timeline: Timeline.extend({
+      vars: (theme, props) => ({
+        root: { "--tl-icon-color": autoContrastText(theme, props) },
+      }),
+    }),
+    Checkbox: Checkbox.extend({
+      vars: (theme, props) => ({
+        root: props.iconColor
+          ? {}
+          : { "--checkbox-icon-color": autoContrastText(theme, props) },
+      }),
+    }),
+    CheckboxIndicator: CheckboxIndicator.extend({
+      vars: (theme, props) => ({
+        indicator: props.iconColor
+          ? {}
+          : { "--checkbox-icon-color": autoContrastText(theme, props) },
+      }),
+    }),
+    Radio: Radio.extend({
+      vars: (theme, props) => ({
+        root: props.iconColor
+          ? {}
+          : { "--radio-icon-color": autoContrastText(theme, props) },
+      }),
+    }),
+    RadioIndicator: RadioIndicator.extend({
+      vars: (theme, props) => ({
+        indicator: props.iconColor
+          ? {}
+          : { "--radio-icon-color": autoContrastText(theme, props) },
+      }),
+    }),
 
     // Mantine's own tooltip is already the launcher's: inverted, light on
     // the dark scheme, at font size sm (14px).
