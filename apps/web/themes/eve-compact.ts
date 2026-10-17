@@ -1,4 +1,4 @@
-import { createTheme } from "@mantine/core";
+import { Button, createTheme, Input } from "@mantine/core";
 
 import classes from "./eve-compact.module.css";
 
@@ -50,15 +50,37 @@ export const eveCompactTheme = createTheme({
 });
 
 /**
- * Controls one size down from Mantine's defaults: 30px buttons and inputs
- * instead of 36px. Still clear of the 24px minimum target size (WCAG 2.5.8),
+ * 30px buttons and inputs with EVE's 14px text. The default size (Mantine's
+ * `sm`) is shortened from 36px to 30px; `xs`, already 30px and which many
+ * pages ask for explicitly, takes 14px text instead of 12px, which in
+ * Rajdhani's bold capitals is the smallest text on the page. Larger sizes are
+ * left as they are. Still clear of the 24px minimum target size (WCAG 2.5.8),
  * but for a mouse, not a finger.
  */
+const isDefaultSize = (size: unknown) => size === undefined || size === "sm";
+
 export const eveCompactControlsTheme = createTheme({
   components: {
-    Button: { defaultProps: { size: "xs" } },
-    Input: { defaultProps: { size: "xs" } },
-    InputWrapper: { defaultProps: { size: "xs" } },
+    Button: Button.extend({
+      vars: (_theme, { size }) => ({
+        root: isDefaultSize(size)
+          ? { "--button-height": "var(--button-height-xs)" }
+          : size === "xs"
+            ? { "--button-fz": "var(--mantine-font-size-sm)" }
+            : {},
+      }),
+    }),
+    // Every input renders an Input, whatever its own default size
+    // (TextInput has none; Select, NumberInput and most others say `sm`).
+    Input: Input.extend({
+      vars: (_theme, { size }) => ({
+        wrapper: isDefaultSize(size)
+          ? { "--input-height": "var(--input-height-xs)" }
+          : size === "xs"
+            ? { "--input-fz": "var(--mantine-font-size-sm)" }
+            : {},
+      }),
+    }),
     SegmentedControl: { defaultProps: { size: "xs" } },
     Badge: { defaultProps: { size: "sm" } },
   },

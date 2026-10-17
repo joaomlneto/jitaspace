@@ -9,6 +9,7 @@ import {
   jest,
 } from "@jest/globals";
 import {
+  Button,
   createTheme,
   DEFAULT_THEME,
   mergeMantineTheme,
@@ -32,16 +33,6 @@ function ThemePrimaryColorText() {
   const theme = useMantineTheme();
 
   return <Text data-testid="theme-primary-color">{theme.primaryColor}</Text>;
-}
-
-function ThemeButtonSizeText() {
-  const theme = useMantineTheme();
-  const defaultProps = theme.components.Button?.defaultProps as
-    | { size?: string }
-    | undefined;
-  const size = defaultProps?.size;
-
-  return <Text data-testid="theme-button-size">{size ?? "none"}</Text>;
 }
 
 /** Makes `matchMedia` report a coarse pointer, or not, for the next render. */
@@ -186,11 +177,11 @@ describe("AppMantineProvider", () => {
   });
 
   it.each([
-    [false, "xs"],
-    [true, "none"],
+    [false, "var(--button-height-xs)"],
+    [true, ""],
   ])(
-    "gives EVE (compact) small controls only without a touchscreen (touch: %s)",
-    async (touch, size) => {
+    "gives EVE (compact) short buttons only without a touchscreen (touch: %s)",
+    async (touch, height) => {
       const restore = mockTouch(touch);
       window.localStorage.setItem(
         PREFERENCES_STORAGE_KEY,
@@ -199,18 +190,45 @@ describe("AppMantineProvider", () => {
 
       render(
         <AppMantineProvider>
-          <ThemeButtonSizeText />
+          <Button>Launch</Button>
         </AppMantineProvider>,
       );
 
+      // The text keeps Mantine's default size either way; only the height
+      // changes, through the theme's `vars`.
       await waitFor(() => {
-        expect(screen.getByTestId("theme-button-size")).toHaveTextContent(
-          new RegExp(`^${size}$`),
-        );
+        expect(
+          screen
+            .getByRole("button", { name: "Launch" })
+            .style.getPropertyValue("--button-height"),
+        ).toBe(height);
       });
       restore();
     },
   );
+
+  it("gives EVE (compact)'s xs buttons EVE's 14px text", async () => {
+    const restore = mockTouch(false);
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ state: { appTheme: "eve_compact" }, version: 0 }),
+    );
+
+    render(
+      <AppMantineProvider>
+        <Button size="xs">Launch</Button>
+      </AppMantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getByRole("button", { name: "Launch" })
+          .style.getPropertyValue("--button-fz"),
+      ).toBe("var(--mantine-font-size-sm)");
+    });
+    restore();
+  });
 
   it("updates theme when app theme is changed", async () => {
     render(
