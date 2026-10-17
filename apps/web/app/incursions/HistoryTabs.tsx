@@ -28,6 +28,7 @@ import { DataTable } from "~/components/DataTable";
 import { mergeLookups, useIncursionHistory } from "./history";
 import { formatDuration } from "./math";
 import {
+  constellationColumnsFor,
   ConstellationLink,
   EveTime,
   StateBadge,
@@ -233,31 +234,7 @@ interface HistoryTableRow extends IncursionRow {
 const historyColumnsFor = (
   names: Names,
 ): DataTableColumn<HistoryTableRow>[] => [
-  {
-    id: "constellation",
-    header: "Constellation",
-    accessor: "constellationName",
-    sortable: true,
-    filter: { type: "text" },
-    cell: (row) => (
-      <ConstellationLink constellationId={row.constellationId} names={names} />
-    ),
-  },
-  {
-    id: "region",
-    header: "Region",
-    accessor: "regionName",
-    sortable: true,
-    cell: (row) => {
-      const region = names.region(row.constellationId);
-      return region ? (
-        <Anchor component={Link} href={`/region/${region.regionId}`} size="sm">
-          {region.name}
-        </Anchor>
-      ) : null;
-    },
-    filter: { type: "multi-select" },
-  },
+  ...constellationColumnsFor<HistoryTableRow>(names),
   {
     id: "staging",
     header: "Staging",
