@@ -25,7 +25,6 @@ export const APP_THEME_OPTIONS = [
   { value: "minimal", label: "Minimal" },
   { value: "eve", label: "EVE" },
   { value: "eve_compact", label: "EVE (compact)" },
-  { value: "eve_old", label: "EVE (old)" },
   { value: "amarr", label: "Amarr" },
   { value: "caldari", label: "Caldari" },
   { value: "gallente", label: "Gallente" },

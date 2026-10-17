@@ -9,7 +9,6 @@ import { colors } from "./colors";
 import { crimsonHarvestTheme } from "./crimson-harvest";
 import { eveTheme } from "./eve";
 import { eveCompactControlsTheme, eveCompactTheme } from "./eve-compact";
-import { eveOldTheme } from "./eve-old";
 import { lightDark } from "./lightDark";
 import { DEFAULT_THEME_SEASON } from "./season";
 import { WALLPAPERS } from "./wallpapers";
@@ -40,13 +39,6 @@ const baseTheme = createTheme({
 // tuples (`eve`, `caldari`, `dark`, …) taking precedence over same-named ones.
 const eve = mergeThemeOverrides(baseTheme, createTheme({ colors }), eveTheme);
 
-// EVE as it was before it followed the launcher, on the same palettes.
-const eveOld = mergeThemeOverrides(
-  baseTheme,
-  createTheme({ colors }),
-  eveOldTheme,
-);
-
 // EVE (compact) on a touchscreen: the tight spacing, but EVE's control sizes.
 const eveCompact = mergeThemeOverrides(eve, eveCompactTheme);
 
@@ -58,7 +50,6 @@ export const themes = {
   minimal: baseTheme,
   eve,
   eve_compact: mergeThemeOverrides(eveCompact, eveCompactControlsTheme),
-  eve_old: eveOld,
   amarr: mergeThemeOverrides(
     eve,
     createTheme({

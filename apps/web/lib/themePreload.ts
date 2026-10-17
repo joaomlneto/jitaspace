@@ -62,11 +62,6 @@ export const THEME_PRELOAD: Record<
   minimal: { body: lightDark("#fff", "#242424") },
   eve: preload("#101010", WALLPAPERS.cradleOfWar),
   eve_compact: preload("#101010", WALLPAPERS.cradleOfWar),
-  // The old EVE theme keeps its own body colours: #f2f7fb and #111111.
-  eve_old: {
-    ...preload("#111111", WALLPAPERS.cradleOfWar),
-    body: lightDark("#f2f7fb", "#111111"),
-  },
   amarr: preload("#101010", WALLPAPERS.amarr),
   caldari: preload("#101010", WALLPAPERS.caldari),
   gallente: preload("#101010", WALLPAPERS.gallente),
