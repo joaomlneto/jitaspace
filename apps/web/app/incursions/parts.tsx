@@ -119,7 +119,13 @@ export function SystemLink({
           miw="max-content"
         />
       )}
-      <Anchor component={Link} href={`/system/${solarSystemId}`} size={size}>
+      {/* Names like 8-KZXQ would otherwise break at the hyphen. */}
+      <Anchor
+        component={Link}
+        href={`/system/${solarSystemId}`}
+        size={size}
+        style={{ whiteSpace: "nowrap" }}
+      >
         {system?.name ?? solarSystemId}
       </Anchor>
     </Group>
