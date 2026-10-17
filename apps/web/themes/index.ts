@@ -7,6 +7,7 @@ import { colors } from "./colors";
 import { crimsonHarvestTheme } from "./crimson-harvest";
 import { eveTheme } from "./eve";
 import { eveCompactControlsTheme, eveCompactTheme } from "./eve-compact";
+import { excelTheme } from "./excel";
 import { lightDark } from "./lightDark";
 import { DEFAULT_THEME_SEASON } from "./season";
 import { WALLPAPERS } from "./wallpapers";
@@ -111,6 +112,8 @@ export const themes = {
       primaryColor: "sisters_of_eve_primary",
     }),
   ),
+  // For fun: a spreadsheet. Not an EVE theme, so over the plain base.
+  excel: mergeThemeOverrides(baseTheme, excelTheme),
   // EVE on plain black instead of a wallpaper. The light scheme gets a plain
   // pale background instead: page text sits straight on it (e.g. /about), and
   // that text is dark there.

@@ -1,0 +1,69 @@
+/* Excel (themes/excel.ts): the title bar, the cell styles and the formatted
+   table. Theme `styles` become inline styles, which cannot reach a table's
+   header cells or tell a heading's order, so these live here as theme
+   `classNames`. */
+
+/* The green title bar across the top of the window, with white text and a
+   tinted search box, as in Excel's own. The header's controls draw with the
+   theme's text, grey and primary colours, so this redefines those for the
+   bar alone; its dropdowns render in a portal, outside it. */
+.titleBar {
+  --mantine-color-text: #ffffff;
+  --mantine-color-dimmed: #e9f5ee;
+  --mantine-color-black: #ffffff;
+  --mantine-color-dark-0: #ffffff;
+  --mantine-primary-color-filled: #ffffff;
+  --mantine-primary-color-light-color: #ffffff;
+
+  /* Hover and the search box: darker veils over the green, so the white text
+     on them keeps 7:1 or more (a white veil left it under 4:1). Borders stay
+     white veils. */
+  --mantine-color-gray-0: rgba(0, 0, 0, 0.18);
+  --mantine-color-gray-1: rgba(0, 0, 0, 0.26);
+  --mantine-color-gray-3: rgba(255, 255, 255, 0.35);
+  --mantine-color-gray-4: rgba(255, 255, 255, 0.5);
+  --mantine-color-gray-6: #e9f5ee;
+  --mantine-color-gray-7: #ffffff;
+  --mantine-color-dark-1: #e9f5ee;
+  --mantine-color-dark-3: rgba(255, 255, 255, 0.5);
+  --mantine-color-dark-4: rgba(255, 255, 255, 0.35);
+  --mantine-color-dark-5: rgba(0, 0, 0, 0.26);
+  --mantine-color-dark-6: rgba(0, 0, 0, 0.18);
+
+  background-color: #217346;
+  border-bottom-color: #185c37;
+  color: #ffffff;
+}
+
+/* Headings as Excel's cell styles, in its "Text 2" blue-grey: Title for h1,
+   then Heading 1–3, underlined in Accent 1 (#4472c4) and its tints. */
+.title {
+  color: light-dark(#44546a, #adb9ca);
+}
+
+.title[data-order="2"] {
+  border-bottom: 3px solid #4472c4;
+}
+
+.title[data-order="3"] {
+  border-bottom: 2px solid light-dark(#a2b8e1, #5b7bc0);
+}
+
+.title[data-order="4"] {
+  border-bottom: 2px solid light-dark(#8ea9db, #4a6aa8);
+}
+
+/* The Hyperlink cell style, always underlined. A shade deeper than Excel's
+   #0563c1, which is 4.49:1 on the banded rows' #d9e1f2; this is 5.3:1. */
+.hyperlink {
+  color: light-dark(#0558b0, #6cb4ff);
+  text-decoration: underline;
+}
+
+/* "Format as Table", Table Style Medium 2: a bold white-on-Accent 1 header
+   row over banded rows (the banding is the theme's stripedColor). */
+.table thead th {
+  background-color: #4472c4;
+  color: #ffffff;
+  font-weight: 700;
+}
