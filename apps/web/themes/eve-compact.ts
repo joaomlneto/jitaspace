@@ -1,15 +1,18 @@
 import { createTheme } from "@mantine/core";
 
+import classes from "./eve-compact.module.css";
+
 /**
  * EVE (compact) — the EVE theme, denser: more on screen at once for the
  * table- and list-heavy pages.
  *
  * Overrides over EVE (./eve.ts), which ./index.ts merges them over.
  * {@link eveCompactTheme} tightens the spacing scale, which Mantine's gaps,
- * paddings and table rows all read, and scales the headings down. Body text
- * keeps EVE's sizes and line heights: a Mantine List stacks its items with no
- * gap, so a list of links is as tall as its lines, and anything under 1.5 at
- * 16px puts them closer than the 24px minimum target size (WCAG 2.5.8).
+ * paddings and table rows all read, trims the side padding of buttons and
+ * badges, which the scale does not reach, and scales the headings down. Body
+ * text keeps EVE's sizes and line heights: a Mantine List stacks its items
+ * with no gap, so a list of links is as tall as its lines, and anything under
+ * 1.5 at 16px puts them closer than the 24px minimum target size (WCAG 2.5.8).
  * {@link eveCompactControlsTheme} also shrinks the controls, and applies only
  * with a mouse or trackpad: on a touchscreen they keep EVE's sizes, so they
  * stay easy to tap.
@@ -18,13 +21,14 @@ import { createTheme } from "@mantine/core";
 const rem = (px: number): string => `${px / 16}rem`;
 
 export const eveCompactTheme = createTheme({
-  // About 60% of EVE's (8 / 10 / 14 / 20 / 28).
+  // About half to 60% of EVE's (8 / 10 / 14 / 20 / 28): the larger steps,
+  // the gaps between sections and cards, shrink the most.
   spacing: {
     xs: rem(4),
     sm: rem(6),
-    md: rem(9),
-    lg: rem(13),
-    xl: rem(18),
+    md: rem(8),
+    lg: rem(11),
+    xl: rem(15),
   },
 
   headings: {
@@ -39,7 +43,9 @@ export const eveCompactTheme = createTheme({
   },
 
   components: {
-    Card: { defaultProps: { padding: "md" } },
+    Card: { defaultProps: { padding: "sm" } },
+    Button: { classNames: { root: classes.button } },
+    Badge: { classNames: { root: classes.badge } },
   },
 });
 
