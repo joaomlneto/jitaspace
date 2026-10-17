@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
@@ -36,6 +35,7 @@ import {
   WarDefenderTickerBadge,
 } from "~/components/Badge";
 import { KillmailCard } from "~/components/Killmails";
+import { HoverPrefetchLink } from "~/components/Link";
 import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
 // How many killmail cards to mount at once. Each card fires its own ESI
@@ -80,15 +80,18 @@ export default function Page() {
             <Title order={1}>War Report</Title>
           </Group>
           <Group>
-            <Link href={`https://zkillboard.com/war/${warId}`} target="_blank">
+            <HoverPrefetchLink
+              href={`https://zkillboard.com/war/${warId}`}
+              target="_blank"
+            >
               <Button size="xs">
                 <Group gap="xs">
                   <IconExternalLink size={14} />
                   zKillboard
                 </Group>
               </Button>
-            </Link>
-            <Link
+            </HoverPrefetchLink>
+            <HoverPrefetchLink
               href={`https://evemaps.dotlan.net/war/${warId}`}
               target="_blank"
             >
@@ -98,7 +101,7 @@ export default function Page() {
                   DOTLAN EveMaps
                 </Group>
               </Button>
-            </Link>
+            </HoverPrefetchLink>
           </Group>
         </Group>
         <Group justify="space-between">

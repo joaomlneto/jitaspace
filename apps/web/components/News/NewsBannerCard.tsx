@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Badge, Box, Button, CloseButton, Stack, Text } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import type { NewsItem } from "~/config/news";
+import { HoverPrefetchLink } from "~/components/Link";
 import { formatNewsDate } from "./formatNewsDate";
 
 export interface NewsBannerCardProps {
@@ -130,7 +130,7 @@ export function NewsBannerCard({
             </Button>
           ) : (
             <Button
-              component={Link}
+              component={HoverPrefetchLink}
               href={item.link.href}
               color={color}
               size="xs"

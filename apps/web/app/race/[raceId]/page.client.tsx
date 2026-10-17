@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Alert,
   Anchor,
@@ -93,6 +92,7 @@ import {
   YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
 import {
   LazyShipTreeTab,
@@ -957,7 +957,10 @@ const corporationColumns: DataTableColumn<RaceCorporationRow>[] = [
     filter: { type: "range", min: 0 },
     cell: (row) =>
       row.lpOffers > 0 ? (
-        <Anchor component={Link} href={`/lp-store/${row.corporationId}`}>
+        <Anchor
+          component={HoverPrefetchLink}
+          href={`/lp-store/${row.corporationId}`}
+        >
           {formatCount(row.lpOffers)}
         </Anchor>
       ) : (

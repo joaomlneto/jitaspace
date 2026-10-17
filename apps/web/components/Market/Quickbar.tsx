@@ -2,7 +2,6 @@
 
 import type { DragEvent, ReactNode } from "react";
 import { createContext, use, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
   ActionIcon,
   Button,
@@ -30,6 +29,7 @@ import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
 import type { MarketTreeFilter } from "./filterMarketTree";
 import type { MarketTree } from "./readMarketTree";
 import type { QuickbarData, QuickbarDragPayload } from "~/lib/quickbar";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   buildQuickbarTree,
   countItems,
@@ -360,7 +360,7 @@ function ItemRow({ typeId, name }: Readonly<{ typeId: number; name: string }>) {
       onDragStart={(event) => startDrag(event, { kind: "item", typeId })}
     >
       <NavLink
-        component={Link}
+        component={HoverPrefetchLink}
         href={`/market/${typeId}`}
         label={
           typeNames.has(typeId) ? (

@@ -1,5 +1,4 @@
 import type { MenuProps } from "@mantine/core";
-import Link from "next/link";
 import { Menu, Text } from "@mantine/core";
 import { modals, openContextModal } from "@mantine/modals";
 import { IconLockSearch } from "@tabler/icons-react";
@@ -14,7 +13,7 @@ import {
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { JitaSpaceIcon, ZkillboardIcon } from "~/components/Icon";
-import { CharacterPageLink } from "~/components/Link";
+import { CharacterPageLink, HoverPrefetchLink } from "~/components/Link";
 import { characterApps } from "~/config/apps.tsx";
 import { getEnabledApps } from "./appAccess";
 
@@ -75,7 +74,7 @@ export const CharacterMenu = ({
             {enabledCharacterApps.map((app) => (
               <Menu.Item
                 key={app.name}
-                component={Link}
+                component={HoverPrefetchLink}
                 href={app.url ?? ""}
                 onClick={app.onClick}
                 leftSection={<app.Icon width={20} />}

@@ -1,5 +1,4 @@
 import { memo } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Container,
@@ -17,6 +16,8 @@ import humanizeDuration from "humanize-duration";
 import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
 import { useCharacterSkillQueue } from "@jitaspace/hooks";
 import { skillLevelRomanNumeral } from "@jitaspace/utils";
+
+import { HoverPrefetchLink } from "~/components/Link";
 
 export interface SkillQueueTimelineProps {
   characterId: number;
@@ -114,7 +115,7 @@ export const SkillQueueTimeline = memo(
                           <Text size="sm">{entry.queue_position}</Text>
                         </Group>
                         <Anchor
-                          component={Link}
+                          component={HoverPrefetchLink}
                           href={`https://everef.net/type/${entry.skill_id}`}
                           target="_blank"
                           size="sm"

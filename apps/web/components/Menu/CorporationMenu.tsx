@@ -1,5 +1,4 @@
 import type { MenuProps } from "@mantine/core";
-import Link from "next/link";
 import { Menu } from "@mantine/core";
 import { useShallow } from "zustand/shallow";
 
@@ -8,7 +7,7 @@ import { useAuthStore } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { JitaSpaceIcon, ZkillboardIcon } from "~/components/Icon";
-import { CorporationPageLink } from "~/components/Link";
+import { CorporationPageLink, HoverPrefetchLink } from "~/components/Link";
 import { corporationApps } from "~/config/apps";
 import { getEnabledApps } from "./appAccess";
 
@@ -74,7 +73,7 @@ export const CorporationMenu = ({
             {enabledCorporationApps.map((app) => (
               <Menu.Item
                 key={app.name}
-                component={Link}
+                component={HoverPrefetchLink}
                 href={app.url ?? ""}
                 onClick={app.onClick}
                 leftSection={<app.Icon width={20} />}

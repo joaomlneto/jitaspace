@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Alert,
@@ -26,6 +25,7 @@ import {
 } from "nuqs";
 
 import type { HistoryIndex } from "~/lib/history";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   collectionMeta,
   entityHistoryHref,
@@ -85,7 +85,7 @@ function BuildRailRow({
       >
         <Group gap="xs" wrap="nowrap">
           <Anchor
-            component={Link}
+            component={HoverPrefetchLink}
             href={`/history/build/${b.build}`}
             c={b.visibleCount === 0 ? "dimmed" : undefined}
             size="sm"
@@ -249,7 +249,12 @@ export default function HistoryIndexClient({
             How EVE Online static data has changed across {changedBuildCount}{" "}
             client builds. {countsLabel} with recorded changes.
           </Text>
-          <Anchor component={Link} href="/history/compare" size="sm" mt={4}>
+          <Anchor
+            component={HoverPrefetchLink}
+            href="/history/compare"
+            size="sm"
+            mt={4}
+          >
             Compare two builds →
           </Anchor>
           <Group gap="xs" mt={8}>

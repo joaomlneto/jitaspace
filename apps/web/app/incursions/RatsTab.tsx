@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { Anchor, Box, Group, Stack, Text, Tooltip } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -10,6 +9,7 @@ import { TypeAvatar } from "@jitaspace/ui";
 import type { IncursionRatGroup } from "./types";
 import type { NpcLayer, NpcStats, PerDamageType } from "~/lib/npcStats";
 import { DataTable } from "~/components/DataTable";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   DAMAGE_COLOR,
   DAMAGE_LABEL,
@@ -146,7 +146,7 @@ const COLUMNS: DataTableColumn<RatRow>[] = [
       <Group gap={6} wrap="nowrap">
         <TypeAvatar typeId={row.typeId} size={20} radius="sm" />
         <Anchor
-          component={Link}
+          component={HoverPrefetchLink}
           href={`/type/${row.typeId}?tab=combat`}
           size="xs"
           fw={600}

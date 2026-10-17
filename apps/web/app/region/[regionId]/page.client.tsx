@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Anchor,
@@ -17,6 +16,7 @@ import { ConstellationName, RegionName } from "@jitaspace/eve-components";
 import { useRegion } from "@jitaspace/hooks";
 
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 
 export default function Page() {
   const params = useParams();
@@ -39,7 +39,7 @@ export default function Page() {
           </Title>
         </Group>
         <Group>
-          <Link
+          <HoverPrefetchLink
             href={`https://evemaps.dotlan.net/region/${regionId}`}
             target="_blank"
           >
@@ -49,8 +49,8 @@ export default function Page() {
                 DOTLAN EveMaps
               </Group>
             </Button>
-          </Link>
-          <Link
+          </HoverPrefetchLink>
+          <HoverPrefetchLink
             href={`https://zkillboard.com/region/${regionId}`}
             target="_blank"
           >
@@ -60,16 +60,19 @@ export default function Page() {
                 zKillboard
               </Group>
             </Button>
-          </Link>
-          <Link href={`https://eveeye.com/?m=${regionId}`} target="_blank">
+          </HoverPrefetchLink>
+          <HoverPrefetchLink
+            href={`https://eveeye.com/?m=${regionId}`}
+            target="_blank"
+          >
             <Button>
               <Group gap="xs">
                 <IconExternalLink size={14} />
                 Eveeye
               </Group>
             </Button>
-          </Link>
-          <Link
+          </HoverPrefetchLink>
+          <HoverPrefetchLink
             href={`https://www.adam4eve.eu/location.php?id=${regionId}`}
             target="_blank"
           >
@@ -79,7 +82,7 @@ export default function Page() {
                 Adam4EVE
               </Group>
             </Button>
-          </Link>
+          </HoverPrefetchLink>
         </Group>
         {region?.data.description && (
           <MailMessageViewer content={region.data.description} />
@@ -89,7 +92,7 @@ export default function Page() {
           {region?.data.constellations.map((constellationId: number) => (
             <List.Item key={constellationId}>
               <Anchor
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`/constellation/${constellationId}`}
               >
                 <ConstellationName span constellationId={constellationId} />

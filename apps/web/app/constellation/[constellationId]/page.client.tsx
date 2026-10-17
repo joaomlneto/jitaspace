@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Badge,
   Box,
@@ -50,6 +49,7 @@ import {
   SectionHeading,
   StatCard,
 } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import { formatInteger } from "~/lib/format";
 import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import {
@@ -388,7 +388,7 @@ export default function ConstellationPage({
           {region?.name && (
             <Group gap="xs">
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`https://evemaps.dotlan.net/map/${dotlanName(region.name)}/${dotlanName(name)}`}
                 target="_blank"
                 rel="noopener noreferrer"

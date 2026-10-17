@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import Link from "next/link";
 import { Anchor, Badge, Group, Text, Tooltip } from "@mantine/core";
 import { IconExternalLink, IconSkull } from "@tabler/icons-react";
 
@@ -18,6 +17,7 @@ import type {
   IncursionState,
   SovereigntyHolder,
 } from "./types";
+import { HoverPrefetchLink } from "~/components/Link";
 
 export const STATES: { state: IncursionState; label: string; color: string }[] =
   [
@@ -121,7 +121,7 @@ export function SystemLink({
       )}
       {/* Names like 8-KZXQ would otherwise break at the hyphen. */}
       <Anchor
-        component={Link}
+        component={HoverPrefetchLink}
         href={`/system/${solarSystemId}`}
         size={size}
         style={{ whiteSpace: "nowrap" }}
@@ -145,7 +145,7 @@ export function ConstellationLink({
 }>) {
   return (
     <Anchor
-      component={Link}
+      component={HoverPrefetchLink}
       href={`/constellation/${constellationId}`}
       size={size}
       fw={fw}
@@ -184,7 +184,11 @@ export const constellationColumnsFor = <T extends ConstellationRow>(
     cell: (row) => {
       const region = names.region(row.constellationId);
       return region ? (
-        <Anchor component={Link} href={`/region/${region.regionId}`} size="sm">
+        <Anchor
+          component={HoverPrefetchLink}
+          href={`/region/${region.regionId}`}
+          size="sm"
+        >
           {region.name}
         </Anchor>
       ) : null;
@@ -282,7 +286,7 @@ export function SovereigntyHolderLabel({
           />
           {withName && (
             <Anchor
-              component={Link}
+              component={HoverPrefetchLink}
               href={`/alliance/${holder.allianceId}`}
               size="sm"
             >
@@ -301,7 +305,7 @@ export function SovereigntyHolderLabel({
           <FactionAvatar factionId={holder.factionId} size={size} radius={4} />
           {withName && (
             <Anchor
-              component={Link}
+              component={HoverPrefetchLink}
               href={`/faction/${holder.factionId}`}
               size="sm"
             >

@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Alert,
   Anchor,
@@ -99,6 +98,7 @@ import {
   YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
 import {
   LazyShipTreeTab,
@@ -485,7 +485,10 @@ const corporationColumns: DataTableColumn<FactionCorporationRow>[] = [
     filter: { type: "range", min: 0 },
     cell: (row) =>
       row.lpOffers > 0 ? (
-        <Anchor component={Link} href={`/lp-store/${row.corporationId}`}>
+        <Anchor
+          component={HoverPrefetchLink}
+          href={`/lp-store/${row.corporationId}`}
+        >
           {formatCount(row.lpOffers)}
         </Anchor>
       ) : (
@@ -1215,7 +1218,12 @@ export default function FactionPage({
             />
           }
         >
-          <Anchor component={Link} href="/factions" size="sm" c="dimmed">
+          <Anchor
+            component={HoverPrefetchLink}
+            href="/factions"
+            size="sm"
+            c="dimmed"
+          >
             Factions
           </Anchor>
           <Group gap="sm" align="center">
@@ -1268,7 +1276,7 @@ export default function FactionPage({
 
           <Group gap="xs">
             <Button
-              component={Link}
+              component={HoverPrefetchLink}
               href={`https://zkillboard.com/faction/${factionId}/`}
               target="_blank"
               rel="noopener noreferrer"
