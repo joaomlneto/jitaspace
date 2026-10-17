@@ -133,6 +133,7 @@ function CompositionBar({
               label={`${row.name}: ${formatInteger(row.memberCount)} pilots (${formatPercent(row.memberCount / pilots)})`}
             >
               <Progress.Section
+                aria-label={row.name}
                 value={(row.memberCount / pilots) * 100}
                 color={COMPOSITION_COLORS[index % COMPOSITION_COLORS.length]}
               />
@@ -143,6 +144,7 @@ function CompositionBar({
               label={`${formatInteger(corporations - top.length)} other corporations: ${formatInteger(others)} pilots (${formatPercent(others / pilots)})`}
             >
               <Progress.Section
+                aria-label="Other corporations"
                 value={(others / pilots) * 100}
                 color="dark.3"
               />
@@ -391,7 +393,9 @@ export default function AlliancePage({
             <Text size="sm">{name ?? allianceId}</Text>
           </Breadcrumbs>
           <Group gap="sm" align="center">
-            <Title order={2}>{name ?? `Alliance ${allianceId}`}</Title>
+            <Title order={1} size="h2">
+              {name ?? `Alliance ${allianceId}`}
+            </Title>
             {ticker && (
               <Badge variant="light" size="lg">
                 {`<${ticker}>`}

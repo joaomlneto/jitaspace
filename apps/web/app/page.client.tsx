@@ -1,7 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Burger, Container, SimpleGrid, Stack } from "@mantine/core";
+import {
+  Burger,
+  Container,
+  SimpleGrid,
+  Stack,
+  Title,
+  VisuallyHidden,
+} from "@mantine/core";
 import { useShallow } from "zustand/shallow";
 
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
@@ -65,6 +72,11 @@ export default function HomePage({ newsCarousel }: Readonly<HomePageProps>) {
 
   return (
     <Container size="xl" py="md">
+      {/* The page's sections are headed visually by SectionHeader (h2); the
+          site name is its one h1, for screen readers. */}
+      <VisuallyHidden>
+        <Title order={1}>JitaSpace</Title>
+      </VisuallyHidden>
       <Stack gap={48}>
         {newsCarousel ?? <NewsCarousel />}
         {env.NODE_ENV === "development" && <DevelopmentModeAlert />}

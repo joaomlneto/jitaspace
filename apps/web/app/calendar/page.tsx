@@ -69,7 +69,7 @@ export default function Page() {
         {Object.keys(eventsPerDate).map((dateString) => {
           return (
             <Stack key={dateString}>
-              <Title order={5}>
+              <Title order={2} size="h5">
                 {format(
                   new Date(Number.parseInt(dateString, 10)),
                   "LLLL dd - EEEE",

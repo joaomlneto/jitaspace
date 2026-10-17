@@ -501,7 +501,7 @@ export default function CharacterPage({
             </Text>
           )}
           <Group gap="sm" align="center">
-            <Title order={2}>
+            <Title order={1} size="h2">
               {identity.name ?? `Character ${characterId}`}
             </Title>
             {badge && <Badge variant="light">{badge}</Badge>}

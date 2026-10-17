@@ -34,7 +34,7 @@ export default function Page() {
     <Container size="sm">
       <Stack>
         <Group gap="xl">
-          <Title order={3}>
+          <Title order={1} size="h3">
             <RegionName span regionId={regionId} />
           </Title>
         </Group>
@@ -84,7 +84,9 @@ export default function Page() {
         {region?.data.description && (
           <MailMessageViewer content={region.data.description} />
         )}
-        <Title order={4}>Constellations:</Title>
+        <Title order={2} size="h4">
+          Constellations:
+        </Title>
         <List>
           {region?.data.constellations.map((constellationId: number) => (
             <List.Item key={constellationId}>

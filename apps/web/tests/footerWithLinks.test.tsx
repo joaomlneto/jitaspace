@@ -57,4 +57,18 @@ describe("FooterWithLinks", () => {
       expect(link).toHaveAttribute("data-prefetch", "false");
     }
   });
+
+  it("names the icon-only Discord link", () => {
+    const { FooterWithLinks } = require("~/layouts/MainLayout/FooterWithLinks");
+
+    render(
+      <MantineProvider>
+        <FooterWithLinks />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "JitaSpace on Discord" }),
+    ).toHaveAttribute("href", "https://discord.gg/jitaspace");
+  });
 });

@@ -605,7 +605,9 @@ export default function StationPage({
             </Text>
           )}
           <Group gap="sm" align="center">
-            <Title order={2}>{live.name}</Title>
+            <Title order={1} size="h2">
+              {live.name}
+            </Title>
             {location && (
               <SolarSystemSecurityStatusBadge
                 securityStatus={location.securityStatus}

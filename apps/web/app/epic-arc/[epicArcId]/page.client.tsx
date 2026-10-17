@@ -100,7 +100,9 @@ function EpicArcHero({
         </HeroImage>
         <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
           <Group gap="sm" align="center">
-            <Title order={2}>{arc.name}</Title>
+            <Title order={1} size="h2">
+              {arc.name}
+            </Title>
             <Badge variant="light" color="grape" size="md">
               Epic Arc
             </Badge>
