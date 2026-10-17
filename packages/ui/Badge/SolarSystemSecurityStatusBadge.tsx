@@ -33,9 +33,11 @@ export const SolarSystemSecurityStatusBadge = memo(
         variant="filled"
         style={{
           backgroundColor: securityStatusColor(securityStatus),
+          // Its own text colour too: the background is set here, so the
+          // theme cannot pick a text colour that suits it.
           color: isLightSecurityStatus(securityStatus)
             ? theme.black
-            : undefined,
+            : theme.white,
         }}
         {...otherProps}
       >

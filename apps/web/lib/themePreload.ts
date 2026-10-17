@@ -44,7 +44,7 @@ const preload = (
   body: string,
   wallpaper: { appBackground: string; appBackgroundMobile: string },
 ): ThemePreload => ({
-  body: lightDark("#f2f7fb", body),
+  body: lightDark("#f1f1f1", body),
   background: wallpaper.appBackground,
   backgroundMobile: wallpaper.appBackgroundMobile,
 });
@@ -60,19 +60,20 @@ export const THEME_PRELOAD: Record<
 > = {
   // No wallpaper: just Mantine's own body colours.
   minimal: { body: lightDark("#fff", "#242424") },
-  eve: preload("#111111", WALLPAPERS.cradleOfWar),
-  amarr: preload("#111111", WALLPAPERS.amarr),
-  caldari: preload("#111111", WALLPAPERS.caldari),
-  gallente: preload("#111111", WALLPAPERS.gallente),
-  minmatar: preload("#111111", WALLPAPERS.minmatar),
-  ore: preload("#111111", WALLPAPERS.cradleOfWar),
-  sisters_of_eve: preload("#111111", WALLPAPERS.cradleOfWar),
-  carbon: preload("#111111", WALLPAPERS.cradleOfWar),
-  photon: preload("#111111", WALLPAPERS.cradleOfWar),
+  eve: preload("#101010", WALLPAPERS.cradleOfWar),
+  eve_compact: preload("#101010", WALLPAPERS.cradleOfWar),
+  amarr: preload("#101010", WALLPAPERS.amarr),
+  caldari: preload("#101010", WALLPAPERS.caldari),
+  gallente: preload("#101010", WALLPAPERS.gallente),
+  minmatar: preload("#101010", WALLPAPERS.minmatar),
+  ore: preload("#101010", WALLPAPERS.cradleOfWar),
+  sisters_of_eve: preload("#101010", WALLPAPERS.cradleOfWar),
+  carbon: preload("#101010", WALLPAPERS.cradleOfWar),
+  photon: preload("#101010", WALLPAPERS.cradleOfWar),
   whpd: {
-    body: lightDark("#eef2ff", "#080c18"),
-    background: lightDark("#eef2ff", "#000"),
-    backgroundMobile: lightDark("#eef2ff", "#000"),
+    body: lightDark("#f1f1f1", "#101010"),
+    background: lightDark("#f1f1f1", "#000"),
+    backgroundMobile: lightDark("#f1f1f1", "#000"),
   },
 };
 

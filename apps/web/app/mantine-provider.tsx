@@ -32,6 +32,10 @@ export const cssVariablesResolver: CSSVariablesResolver = (theme) => {
   };
 };
 
+// Any coarse pointer, not just the primary one: a laptop with a touchscreen
+// is tapped as well as clicked.
+const TOUCH_QUERY = "(any-pointer: coarse)";
+
 export const AppMantineProvider = ({ children }: PropsWithChildren) => {
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
 
@@ -40,6 +44,10 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
   // the server and during hydration, which render the seasonal theme as
   // prerendered; the clock is read only in the layout effect below.
   const [seasonOver, setSeasonOver] = useState(false);
+  // Whether any pointer is coarse (a touchscreen), for the themes that keep
+  // bigger controls there (themes/index.ts). False on the server and during
+  // hydration; read in the layout effect below, and followed after that.
+  const [touch, setTouch] = useState(false);
 
   // Renders the persisted theme before the browser paints the hydrated page
   // (see lib/themePreload.ts). localStorage is synchronous, so rehydrate() has
@@ -54,7 +62,16 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
     // The synchronous re-render is the point here, not an accident.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSeasonOver(isDefaultThemeSeasonOver(Date.now()));
+    setTouch(window.matchMedia(TOUCH_QUERY).matches);
     setPersistedThemeRendered(true);
+  }, []);
+
+  // A touchscreen plugged in or detached (a convertible) switches the theme.
+  useEffect(() => {
+    const query = window.matchMedia(TOUCH_QUERY);
+    const onChange = () => setTouch(query.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
   }, []);
 
   // A tab left open across the season's end switches when it ends. setTimeout
@@ -75,8 +92,8 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
   }, [persistedThemeRendered]);
 
   const theme = useMemo(
-    () => resolveAppTheme(selectedTheme, seasonOver),
-    [selectedTheme, seasonOver],
+    () => resolveAppTheme(selectedTheme, seasonOver, touch),
+    [selectedTheme, seasonOver, touch],
   );
 
   return (
