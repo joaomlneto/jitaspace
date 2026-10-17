@@ -16,21 +16,25 @@ import {
 } from "~/components/Anchor";
 import { SectionHeading } from "~/components/EntityPage";
 
-/** Wormhole space: its regions start at 11000000. */
+/**
+ * Wormhole space (Anoikis): regions 11000000 to 11999999. Abyssal space starts
+ * at 12000000, as `/regions` groups them.
+ */
 export const isWormholeRegion = (regionId: number | undefined) =>
-  (regionId ?? 0) >= 11_000_000;
+  regionId !== undefined && regionId >= 11_000_000 && regionId < 12_000_000;
 
 /** A system's security band, or "Wormhole" in wormhole space. */
 export const bandOf = (securityStatus: number, isWormhole: boolean) =>
   isWormhole ? "Wormhole" : securityStatusBand(securityStatus);
 
 /**
- * A wormhole class as players name it. Only meaningful in wormhole space: the
- * SDE gives known space one too (7 high-sec, 8 low-sec, 9 null-sec: the class
- * of what spawns there).
+ * A wormhole class as players name it: C1 to C6, C12 for Thera, C13 for the
+ * shattered systems, C14 to C18 for the Drifter holes. Only meaningful in
+ * wormhole space: the SDE gives known space one too (7 high-sec, 8 low-sec,
+ * 9 null-sec: the class of what spawns there).
  */
 export const formatWormholeClass = (wormholeClassId: number) =>
-  wormholeClassId <= 6 ? `C${wormholeClassId}` : String(wormholeClassId);
+  `C${wormholeClassId}`;
 
 /** How many systems fall in each security band: "4 High-Sec, 2 Low-Sec". */
 export const bandCounts = (

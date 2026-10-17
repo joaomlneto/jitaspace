@@ -217,7 +217,14 @@ export function IncursionHistory({
     .filter((row) => row.endedAt !== null)
     .map((row) => row.durationMs)
     .sort((a, b) => a - b);
-  const medianDuration = ended[Math.floor(ended.length / 2)];
+  const middle = Math.floor(ended.length / 2);
+  // An even count has two middle values; the median is halfway between them.
+  const medianDuration =
+    ended.length % 2 === 0
+      ? ended.length === 0
+        ? undefined
+        : ((ended[middle - 1] ?? 0) + (ended[middle] ?? 0)) / 2
+      : ended[middle];
   const constellationCount = new Set(rows.map((row) => row.constellationId))
     .size;
 

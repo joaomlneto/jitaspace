@@ -259,9 +259,15 @@ describe("readRegion", () => {
         { id: KABO, name: "Kabo" },
       ],
     });
+    // Leaving out the systems and constellations ESI no longer lists.
     expect(prismaMock.solarSystem.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { constellationId: { in: [JAYAI, KABO] } },
+        where: { constellationId: { in: [JAYAI, KABO] }, isDeleted: false },
+      }),
+    );
+    expect(prismaMock.constellation.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { regionId: DEVOID, isDeleted: false },
       }),
     );
     expect(

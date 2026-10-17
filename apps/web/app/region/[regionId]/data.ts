@@ -44,7 +44,8 @@ export async function readRegion(
         }),
     prisma.constellation.findMany({
       select: { constellationId: true, name: true },
-      where: { regionId },
+      // Not those ESI no longer lists, which the scraper marks deleted.
+      where: { regionId, isDeleted: false },
       orderBy: { name: "asc" },
     }),
   ]);
@@ -91,7 +92,7 @@ export async function readRegionIncursions(
   const readAt = new Date();
   const constellations = await prisma.constellation.findMany({
     select: { constellationId: true },
-    where: { regionId },
+    where: { regionId, isDeleted: false },
   });
   return {
     readAt: readAt.toISOString(),

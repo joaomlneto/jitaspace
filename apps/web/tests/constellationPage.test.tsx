@@ -563,6 +563,8 @@ describe("constellation page (client)", () => {
     // Two past incursions, one of which reached the boss.
     expect(card("Incursions").getByText("2")).toBeVisible();
     expect(card("Reached the boss").getByText("1")).toBeVisible();
+    // 7d 4h and 3d: the median of an even count is halfway between them.
+    expect(card("Typical length").getByText("5d 2h")).toBeVisible();
   });
 
   it("lists each system's site in the Systems tab", async () => {

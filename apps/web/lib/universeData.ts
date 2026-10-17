@@ -11,7 +11,10 @@ import { prisma } from "~/lib/db";
  * reads inside its own `"use cache"` scope, with the lifetime its data needs.
  */
 
-/** Solar systems, by name, with their stations and incursion site. */
+/**
+ * Solar systems, by name, with their stations and incursion site. Leaves out
+ * those ESI no longer lists, which the scraper marks deleted.
+ */
 export async function readUniverseSystems(where: {
   constellationId: number | { in: number[] };
 }): Promise<UniverseSystem[]> {
@@ -23,7 +26,7 @@ export async function readUniverseSystems(where: {
       constellationId: true,
       _count: { select: { stations: { where: { isDeleted: false } } } },
     },
-    where,
+    where: { ...where, isDeleted: false },
     orderBy: { name: "asc" },
   });
   return systems.map((system) => ({
