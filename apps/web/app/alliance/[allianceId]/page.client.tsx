@@ -493,7 +493,7 @@ export default function AlliancePage({
             {EXTERNAL_LINKS.map((link) => (
               <Button
                 key={link.label}
-                component={HoverPrefetchLink}
+                component="a"
                 href={`${link.href}${allianceId}`}
                 target="_blank"
                 rel="noopener noreferrer"

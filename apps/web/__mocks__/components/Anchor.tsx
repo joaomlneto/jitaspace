@@ -81,3 +81,7 @@ export const OpenInformationWindowAnchor = childrenStub();
 export const StargateDestinationAnchor = childrenStub();
 export const WarAggressorAnchor = childrenStub();
 export const WarDefenderAnchor = childrenStub();
+
+// Real, not a stub: it is a formatted count plus a link, so the tables that
+// use it keep showing the numbers their tests assert on.
+export { LpOffersAnchor } from "../../components/Anchor/LpOffersAnchor";

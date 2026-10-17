@@ -562,7 +562,7 @@ export default function CorporationPage({
             {EXTERNAL_LINKS.map((link) => (
               <Button
                 key={link.label}
-                component={HoverPrefetchLink}
+                component="a"
                 href={`${link.href}${corporationId}`}
                 target="_blank"
                 rel="noopener noreferrer"

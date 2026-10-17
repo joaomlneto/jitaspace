@@ -15,6 +15,7 @@ export * from "./EveEntityNameAnchor";
 export * from "./EveMailSenderAnchor";
 export * from "./FactionAnchor";
 export * from "./GroupAnchor";
+export * from "./LpOffersAnchor";
 export * from "./MarketGroupAnchor";
 export * from "./MissionAnchor";
 export * from "./OpenInformationWindowAnchor";
