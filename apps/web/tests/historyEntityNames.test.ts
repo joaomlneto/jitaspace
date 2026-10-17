@@ -43,7 +43,9 @@ jest.mock("~/lib/db", () => ({
   ),
 }));
 
-const mockQueryRaw = jest.fn((..._args: unknown[]) => Promise.resolve([]));
+const mockQueryRaw = jest.fn((..._args: unknown[]) =>
+  Promise.resolve([] as unknown[]),
+);
 jest.mock("@jitaspace/db-builds", () => ({
   buildsSchema: "public",
   Prisma: { raw: (sql: string) => ({ raw: sql }) },
@@ -198,6 +200,36 @@ describe("readEntityNames", () => {
     expect(mockQueryRaw).not.toHaveBeenCalled();
 
     await readEntityNames([{ entityType: "type", entityId: 95741 }], 3579973);
+    // The names rebuilt from its changes, then the name stored on the entity.
+    expect(mockQueryRaw).toHaveBeenCalledTimes(2);
+  });
+
+  it("falls back to the name the history DB stores on the entity", async () => {
+    mockOverrides.dungeon = () => [];
+    // No change touches the dungeon's name fields; Entity.name has it.
+    mockQueryRaw
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        { kind: "dungeon", id: "184", name: "Seek and Destroy" },
+      ]);
+
+    expect(
+      await readEntityNames(
+        [{ entityType: "dungeon", entityId: 184 }],
+        3586130,
+      ),
+    ).toEqual({ dungeon: { 184: "Seek and Destroy" } });
+  });
+
+  it("asks for stored names only for what is still unnamed", async () => {
+    mockOverrides.type = () => [];
+    mockQueryRaw.mockResolvedValueOnce([
+      { kind: "type", id: "95741", fields: { name: "From its changes" } },
+    ]);
+
+    expect(
+      await readEntityNames([{ entityType: "type", entityId: 95741 }], 3579973),
+    ).toEqual({ type: { 95741: "From its changes" } });
     expect(mockQueryRaw).toHaveBeenCalledTimes(1);
   });
 
