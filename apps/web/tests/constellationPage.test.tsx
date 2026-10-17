@@ -135,24 +135,28 @@ function mockSdeReads() {
       solarSystemId: LABAPI,
       name: "Labapi",
       securityStatus: "0.3",
+      constellationId: JAYAI,
       _count: { stations: 2 },
     },
     {
       solarSystemId: ROUSHZAR,
       name: "Roushzar",
       securityStatus: "0.2",
+      constellationId: JAYAI,
       _count: { stations: 0 },
     },
     {
       solarSystemId: SOSAN,
       name: "Sosan",
       securityStatus: "0.3",
+      constellationId: JAYAI,
       _count: { stations: 1 },
     },
     {
       solarSystemId: TARARAN,
       name: "Tararan",
       securityStatus: "0.4",
+      constellationId: JAYAI,
       _count: { stations: 0 },
     },
   ]);
@@ -208,6 +212,7 @@ function mockIncursions(active = true) {
       ? [
           {
             incursionId: 3,
+            constellationId: JAYAI,
             state: "mobilizing",
             influence: 0.6,
             hasBoss: false,
@@ -220,6 +225,7 @@ function mockIncursions(active = true) {
       : []),
     {
       incursionId: 2,
+      constellationId: JAYAI,
       state: "withdrawing",
       influence: 1,
       hasBoss: true,
@@ -230,6 +236,7 @@ function mockIncursions(active = true) {
     },
     {
       incursionId: 1,
+      constellationId: JAYAI,
       state: "withdrawing",
       influence: null,
       hasBoss: null,
@@ -285,7 +292,7 @@ describe("readConstellation", () => {
     const constellation = await loadData().readConstellation(JAYAI);
     expect(constellation?.neighbours).toEqual([
       {
-        constellationId: NEIGHBOUR,
+        id: NEIGHBOUR,
         name: "Kabo",
         region: { id: DEVOID, name: "Devoid" },
         gates: [
@@ -336,7 +343,7 @@ describe("readConstellationIncursions", () => {
     const { incursions } = await loadData().readConstellationIncursions(JAYAI);
     expect(prismaMock.incursion.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { constellationId: JAYAI },
+        where: { constellationId: { in: [JAYAI] } },
         orderBy: { firstSeenAt: "desc" },
       }),
     );
