@@ -5,6 +5,7 @@ import {
   displayFont,
   eveAccentColors,
   eveFoundations,
+  eveHeadings,
   eveSharedOther,
   rem,
 } from "./eve-shared";
@@ -105,19 +106,7 @@ export const eveOldTheme = createTheme({
 
   ...eveFoundations,
 
-  headings: {
-    fontFamily: displayFont,
-    fontWeight: "600",
-    textWrap: "balance",
-    sizes: {
-      h1: { fontSize: rem(38), lineHeight: "1.2", fontWeight: "600" },
-      h2: { fontSize: rem(28), lineHeight: "1.2", fontWeight: "600" },
-      h3: { fontSize: rem(22), lineHeight: "1.2", fontWeight: "600" },
-      h4: { fontSize: rem(18), lineHeight: "1.2", fontWeight: "600" },
-      h5: { fontSize: rem(16), lineHeight: "1.2", fontWeight: "600" },
-      h6: { fontSize: rem(14), lineHeight: "1.2", fontWeight: "600" },
-    },
-  },
+  headings: eveHeadings("600"),
 
   /* Radii — sharp / militaristic, xs & sm dominate */
   defaultRadius: "xs",

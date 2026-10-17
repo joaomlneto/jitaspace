@@ -138,6 +138,31 @@ export const eveFoundations = createTheme({
   focusRing: "auto",
 });
 
+/** Headings in the display font, at one weight throughout. */
+export const eveHeadings = (fontWeight: string) => ({
+  fontFamily: displayFont,
+  fontWeight,
+  textWrap: "balance" as const,
+  sizes: Object.fromEntries(
+    (
+      [
+        ["h1", 38],
+        ["h2", 28],
+        ["h3", 22],
+        ["h4", 18],
+        ["h5", 16],
+        ["h6", 14],
+      ] as const
+    ).map(([h, px]) => [
+      h,
+      { fontSize: rem(px), lineHeight: "1.2", fontWeight },
+    ]),
+  ) as Record<
+    "h1" | "h2" | "h3" | "h4" | "h5" | "h6",
+    { fontSize: string; lineHeight: string; fontWeight: string }
+  >,
+});
+
 /** Design tokens under `theme.other` that both themes read the same way. */
 export const eveSharedOther = {
   fonts: {

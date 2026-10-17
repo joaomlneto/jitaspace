@@ -10,8 +10,8 @@ import {
   displayFont,
   eveAccentColors,
   eveFoundations,
+  eveHeadings,
   eveSharedOther,
-  rem,
 } from "./eve-shared";
 import classes from "./eve.module.css";
 import { lightDark } from "./lightDark";
@@ -199,19 +199,7 @@ export const eveTheme = createTheme({
 
   ...eveFoundations,
 
-  headings: {
-    fontFamily: displayFont,
-    fontWeight: "700",
-    textWrap: "balance",
-    sizes: {
-      h1: { fontSize: rem(38), lineHeight: "1.2", fontWeight: "700" },
-      h2: { fontSize: rem(28), lineHeight: "1.2", fontWeight: "700" },
-      h3: { fontSize: rem(22), lineHeight: "1.2", fontWeight: "700" },
-      h4: { fontSize: rem(18), lineHeight: "1.2", fontWeight: "700" },
-      h5: { fontSize: rem(16), lineHeight: "1.2", fontWeight: "700" },
-      h6: { fontSize: rem(14), lineHeight: "1.2", fontWeight: "700" },
-    },
-  },
+  headings: eveHeadings("700"),
 
   /* Radii — square everywhere, as in the launcher. Explicit pixel or
      percentage radii (round avatars, dots) are unaffected. */
