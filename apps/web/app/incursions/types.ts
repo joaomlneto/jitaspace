@@ -107,6 +107,26 @@ export interface IncursionHistory extends IncursionLookups {
   stateEvents: IncursionStateEventTuple[];
 }
 
+/** Where each site type spawns in a constellation, and its incursions. */
+export interface IncursionLayout {
+  constellationId: number;
+  /** The latest incursion's; null if none recorded one. */
+  stagingSolarSystemId: number | null;
+  /** Empty where the constellation's layout is not mapped. */
+  vanguard: number[];
+  assault: number[];
+  headquarters: number[];
+  incursionCount: number;
+  /** When the latest incursion was first seen; null if none was. */
+  lastSeenAt: string | null;
+}
+
+/** The Layouts tab's data, from `/api/incursions/layouts`. */
+export interface IncursionLayouts extends IncursionLookups {
+  readAt: string;
+  layouts: IncursionLayout[];
+}
+
 export interface IncursionRat {
   typeId: number;
   name: string;
