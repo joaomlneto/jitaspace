@@ -1,0 +1,20 @@
+/* EVE (compact) (themes/eve-compact.ts): tighter side padding on buttons and
+   badges. Mantine gives each size a fixed padding that the spacing scale does
+   not reach (14px on an xs button, 8px on an sm badge), defined as custom
+   properties on the component's own class; these redefine them on the same
+   element. Doubled to outrank Mantine's single class whatever the load order.
+
+   Only the width changes, never the height, so touch targets keep their
+   size. */
+
+.button.button {
+  --button-padding-x-xs: 10px;
+  --button-padding-x-sm: 12px;
+  --button-padding-x-md: 16px;
+}
+
+.badge.badge {
+  --badge-padding-x-xs: 4px;
+  --badge-padding-x-sm: 6px;
+  --badge-padding-x-md: 7px;
+}

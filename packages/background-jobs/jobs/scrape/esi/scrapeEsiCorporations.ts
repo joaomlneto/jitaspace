@@ -1,4 +1,5 @@
 import type { LimitFunction } from "p-limit";
+import { isAxiosError } from "axios";
 import pLimit from "p-limit";
 
 import {
@@ -17,17 +18,31 @@ import {
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-const fetchCorporationWithId = (corporationId: number) =>
-  getCorporationsCorporationId(corporationId).then((res) => ({
-    corporationId,
-    ...res.data,
-  }));
+/** Resolves to `null` when ESI answers 404, and rethrows anything else. */
+const nullOn404 = (error: unknown) => {
+  if (isAxiosError(error) && error.response?.status === 404) return null;
+  throw error;
+};
 
+/**
+ * `null` for an ID ESI does not know: a corporation ID that was never valid
+ * (one stored as a placeholder by an earlier failed fetch) answers 404.
+ */
+const fetchCorporationWithId = (corporationId: number) =>
+  getCorporationsCorporationId(corporationId).then(
+    (res) => ({ corporationId, ...res.data }),
+    nullOn404,
+  );
+
+/**
+ * `null` for a deleted (biomassed) character: ESI answers 404 "Character has
+ * been deleted!", and a closed corporation's CEO or founder often is one.
+ */
 const fetchCharacterWithId = (characterId: number) =>
-  getCharactersDetail(characterId).then((res) => ({
-    characterId,
-    ...res.data,
-  }));
+  getCharactersDetail(characterId).then(
+    (res) => ({ characterId, ...res.data }),
+    nullOn404,
+  );
 
 export interface ScrapeCorporationsEventPayload {
   data: {
@@ -44,11 +59,15 @@ const processCorporationBatch = async (
 ): Promise<BatchStepResult<StatsKey>> => {
   const stepStartTime = performance.now();
 
-  const thisBatchCorporations = await Promise.all(
-    thisBatchIds.map((corporationId) =>
-      limit(() => fetchCorporationWithId(corporationId)),
-    ),
-  );
+  // Unknown IDs drop out here, so the corporation diff below finds them stored
+  // but absent from ESI and marks them deleted.
+  const thisBatchCorporations = (
+    await Promise.all(
+      thisBatchIds.map((corporationId) =>
+        limit(() => fetchCorporationWithId(corporationId)),
+      ),
+    )
+  ).filter((corporation) => corporation != null);
 
   // Deduplicated: a founder who is still CEO, or a character who founded several
   // corporations in this batch, would otherwise be synced twice — and
@@ -64,16 +83,45 @@ const processCorporationBatch = async (
     ),
   ];
 
-  await createCorpAndItsRefRecords({
-    missingCharacterIds: new Set(characterIds.filter((id) => id > 1)),
-    missingCorporationIds: new Set(thisBatchIds.filter((id) => id > 1)),
-  });
+  // Deleted characters drop out here, so the character diff below finds them
+  // stored but absent from ESI and marks them deleted.
+  const characters = (
+    await Promise.all(
+      characterIds.map((characterId) =>
+        limit(() => fetchCharacterWithId(characterId)),
+      ),
+    )
+  ).filter((character) => character != null);
 
-  const characters = await Promise.all(
-    characterIds.map((characterId) =>
-      limit(() => fetchCharacterWithId(characterId)),
+  // The helper only bootstraps the references of rows it creates itself. The
+  // corporations and characters below that already exist are updated with what
+  // ESI says now, which can point at a corporation, alliance, station or
+  // faction we have never stored (a CEO who has since joined another
+  // corporation, a corporation that joined a new alliance) — so every ID the
+  // updates will reference is passed explicitly.
+  const isRealId = (id: number | null | undefined): id is number =>
+    id != null && id > 1;
+  await createCorpAndItsRefRecords({
+    missingAllianceIds: new Set(
+      thisBatchCorporations.map((c) => c.alliance_id).filter(isRealId),
     ),
-  );
+    missingCharacterIds: new Set(characterIds.filter(isRealId)),
+    missingCorporationIds: new Set(
+      [
+        ...thisBatchCorporations.map((c) => c.corporationId),
+        ...characters.map((character) => character.corporation_id),
+      ].filter(isRealId),
+    ),
+    missingFactionIds: new Set(
+      [
+        ...thisBatchCorporations.map((c) => c.enlisted_faction_id),
+        ...characters.map((character) => character.faction_id),
+      ].filter(isRealId),
+    ),
+    missingStationIds: new Set(
+      thisBatchCorporations.map((c) => c.home_station_id).filter(isRealId),
+    ),
+  });
 
   // bootstrap missing corporationIds
   await prisma.corporation.createMany({
