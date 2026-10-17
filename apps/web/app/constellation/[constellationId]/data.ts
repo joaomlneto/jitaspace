@@ -1,13 +1,13 @@
 import { cacheLife, cacheTag } from "next/cache";
 
-import type {
-  ConstellationIncursions,
-  ConstellationPageData,
-  NeighbouringConstellation,
-} from "./types";
-import { incursionSiteRole } from "~/app/incursions/siteRoles";
+import type { ConstellationIncursions, ConstellationPageData } from "./types";
 import { prisma } from "~/lib/db";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
+import {
+  readGateNeighbours,
+  readIncursionRecords,
+  readUniverseSystems,
+} from "~/lib/universeData";
 
 /**
  * A constellation, its systems and the constellations its stargates lead to.
@@ -44,16 +44,7 @@ export async function readConstellation(
           select: { factionId: true, name: true },
           where: { factionId: constellation.factionId },
         }),
-    prisma.solarSystem.findMany({
-      select: {
-        solarSystemId: true,
-        name: true,
-        securityStatus: true,
-        _count: { select: { stations: { where: { isDeleted: false } } } },
-      },
-      where: { constellationId },
-      orderBy: { name: "asc" },
-    }),
+    readUniverseSystems({ constellationId }),
   ]);
 
   return {
@@ -65,80 +56,13 @@ export async function readConstellation(
     },
     faction: faction ? { id: faction.factionId, name: faction.name } : null,
     wormholeClassId: constellation.wormholeClassId,
-    systems: systems.map((system) => ({
-      solarSystemId: system.solarSystemId,
-      name: system.name,
-      securityStatus: Number(system.securityStatus),
-      stationCount: system._count.stations,
-      siteRole: incursionSiteRole(system.solarSystemId) ?? null,
-    })),
-    neighbours: await readNeighbours(
-      constellationId,
+    systems,
+    neighbours: await readGateNeighbours(
       systems.map((system) => system.solarSystemId),
+      "constellation",
+      constellationId,
     ),
   };
-}
-
-/** The constellations one stargate from these systems, by name. */
-async function readNeighbours(
-  constellationId: number,
-  solarSystemIds: number[],
-): Promise<NeighbouringConstellation[]> {
-  const gates = await prisma.stargate.findMany({
-    select: {
-      solarSystem: { select: { solarSystemId: true, name: true } },
-      DestinationStargate: {
-        select: {
-          solarSystem: {
-            select: {
-              solarSystemId: true,
-              name: true,
-              constellationId: true,
-              constellation: {
-                select: {
-                  name: true,
-                  regionId: true,
-                  region: { select: { name: true } },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    where: { solarSystemId: { in: solarSystemIds }, isDeleted: false },
-  });
-
-  const neighbours = new Map<number, NeighbouringConstellation>();
-  for (const gate of gates) {
-    const there = gate.DestinationStargate?.solarSystem;
-    if (!there || there.constellationId === constellationId) continue;
-    let neighbour = neighbours.get(there.constellationId);
-    if (!neighbour) {
-      neighbour = {
-        constellationId: there.constellationId,
-        name: there.constellation.name,
-        region: {
-          id: there.constellation.regionId,
-          name: there.constellation.region?.name ?? null,
-        },
-        gates: [],
-      };
-      neighbours.set(there.constellationId, neighbour);
-    }
-    neighbour.gates.push([
-      { id: gate.solarSystem.solarSystemId, name: gate.solarSystem.name },
-      { id: there.solarSystemId, name: there.name },
-    ]);
-  }
-  return [...neighbours.values()]
-    .map((neighbour) => ({
-      ...neighbour,
-      gates: neighbour.gates.sort(([a], [b]) =>
-        (a.name ?? "").localeCompare(b.name ?? ""),
-      ),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -156,27 +80,8 @@ export async function readConstellationIncursions(
   cacheTag(SDE_CACHE_TAG);
 
   const readAt = new Date();
-  const incursions = await prisma.incursion.findMany({
-    select: {
-      incursionId: true,
-      state: true,
-      influence: true,
-      hasBoss: true,
-      stagingSolarSystemId: true,
-      firstSeenAt: true,
-      lastSeenAt: true,
-      endedAt: true,
-    },
-    where: { constellationId },
-    orderBy: { firstSeenAt: "desc" },
-  });
   return {
     readAt: readAt.toISOString(),
-    incursions: incursions.map((incursion) => ({
-      ...incursion,
-      firstSeenAt: incursion.firstSeenAt.toISOString(),
-      lastSeenAt: incursion.lastSeenAt.toISOString(),
-      endedAt: incursion.endedAt?.toISOString() ?? null,
-    })),
+    incursions: await readIncursionRecords([constellationId]),
   };
 }
