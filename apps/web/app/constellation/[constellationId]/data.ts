@@ -134,7 +134,7 @@ async function readNeighbours(
   return [...neighbours.values()]
     .map((neighbour) => ({
       ...neighbour,
-      gates: neighbour.gates.sort(([a], [b]) =>
+      gates: neighbour.gates.toSorted(([a], [b]) =>
         (a.name ?? "").localeCompare(b.name ?? ""),
       ),
     }))
