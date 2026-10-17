@@ -5,6 +5,7 @@ import {
   incursionSiteRole,
 } from "~/app/incursions/siteRoles";
 import { EVE_UNIVERSITY_SYSTEMS_BY_ROLE } from "~/app/incursions/siteRolesEveUniversity";
+import { INFERRED_SYSTEMS_BY_ROLE } from "~/app/incursions/siteRolesInferred";
 
 describe("incursionSiteRole", () => {
   it("maps null-sec systems from the EVE University wiki", () => {
@@ -68,6 +69,16 @@ describe("incursionSiteRole", () => {
     expect(incursionSiteRole(30003495)).toBeUndefined();
   });
 
+  it.each([
+    ["Roushzar (Jayai), on no source", 30002975, "headquarters"],
+    ["C0T-77 (Crown), an empty wiki row", 30004493, "headquarters"],
+    ["Ziriert (Jakemhih), a gap in the wiki's row", 30003562, "vanguard"],
+    ["E1-4YH (T-1WDH), in two of the wiki's roles", 30001214, "assault"],
+    ["U-O2DA (X-FHU3), in two of the wiki's roles", 30003637, "headquarters"],
+  ])("maps %s by the layout rule", (_name, solarSystemId, role) => {
+    expect(incursionSiteRole(solarSystemId)).toBe(role);
+  });
+
   it("adds no system twice, nor one eve-incursions.de already maps", () => {
     const wiki = Object.values(EVE_UNIVERSITY_SYSTEMS_BY_ROLE).flat();
     expect(new Set(wiki).size).toBe(wiki.length);
@@ -75,5 +86,15 @@ describe("incursionSiteRole", () => {
       Object.values(EVE_INCURSIONS_SYSTEMS_BY_ROLE).flat(),
     );
     expect(wiki.filter((id) => mapped.has(id))).toEqual([]);
+  });
+
+  it("infers only systems neither map has", () => {
+    const inferred = Object.values(INFERRED_SYSTEMS_BY_ROLE).flat();
+    expect(new Set(inferred).size).toBe(inferred.length);
+    const mapped = new Set([
+      ...Object.values(EVE_INCURSIONS_SYSTEMS_BY_ROLE).flat(),
+      ...Object.values(EVE_UNIVERSITY_SYSTEMS_BY_ROLE).flat(),
+    ]);
+    expect(inferred.filter((id) => mapped.has(id))).toEqual([]);
   });
 });

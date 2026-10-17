@@ -34,6 +34,7 @@
  */
 
 import { EVE_UNIVERSITY_SYSTEMS_BY_ROLE } from "./siteRolesEveUniversity";
+import { INFERRED_SYSTEMS_BY_ROLE } from "./siteRolesInferred";
 
 export type IncursionSiteRole = "vanguard" | "assault" | "headquarters";
 
@@ -225,8 +226,12 @@ const CORRECTIONS = new Map<number, IncursionSiteRole | undefined>([
   [30004851, undefined], // BB-EKF (50-5UD), the staging system
 ]);
 
-/** eve-incursions.de's map, corrected, then the EVE University wiki's. */
+/**
+ * eve-incursions.de's map, corrected, then the EVE University wiki's, then the
+ * layouts neither has.
+ */
 const ROLE_BY_SYSTEM = new Map<number, IncursionSiteRole>([
+  ...entries(INFERRED_SYSTEMS_BY_ROLE),
   ...entries(EVE_UNIVERSITY_SYSTEMS_BY_ROLE),
   ...entries(EVE_INCURSIONS_SYSTEMS_BY_ROLE),
 ]);
