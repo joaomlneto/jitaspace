@@ -55,7 +55,10 @@ jest.mock("~/lib/db", () => ({
     },
     solarSystem: {
       findUnique: (...a: unknown[]) => mockSolarSystemFindUnique(...a),
+      // The constellation page lists its systems and their stargates.
+      findMany: () => Promise.resolve([]),
     },
+    stargate: { findMany: () => Promise.resolve([]) },
     star: { findUnique: (...a: unknown[]) => mockStarFindUnique(...a) },
     planet: { findUnique: (...a: unknown[]) => mockPlanetFindUnique(...a) },
   },
@@ -146,8 +149,10 @@ describe("constellation/[constellationId] generateMetadata", () => {
   it("returns constellation name", async () => {
     mockConstellationFindUnique.mockResolvedValue({
       name: "Kimotoro",
+      regionId: 10000002,
       region: { name: "The Forge" },
-      _count: { solarSystems: 8 },
+      factionId: null,
+      wormholeClassId: null,
     });
     const { generateMetadata } =
       await import("~/app/constellation/[constellationId]/page");
@@ -174,13 +179,13 @@ describe("constellation/[constellationId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockConstellationFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } =
       await import("~/app/constellation/[constellationId]/page");
-    expect(
-      await generateMetadata({ params: rp({ constellationId: "20000001" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ constellationId: "20000001" }) }),
+    ).rejects.toThrow("db");
   });
 });
 

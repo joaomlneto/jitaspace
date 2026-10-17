@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { prisma } from "~/lib/db";
+import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, withArticle } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
-import { cacheSdeRead } from "~/lib/sdeCache";
+import { readConstellation, readConstellationIncursions } from "./data";
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -17,113 +18,75 @@ export async function generateMetadata({
   const { constellationId } = await params;
   const id = parsePositiveEntityId(constellationId);
   if (id === null) return {};
-  try {
-    // Shares `readConstellation` with the page rather than issuing its own
-    // one-column query, as the station page shares `readStation`: the metadata
-    // pass and the render then resolve to the same cache entry, so the route
-    // costs one query per render instead of two. The `catch` stays out here,
-    // outside the cached scope, which is what makes that safe.
-    const constellation = await readConstellation(id);
-    if (!constellation) return {};
 
-    const region = constellation.regionName;
-    const systems = constellation.solarSystemCount;
+  // Uncaught, like the page body: this route is cached whole, so a database
+  // failure must throw rather than store generic metadata. It shares
+  // `readConstellation` with the page, so both resolve to one cache entry.
+  const constellation = await readConstellation(id);
+  if (!constellation) return {};
 
-    const inRegion = region ? ` in ${withArticle(region)} region` : "";
-    const spanning = systems ? `, spanning ${systems} solar systems` : "";
+  const region = constellation.region?.name;
+  const systems = constellation.systems.length;
+  const inRegion = region ? ` in ${withArticle(region)} region` : "";
+  const spanning = systems ? `, spanning ${systems} solar systems` : "";
 
-    return pageMetadata({
-      title: constellation.name,
-      description: `${constellation.name} is a constellation${inRegion} of EVE Online${spanning}.`,
-      path: `/constellation/${id}`,
-      badge: "Constellation",
-      facts: [
-        ...(region ? [{ label: "Region", value: region }] : []),
-        ...(systems ? [{ label: "Systems", value: String(systems) }] : []),
-      ],
-    });
-  } catch {
-    return {};
-  }
-}
-
-interface ConstellationSummary {
-  name: string;
-  /** How many solar systems it spans — stated on the OpenGraph card. */
-  solarSystemCount: number;
-  regionId: number;
-  regionName: string | null;
-}
-
-/**
- * Read a constellation and its parent region from our database. Returns null
- * for an unknown id — the caller turns that into a 404.
- *
- * Cached until the next SDE build is ingested, which is the only time these
- * rows change. A failed query throws rather than returning null, so a database
- * blip can never be mistaken for a missing constellation and stored as a 404
- * (see "Never catch a database error inside a `"use cache"` scope" in
- * CLAUDE.md). That is also why this uses `findUnique` plus a null test rather
- * than `findUniqueOrThrow`, which would collapse the two cases into one error.
- */
-async function readConstellation(
-  constellationId: number,
-): Promise<ConstellationSummary | null> {
-  "use cache";
-  cacheSdeRead();
-
-  const constellation = await prisma.constellation.findUnique({
-    select: {
-      name: true,
-      regionId: true,
-      region: { select: { name: true } },
-      // Counted here so the OpenGraph card can state the constellation's size
-      // without a second query outside this cache entry.
-      _count: { select: { solarSystems: true } },
-    },
-    where: { constellationId },
+  return pageMetadata({
+    title: constellation.name,
+    description: `${constellation.name} is a constellation${inRegion} of EVE Online${spanning}. See its systems, neighbouring constellations, incursions and change history.`,
+    path: `/constellation/${id}`,
+    badge: "Constellation",
+    facts: [
+      ...(region ? [{ label: "Region", value: region }] : []),
+      ...(systems ? [{ label: "Systems", value: String(systems) }] : []),
+    ],
   });
-  if (!constellation) return null;
-
-  return {
-    name: constellation.name,
-    regionId: constellation.regionId,
-    regionName: constellation.region?.name ?? null,
-    solarSystemCount: constellation._count.solarSystems,
-  };
 }
 
-/**
- * The id check and the database read live here rather than in `Page` so they
- * happen *inside* the Suspense boundary, alongside `params`.
- */
+// ISR per constellation: without `generateStaticParams` an unlisted id
+// re-renders, and re-runs every query below, on every request (see
+// apps/web/CLAUDE.md → "ISR for a dynamic `[param]` route"). The real ids live
+// in the database, which `next build` cannot reach in CI, and Cache Components
+// rejects an empty list — so this lists one id `parsePositiveEntityId` refuses,
+// which prerenders as a 404 without a query.
+export function generateStaticParams() {
+  return [{ constellationId: "0" }];
+}
+
 async function PageContent({
   params,
-}: Readonly<{
-  params: Promise<{ constellationId: string }>;
-}>) {
+}: Readonly<{ params: Promise<{ constellationId: string }> }>) {
   const { constellationId } = await params;
   const id = parsePositiveEntityId(constellationId);
   if (id === null) notFound();
 
-  const constellation = await readConstellation(id);
+  // Uncaught: this page is cached whole, so a database failure must throw
+  // rather than store a 404. `null` is a constellation that genuinely does not
+  // exist. The history read runs alongside: a cold one takes seconds, and
+  // `loadEntityHistory` never throws.
+  const [constellation, incursions, history] = await Promise.all([
+    readConstellation(id),
+    readConstellationIncursions(id),
+    loadEntityHistory("constellation", id),
+  ]);
   if (!constellation) notFound();
 
+  // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
+  // `useSearchParams()`, which drops this subtree out of the cached render. The
+  // React adapter reads `?tab=` after hydration instead.
   return (
-    <PageClient
-      constellationId={id}
-      name={constellation.name}
-      regionId={constellation.regionId}
-      regionName={constellation.regionName}
-    />
+    <NuqsAdapter>
+      <PageClient
+        constellation={constellation}
+        incursions={incursions}
+        history={history}
+      />
+    </NuqsAdapter>
   );
 }
 
 export default function Page({
   params,
-}: Readonly<{
-  params: Promise<{ constellationId: string }>;
-}>) {
+}: Readonly<{ params: Promise<{ constellationId: string }> }>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
