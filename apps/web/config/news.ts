@@ -52,7 +52,10 @@ export const newsItems: NewsItem[] = [
     date: "2026-10-06",
     publishAt: "2026-10-06T11:00:00Z",
     expiresAt: "2026-11-03T11:00:00Z",
-    color: "#f01408", // the Crimson Harvest theme's primary (crimson.6)
+    // The Crimson Harvest theme's crimson.7. Its crimson.6 (#f01408) takes
+    // neither dark nor light text at 4.5:1 when the badge and button are
+    // filled; this takes light text at 5.6:1.
+    color: "#c80e05",
     // A 1280x720 WebP (79 KB) of the event key art: the card is never wider
     // than ~520 CSS px, and the art's grain compresses poorly at 1600 px.
     image:
