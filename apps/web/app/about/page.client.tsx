@@ -218,6 +218,7 @@ export default function PageClient() {
                   target="_blank"
                   size="sm"
                   variant="light"
+                  aria-label="Join the JitaSpace Discord"
                 >
                   <IconBrandDiscordFilled />
                 </ActionIcon>
@@ -233,7 +234,9 @@ export default function PageClient() {
             </Table.Tr>
           </Table.Tbody>
         </Table>
-        <Title order={3}>Privacy Policy</Title>
+        <Title order={2} size="h3">
+          Privacy Policy
+        </Title>
         <Text size="sm">
           We do not collect any of your EVE Online data, nor any personally
           identifiable information. All data collected is anonymized — users
@@ -264,7 +267,9 @@ export default function PageClient() {
             .
           </List.Item>
         </List>
-        <Title order={3}>Acknowledgements</Title>
+        <Title order={2} size="h3">
+          Acknowledgements
+        </Title>
         <Text size="sm">
           Extremely grateful to all the folks who helped me out with this, both
           people that were willing to test my buggy code in the early stages, to
@@ -378,7 +383,9 @@ export default function PageClient() {
           </Anchor>
           .
         </Text>
-        <Title order={3}>Copyright Notice</Title>
+        <Title order={2} size="h3">
+          Copyright Notice
+        </Title>
         <Text size="sm">
           EVE Online, the EVE logo, EVE and all associated logos and designs are
           the intellectual property of Fenris Creations. All artwork,

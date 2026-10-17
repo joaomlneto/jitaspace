@@ -34,7 +34,9 @@ export function HistoryTimelineChart({
   return (
     <Paper withBorder p="md" radius="md">
       <Group justify="space-between" align="baseline" mb="sm">
-        <Title order={4}>Activity over time</Title>
+        <Title order={2} size="h4">
+          Activity over time
+        </Title>
         {model.totalChanges > 0 && (
           <Text size="xs" c="dimmed">
             {model.totalChanges.toLocaleString()} changes across{" "}

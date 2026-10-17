@@ -1219,7 +1219,9 @@ export default function FactionPage({
             Factions
           </Anchor>
           <Group gap="sm" align="center">
-            <Title order={2}>{faction.name}</Title>
+            <Title order={1} size="h2">
+              {faction.name}
+            </Title>
             {hasWarfare && (
               <Badge color="red" variant="light">
                 Faction Warfare

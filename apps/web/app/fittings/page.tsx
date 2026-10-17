@@ -79,7 +79,9 @@ export default function Page() {
             <FittingIcon width={48} />
             <Title order={1}>Fittings</Title>
           </Group>
-          <Title order={4}>Current Ship Fitting</Title>
+          <Title order={2} size="h4">
+            Current Ship Fitting
+          </Title>
           {character && hasScopesForCurrentFit ? (
             <UnstyledButton
               onClick={() => {
@@ -109,7 +111,9 @@ export default function Page() {
               Insufficient permissions to get current fit of character.
             </Text>
           )}
-          <Title order={4}>Saved Fittings</Title>
+          <Title order={2} size="h4">
+            Saved Fittings
+          </Title>
           {errors.length > 0 && (
             // Without this a character whose token failed is simply missing
             // from a list that claims to show everyone's, with nothing to

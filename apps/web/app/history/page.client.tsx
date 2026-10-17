@@ -189,7 +189,9 @@ export default function HistoryIndexClient({
   if (!initialIndex) {
     return (
       <Container size="md" py="xl">
-        <Title order={2}>Type Change History</Title>
+        <Title order={1} size="h2">
+          Type Change History
+        </Title>
         <Alert mt="md" color="gray">
           No history has been generated yet. Run{" "}
           <code>pnpm --filter @jitaspace/cli exec build-history</code> to
@@ -244,7 +246,9 @@ export default function HistoryIndexClient({
     <Container size="md" py="xl">
       <Stack gap="lg">
         <div>
-          <Title order={2}>Type Change History</Title>
+          <Title order={1} size="h2">
+            Type Change History
+          </Title>
           <Text c="dimmed" size="sm" mt={4}>
             How EVE Online static data has changed across {changedBuildCount}{" "}
             client builds. {countsLabel} with recorded changes.
@@ -315,7 +319,9 @@ export default function HistoryIndexClient({
 
         <div>
           <Group justify="space-between" mb="sm">
-            <Title order={4}>Builds</Title>
+            <Title order={2} size="h4">
+              Builds
+            </Title>
             <Switch
               size="xs"
               label="Show builds without changes"

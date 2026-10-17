@@ -33,7 +33,7 @@ export function SectionHeader({
         style={{ flex: 1, minWidth: 0 }}
       >
         <span className={classes.bar} aria-hidden />
-        <Title order={3} className={classes.title}>
+        <Title order={2} size="h3" className={classes.title}>
           {title}
         </Title>
         {count != null && <span className={classes.count}>{count}</span>}

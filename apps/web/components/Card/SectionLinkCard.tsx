@@ -56,7 +56,7 @@ export function SectionLinkCard({
         padding="xl"
       >
         <Container m={0} p={0} w={64} h={64}>
-          <Icon height={64} width={64} />
+          <Icon height={64} width={64} alt="" />
         </Container>
         <Group>
           <Text fz="lg" fw={500} className={classes.title} mt="md">

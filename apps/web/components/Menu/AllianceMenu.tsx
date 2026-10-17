@@ -69,7 +69,7 @@ export const AllianceMenu = ({
                 component={Link}
                 href={app.url ?? ""}
                 onClick={app.onClick}
-                leftSection={<app.Icon width={20} />}
+                leftSection={<app.Icon width={20} alt="" />}
               >
                 {app.name}
               </Menu.Item>

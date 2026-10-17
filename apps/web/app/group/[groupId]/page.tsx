@@ -115,13 +115,17 @@ async function PageContent({
           <Title order={1}>{name}</Title>
         </Group>
         <GroupBreadcrumbs groupId={groupId} />
-        <Title order={3}>Types</Title>
+        <Title order={2} size="h3">
+          Types
+        </Title>
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xs">
           {sortedTypes.map((type) => (
             <Group wrap="nowrap" key={type.typeId}>
               <TypeAvatar typeId={type.typeId} size="sm" />
               <TypeAnchor typeId={type.typeId}>
-                <Text>{type.name}</Text>
+                {/* A few types have an empty name in our database; a link still
+                    needs text. */}
+                <Text>{type.name || `Type ${type.typeId}`}</Text>
               </TypeAnchor>
             </Group>
           ))}

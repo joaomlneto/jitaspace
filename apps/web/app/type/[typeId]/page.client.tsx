@@ -526,7 +526,9 @@ export default function TypePage({
         >
           <TypeInventoryBreadcrumbs typeId={typeId} fz="sm" />
           <Group gap="sm" align="center">
-            <Title order={2}>{name ?? notAvailableText}</Title>
+            <Title order={1} size="h2">
+              {name ?? notAvailableText}
+            </Title>
             {typeData?.published === false && (
               <Badge color="red" variant="light">
                 Unpublished

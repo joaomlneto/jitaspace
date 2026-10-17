@@ -39,7 +39,9 @@ export default function Page({
     <Container size="sm">
       <Stack>
         <Group gap="xl">
-          <Title order={3}>{name}</Title>
+          <Title order={1} size="h3">
+            {name}
+          </Title>
         </Group>
         <Group justify="space-between">
           <Text>Region</Text>

@@ -318,6 +318,27 @@ describe("DataTable — pagination", () => {
     expect(screen.getByText("Rows per page:")).toBeInTheDocument();
   });
 
+  it("names the previous/next arrows", () => {
+    const manyRows = Array.from({ length: 30 }, (_, i) => ({
+      name: `Row ${i}`,
+      score: i,
+    }));
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={manyRows}
+        withPagination
+        defaultPageSize={10}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next page" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the total filtered row count", () => {
     renderWithMantine(
       <DataTable columns={columns} data={data} withPagination />,
