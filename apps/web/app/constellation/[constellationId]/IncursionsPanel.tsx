@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { Anchor, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -22,6 +21,7 @@ import {
 } from "~/app/incursions/parts";
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import { formatDate, formatInteger } from "~/lib/format";
 import { SystemLink } from "./parts";
 
@@ -175,7 +175,11 @@ export function IncursionsPanel({
               {active.influence !== null &&
                 `, influence ${percent(active.influence)}`}
               .{" "}
-              <Anchor component={Link} href="/incursions" size="sm">
+              <Anchor
+                component={HoverPrefetchLink}
+                href="/incursions"
+                size="sm"
+              >
                 Follow it live on the incursions page
               </Anchor>
             </Text>
@@ -237,7 +241,11 @@ export function IncursionsPanel({
         )}
         <Text size="xs" c="dimmed">
           CCP does not publish where each site spawns; see the{" "}
-          <Anchor component={Link} href="/incursions#layouts" size="xs">
+          <Anchor
+            component={HoverPrefetchLink}
+            href="/incursions#layouts"
+            size="xs"
+          >
             layouts of every constellation
           </Anchor>{" "}
           and where they come from.

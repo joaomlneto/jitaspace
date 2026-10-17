@@ -144,14 +144,17 @@ async function readNeighbours(
 /**
  * Every incursion that spawned in the constellation, ours and imported (back to
  * 2015), most recent first. Not SDE data: `esi-track-incursions` writes it every
- * 5 minutes, so it keeps a short lifetime of its own. Uncaught, like the
+ * 5 minutes, so it keeps a lifetime of its own. Uncaught, like the
  * constellation read.
  */
 export async function readConstellationIncursions(
   constellationId: number,
 ): Promise<ConstellationIncursions> {
   "use cache";
-  cacheLife("minutes");
+  // Hours, not the incursions page's minutes: this lifetime is the whole
+  // page's, and there are a thousand constellation pages, each regenerating
+  // with every query above. An incursion lasts days.
+  cacheLife("hours");
   // System names in the tab come from the SDE read; refresh with it too.
   cacheTag(SDE_CACHE_TAG);
 
