@@ -36,7 +36,7 @@ export function buildIncursionLayouts({
         assault: [],
         headquarters: [],
         incursionCount: 0,
-        lastSeenAt: null,
+        latestIncursionAt: null,
       };
       layouts.set(constellationId, layout);
     }
@@ -46,7 +46,7 @@ export function buildIncursionLayouts({
   for (const incursion of incursions) {
     const layout = layoutOf(incursion.constellationId);
     layout.incursionCount += 1;
-    layout.lastSeenAt ??= incursion.firstSeenAt.toISOString();
+    layout.latestIncursionAt ??= incursion.firstSeenAt.toISOString();
     layout.stagingSolarSystemId ??= incursion.stagingSolarSystemId;
   }
 

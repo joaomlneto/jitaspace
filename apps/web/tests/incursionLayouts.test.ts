@@ -50,7 +50,7 @@ describe("buildIncursionLayouts", () => {
       assault: [4],
       headquarters: [5],
       incursionCount: 3,
-      lastSeenAt: "2026-01-02T00:00:00.000Z",
+      latestIncursionAt: "2026-01-02T00:00:00.000Z",
     });
   });
 
@@ -77,7 +77,7 @@ describe("buildIncursionLayouts", () => {
         stagingSolarSystemId: null,
         vanguard: [9],
         incursionCount: 0,
-        lastSeenAt: null,
+        latestIncursionAt: null,
       }),
     ]);
   });

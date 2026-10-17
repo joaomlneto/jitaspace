@@ -184,7 +184,7 @@ const LAYOUTS: IncursionLayouts = {
       assault: [],
       headquarters: [ZD4],
       incursionCount: 12,
-      lastSeenAt: hoursAgo(72),
+      latestIncursionAt: hoursAgo(72),
     },
     {
       constellationId: 20000002,
@@ -193,7 +193,7 @@ const LAYOUTS: IncursionLayouts = {
       assault: [],
       headquarters: [],
       incursionCount: 1,
-      lastSeenAt: "2020-01-01T00:00:00.000Z",
+      latestIncursionAt: "2020-01-01T00:00:00.000Z",
     },
   ],
 };

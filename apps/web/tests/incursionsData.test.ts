@@ -343,7 +343,7 @@ describe("readIncursionLayouts", () => {
       stagingSolarSystemId: 30000001,
       vanguard: [30000003, 30000001],
       incursionCount: 1,
-      lastSeenAt: "2026-10-05T08:10:00.000Z",
+      latestIncursionAt: "2026-10-05T08:10:00.000Z",
     });
     expect(layouts[2]?.stagingSolarSystemId).toBeNull();
     expect(constellations[20000001]?.name).toBe("Agiesseson");

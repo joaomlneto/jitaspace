@@ -138,12 +138,13 @@ const layoutColumnsFor = (names: Names): DataTableColumn<LayoutRow>[] => [
     filter: { type: "range", min: 0 },
   },
   {
-    id: "lastSeenAt",
-    header: "Last incursion (EVE)",
-    accessor: "lastSeenAt",
+    id: "latestIncursionAt",
+    header: "Latest incursion (EVE)",
+    accessor: "latestIncursionAt",
     sortable: true,
     filter: { type: "date-range" },
-    cell: (row) => (row.lastSeenAt ? <EveTime iso={row.lastSeenAt} /> : null),
+    cell: (row) =>
+      row.latestIncursionAt ? <EveTime iso={row.latestIncursionAt} /> : null,
   },
 ];
 
@@ -198,11 +199,12 @@ export function LayoutsTab() {
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
         Which systems host the vanguard, assault and headquarters sites when an
-        incursion spawns in each constellation. CCP does not publish this: the
-        layouts come from eve-incursions.de and the EVE University wiki, checked
-        against the rule every known layout follows (vanguards nearest the
-        staging system, the headquarters furthest) and against killmails. The
-        staging system shown is the one the latest incursion used.
+        incursion spawns in each constellation. CCP does not publish this. Most
+        layouts come from eve-incursions.de and the EVE University wiki; the
+        rest follow the rule every known layout does (vanguards nearest the
+        staging system, the headquarters furthest), and killmails have settled
+        the few the sources disagreed on. The staging system shown is the one
+        the latest incursion used.
       </Text>
       {layouts.isError ? (
         <Alert color="red" variant="light">

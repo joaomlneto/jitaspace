@@ -118,7 +118,7 @@ export interface IncursionLayout {
   headquarters: number[];
   incursionCount: number;
   /** When the latest incursion was first seen; null if none was. */
-  lastSeenAt: string | null;
+  latestIncursionAt: string | null;
 }
 
 /** The Layouts tab's data, from `/api/incursions/layouts`. */
