@@ -240,6 +240,10 @@ for (const [solarSystemId, role] of CORRECTIONS) {
   else ROLE_BY_SYSTEM.set(solarSystemId, role);
 }
 
+/** Every mapped system and the site type that spawns in it. */
+export const INCURSION_SITE_ROLES: ReadonlyMap<number, IncursionSiteRole> =
+  ROLE_BY_SYSTEM;
+
 /** The site type that spawns in a system, if it is mapped. */
 export const incursionSiteRole = (
   solarSystemId: number,
