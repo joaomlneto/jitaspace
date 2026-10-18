@@ -561,6 +561,64 @@ describe("War page", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps loading zKillboard's pages when ESI's list is missing", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    });
+    swrState = {
+      data: [Array.from({ length: 200 }, (_, i) => zkbKillmail(1000 - i))],
+      size: 1,
+    };
+
+    renderPage("?tab=killmails");
+
+    const loadMore = () =>
+      fireEvent.click(
+        screen.getByRole("button", { name: /Load more killmails/ }),
+      );
+    for (let batch = 1; batch < 8; batch++) loadMore();
+    expect(screen.getAllByTestId("killmail-card")).toHaveLength(200);
+
+    // Every loaded kill is shown, but zKillboard's page was full: ask on.
+    expect(
+      screen.getByRole("button", { name: "Load more killmails" }),
+    ).toBeInTheDocument();
+    loadMore();
+    expect(mockSetSize).toHaveBeenLastCalledWith(2);
+  });
+
+  it("does not count kills before any have arrived", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({ data: undefined, isLoading: true });
+    swrState = { isLoading: true };
+
+    renderPage("?tab=killmails");
+
+    expect(screen.getByRole("tab", { name: "Killmails" })).toBeInTheDocument();
+  });
+
+  it("does not blame zKillboard when it answered with no kills", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    });
+    swrState = { data: [[]] };
+
+    renderPage("?tab=killmails");
+
+    expect(
+      screen.getByText(
+        "zKillboard has no kills for this war, and ESI did not answer.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Neither ESI nor zKillboard/)).toBeNull();
+  });
+
   it("falls back to ESI alone when zKillboard fails", () => {
     mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
     mockUseWarKillmails.mockReturnValue(esiList([1]));
@@ -636,14 +694,19 @@ describe("War page", () => {
         status,
         json: () => Promise.resolve(body),
       }) as Response;
+    const originalFetch = global.fetch;
     const fetchMock = jest.fn<typeof fetch>();
     global.fetch = fetchMock;
-    fetchMock.mockResolvedValueOnce(reply([zkbKillmail(1)]));
-    await expect(swrFetcher("u")).resolves.toHaveLength(1);
-    fetchMock.mockResolvedValueOnce(reply({ error: "nope" }));
-    await expect(swrFetcher("u")).rejects.toThrow("sent no killmails");
-    fetchMock.mockResolvedValueOnce(reply(null, 429));
-    await expect(swrFetcher("u")).rejects.toThrow("answered 429");
+    try {
+      fetchMock.mockResolvedValueOnce(reply([zkbKillmail(1)]));
+      await expect(swrFetcher("u")).resolves.toHaveLength(1);
+      fetchMock.mockResolvedValueOnce(reply({ error: "nope" }));
+      await expect(swrFetcher("u")).rejects.toThrow("sent no killmails");
+      fetchMock.mockResolvedValueOnce(reply(null, 429));
+      await expect(swrFetcher("u")).rejects.toThrow("answered 429");
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 
   it("renders the server wrapper (page.tsx) inside a Suspense boundary", async () => {

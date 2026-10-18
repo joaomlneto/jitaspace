@@ -249,7 +249,9 @@ export function KillmailList({
   if (feed.entries.length === 0)
     return (
       <Text size="sm" c="dimmed">
-        No ships have been destroyed in this war.
+        {feed.hasEsiError
+          ? "zKillboard has no kills for this war, and ESI did not answer."
+          : "No ships have been destroyed in this war."}
       </Text>
     );
 
@@ -268,9 +270,11 @@ export function KillmailList({
           />
         ))}
       </Stack>
-      {limit === undefined && feed.remaining > 0 && (
+      {limit === undefined && feed.hasMore && (
         <Button variant="default" fullWidth onClick={feed.showMore}>
-          Load more killmails ({formatInteger(feed.remaining)} remaining)
+          {feed.remaining > 0
+            ? `Load more killmails (${formatInteger(feed.remaining)} remaining)`
+            : "Load more killmails"}
         </Button>
       )}
       {footer}

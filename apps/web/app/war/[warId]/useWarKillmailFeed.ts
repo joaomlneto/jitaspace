@@ -150,24 +150,42 @@ export function useWarKillmailFeed(warId: number) {
     return [...byId.values()].sort((a, b) => b.killmailId - a.killmailId);
   }, [firstEsiList, laterEsiLists, zkbById]);
 
-  const { setSize } = zkb;
+  /**
+   * zKillboard has more pages than it was asked for: the last one came back
+   * full and none is on its way. When ESI's list is missing, this is the only
+   * sign that there is more to show.
+   */
+  const zkbHasMore =
+    !isZkbExhausted &&
+    lastPage !== undefined &&
+    (zkbPages?.length ?? 0) === zkb.size;
+  const remaining = Math.max(entries.length - visibleCount, 0);
+
+  const { setSize, size } = zkb;
   const showMore = useCallback(() => {
     const next = visibleCount + KILLMAILS_PER_BATCH;
     setVisibleCount(next);
-    void setSize(Math.ceil(next / ZKB_PAGE_SIZE));
-  }, [visibleCount, setSize]);
+    // Ask for the pages the next batch spans, and at least one more once the
+    // loaded kills run out.
+    const wanted = Math.ceil(next / ZKB_PAGE_SIZE);
+    void setSize(
+      remaining === 0 && zkbHasMore ? Math.max(wanted, size + 1) : wanted,
+    );
+  }, [visibleCount, remaining, zkbHasMore, size, setSize]);
 
   const isEmpty = entries.length === 0;
   return {
     entries,
     visible: entries.slice(0, visibleCount),
-    remaining: Math.max(entries.length - visibleCount, 0),
+    remaining,
+    /** More can be shown: loaded kills not yet visible, or zKillboard pages. */
+    hasMore: remaining > 0 || zkbHasMore,
     showMore,
     awaitsZkb,
     /** Nothing to show yet, and an answer is still on its way. */
     isLoading: isEmpty && (isEsiLoading || (isEsiError && isZkbFetching)),
     /** Nothing to show, because neither source answered. */
-    isError: isEmpty && isEsiError && !isZkbFetching,
+    isError: isEmpty && isEsiError && zkb.error !== undefined,
     /** Some ESI page failed, so the list may be short. */
     hasEsiError: isEsiError,
     hasZkbError: zkb.error !== undefined,

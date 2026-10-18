@@ -110,7 +110,9 @@ export default function Page() {
               value="killmails"
               leftSection={<KillReportIcon size={16} alt="" />}
             >
-              Killmails ({formatInteger(feed.entries.length)})
+              {feed.isLoading
+                ? "Killmails"
+                : `Killmails (${formatInteger(feed.entries.length)})`}
             </Tabs.Tab>
             {visibleTabs.allies && (
               <Tabs.Tab
