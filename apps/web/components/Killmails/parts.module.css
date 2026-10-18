@@ -1,0 +1,35 @@
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+}
+
+.iskFigure {
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 700;
+  color: var(--mantine-color-bright);
+  white-space: nowrap;
+}
+
+/* Mantine's Text resets white-space on the amount inside. */
+.iskFigure * {
+  white-space: nowrap;
+}
+
+/* Values that stand out on a killboard: a billion and up, then ten. */
+.iskFigure[data-tier="high"] {
+  color: var(--mantine-color-orange-5);
+}
+
+.iskFigure[data-tier="huge"] {
+  color: var(--mantine-color-red-5);
+}

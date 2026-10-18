@@ -1,0 +1,147 @@
+/*
+  One dense line per kill, like a killboard, under a header row.
+  Every row and the header share one set of tracks — fixed where the
+  content is (time, system, value, actions), shared fractions elsewhere — so
+  the columns line up down the whole list.
+*/
+.container {
+  container-type: inline-size;
+}
+
+.line,
+.header {
+  display: grid;
+  grid-template-columns:
+    3.25rem minmax(0, 1.1fr) minmax(0, 1.4fr) minmax(0, 1.2fr)
+    7.5rem 5.5rem 3.5rem;
+  grid-template-areas: "time ship victim attacker where value actions";
+  align-items: center;
+  column-gap: var(--mantine-spacing-sm);
+  padding: 0 var(--mantine-spacing-xs) 0 calc(var(--mantine-spacing-sm) + 3px);
+}
+
+.header {
+  padding-block: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mantine-color-dimmed);
+}
+
+.line {
+  position: relative;
+  min-height: 44px;
+  padding-block: 4px;
+  border-radius: var(--mantine-radius-sm);
+  background: var(--mantine-color-default);
+  transition: background-color 100ms ease;
+}
+
+.line:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.line::before {
+  content: "";
+  position: absolute;
+  inset: 4px auto 4px 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--killmail-accent, var(--mantine-color-default-border));
+}
+
+.time {
+  grid-area: time;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.clock {
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 700;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-bright);
+}
+
+.day {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  min-width: 0;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.ship {
+  grid-area: ship;
+}
+
+.victim {
+  grid-area: victim;
+}
+
+.attacker {
+  grid-area: attacker;
+}
+
+.where {
+  grid-area: where;
+}
+
+.value {
+  grid-area: value;
+  text-align: right;
+}
+
+.actions {
+  grid-area: actions;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@container (max-width: 820px) {
+  .line,
+  .header {
+    grid-template-columns: 3.25rem minmax(0, 1fr) minmax(0, 1.2fr) 5.5rem 3.5rem;
+    grid-template-areas: "time ship victim value actions";
+  }
+
+  .attacker,
+  .where {
+    display: none;
+  }
+}
+
+@container (max-width: 460px) {
+  .header {
+    display: none;
+  }
+
+  .line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "ship value"
+      "victim time"
+      "victim actions";
+    row-gap: 2px;
+    padding-block: 6px;
+  }
+
+  .time {
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+}

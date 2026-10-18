@@ -10,9 +10,28 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
-const WAR_ID = 30000142;
+import type { EsiKillmail, ZkbKillmail } from "~/components/Killmails";
+
+// ---------------------------------------------------------------------------
+// /war/[warId]: a hero header and Overview / Killmails / Allies tabs. The war
+// and its killmail list come from ESI; zKillboard's war feed supplies the
+// killmails in full, with values, 200 to a page.
+// ---------------------------------------------------------------------------
+
+const WAR_ID = 762813;
+const AGGRESSOR_ALLIANCE = 99010015;
+const DEFENDER_ALLIANCE = 99003581;
+const ALLY_ALLIANCE = 99000003;
+const ALLY_CORPORATION = 1000036;
 
 const mockUseSelectedCharacter = jest.fn();
 const mockUseWar = jest.fn();
@@ -33,49 +52,90 @@ jest.mock("@jitaspace/hooks", () => ({
   useWarKillmails: (...args: unknown[]) => mockUseWarKillmails(...args),
 }));
 
-jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
+jest.mock("@jitaspace/eve-icons", () => {
+  const Icon = () => null;
+  return new Proxy({}, { get: () => Icon });
+});
 
-jest.mock("@jitaspace/eve-icons", () => ({
-  WarReportIcon: () => null,
+jest.mock("@jitaspace/ui", () => ({
+  ...jest.requireActual<Record<string, unknown>>("@jitaspace/ui"),
+  TimeAgoText: () => <span>ago</span>,
 }));
 
 jest.mock("~/components/ActionIcon", () => ({
-  OpenInformationWindowActionIcon: () => <div data-testid="info-window" />,
-}));
-
-jest.mock("~/components/Anchor", () => ({
-  ...jest.requireActual<Record<string, unknown>>(
-    "../__mocks__/components/Anchor",
+  OpenInformationWindowActionIcon: ({ entityId }: { entityId: number }) => (
+    <div data-testid="info-window">{entityId}</div>
   ),
-  WarAggressorAnchor: ({ children }: { children?: ReactNode }) => (
-    <span>{children}</span>
-  ),
-  WarDefenderAnchor: ({ children }: { children?: ReactNode }) => (
-    <span>{children}</span>
-  ),
-}));
-
-jest.mock("~/components/Avatar", () => ({
-  WarAggressorAvatar: () => null,
-  WarDefenderAvatar: () => null,
 }));
 
 jest.mock("~/components/Badge", () => ({
   AllianceTickerBadge: () => null,
   CorporationTickerBadge: () => null,
-  WarAggressorTickerBadge: () => null,
-  WarDefenderTickerBadge: () => null,
 }));
 
-jest.mock("~/components/Text", () => ({
-  WarAggressorName: () => <span>Aggressor Name</span>,
-  WarDefenderName: () => <span>Defender Name</span>,
-}));
-
+// The cards have their own test; here they only report what they were given.
 jest.mock("~/components/Killmails", () => ({
-  KillmailCard: ({ killmailId }: { killmailId: number }) => (
-    <div data-testid="killmail-card">{`Killmail ${killmailId}`}</div>
+  ...jest.requireActual<Record<string, unknown>>(
+    "~/components/Killmails/zkillboard",
   ),
+  KillmailLineCard: ({
+    killmail,
+    zkb,
+    tag,
+  }: {
+    killmail: EsiKillmail;
+    zkb?: { totalValue?: number };
+    tag?: { label: string };
+  }) => (
+    <div data-testid="killmail-card">
+      {`Killmail ${killmail.killmail_id}`}
+      {tag && ` · ${tag.label}`}
+      {zkb?.totalValue !== undefined && ` · ${zkb.totalValue} ISK`}
+    </div>
+  ),
+  EsiKillmailCard: ({
+    killmailId,
+    tagFor,
+  }: {
+    killmailId: number;
+    tagFor: (killmail: EsiKillmail) => { label: string } | undefined;
+  }) => (
+    <div data-testid="esi-killmail-card">
+      {`ESI killmail ${killmailId}`}
+      {` · ${tagFor(killmailFor(killmailId, DEFENDER_ALLIANCE))?.label}`}
+    </div>
+  ),
+  KillmailLineCardSkeleton: () => <div data-testid="killmail-skeleton" />,
+  KillmailLineCardHeader: () => <div data-testid="killmail-header" />,
+}));
+
+// zKillboard's feed through useSWRInfinite: each test says what has loaded.
+interface SwrInfiniteState {
+  data?: ZkbKillmail[][];
+  error?: Error;
+  isLoading?: boolean;
+  size?: number;
+}
+let swrState: SwrInfiniteState = {};
+const mockSetSize = jest.fn((_size: number) => Promise.resolve(undefined));
+let swrGetKey: (index: number, previous: ZkbKillmail[] | null) => unknown;
+let swrFetcher: (url: string) => Promise<ZkbKillmail[]>;
+jest.mock("swr/infinite", () => ({
+  __esModule: true,
+  default: (
+    getKey: typeof swrGetKey,
+    fetcher: typeof swrFetcher,
+  ): Record<string, unknown> => {
+    swrGetKey = getKey;
+    swrFetcher = fetcher;
+    return {
+      data: swrState.data,
+      error: swrState.error,
+      isLoading: swrState.isLoading ?? false,
+      size: swrState.size ?? 1,
+      setSize: mockSetSize,
+    };
+  },
 }));
 
 jest.mock("next/link", () => ({
@@ -89,12 +149,67 @@ jest.mock("next/link", () => ({
   }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
-function renderPage() {
+function killmailFor(killmailId: number, victimAllianceId?: number) {
+  return {
+    killmail_id: killmailId,
+    killmail_time: "2026-10-12T18:38:34Z",
+    solar_system_id: 30000142,
+    victim: {
+      alliance_id: victimAllianceId,
+      damage_taken: 1,
+      ship_type_id: 670,
+    },
+    attackers: [],
+  } satisfies EsiKillmail;
+}
+
+function zkbKillmail(
+  killmailId: number,
+  victimAllianceId?: number,
+): ZkbKillmail {
+  return {
+    ...killmailFor(killmailId, victimAllianceId),
+    zkb: { hash: `hash${killmailId}`, totalValue: killmailId * 10 },
+  };
+}
+
+const esiList = (ids: number[]) => ({
+  data: {
+    data: ids.map((id) => ({ killmail_id: id, killmail_hash: `hash${id}` })),
+  },
+  isLoading: false,
+});
+
+const FULL_WAR = {
+  aggressor: {
+    alliance_id: AGGRESSOR_ALLIANCE,
+    isk_destroyed: 300,
+    ships_killed: 42,
+  },
+  defender: {
+    alliance_id: DEFENDER_ALLIANCE,
+    isk_destroyed: 100,
+    ships_killed: 7,
+  },
+  declared: "2020-01-01T00:00:00Z",
+  started: "2020-01-02T00:00:00Z",
+  retracted: "2020-01-03T00:00:00Z",
+  finished: "2020-01-04T00:00:00Z",
+  mutual: true,
+  open_for_allies: true,
+  allies: [
+    { alliance_id: ALLY_ALLIANCE },
+    { corporation_id: ALLY_CORPORATION },
+  ],
+};
+
+function renderPage(searchParams = "") {
   const Page = require("~/app/war/[warId]/page.client").default;
   return render(
     <MantineProvider>
       <Page />
     </MantineProvider>,
+    { wrapper: withNuqsTestingAdapter({ searchParams }) },
   );
 }
 
@@ -116,196 +231,311 @@ describe("War page", () => {
     mockUseSelectedCharacter.mockReset();
     mockUseWar.mockReset();
     mockUseWarKillmails.mockReset();
+    mockSetSize.mockClear();
+    swrState = {};
+    mockUseSelectedCharacter.mockReturnValue(null);
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  it("renders a full war with all date rows, allies and killmails (every branch)", () => {
+  it("heads the page with both sides, the war's state and its totals", () => {
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123456789 });
-    mockUseWar.mockReturnValue({
-      data: {
-        data: {
-          aggressor: {
-            corporation_id: 1000035,
-            alliance_id: 99000001,
-            isk_destroyed: 123456789,
-            ships_killed: 42,
-          },
-          defender: {
-            alliance_id: 99000002,
-            isk_destroyed: 987654321,
-            ships_killed: 7,
-          },
-          declared: "2020-01-01T00:00:00Z",
-          started: "2020-01-02T00:00:00Z",
-          retracted: "2020-01-03T00:00:00Z",
-          finished: "2020-01-04T00:00:00Z",
-          mutual: true,
-          open_for_allies: true,
-          allies: [{ alliance_id: 99000003 }, { corporation_id: 1000036 }],
-        },
-      },
-    });
-    mockUseWarKillmails.mockReturnValue({
-      data: {
-        data: [
-          { killmail_id: 1, killmail_hash: "hash1" },
-          { killmail_id: 2, killmail_hash: "hash2" },
-          { killmail_id: 3, killmail_hash: "hash3" },
-        ],
-      },
-    });
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue(esiList([]));
+    swrState = { data: [[]] };
 
     renderPage();
 
     expect(mockUseWar).toHaveBeenCalledWith(WAR_ID);
     expect(mockUseWarKillmails).toHaveBeenCalledWith(WAR_ID);
 
-    expect(screen.getByText("War Report")).toBeInTheDocument();
-    expect(screen.getByText("Aggressor")).toBeInTheDocument();
-    expect(screen.getByText("Defender")).toBeInTheDocument();
+    expect(screen.getByText(`War #${WAR_ID}`)).toBeInTheDocument();
+    // The status badge, beside the "Finished" date and timeline step.
+    expect(
+      screen
+        .getAllByText("Finished")
+        .some((el) => el.closest(".mantine-Badge-root")),
+    ).toBe(true);
+    expect(screen.getByText("Mutual")).toBeInTheDocument();
+    expect(screen.getByText("Open for allies")).toBeInTheDocument();
 
-    // Info window renders twice (aggressor + defender) because a character is selected
-    expect(screen.getAllByTestId("info-window")).toHaveLength(2);
+    // The page's heading names both sides; the header shows each linked,
+    // aggressor first, with its role.
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("vs");
+    const header = screen.getByRole("banner");
+    expect(
+      within(header)
+        .getAllByRole("link")
+        .map((a) => a.getAttribute("href"))
+        .filter((href) => href?.startsWith("/alliance/")),
+    ).toEqual([
+      `/alliance/${AGGRESSOR_ALLIANCE}`,
+      `/alliance/${DEFENDER_ALLIANCE}`,
+    ]);
+    expect(within(header).getByText("Aggressor")).toBeInTheDocument();
+    expect(within(header).getByText("Defender")).toBeInTheDocument();
 
-    // External links
+    // Dates in EVE time, and the war's totals.
+    expect(screen.getAllByText("2020-01-01 00:00").length).toBeGreaterThan(0);
+    expect(screen.getByText("Ships destroyed")).toBeInTheDocument();
+    expect(screen.getByText("49")).toBeInTheDocument();
+
     expect(screen.getByRole("link", { name: /zKillboard/ })).toHaveAttribute(
       "href",
-      `https://zkillboard.com/war/${WAR_ID}`,
+      `https://zkillboard.com/war/${WAR_ID}/`,
     );
     expect(
       screen.getByRole("link", { name: /DOTLAN EveMaps/ }),
     ).toHaveAttribute("href", `https://evemaps.dotlan.net/war/${WAR_ID}`);
 
-    // All optional date / flag rows present
-    expect(screen.getByText("Declared on")).toBeInTheDocument();
-    expect(screen.getByText("Started on")).toBeInTheDocument();
-    expect(screen.getByText("Retracted on")).toBeInTheDocument();
-    expect(screen.getByText("Finished on")).toBeInTheDocument();
-    expect(screen.getByText("Mutual")).toBeInTheDocument();
-    expect(screen.getByText("Open for allies")).toBeInTheDocument();
-    // both Mutual and Open for allies are true -> "Yes" twice
-    expect(screen.getAllByText("Yes")).toHaveLength(2);
-
-    // Allies header reflects the count, both alliance & corporation ally branches render
-    expect(screen.getByText("Allies (2)")).toBeInTheDocument();
-
-    // Killmails header + cards
-    expect(screen.getByText("Killmails (3)")).toBeInTheDocument();
-    expect(screen.getAllByTestId("killmail-card")).toHaveLength(3);
-    expect(screen.getByText("Killmail 1")).toBeInTheDocument();
-  });
-
-  it("mounts killmails in bounded batches and reveals more on demand", () => {
-    mockUseSelectedCharacter.mockReturnValue(undefined);
-    mockUseWar.mockReturnValue({ data: undefined });
-    const killmails = Array.from({ length: 30 }, (_, index) => ({
-      killmail_id: index + 1,
-      killmail_hash: `hash${index + 1}`,
-    }));
-    mockUseWarKillmails.mockReturnValue({ data: { data: killmails } });
-
-    renderPage();
-
-    // Title reflects the FULL count, not the sliced window.
-    expect(screen.getByText("Killmails (30)")).toBeInTheDocument();
-
-    // Only the first batch of 25 cards is mounted initially.
-    expect(screen.getAllByTestId("killmail-card")).toHaveLength(25);
-    expect(screen.getByText("Killmail 25")).toBeInTheDocument();
-    expect(screen.queryByText("Killmail 26")).not.toBeInTheDocument();
-
-    // "Load more" reveals the next batch (capped at the total).
-    fireEvent.click(
-      screen.getByRole("button", { name: /Load more killmails/ }),
-    );
-
-    expect(screen.getAllByTestId("killmail-card")).toHaveLength(30);
-    expect(screen.getByText("Killmail 30")).toBeInTheDocument();
-
-    // Nothing left to load -> button gone.
+    // Each side's info window opens on that side, not the aggressor twice.
     expect(
-      screen.queryByRole("button", { name: /Load more killmails/ }),
-    ).not.toBeInTheDocument();
+      screen.getAllByTestId("info-window").map((el) => el.textContent),
+    ).toEqual([String(AGGRESSOR_ALLIANCE), String(DEFENDER_ALLIANCE)]);
+
+    // The aggressor dealt 300 of the 400 ISK destroyed.
+    expect(screen.getByText("75% of ISK destroyed")).toBeInTheDocument();
+
+    // The whole lifecycle is on the timeline.
+    for (const step of ["Declared", "Fighting", "Retracted"])
+      expect(screen.getAllByText(step).length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("Both sides may engage each other anywhere."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("The war is over.")).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("tab", { name: /Killmails \(0\)/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: /Allies \(2\)/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("No ships have been destroyed in this war."),
+    ).toBeInTheDocument();
   });
 
-  it("renders the empty war state (no war data, no killmails)", () => {
-    mockUseSelectedCharacter.mockReturnValue(undefined);
-    mockUseWar.mockReturnValue({ data: undefined });
-    mockUseWarKillmails.mockReturnValue({ data: undefined });
-
-    renderPage();
-
-    // Header still renders
-    expect(screen.getByText("War Report")).toBeInTheDocument();
-    expect(screen.getByText("Aggressor")).toBeInTheDocument();
-    expect(screen.getByText("Defender")).toBeInTheDocument();
-
-    // No selected character -> no info windows
-    expect(screen.queryByTestId("info-window")).not.toBeInTheDocument();
-
-    // No war -> date/flag rows hidden
-    expect(screen.queryByText("Declared on")).not.toBeInTheDocument();
-    expect(screen.queryByText("Mutual")).not.toBeInTheDocument();
-    expect(screen.queryByText("Open for allies")).not.toBeInTheDocument();
-
-    // Empty counts
-    expect(screen.getByText("Allies (0)")).toBeInTheDocument();
-    expect(screen.getByText("Killmails (0)")).toBeInTheDocument();
-    expect(screen.queryByTestId("killmail-card")).not.toBeInTheDocument();
-  });
-
-  it("renders non-mutual, not-open war with falsey flag values", () => {
-    mockUseSelectedCharacter.mockReturnValue(undefined);
+  it("labels an ongoing war by where it is in its lifecycle", () => {
+    const future = new Date(Date.now() + 86_400_000).toISOString();
     mockUseWar.mockReturnValue({
       data: {
         data: {
-          aggressor: {
-            corporation_id: 1000035,
-            isk_destroyed: 0,
-            ships_killed: 0,
-          },
-          defender: {
-            corporation_id: 1000036,
-            isk_destroyed: 0,
-            ships_killed: 0,
-          },
-          declared: "2020-01-01T00:00:00Z",
-          // no started / retracted / finished
+          ...FULL_WAR,
+          started: future,
+          retracted: undefined,
+          finished: undefined,
           mutual: false,
           open_for_allies: false,
           allies: [],
         },
       },
     });
-    mockUseWarKillmails.mockReturnValue({ data: { data: [] } });
+    mockUseWarKillmails.mockReturnValue(esiList([]));
 
     renderPage();
 
-    // Declared row shows, but optional started/retracted/finished are hidden
-    expect(screen.getByText("Declared on")).toBeInTheDocument();
-    expect(screen.queryByText("Started on")).not.toBeInTheDocument();
-    expect(screen.queryByText("Retracted on")).not.toBeInTheDocument();
-    expect(screen.queryByText("Finished on")).not.toBeInTheDocument();
+    expect(screen.getByText("Starting")).toBeInTheDocument();
+    expect(screen.getByText("Starts")).toBeInTheDocument();
+    expect(screen.queryByText("Mutual")).not.toBeInTheDocument();
+    expect(screen.queryByText("Open for allies")).not.toBeInTheDocument();
+    expect(screen.getByText("The aggressor declared war.")).toBeInTheDocument();
+    // No allies: no tab for them.
+    expect(
+      screen.queryByRole("tab", { name: /Allies/ }),
+    ).not.toBeInTheDocument();
+  });
 
-    // Falsey flags -> "No" twice
-    expect(screen.getAllByText("No")).toHaveLength(2);
+  it("shows the newest five kills on the Overview, tagged by who lost them", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    const ids = [11, 12, 13, 14, 15, 16, 17];
+    mockUseWarKillmails.mockReturnValue(esiList(ids));
+    swrState = {
+      data: [
+        [
+          zkbKillmail(17, AGGRESSOR_ALLIANCE),
+          zkbKillmail(16, DEFENDER_ALLIANCE),
+          zkbKillmail(15, ALLY_ALLIANCE),
+          zkbKillmail(14, 123),
+          zkbKillmail(13),
+          zkbKillmail(12),
+          zkbKillmail(11),
+        ],
+      ],
+    };
 
-    expect(screen.getByText("Allies (0)")).toBeInTheDocument();
-    expect(screen.getByText("Killmails (0)")).toBeInTheDocument();
+    renderPage();
+
+    const cards = screen.getAllByTestId("killmail-card");
+    expect(cards.map((card) => card.textContent)).toEqual([
+      "Killmail 17 · Aggressor loss · 170 ISK",
+      "Killmail 16 · Defender loss · 160 ISK",
+      "Killmail 15 · Ally loss · 150 ISK",
+      "Killmail 14 · 140 ISK",
+      "Killmail 13 · 130 ISK",
+    ]);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "See all 7 killmails" }),
+    );
+    expect(screen.getAllByTestId("killmail-card")).toHaveLength(7);
+    expect(
+      screen.getByText(/Values and full killmails from/),
+    ).toBeInTheDocument();
+  });
+
+  it("reveals killmails a batch at a time, fetching zKillboard pages as needed", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    const ids = Array.from({ length: 230 }, (_, index) => index + 1);
+    mockUseWarKillmails.mockReturnValue(esiList(ids));
+    // zKillboard's first page: the newest 200.
+    swrState = {
+      data: [
+        ids
+          .slice(30)
+          .reverse()
+          .map((id) => zkbKillmail(id)),
+      ],
+    };
+
+    renderPage("?tab=killmails");
+
+    expect(
+      screen.getByRole("tab", { name: /Killmails \(230\)/ }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(screen.getAllByTestId("killmail-card")).toHaveLength(25);
+    expect(screen.getByText("Killmail 230 · 2300 ISK")).toBeInTheDocument();
+
+    const loadMore = () =>
+      fireEvent.click(
+        screen.getByRole("button", { name: /Load more killmails/ }),
+      );
+    for (let batch = 1; batch < 8; batch++) loadMore();
+    expect(screen.getAllByTestId("killmail-card")).toHaveLength(200);
+    expect(mockSetSize).toHaveBeenLastCalledWith(1);
+
+    // Past the first 200 the second page is asked for.
+    loadMore();
+    expect(mockSetSize).toHaveBeenLastCalledWith(2);
+    expect(
+      screen.getByRole("button", { name: "Load more killmails (5 remaining)" }),
+    ).toBeInTheDocument();
+  });
+
+  it("waits for zKillboard, then asks ESI for the killmails it lacks", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue(esiList([1, 2]));
+
+    swrState = { isLoading: true };
+    const { unmount } = renderPage("?tab=killmails");
+    expect(screen.getAllByTestId("killmail-skeleton")).toHaveLength(2);
+    unmount();
+
+    // zKillboard had one of the two, and nothing further back.
+    swrState = { data: [[zkbKillmail(2)]] };
+    renderPage("?tab=killmails");
+    expect(screen.getByText("Killmail 2 · 20 ISK")).toBeInTheDocument();
+    expect(screen.getByTestId("esi-killmail-card")).toHaveTextContent(
+      "ESI killmail 1 · Defender loss",
+    );
+  });
+
+  it("falls back to ESI alone when zKillboard fails", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue(esiList([1]));
+    swrState = { error: new Error("down") };
+
+    renderPage("?tab=killmails");
+
+    expect(screen.getByText(/which did not answer/)).toBeInTheDocument();
+    expect(screen.getByTestId("esi-killmail-card")).toBeInTheDocument();
+  });
+
+  it("lists zKillboard's killmails when ESI's list is missing", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({ data: undefined, isLoading: false });
+    swrState = { data: [[zkbKillmail(5)]] };
+
+    renderPage("?tab=killmails");
+
+    expect(screen.getByText("Killmail 5 · 50 ISK")).toBeInTheDocument();
+  });
+
+  it("lists the defender's allies on their own tab", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue(esiList([]));
+
+    renderPage("?tab=allies");
+
+    expect(screen.getByText("Alliance")).toBeInTheDocument();
+    expect(screen.getByText("Corporation")).toBeInTheDocument();
+    expect(
+      document.querySelector(`a[href="/alliance/${ALLY_ALLIANCE}"]`),
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector(`a[href="/corporation/${ALLY_CORPORATION}"]`),
+    ).toBeInTheDocument();
+  });
+
+  it("renders a skeleton header and loading cards before ESI answers", () => {
+    mockUseWar.mockReturnValue({ data: undefined });
+    mockUseWarKillmails.mockReturnValue({ data: undefined, isLoading: true });
+    swrState = { isLoading: true };
+
+    renderPage("?tab=allies");
+
+    // No war yet: the Allies tab is not offered, so the Overview shows.
+    expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.queryByText("Finished")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("info-window")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("killmail-skeleton")).toHaveLength(3);
+  });
+
+  it("asks zKillboard for the next page only while the last one was full", async () => {
+    mockUseWar.mockReturnValue({ data: undefined });
+    mockUseWarKillmails.mockReturnValue(esiList([]));
+    renderPage();
+
+    expect(swrGetKey(0, null)).toBe(
+      `https://zkillboard.com/api/warID/${WAR_ID}/page/1/`,
+    );
+    const full = Array.from({ length: 200 }, (_, i) => zkbKillmail(i));
+    expect(swrGetKey(1, full)).toBe(
+      `https://zkillboard.com/api/warID/${WAR_ID}/page/2/`,
+    );
+    expect(swrGetKey(2, full.slice(1))).toBeNull();
+
+    // jsdom has no Response; the fetcher reads only these three fields.
+    const reply = (body: unknown, status = 200) =>
+      ({
+        ok: status < 400,
+        status,
+        json: () => Promise.resolve(body),
+      }) as Response;
+    const fetchMock = jest.fn<typeof fetch>();
+    global.fetch = fetchMock;
+    fetchMock.mockResolvedValueOnce(reply([zkbKillmail(1)]));
+    await expect(swrFetcher("u")).resolves.toHaveLength(1);
+    fetchMock.mockResolvedValueOnce(reply({ error: "nope" }));
+    await expect(swrFetcher("u")).rejects.toThrow("sent no killmails");
+    fetchMock.mockResolvedValueOnce(reply(null, 429));
+    await expect(swrFetcher("u")).rejects.toThrow("answered 429");
   });
 
   it("renders the server wrapper (page.tsx) inside a Suspense boundary", async () => {
-    mockUseSelectedCharacter.mockReturnValue(undefined);
     mockUseWar.mockReturnValue({ data: undefined });
     mockUseWarKillmails.mockReturnValue({ data: undefined });
 
     const tree = await resolvePageContent(String(WAR_ID));
-    render(<MantineProvider>{tree}</MantineProvider>);
+    render(<MantineProvider>{tree}</MantineProvider>, {
+      wrapper: withNuqsTestingAdapter(),
+    });
 
-    expect(screen.getByText("War Report")).toBeInTheDocument();
+    expect(screen.getByText(`War #${WAR_ID}`)).toBeInTheDocument();
   });
 });
 
