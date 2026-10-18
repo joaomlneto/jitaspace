@@ -184,17 +184,29 @@ describe("ContactsDataTable", () => {
     expect(screen.getByText("No sources selected.")).toBeInTheDocument();
   });
 
-  it("keeps the same contact from two sources as two rows", () => {
-    // The row id must include the source: keyed by contact id alone, the two
-    // rows would collide.
-    renderTable(
-      [CONTACT_WATCHED, { ...CONTACT_WATCHED, source: CORPORATION_SOURCE }],
-      [CHARACTER_SOURCE, CORPORATION_SOURCE],
-    );
-    const bodyRows = screen
-      .getAllByRole("row")
-      .filter((r) => r.querySelector("td"));
-    expect(bodyRows).toHaveLength(2);
+  it("keeps the same contact from two sources as two distinct rows", () => {
+    // The row id must include the source. Keyed by contact id alone, both rows
+    // still render (TanStack keeps one row per item), but React sees duplicate
+    // keys — which is what this guards against.
+    const consoleError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    try {
+      renderTable(
+        [CONTACT_WATCHED, { ...CONTACT_WATCHED, source: CORPORATION_SOURCE }],
+        [CHARACTER_SOURCE, CORPORATION_SOURCE],
+      );
+      const bodyRows = screen
+        .getAllByRole("row")
+        .filter((r) => r.querySelector("td"));
+      expect(bodyRows).toHaveLength(2);
+      const duplicateKeyWarnings = consoleError.mock.calls.filter((args) =>
+        args.some((arg) => typeof arg === "string" && arg.includes("same key")),
+      );
+      expect(duplicateKeyWarnings).toHaveLength(0);
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it("renders without crashing when a contact has no label_ids", () => {

@@ -18,6 +18,16 @@ describe("getEnabledCorporationApps", () => {
     expect(enabledApps.map((app) => app.name)).toEqual(["Contacts"]);
   });
 
+  it("does not offer corporation Contacts on character contacts access alone", () => {
+    // The entry links to /contacts filtered to the corporation, which shows
+    // nothing unless the corporation's own list is readable.
+    const enabledApps = getEnabledCorporationApps([
+      "esi-characters.read_contacts.v1",
+    ]);
+
+    expect(enabledApps).toHaveLength(0);
+  });
+
   it("returns no apps when scopes do not satisfy optional requirements", () => {
     const enabledApps = getEnabledCorporationApps([]);
 

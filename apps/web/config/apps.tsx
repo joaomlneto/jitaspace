@@ -36,6 +36,11 @@ export interface JitaApp {
   name: string;
   description: string;
   url?: string;
+  /**
+   * The app's page for one corporation or alliance, for the menus that list a
+   * single entity's apps. Falls back to `url`.
+   */
+  subjectUrl?: (subjectId: number) => string;
   onClick?: () => void;
   Icon: (props: EveIconProps) => React.ReactElement;
   hotKey?: string[];
@@ -229,24 +234,15 @@ export const corporationApps: Record<string, JitaApp> = {
     name: "Contacts",
     description: "View and manage your corporation's contacts.",
     url: "/contacts",
+    subjectUrl: (id) => `/contacts?sources=corporation:${id}`,
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
+      // Only the corporation's own contacts scope: the link opens /contacts
+      // filtered to this corporation, which needs that list to be readable.
       optional: [
-        {
-          reason: "Read Character Contacts",
-          scopes: ["esi-characters.read_contacts.v1"],
-        },
         {
           reason: "Read Corporation Contacts",
           scopes: ["esi-corporations.read_contacts.v1"],
-        },
-        {
-          reason: "Read Alliance Contacts",
-          scopes: ["esi-alliances.read_contacts.v1"],
-        },
-        {
-          reason: "Update Character Contacts",
-          scopes: ["esi-characters.write_contacts.v1"],
         },
       ],
     },
@@ -279,6 +275,7 @@ export const allianceApps: Record<string, JitaApp> = {
     name: "Contacts",
     description: "View and manage your alliance's contacts.",
     url: "/contacts",
+    subjectUrl: (id) => `/contacts?sources=alliance:${id}`,
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
       optional: [

@@ -114,10 +114,34 @@ export default function ContactsPageClient() {
 
   const isPending =
     characters.isPending || corporations.isPending || alliances.isPending;
+
+  // Skeleton rows only while something the user asked to see is still on its
+  // way, so a deselected source that is slow to load neither holds back the
+  // "no sources selected" message nor an empty list that has already loaded.
+  // Before the sources are known (the auth store rehydrating), anything
+  // pending counts.
+  const isSelectionPending =
+    sources.length === 0
+      ? isPending
+      : sources.some(
+          (source) =>
+            activeKeys.has(contactSourceKey(source)) &&
+            {
+              character: characters.isPending,
+              corporation: corporations.isPending,
+              alliance: alliances.isPending,
+            }[source.kind],
+        );
+
+  // A source whose labels failed still shows its contacts, with label ids in
+  // place of names, so it is reported apart from one whose contacts failed.
   const errors = [
-    ...characters.errors,
-    ...corporations.errors,
-    ...alliances.errors,
+    ...characters.errors.map((error) => ({ ...error, what: "contacts" })),
+    ...corporations.errors.map((error) => ({ ...error, what: "contacts" })),
+    ...alliances.errors.map((error) => ({ ...error, what: "contacts" })),
+    ...characterLabels.errors.map((error) => ({ ...error, what: "labels" })),
+    ...corporationLabels.errors.map((error) => ({ ...error, what: "labels" })),
+    ...allianceLabels.errors.map((error) => ({ ...error, what: "labels" })),
   ];
 
   return (
@@ -166,6 +190,7 @@ export default function ContactsPageClient() {
                             size={16}
                           />
                           <EveEntityName
+                            span
                             entityId={source.subjectId}
                             category={source.kind}
                           />
@@ -183,9 +208,11 @@ export default function ContactsPageClient() {
           <Alert color="orange" title="Some contacts could not be loaded">
             <Stack gap={2}>
               {errors.map((error) => (
-                <Text key={error.subjectId} size="sm">
-                  <EveEntityName entityId={error.subjectId} />
-                  {": "}
+                <Text key={`${error.what}:${error.subjectId}`} size="sm">
+                  <EveEntityName span inherit entityId={error.subjectId} />
+                  {error.what === "labels"
+                    ? " (labels, shown as numbers): "
+                    : ": "}
                   {error.error.message}
                 </Text>
               ))}
@@ -203,7 +230,7 @@ export default function ContactsPageClient() {
           }
           // Skeleton rows until the first contacts land, so the table holds
           // its height instead of growing into place.
-          isLoading={isPending && rows.length === 0}
+          isLoading={isSelectionPending && rows.length === 0}
         />
       </Stack>
     </Container>
