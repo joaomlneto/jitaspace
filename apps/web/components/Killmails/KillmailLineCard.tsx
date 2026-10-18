@@ -85,7 +85,6 @@ export function KillmailLineCard({
             <Anchor
               component={HoverPrefetchLink}
               href={killmailPagePath(killmail.killmail_id, hash)}
-              prefetch={false}
               size="sm"
               fw={700}
               c="bright"
@@ -98,8 +97,7 @@ export function KillmailLineCard({
                 span
                 size="xs"
                 fw={600}
-                style={{ color: tag.color }}
-                className={parts.truncate}
+                className={`${parts.truncate} ${parts.accentText}`}
               >
                 {tag.label}
               </Text>

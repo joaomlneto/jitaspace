@@ -33,3 +33,27 @@
 .iskFigure[data-tier="huge"] {
   color: var(--mantine-color-red-5);
 }
+
+/*
+  Text in a side's accent: the accents are tuned for the dark themes, and on
+  a light background they fall short of AA contrast, so text darkens there.
+  Bars, rings and stripes keep the accent as is.
+*/
+.accentText {
+  color: var(--killmail-accent, var(--mantine-color-dimmed));
+
+  @mixin light {
+    color: color-mix(
+      in srgb,
+      var(--killmail-accent, var(--mantine-color-dimmed)) 65%,
+      black
+    );
+  }
+}
+
+/* Mantine sets --badge-color inline, so the text colour is set directly. */
+.tagBadge {
+  @mixin light {
+    color: color-mix(in srgb, var(--badge-color) 65%, black);
+  }
+}

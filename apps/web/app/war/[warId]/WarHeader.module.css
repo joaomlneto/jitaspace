@@ -81,6 +81,11 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--side-color);
+
+  /* The accents fall short of AA contrast as text on a light background. */
+  @mixin light {
+    color: color-mix(in srgb, var(--side-color) 65%, black);
+  }
 }
 
 .name {

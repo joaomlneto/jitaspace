@@ -63,8 +63,7 @@ export function KillmailTileCard({
               span
               size="xs"
               fw={600}
-              style={{ color: tag.color }}
-              className={parts.truncate}
+              className={`${parts.truncate} ${parts.accentText}`}
             >
               {tag.label}
             </Text>

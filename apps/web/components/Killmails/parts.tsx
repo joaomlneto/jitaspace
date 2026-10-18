@@ -273,7 +273,6 @@ export function KillmailTimeAgo({
       <Anchor
         component={HoverPrefetchLink}
         href={killmailPagePath(killmail.killmail_id, hash)}
-        prefetch={false}
         size="xs"
         c="dimmed"
       >
@@ -283,7 +282,11 @@ export function KillmailTimeAgo({
   );
 }
 
-/** zKillboard's value for the kill, coloured when it stands out. */
+/**
+ * zKillboard's value for the kill, coloured when it stands out. ISKAmount
+ * shows the exact figure on hover; where it comes from is said once, above
+ * the list, not on every card.
+ */
 export function KillmailValue({
   zkb,
   className,
@@ -291,16 +294,12 @@ export function KillmailValue({
   const value = zkb?.totalValue;
   if (value === undefined) return null;
   return (
-    <Tooltip
-      label={`${formatInteger(Math.round(value))} ISK, valued by zKillboard`}
+    <span
+      className={[classes.iskFigure, className].filter(Boolean).join(" ")}
+      data-tier={iskTier(value)}
     >
-      <span
-        className={[classes.iskFigure, className].filter(Boolean).join(" ")}
-        data-tier={iskTier(value)}
-      >
-        <ISKAmount span inherit amount={value} />
-      </span>
-    </Tooltip>
+      <ISKAmount span inherit amount={value} />
+    </span>
   );
 }
 
@@ -316,6 +315,7 @@ export function KillmailBadges({
           size="xs"
           variant="outline"
           color={tag.color}
+          className={classes.tagBadge}
           style={{ flexShrink: 0 }}
         >
           {tag.label}
