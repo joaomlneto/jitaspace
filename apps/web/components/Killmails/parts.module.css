@@ -28,10 +28,19 @@
 /* Values that stand out on a killboard: a billion and up, then ten. */
 .iskFigure[data-tier="high"] {
   color: var(--mantine-color-orange-5);
+
+  /* As with the accents, darkened on light backgrounds for AA contrast. */
+  @mixin light {
+    color: color-mix(in srgb, var(--mantine-color-orange-5) 65%, black);
+  }
 }
 
 .iskFigure[data-tier="huge"] {
   color: var(--mantine-color-red-5);
+
+  @mixin light {
+    color: color-mix(in srgb, var(--mantine-color-red-5) 65%, black);
+  }
 }
 
 /*
