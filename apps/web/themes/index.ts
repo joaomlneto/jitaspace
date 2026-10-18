@@ -112,8 +112,10 @@ export const themes = {
       primaryColor: "sisters_of_eve_primary",
     }),
   ),
-  // For fun: a spreadsheet. Not an EVE theme, so over the plain base.
-  excel: mergeThemeOverrides(baseTheme, excelTheme),
+  // For fun: a spreadsheet. Not an EVE theme, so over the plain base, but
+  // with the faction palettes (colors.ts) underneath, as EVE has them: pages
+  // ask for `eve_primary`, `eve_accent` and `eve.2` by name.
+  excel: mergeThemeOverrides(baseTheme, createTheme({ colors }), excelTheme),
   // EVE on plain black instead of a wallpaper. The light scheme gets a plain
   // pale background instead: page text sits straight on it (e.g. /about), and
   // that text is dark there.
