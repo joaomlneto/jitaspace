@@ -32,11 +32,6 @@ jest.mock("@jitaspace/hooks", () => ({
   useEsiName: (...args: unknown[]) => mockUseEsiName(...args),
 }));
 
-const mockPush = jest.fn();
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
-}));
-
 jest.mock("@jitaspace/ui", () => ({
   ...jest.requireActual<Record<string, unknown>>("@jitaspace/ui"),
   SolarSystemSecurityStatusBadge: ({
@@ -341,43 +336,16 @@ describe("KillmailFeedCard", () => {
     ]);
   });
 
-  it("opens our killmail page when the entry itself is clicked", () => {
+  it("opens our killmail page from anywhere on the entry, as a link", () => {
     renderFeed();
-    fireEvent.click(screen.getByText("18:38"));
-    expect(mockPush).toHaveBeenCalledWith(DETAILS);
-  });
-
-  it("leaves clicks on its own links and buttons alone", () => {
-    renderFeed();
-    fireEvent.click(screen.getByText("char-2116159360"));
-    fireEvent.click(screen.getByRole("button", { name: "Show fitting" }));
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  it("opens a new tab on a modified or middle click, nothing after a selection", () => {
-    const open = jest.spyOn(window, "open").mockReturnValue(null);
-    renderFeed();
-    fireEvent.click(screen.getByText("18:38"), { metaKey: true });
-    fireEvent.click(screen.getByText("18:38"), { shiftKey: true });
-    // A middle click arrives as `auxclick`, not `click`.
-    fireEvent(
-      screen.getByText("18:38"),
-      new MouseEvent("auxclick", { bubbles: true, button: 1 }),
-    );
-    fireEvent(
-      screen.getByText("18:38"),
-      new MouseEvent("auxclick", { bubbles: true, button: 2 }),
-    );
-    expect(open).toHaveBeenCalledTimes(3);
-    expect(open).toHaveBeenCalledWith(DETAILS, "_blank", "noopener");
-
-    const selection = jest
-      .spyOn(window, "getSelection")
-      .mockReturnValue({ toString: () => "Jita" } as Selection);
-    fireEvent.click(screen.getByText("18:38"));
-    expect(mockPush).not.toHaveBeenCalled();
-    selection.mockRestore();
-    open.mockRestore();
+    // A real link stretched under the entry: new tabs, keyboard and screen
+    // readers work as on any link, and no click handler second-guesses them.
+    const link = screen.getByRole("link", {
+      name: "Killmail 139116685 details",
+    });
+    expect(link).toHaveAttribute("href", DETAILS);
+    expect(link).toBeEmptyDOMElement();
+    expect(screen.getByRole("article")).toContainElement(link);
   });
 
   it("shows a skeleton while loading", () => {

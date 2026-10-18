@@ -1,7 +1,5 @@
 "use client";
 
-import type { MouseEvent } from "react";
-import { useRouter } from "next/navigation";
 import { Skeleton, Text } from "@mantine/core";
 
 import { CorporationName, TypeName } from "@jitaspace/eve-components";
@@ -10,6 +8,7 @@ import { DateHoverCard, TypeAvatar } from "@jitaspace/ui";
 
 import type { KillmailCardProps } from "./parts";
 import { CorporationAnchor, TypeAnchor } from "~/components/Anchor";
+import { HoverPrefetchLink } from "~/components/Link";
 import { formatInteger, formatUtcTime } from "~/lib/format";
 import classes from "./KillmailFeedCard.module.css";
 import {
@@ -38,30 +37,18 @@ function useArticle(typeId: number) {
 }
 
 /**
- * Whether a click on the entry should open the killmail: not when it landed
- * on one of its own links or buttons, came from a portal (a menu or hover
- * card the entry opened), or ended a text selection.
- */
-function isRowClick(event: MouseEvent<HTMLElement>) {
-  const target = event.target as Element;
-  if (!event.currentTarget.contains(target)) return false;
-  if (target.closest("a, button, input, [role='menu']")) return false;
-  return !window.getSelection()?.toString();
-}
-
-/**
  * A killmail as an entry on a timeline: EVE time in the gutter, a dot in the
  * losing side's accent on a rail down the list, and the kill told as a
  * sentence — who lost what, to whom. Clicking the entry anywhere but its
- * links and buttons opens our killmail page.
+ * links and buttons opens our killmail page: a link stretched under the
+ * entry, so it behaves as a link does (new tabs, keyboard, screen readers).
  */
 export function KillmailFeedCard({
   killmail,
   hash,
   zkb,
   tag,
-}: KillmailCardProps) {
-  const router = useRouter();
+}: Readonly<KillmailCardProps>) {
   const { victim } = killmail;
   const finalBlow = finalBlowOf(killmail);
   const others = killmail.attackers.length - 1;
@@ -70,32 +57,18 @@ export function KillmailFeedCard({
   const killedAt = new Date(killmail.killmail_time);
   const path = killmailPagePath(killmail.killmail_id, hash);
 
-  const onClick = (event: MouseEvent<HTMLElement>) => {
-    if (!isRowClick(event)) return;
-    // As a link would: modified clicks open a new tab or window.
-    if (event.metaKey || event.ctrlKey || event.shiftKey) {
-      window.open(path, "_blank", "noopener");
-      return;
-    }
-    router.push(path);
-  };
-  // A middle click never fires `click`; it opens a new tab, as on a link.
-  const onAuxClick = (event: MouseEvent<HTMLElement>) => {
-    if (event.button === 1 && isRowClick(event))
-      window.open(path, "_blank", "noopener");
-  };
-
   return (
     <div className={classes.container}>
-      {/* A mouse convenience: keyboard users reach the same page through
-          the entry's "time ago" link. */}
       <article
         className={classes.item}
         style={accentStyle(tag)}
         aria-label={`Killmail ${killmail.killmail_id}`}
-        onClick={onClick}
-        onAuxClick={onAuxClick}
       >
+        <HoverPrefetchLink
+          href={path}
+          className={classes.rowLink}
+          aria-label={`Killmail ${killmail.killmail_id} details`}
+        />
         {/* The grid area sits on this wrapper: the hover card wraps its
             child in a span of its own. */}
         <div className={classes.time}>

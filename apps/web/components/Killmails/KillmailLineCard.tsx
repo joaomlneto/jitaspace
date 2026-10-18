@@ -55,7 +55,7 @@ export function KillmailLineCard({
   hash,
   zkb,
   tag,
-}: KillmailCardProps) {
+}: Readonly<KillmailCardProps>) {
   const { victim } = killmail;
   const finalBlow = finalBlowOf(killmail);
   const killedAt = new Date(killmail.killmail_time);

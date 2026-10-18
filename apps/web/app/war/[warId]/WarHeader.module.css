@@ -46,6 +46,7 @@
 }
 
 .side[data-side="defender"] {
+  --side-color: var(--def);
   flex-direction: row-reverse;
   text-align: right;
 }
@@ -69,10 +70,6 @@
 
 .side[data-side="aggressor"] {
   --side-color: var(--agg);
-}
-
-.side[data-side="defender"] {
-  --side-color: var(--def);
 }
 
 .role {

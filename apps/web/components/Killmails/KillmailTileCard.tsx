@@ -32,7 +32,7 @@ export function KillmailTileCard({
   hash,
   zkb,
   tag,
-}: KillmailCardProps) {
+}: Readonly<KillmailCardProps>) {
   const { victim } = killmail;
   const finalBlow = finalBlowOf(killmail);
   return (
