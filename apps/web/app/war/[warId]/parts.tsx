@@ -270,8 +270,13 @@ export function KillmailList({
           />
         ))}
       </Stack>
-      {limit === undefined && feed.hasMore && (
-        <Button variant="default" fullWidth onClick={feed.showMore}>
+      {limit === undefined && (feed.hasMore || feed.isLoadingMore) && (
+        <Button
+          variant="default"
+          fullWidth
+          onClick={feed.showMore}
+          loading={feed.isLoadingMore}
+        >
           {feed.remaining > 0
             ? `Load more killmails (${formatInteger(feed.remaining)} remaining)`
             : "Load more killmails"}

@@ -501,6 +501,7 @@ describe("War page", () => {
     expect(
       screen.getByText(/Neither ESI nor zKillboard answered/),
     ).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Killmails" })).toBeInTheDocument();
     expect(
       screen.queryByText("No ships have been destroyed in this war."),
     ).not.toBeInTheDocument();
@@ -549,6 +550,24 @@ describe("War page", () => {
     );
   });
 
+  it("says older kills are missing when both sources have failed", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    });
+    swrState = { data: [[zkbKillmail(1)]], error: new Error("down") };
+
+    renderPage("?tab=killmails");
+
+    expect(
+      screen.getByText(
+        /zKillboard stopped answering, so older kills are missing; ESI did not answer/,
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("owns up when zKillboard stops answering after a page", () => {
     mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
     mockUseWarKillmails.mockReturnValue(esiList([1]));
@@ -557,7 +576,9 @@ describe("War page", () => {
     renderPage("?tab=killmails");
 
     expect(
-      screen.getByText(/which stopped answering, so older kills/),
+      screen.getByText(
+        /zKillboard stopped answering, so older kills may lack values/,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -583,11 +604,22 @@ describe("War page", () => {
     expect(screen.getAllByTestId("killmail-card")).toHaveLength(200);
 
     // Every loaded kill is shown, but zKillboard's page was full: ask on.
+    // Without ESI's list, the count is only a floor.
+    expect(
+      screen.getByRole("tab", { name: /Killmails \(200\+\)/ }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Load more killmails" }),
     ).toBeInTheDocument();
     loadMore();
     expect(mockSetSize).toHaveBeenLastCalledWith(2);
+
+    // While that page is on its way, the button stays, busy.
+    swrState = { ...swrState, size: 2 };
+    loadMore();
+    expect(
+      screen.getByRole("button", { name: /Load more killmails/ }),
+    ).toHaveAttribute("data-loading", "true");
   });
 
   it("does not count kills before any have arrived", () => {
@@ -626,7 +658,9 @@ describe("War page", () => {
 
     renderPage("?tab=killmails");
 
-    expect(screen.getByText(/which did not answer/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/zKillboard did not answer, so values are missing/),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("esi-killmail-card")).toBeInTheDocument();
   });
 

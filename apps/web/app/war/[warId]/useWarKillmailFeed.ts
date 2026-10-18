@@ -180,6 +180,13 @@ export function useWarKillmailFeed(warId: number) {
     remaining,
     /** More can be shown: loaded kills not yet visible, or zKillboard pages. */
     hasMore: remaining > 0 || zkbHasMore,
+    /** A zKillboard page asked for by "load more" is on its way. */
+    isLoadingMore: !isEmpty && remaining === 0 && isZkbFetching,
+    /**
+     * The count is a floor, not a total: ESI's list failed, so only what
+     * zKillboard has sent so far is known, and it may have more.
+     */
+    isCountPartial: isEsiError && !isZkbExhausted,
     showMore,
     awaitsZkb,
     /** Nothing to show yet, and an answer is still on its way. */

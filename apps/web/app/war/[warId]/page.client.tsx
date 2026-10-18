@@ -35,14 +35,26 @@ import { WarHeader } from "./WarHeader";
 const RECENT_KILLMAILS = 5;
 
 /** How the Killmails tab owns up to what the sources failed to send. */
-function zkbNote(feed: WarKillmailFeed) {
+function sourcesNote(feed: WarKillmailFeed) {
+  const notes: string[] = [];
   if (feed.hasZkbError && feed.zkbPageCount === 0)
-    return ", which did not answer, so values are missing.";
-  if (feed.hasZkbError)
-    return ", which stopped answering, so older kills may lack values.";
+    notes.push("zKillboard did not answer, so values are missing");
+  else if (feed.hasZkbError)
+    notes.push(
+      feed.hasEsiError
+        ? "zKillboard stopped answering, so older kills are missing"
+        : "zKillboard stopped answering, so older kills may lack values",
+    );
   if (feed.hasEsiError)
-    return ". ESI did not answer for every page, so the list may be short.";
-  return ".";
+    notes.push("ESI did not answer for every page, so the list may be short");
+  return notes.length === 0
+    ? "."
+    : `. ${notes.join("; ")}. Reload the page to try again.`;
+}
+
+/** "694", or "200+" when only part of the list is known. */
+function killmailCount(feed: WarKillmailFeed) {
+  return `${formatInteger(feed.entries.length)}${feed.isCountPartial ? "+" : ""}`;
 }
 
 const toDate = (iso: string | undefined) =>
@@ -110,9 +122,9 @@ export default function Page() {
               value="killmails"
               leftSection={<KillReportIcon size={16} alt="" />}
             >
-              {feed.isLoading
+              {feed.isLoading || feed.isError
                 ? "Killmails"
-                : `Killmails (${formatInteger(feed.entries.length)})`}
+                : `Killmails (${killmailCount(feed)})`}
             </Tabs.Tab>
             {visibleTabs.allies && (
               <Tabs.Tab
@@ -154,8 +166,7 @@ export default function Page() {
                             variant="subtle"
                             onClick={() => void setActiveTab("killmails")}
                           >
-                            See all {formatInteger(feed.entries.length)}{" "}
-                            killmails
+                            See all {killmailCount(feed)} killmails
                           </Button>
                         )
                       }
@@ -177,7 +188,7 @@ export default function Page() {
                 >
                   zKillboard
                 </a>
-                {zkbNote(feed)}
+                {sourcesNote(feed)}
               </Text>
               <KillmailList war={war} feed={feed} />
             </Stack>
