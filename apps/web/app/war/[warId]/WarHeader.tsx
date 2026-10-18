@@ -46,10 +46,7 @@ function Side({
         <div className={classes.name}>
           <PartyName party={party} />
         </div>
-        <Group
-          gap="xs"
-          style={{ flexDirection: side === "defender" ? "row-reverse" : "row" }}
-        >
+        <Group gap="xs" className={classes.tickerRow}>
           <PartyTicker party={party} />
           {character && entityId !== undefined && (
             <OpenInformationWindowActionIcon

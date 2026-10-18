@@ -354,10 +354,21 @@ describe("KillmailFeedCard", () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("opens a new tab on a modified click, and nothing after a selection", () => {
+  it("opens a new tab on a modified or middle click, nothing after a selection", () => {
     const open = jest.spyOn(window, "open").mockReturnValue(null);
     renderFeed();
     fireEvent.click(screen.getByText("18:38"), { metaKey: true });
+    fireEvent.click(screen.getByText("18:38"), { shiftKey: true });
+    // A middle click arrives as `auxclick`, not `click`.
+    fireEvent(
+      screen.getByText("18:38"),
+      new MouseEvent("auxclick", { bubbles: true, button: 1 }),
+    );
+    fireEvent(
+      screen.getByText("18:38"),
+      new MouseEvent("auxclick", { bubbles: true, button: 2 }),
+    );
+    expect(open).toHaveBeenCalledTimes(3);
     expect(open).toHaveBeenCalledWith(DETAILS, "_blank", "noopener");
 
     const selection = jest

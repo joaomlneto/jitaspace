@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useCallback } from "react";
 import {
   Button,
   Group,
@@ -21,6 +22,7 @@ import {
 
 import type { EsiWar, WarParty } from "./sides";
 import type { WarKillmailEntry, WarKillmailFeed } from "./useWarKillmailFeed";
+import type { EsiKillmail } from "~/components/Killmails";
 import { AllianceAnchor, CorporationAnchor } from "~/components/Anchor";
 import {
   AllianceTickerBadge,
@@ -176,15 +178,22 @@ export function WarTimeline({
   );
 }
 
+/** The placeholder for a card whose killmail is on its way. */
+const CARD_SKELETON = <KillmailLineCardSkeleton />;
+
 function KillmailEntry({
   entry,
   war,
-  isZkbLoading,
+  awaitsZkb,
 }: Readonly<{
   entry: WarKillmailEntry;
   war: EsiWar | undefined;
-  isZkbLoading: boolean;
+  awaitsZkb: boolean;
 }>) {
+  const tagFor = useCallback(
+    (killmail: EsiKillmail) => lossTag(war, killmail),
+    [war],
+  );
   if (entry.zkb)
     return (
       <KillmailLineCard
@@ -194,15 +203,15 @@ function KillmailEntry({
         tag={lossTag(war, entry.zkb)}
       />
     );
-  // zKillboard may still bring this one in full; wait rather than ask ESI.
-  if (isZkbLoading) return <KillmailLineCardSkeleton />;
+  // The zKillboard page in flight may still bring it; wait rather than ask ESI.
+  if (awaitsZkb) return CARD_SKELETON;
   return (
     <EsiKillmailCard
       killmailId={entry.killmailId}
       killmailHash={entry.hash}
       card={KillmailLineCard}
-      skeleton={<KillmailLineCardSkeleton />}
-      tagFor={(killmail) => lossTag(war, killmail)}
+      skeleton={CARD_SKELETON}
+      tagFor={tagFor}
     />
   );
 }
@@ -229,6 +238,14 @@ export function KillmailList({
       </Stack>
     );
 
+  if (feed.isError)
+    return (
+      <Text size="sm" c="dimmed">
+        Neither ESI nor zKillboard answered, so this war&apos;s killmails could
+        not be loaded. Try again later.
+      </Text>
+    );
+
   if (feed.entries.length === 0)
     return (
       <Text size="sm" c="dimmed">
@@ -247,7 +264,7 @@ export function KillmailList({
             key={entry.killmailId}
             entry={entry}
             war={war}
-            isZkbLoading={feed.isZkbLoading}
+            awaitsZkb={feed.awaitsZkb(entry.killmailId)}
           />
         ))}
       </Stack>

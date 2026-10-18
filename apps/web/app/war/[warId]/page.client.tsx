@@ -22,6 +22,7 @@ import {
 import { useWar } from "@jitaspace/hooks";
 
 import type { WarPageTab } from "./tabs";
+import type { WarKillmailFeed } from "./useWarKillmailFeed";
 import { SectionHeading } from "~/components/EntityPage";
 import { formatInteger } from "~/lib/format";
 import { deriveWarStatus } from "~/lib/warStatus";
@@ -32,6 +33,17 @@ import { WarHeader } from "./WarHeader";
 
 /** How many of the newest kills the Overview tab shows. */
 const RECENT_KILLMAILS = 5;
+
+/** How the Killmails tab owns up to what the sources failed to send. */
+function zkbNote(feed: WarKillmailFeed) {
+  if (feed.hasZkbError && feed.zkbPageCount === 0)
+    return ", which did not answer, so values are missing.";
+  if (feed.hasZkbError)
+    return ", which stopped answering, so older kills may lack values.";
+  if (feed.hasEsiError)
+    return ". ESI did not answer for every page, so the list may be short.";
+  return ".";
+}
 
 const toDate = (iso: string | undefined) =>
   iso === undefined ? null : new Date(iso);
@@ -163,9 +175,7 @@ export default function Page() {
                 >
                   zKillboard
                 </a>
-                {feed.hasZkbError
-                  ? ", which did not answer, so values are missing."
-                  : "."}
+                {zkbNote(feed)}
               </Text>
               <KillmailList war={war} feed={feed} />
             </Stack>

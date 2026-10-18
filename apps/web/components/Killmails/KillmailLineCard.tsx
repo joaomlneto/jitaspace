@@ -66,14 +66,18 @@ export function KillmailLineCard({
         style={accentStyle(tag)}
         aria-label={`Killmail ${killmail.killmail_id}`}
       >
-        <DateHoverCard date={killedAt}>
-          <div className={classes.time}>
-            <span className={classes.clock}>
-              {formatUtcTime(killmail.killmail_time)}
+        {/* The grid area sits on this wrapper: the hover card wraps its
+            child in a span of its own. */}
+        <div className={classes.time}>
+          <DateHoverCard date={killedAt}>
+            <span>
+              <span className={classes.clock}>
+                {formatUtcTime(killmail.killmail_time)}
+              </span>
+              <span className={classes.day}>{dayFormat.format(killedAt)}</span>
             </span>
-            <span className={classes.day}>{dayFormat.format(killedAt)}</span>
-          </div>
-        </DateHoverCard>
+          </DateHoverCard>
+        </div>
 
         <div className={`${classes.cell} ${classes.ship}`}>
           <TypeAvatar typeId={victim.ship_type_id} size={32} radius="xs" />

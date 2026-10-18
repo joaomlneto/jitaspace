@@ -72,11 +72,17 @@ export function KillmailFeedCard({
 
   const onClick = (event: MouseEvent<HTMLElement>) => {
     if (!isRowClick(event)) return;
-    if (event.metaKey || event.ctrlKey) {
+    // As a link would: modified clicks open a new tab or window.
+    if (event.metaKey || event.ctrlKey || event.shiftKey) {
       window.open(path, "_blank", "noopener");
       return;
     }
     router.push(path);
+  };
+  // A middle click never fires `click`; it opens a new tab, as on a link.
+  const onAuxClick = (event: MouseEvent<HTMLElement>) => {
+    if (event.button === 1 && isRowClick(event))
+      window.open(path, "_blank", "noopener");
   };
 
   return (
@@ -88,15 +94,20 @@ export function KillmailFeedCard({
         style={accentStyle(tag)}
         aria-label={`Killmail ${killmail.killmail_id}`}
         onClick={onClick}
+        onAuxClick={onAuxClick}
       >
-        <DateHoverCard date={killedAt}>
-          <div className={classes.time}>
-            <span className={classes.clock}>
-              {formatUtcTime(killmail.killmail_time)}
+        {/* The grid area sits on this wrapper: the hover card wraps its
+            child in a span of its own. */}
+        <div className={classes.time}>
+          <DateHoverCard date={killedAt}>
+            <span>
+              <span className={classes.clock}>
+                {formatUtcTime(killmail.killmail_time)}
+              </span>
+              <span className={classes.day}>{dayFormat.format(killedAt)}</span>
             </span>
-            <span className={classes.day}>{dayFormat.format(killedAt)}</span>
-          </div>
-        </DateHoverCard>
+          </DateHoverCard>
+        </div>
 
         <div className={classes.rail}>
           <span className={classes.dot} />

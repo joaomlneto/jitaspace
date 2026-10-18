@@ -10,11 +10,13 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   cleanup,
   fireEvent,
   render,
   screen,
+  waitFor,
   within,
 } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
@@ -138,6 +140,19 @@ jest.mock("swr/infinite", () => ({
   },
 }));
 
+// ESI's later killmail pages: each test says what a page holds.
+const mockEsiPage = jest.fn<(page: number) => Promise<unknown>>();
+jest.mock("@jitaspace/esi-client", () => ({
+  ...jest.requireActual<Record<string, unknown>>("@jitaspace/esi-client"),
+  getWarsWarIdKillmailsQueryOptions: (
+    warId: number,
+    params: { page: number },
+  ) => ({
+    queryKey: ["war-killmails", warId, params.page],
+    queryFn: () => mockEsiPage(params.page),
+  }),
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
@@ -176,6 +191,7 @@ function zkbKillmail(
 const esiList = (ids: number[]) => ({
   data: {
     data: ids.map((id) => ({ killmail_id: id, killmail_hash: `hash${id}` })),
+    headers: {},
   },
   isLoading: false,
 });
@@ -203,14 +219,23 @@ const FULL_WAR = {
   ],
 };
 
+/** Mantine, and a fresh query cache: ESI's later pages go through it. */
+function withProviders(ui: ReactNode) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return (
+    <QueryClientProvider client={client}>
+      <MantineProvider>{ui}</MantineProvider>
+    </QueryClientProvider>
+  );
+}
+
 function renderPage(searchParams = "") {
   const Page = require("~/app/war/[warId]/page.client").default;
-  return render(
-    <MantineProvider>
-      <Page />
-    </MantineProvider>,
-    { wrapper: withNuqsTestingAdapter({ searchParams }) },
-  );
+  return render(withProviders(<Page />), {
+    wrapper: withNuqsTestingAdapter({ searchParams }),
+  });
 }
 
 // The server wrapper resolves `params` inside the Suspense boundary, so reach
@@ -232,6 +257,7 @@ describe("War page", () => {
     mockUseWar.mockReset();
     mockUseWarKillmails.mockReset();
     mockSetSize.mockClear();
+    mockEsiPage.mockReset();
     swrState = {};
     mockUseSelectedCharacter.mockReturnValue(null);
   });
@@ -441,6 +467,100 @@ describe("War page", () => {
     );
   });
 
+  it("asks ESI for a kill newer than everything zKillboard has sent", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    // zKillboard's first page is full and its second is on its way, but
+    // kill 1300 is newer than the whole first page: it cannot be coming.
+    const page = Array.from({ length: 200 }, (_, i) => zkbKillmail(1299 - i));
+    mockUseWarKillmails.mockReturnValue(esiList([1300, 1299]));
+    swrState = { data: [page], size: 2 };
+
+    renderPage("?tab=killmails");
+
+    expect(screen.getByTestId("esi-killmail-card")).toHaveTextContent(
+      "ESI killmail 1300",
+    );
+    expect(screen.queryByTestId("killmail-skeleton")).not.toBeInTheDocument();
+  });
+
+  it("waits for zKillboard when ESI fails, and says so when both have", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+    });
+
+    swrState = { isLoading: true };
+    const { unmount } = renderPage("?tab=killmails");
+    expect(screen.getAllByTestId("killmail-skeleton")).toHaveLength(3);
+    unmount();
+
+    swrState = { error: new Error("down") };
+    renderPage("?tab=killmails");
+    expect(
+      screen.getByText(/Neither ESI nor zKillboard answered/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("No ships have been destroyed in this war."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reads every page of ESI's list", async () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({
+      data: {
+        data: [{ killmail_id: 2, killmail_hash: "hash2" }],
+        headers: { "x-pages": "2" },
+      },
+      isLoading: false,
+    });
+    mockEsiPage.mockResolvedValue({
+      data: [{ killmail_id: 1, killmail_hash: "hash1" }],
+    });
+    swrState = { data: [[zkbKillmail(2), zkbKillmail(1)]] };
+
+    renderPage("?tab=killmails");
+
+    expect(
+      await screen.findByRole("tab", { name: /Killmails \(2\)/ }),
+    ).toBeInTheDocument();
+    expect(mockEsiPage).toHaveBeenCalledWith(2);
+  });
+
+  it("owns up when a later ESI page fails", async () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue({
+      data: {
+        data: [{ killmail_id: 2, killmail_hash: "hash2" }],
+        headers: { "x-pages": "2" },
+      },
+      isLoading: false,
+    });
+    mockEsiPage.mockRejectedValue(new Error("down"));
+    swrState = { data: [[zkbKillmail(2)]] };
+
+    renderPage("?tab=killmails");
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/ESI did not answer for every page/),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it("owns up when zKillboard stops answering after a page", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    mockUseWarKillmails.mockReturnValue(esiList([1]));
+    swrState = { data: [[zkbKillmail(1)]], error: new Error("down") };
+
+    renderPage("?tab=killmails");
+
+    expect(
+      screen.getByText(/which stopped answering, so older kills/),
+    ).toBeInTheDocument();
+  });
+
   it("falls back to ESI alone when zKillboard fails", () => {
     mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
     mockUseWarKillmails.mockReturnValue(esiList([1]));
@@ -531,9 +651,7 @@ describe("War page", () => {
     mockUseWarKillmails.mockReturnValue({ data: undefined });
 
     const tree = await resolvePageContent(String(WAR_ID));
-    render(<MantineProvider>{tree}</MantineProvider>, {
-      wrapper: withNuqsTestingAdapter(),
-    });
+    render(withProviders(tree), { wrapper: withNuqsTestingAdapter() });
 
     expect(screen.getByText(`War #${WAR_ID}`)).toBeInTheDocument();
   });

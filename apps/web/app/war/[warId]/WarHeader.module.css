@@ -91,6 +91,10 @@
   overflow-wrap: anywhere;
 }
 
+.side[data-side="defender"] .tickerRow {
+  flex-direction: row-reverse;
+}
+
 .figures {
   display: flex;
   gap: var(--mantine-spacing-lg);
@@ -176,7 +180,8 @@
     align-items: flex-start;
   }
 
-  .side[data-side="defender"] .figures {
+  .side[data-side="defender"] .figures,
+  .side[data-side="defender"] .tickerRow {
     flex-direction: row;
   }
 

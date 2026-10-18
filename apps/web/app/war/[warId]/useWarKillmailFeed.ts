@@ -1,8 +1,15 @@
 "use client";
 
+import type { UseQueryResult } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
+import { useQueries } from "@tanstack/react-query";
 import useSWRInfinite from "swr/infinite";
 
+import type {
+  GetWarsWarIdKillmailsQueryResponse,
+  ResponseConfig,
+} from "@jitaspace/esi-client";
+import { getWarsWarIdKillmailsQueryOptions } from "@jitaspace/esi-client";
 import { useWarKillmails } from "@jitaspace/hooks";
 
 import type { ZkbKillmail } from "~/components/Killmails";
@@ -21,6 +28,8 @@ export interface WarKillmailEntry {
   zkb?: ZkbKillmail;
 }
 
+type EsiPage = ResponseConfig<GetWarsWarIdKillmailsQueryResponse>;
+
 async function fetchZkbPage(url: string): Promise<ZkbKillmail[]> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`zKillboard answered ${response.status}`);
@@ -30,17 +39,42 @@ async function fetchZkbPage(url: string): Promise<ZkbKillmail[]> {
   return body as ZkbKillmail[];
 }
 
+/** How many pages ESI says the list has, from its `X-Pages` header. */
+function pageCount(page: EsiPage | undefined): number {
+  const pages = Number(page?.headers["x-pages"]);
+  return Number.isSafeInteger(pages) && pages > 1 ? pages : 1;
+}
+
+/** ESI's later pages, folded into one result (stable while they settle). */
+function combineEsiPages(results: UseQueryResult<EsiPage>[]) {
+  return {
+    lists: results.map((result) => result.data?.data),
+    isLoading: results.some((result) => result.isLoading),
+    isError: results.some((result) => result.isError),
+  };
+}
+
 /**
- * A war's killmails, newest first. ESI's list is the authority on which
- * killmails there are; zKillboard's war feed carries each one in full plus
- * its ISK value, 200 to a request, so a card it covers needs no ESI request
- * of its own. zKillboard pages are fetched only as far as the cards shown.
+ * A war's killmails, newest first. ESI's list, every page of it, is the
+ * authority on which killmails there are; zKillboard's war feed carries each
+ * one in full plus its ISK value, 200 to a request, so a card it covers
+ * needs no ESI request of its own. zKillboard pages are fetched only as far
+ * as the cards shown.
  */
 export function useWarKillmailFeed(warId: number) {
   const isValidWar = Number.isSafeInteger(warId) && warId > 0;
-  const { data: esi, isLoading: isEsiLoading } = useWarKillmails(
-    isValidWar ? warId : undefined,
-  );
+  const validWarId = isValidWar ? warId : undefined;
+  const firstEsiPage = useWarKillmails(validWarId);
+  const laterEsiPages = useQueries({
+    queries: Array.from(
+      { length: pageCount(firstEsiPage.data) - 1 },
+      (_, index) =>
+        getWarsWarIdKillmailsQueryOptions(validWarId, { page: index + 2 }),
+    ),
+    combine: combineEsiPages,
+  });
+  const isEsiLoading = firstEsiPage.isLoading || laterEsiPages.isLoading;
+  const isEsiError = firstEsiPage.isError || laterEsiPages.isError;
 
   const [visibleCount, setVisibleCount] = useState(KILLMAILS_PER_BATCH);
   // Reset when navigating between wars; the page component is reused, so this
@@ -77,19 +111,34 @@ export function useWarKillmailFeed(warId: number) {
   const isZkbExhausted =
     zkb.error !== undefined ||
     (lastPage !== undefined && lastPage.length < ZKB_PAGE_SIZE);
-  /** zKillboard pages are still on their way for the cards being shown. */
-  const isZkbLoading =
+  /** A zKillboard page is on its way. */
+  const isZkbFetching =
     !isZkbExhausted && (zkb.isLoading || (zkbPages?.length ?? 0) < zkb.size);
+  /** zKillboard's pages run newest first, so this is the oldest id loaded. */
+  const zkbFloor = lastPage?.at(-1)?.killmail_id;
 
-  const esiList = esi?.data;
+  /**
+   * Whether a killmail zKillboard has not sent may still arrive with the page
+   * in flight: only if it is older than everything loaded so far. Anything
+   * newer would already be here, so it is fetched from ESI instead.
+   */
+  const awaitsZkb = useCallback(
+    (killmailId: number) =>
+      isZkbFetching && (zkbFloor === undefined || killmailId < zkbFloor),
+    [isZkbFetching, zkbFloor],
+  );
+
+  const firstEsiList = firstEsiPage.data?.data;
+  const laterEsiLists = laterEsiPages.lists;
   const entries = useMemo<WarKillmailEntry[]>(() => {
     const byId = new Map<number, WarKillmailEntry>();
-    for (const { killmail_id, killmail_hash } of esiList ?? [])
-      byId.set(killmail_id, {
-        killmailId: killmail_id,
-        hash: killmail_hash,
-        zkb: zkbById.get(killmail_id),
-      });
+    for (const list of [firstEsiList, ...laterEsiLists])
+      for (const { killmail_id, killmail_hash } of list ?? [])
+        byId.set(killmail_id, {
+          killmailId: killmail_id,
+          hash: killmail_hash,
+          zkb: zkbById.get(killmail_id),
+        });
     // Should ESI's list be missing or short, zKillboard's own fills it in.
     for (const killmail of zkbById.values())
       if (!byId.has(killmail.killmail_id))
@@ -99,7 +148,7 @@ export function useWarKillmailFeed(warId: number) {
           zkb: killmail,
         });
     return [...byId.values()].sort((a, b) => b.killmailId - a.killmailId);
-  }, [esiList, zkbById]);
+  }, [firstEsiList, laterEsiLists, zkbById]);
 
   const { setSize } = zkb;
   const showMore = useCallback(() => {
@@ -108,14 +157,22 @@ export function useWarKillmailFeed(warId: number) {
     void setSize(Math.ceil(next / ZKB_PAGE_SIZE));
   }, [visibleCount, setSize]);
 
+  const isEmpty = entries.length === 0;
   return {
     entries,
     visible: entries.slice(0, visibleCount),
     remaining: Math.max(entries.length - visibleCount, 0),
     showMore,
-    isLoading: isEsiLoading && entries.length === 0,
-    isZkbLoading,
+    awaitsZkb,
+    /** Nothing to show yet, and an answer is still on its way. */
+    isLoading: isEmpty && (isEsiLoading || (isEsiError && isZkbFetching)),
+    /** Nothing to show, because neither source answered. */
+    isError: isEmpty && isEsiError && !isZkbFetching,
+    /** Some ESI page failed, so the list may be short. */
+    hasEsiError: isEsiError,
     hasZkbError: zkb.error !== undefined,
+    /** How many zKillboard pages arrived before any error. */
+    zkbPageCount: zkbPages?.length ?? 0,
   };
 }
 

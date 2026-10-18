@@ -53,9 +53,12 @@
 
 .time {
   grid-area: time;
-  display: flex;
-  flex-direction: column;
   line-height: 1.15;
+}
+
+.clock,
+.day {
+  display: block;
 }
 
 .clock {
@@ -140,8 +143,12 @@
   }
 
   .time {
-    flex-direction: row;
-    justify-content: flex-end;
-    gap: 6px;
+    text-align: right;
+  }
+
+  .clock,
+  .day {
+    display: inline;
+    margin-left: 6px;
   }
 }
