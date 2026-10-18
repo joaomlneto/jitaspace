@@ -5,7 +5,10 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import type { ContactRow } from "~/components/Contacts/contactRows";
+import type {
+  ContactRow,
+  ContactSource,
+} from "~/components/Contacts/contactRows";
 
 // ContactsDataTable takes ready-made `contacts` rows directly (no internal
 // data hook; label names arrive resolved, see contactRows). Rendering the real DataTable executes the module-scope cell renderers
@@ -81,7 +84,13 @@ const CORPORATION_CONTACT = {
   source: CORPORATION_SOURCE,
 } satisfies Contact;
 
-function renderTable(contacts: Contact[], showSourceColumn = false) {
+const ALLIANCE_SOURCE = { kind: "alliance", subjectId: 99000001 } as const;
+
+function renderTable(
+  contacts: Contact[],
+  sources: readonly ContactSource[] = [CHARACTER_SOURCE],
+  emptyText?: string,
+) {
   const {
     ContactsDataTable,
   } = require("~/components/Contacts/ContactsDataTable/ContactsDataTable");
@@ -89,11 +98,17 @@ function renderTable(contacts: Contact[], showSourceColumn = false) {
     <MantineProvider>
       <ContactsDataTable
         contacts={contacts}
-        showSourceColumn={showSourceColumn}
+        sources={sources}
+        emptyText={emptyText}
       />
     </MantineProvider>,
   );
 }
+
+const columnHeader = (name: string) =>
+  screen
+    .queryAllByRole("columnheader")
+    .find((cell) => cell.textContent.startsWith(name));
 
 describe("ContactsDataTable", () => {
   it("renders without crashing for an empty contact list", () => {
@@ -128,23 +143,45 @@ describe("ContactsDataTable", () => {
   it("leaves the blocked cell empty for a corporation's contact", () => {
     // Only characters have a blocked list; "Unknown" would wrongly suggest
     // ESI could have told us.
-    renderTable([CORPORATION_CONTACT]);
+    renderTable([CORPORATION_CONTACT], [CHARACTER_SOURCE, CORPORATION_SOURCE]);
+    expect(columnHeader("Blocked")).toBeDefined();
     expect(screen.queryByText("Unknown")).not.toBeInTheDocument();
     expect(screen.queryByText("No")).not.toBeInTheDocument();
   });
 
-  it("shows the Source column only when asked to", () => {
-    const sourceHeader = () =>
-      screen
-        .queryAllByRole("columnheader")
-        .find((cell) => cell.textContent.startsWith("Source"));
-
-    const { unmount } = renderTable([CONTACT_WATCHED, CORPORATION_CONTACT]);
-    expect(sourceHeader()).toBeUndefined();
+  it("shows the Source column only with more than one source", () => {
+    const { unmount } = renderTable([CONTACT_WATCHED]);
+    expect(columnHeader("Source")).toBeUndefined();
     unmount();
 
-    renderTable([CONTACT_WATCHED, CORPORATION_CONTACT], true);
-    expect(sourceHeader()).toBeDefined();
+    renderTable(
+      [CONTACT_WATCHED, CORPORATION_CONTACT],
+      [CHARACTER_SOURCE, CORPORATION_SOURCE],
+    );
+    expect(columnHeader("Source")).toBeDefined();
+  });
+
+  it("leaves out Blocked without a character source", () => {
+    // Corporations have a watchlist but no blocked list.
+    renderTable([CORPORATION_CONTACT], [CORPORATION_SOURCE]);
+    expect(columnHeader("Blocked")).toBeUndefined();
+    expect(columnHeader("Watchlist")).toBeDefined();
+  });
+
+  it("leaves out Watchlist and Blocked with only an alliance", () => {
+    // Alliances have neither, so both columns would be empty on every row.
+    renderTable(
+      [{ ...CORPORATION_CONTACT, source: ALLIANCE_SOURCE }],
+      [ALLIANCE_SOURCE],
+    );
+    expect(columnHeader("Watchlist")).toBeUndefined();
+    expect(columnHeader("Blocked")).toBeUndefined();
+    expect(columnHeader("Standings")).toBeDefined();
+  });
+
+  it("shows the empty text it is given", () => {
+    renderTable([], [CHARACTER_SOURCE], "No sources selected.");
+    expect(screen.getByText("No sources selected.")).toBeInTheDocument();
   });
 
   it("keeps the same contact from two sources as two rows", () => {
@@ -152,7 +189,7 @@ describe("ContactsDataTable", () => {
     // rows would collide.
     renderTable(
       [CONTACT_WATCHED, { ...CONTACT_WATCHED, source: CORPORATION_SOURCE }],
-      true,
+      [CHARACTER_SOURCE, CORPORATION_SOURCE],
     );
     const bodyRows = screen
       .getAllByRole("row")

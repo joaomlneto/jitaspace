@@ -5,7 +5,7 @@ import type { DataTableColumn } from "@jitaspace/datatable";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
 
-import type { ContactRow } from "../contactRows";
+import type { ContactRow, ContactSource } from "../contactRows";
 import { EveEntityAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { contactRowKey } from "../contactRows";
@@ -13,12 +13,18 @@ import { contactRowKey } from "../contactRows";
 export interface ContactsDataTableProps {
   contacts?: ContactRow[];
   /**
-   * Show which character, corporation or alliance each contact belongs to.
-   * Pointless with a single source — it would repeat the same name on every
-   * row — so the page turns it on only when there is more than one.
+   * Every contact list the user can read, whether or not it is selected. It
+   * decides which columns exist: Source only with more than one source (with
+   * one it would repeat the same name on every row), Blocked only with a
+   * character (only characters have a blocked list) and Watchlist only with a
+   * character or corporation (alliances have no watchlist).
+   *
+   * Columns are added or left out rather than hidden, because the table reads
+   * `defaultVisible` once, on mount, and the sources load after that.
    */
-  showSourceColumn?: boolean;
+  sources: readonly ContactSource[];
   isLoading?: boolean;
+  emptyText?: string;
 }
 
 const CONTACT_TYPE_OPTIONS = [
@@ -79,6 +85,8 @@ function contactNameCell(contact: ContactRow) {
   );
 }
 
+// Alliance contacts have no watchlist, so they read as "not watched": the
+// boolean filter's "No" includes them, which is true of them.
 function contactWatchedCell(contact: ContactRow) {
   return contact.is_watched ? (
     <Badge variant="filled" size="xs">
@@ -120,9 +128,18 @@ function contactStandingsCell(contact: ContactRow) {
 export const ContactsDataTable = memo(
   ({
     contacts,
-    showSourceColumn = false,
+    sources,
     isLoading = false,
+    emptyText,
   }: ContactsDataTableProps) => {
+    const showSourceColumn = sources.length > 1;
+    const showBlockedColumn = sources.some(
+      (source) => source.kind === "character",
+    );
+    const showWatchedColumn = sources.some(
+      (source) => source.kind !== "alliance",
+    );
+
     const columns = useMemo<DataTableColumn<ContactRow>[]>(
       () => [
         ...(showSourceColumn
@@ -159,21 +176,29 @@ export const ContactsDataTable = memo(
           sortable: true,
           cell: contactNameCell,
         },
-        {
-          id: "isWatched",
-          header: "Watchlist",
-          accessor: (contact) => contact.is_watched ?? false,
-          sortable: true,
-          filter: { type: "boolean" },
-          cell: contactWatchedCell,
-        },
-        {
-          id: "isBlocked",
-          header: "Blocked",
-          accessor: "is_blocked",
-          sortable: true,
-          cell: contactBlockedCell,
-        },
+        ...(showWatchedColumn
+          ? [
+              {
+                id: "isWatched",
+                header: "Watchlist",
+                accessor: (contact) => contact.is_watched ?? false,
+                sortable: true,
+                filter: { type: "boolean" },
+                cell: contactWatchedCell,
+              } satisfies DataTableColumn<ContactRow>,
+            ]
+          : []),
+        ...(showBlockedColumn
+          ? [
+              {
+                id: "isBlocked",
+                header: "Blocked",
+                accessor: "is_blocked",
+                sortable: true,
+                cell: contactBlockedCell,
+              } satisfies DataTableColumn<ContactRow>,
+            ]
+          : []),
         {
           id: "labels",
           header: "Labels",
@@ -191,7 +216,7 @@ export const ContactsDataTable = memo(
           cell: contactStandingsCell,
         },
       ],
-      [showSourceColumn],
+      [showSourceColumn, showWatchedColumn, showBlockedColumn],
     );
 
     return (
@@ -202,6 +227,7 @@ export const ContactsDataTable = memo(
         // alone is not unique in a merged list.
         rowId={contactRowKey}
         isLoading={isLoading}
+        emptyText={emptyText}
         withGlobalFilter
         withColumnVisibility
         withPagination

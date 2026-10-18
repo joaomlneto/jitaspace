@@ -29,8 +29,10 @@ import type {
   ContactSourceKind,
 } from "~/components/Contacts";
 import {
+  activeSourceKeys,
   ContactsDataTable,
   contactSourceKey,
+  nextSourceSelection,
   toContactRows,
 } from "~/components/Contacts";
 
@@ -81,7 +83,7 @@ export default function ContactsPageClient() {
   );
 
   const activeKeys = useMemo(
-    () => new Set(selectedKeys ?? sources.map(contactSourceKey)),
+    () => activeSourceKeys(selectedKeys, sources),
     [selectedKeys, sources],
   );
 
@@ -139,12 +141,7 @@ export default function ContactsPageClient() {
             multiple
             value={[...activeKeys]}
             onChange={(value) => {
-              // Drop the param entirely when everything is selected, so the
-              // default state leaves a clean URL rather than listing every
-              // source the user can read.
-              void setSelectedKeys(
-                value.length === sources.length ? null : value,
-              );
+              void setSelectedKeys(nextSourceSelection(value, sources));
             }}
           >
             <Stack gap="xs">
@@ -198,7 +195,12 @@ export default function ContactsPageClient() {
 
         <ContactsDataTable
           contacts={rows}
-          showSourceColumn={sources.length > 1}
+          sources={sources}
+          emptyText={
+            sources.length > 1 && activeKeys.size === 0
+              ? "No sources selected. Pick one above to see its contacts."
+              : undefined
+          }
           // Skeleton rows until the first contacts land, so the table holds
           // its height instead of growing into place.
           isLoading={isPending && rows.length === 0}

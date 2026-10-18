@@ -41,6 +41,39 @@ export type ContactRow = Pick<
 export const contactSourceKey = ({ kind, subjectId }: ContactSource) =>
   `${kind}:${subjectId}`;
 
+/**
+ * The sources whose contacts to show, from the `?sources=` selection (`null`
+ * when the URL has none, meaning every source).
+ *
+ * Keys for sources this browser cannot read are dropped: a shared link, or one
+ * bookmarked before a character signed out, can name them. With a single
+ * source the selection is ignored altogether, since the page shows no chips to
+ * change it and a stale selection would leave an empty table with no way out.
+ */
+export function activeSourceKeys(
+  selected: readonly string[] | null,
+  sources: readonly ContactSource[],
+): Set<string> {
+  const known = sources.map(contactSourceKey);
+  if (selected === null || sources.length <= 1) return new Set(known);
+  const knownKeys = new Set(known);
+  return new Set(selected.filter((key) => knownKeys.has(key)));
+}
+
+/**
+ * The `?sources=` value for a new chip selection: `null`, which leaves a clean
+ * URL, once every source is selected. Unknown keys are dropped first, or one
+ * would make "every source" match while a real source is still deselected.
+ */
+export function nextSourceSelection(
+  selected: readonly string[],
+  sources: readonly ContactSource[],
+): string[] | null {
+  const known = new Set(sources.map(contactSourceKey));
+  const next = selected.filter((key) => known.has(key));
+  return next.length === known.size ? null : next;
+}
+
 /** The same contact can appear once per source, so the source is in the key. */
 export const contactRowKey = (row: ContactRow) =>
   `${contactSourceKey(row.source)}:${row.contact_id}`;

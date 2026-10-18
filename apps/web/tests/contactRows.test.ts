@@ -1,8 +1,11 @@
 import { describe, expect, it } from "@jest/globals";
 
+import type { ContactSource } from "~/components/Contacts/contactRows";
 import {
+  activeSourceKeys,
   contactRowKey,
   contactSourceKey,
+  nextSourceSelection,
   toContactRows,
 } from "~/components/Contacts/contactRows";
 
@@ -139,5 +142,69 @@ describe("contact keys", () => {
     expect(contactSourceKey({ kind: "alliance", subjectId: 99000001 })).toBe(
       "alliance:99000001",
     );
+  });
+});
+
+const CHARACTER: ContactSource = { kind: "character", subjectId: CHARACTER_ID };
+const CORPORATION: ContactSource = {
+  kind: "corporation",
+  subjectId: CORPORATION_ID,
+};
+const ALLIANCE: ContactSource = { kind: "alliance", subjectId: 99000001 };
+const SOURCES = [CHARACTER, CORPORATION, ALLIANCE];
+
+describe("activeSourceKeys", () => {
+  it("shows every source when the URL has no selection", () => {
+    expect([...activeSourceKeys(null, SOURCES)]).toEqual([
+      "character:90000001",
+      "corporation:98000001",
+      "alliance:99000001",
+    ]);
+  });
+
+  it("keeps an explicit empty selection empty", () => {
+    expect(activeSourceKeys([], SOURCES).size).toBe(0);
+  });
+
+  it("drops keys for sources this browser cannot read", () => {
+    expect([
+      ...activeSourceKeys(["corporation:98000001", "character:1"], SOURCES),
+    ]).toEqual(["corporation:98000001"]);
+  });
+
+  it("ignores the selection with a single source", () => {
+    // No chips render with one source, so a selection naming someone else
+    // (a shared link) must not leave an empty table with no way out.
+    expect([...activeSourceKeys(["character:1"], [CHARACTER])]).toEqual([
+      "character:90000001",
+    ]);
+    expect([...activeSourceKeys([], [CHARACTER])]).toEqual([
+      "character:90000001",
+    ]);
+  });
+});
+
+describe("nextSourceSelection", () => {
+  it("clears the param once every source is selected", () => {
+    expect(
+      nextSourceSelection(SOURCES.map(contactSourceKey), SOURCES),
+    ).toBeNull();
+  });
+
+  it("keeps a partial selection", () => {
+    expect(nextSourceSelection(["alliance:99000001"], SOURCES)).toEqual([
+      "alliance:99000001",
+    ]);
+  });
+
+  it("does not count unknown keys towards 'every source'", () => {
+    // Three keys for three sources, but one is stale: the corporation is still
+    // deselected, so this is not "everything".
+    expect(
+      nextSourceSelection(
+        ["character:90000001", "alliance:99000001", "character:1"],
+        SOURCES,
+      ),
+    ).toEqual(["character:90000001", "alliance:99000001"]);
   });
 });
