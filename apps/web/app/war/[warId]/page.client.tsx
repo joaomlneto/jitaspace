@@ -2,263 +2,204 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+import {
+  Button,
+  Container,
+  Grid,
+  Paper,
+  Stack,
+  Tabs,
+  Text,
+} from "@mantine/core";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import { AllianceName, CorporationName } from "@jitaspace/eve-components";
-import { WarReportIcon } from "@jitaspace/eve-icons";
 import {
-  useSelectedCharacter,
-  useWar,
-  useWarKillmails,
-} from "@jitaspace/hooks";
-import {
-  AllianceAvatar,
-  CorporationAvatar,
-  DateHoverCard,
-  FormattedDateText,
-  ISKAmount,
-} from "@jitaspace/ui";
+  KillReportIcon,
+  WarReportIcon,
+  WindowAlliancesIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
+import { useWar } from "@jitaspace/hooks";
 
-import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
-import {
-  AllianceAnchor,
-  CorporationAnchor,
-  WarAggressorAnchor,
-  WarDefenderAnchor,
-} from "~/components/Anchor";
-import { WarAggressorAvatar, WarDefenderAvatar } from "~/components/Avatar";
-import {
-  AllianceTickerBadge,
-  CorporationTickerBadge,
-  WarAggressorTickerBadge,
-  WarDefenderTickerBadge,
-} from "~/components/Badge";
-import { KillmailCard } from "~/components/Killmails";
-import { HoverPrefetchLink } from "~/components/Link";
-import { WarAggressorName, WarDefenderName } from "~/components/Text";
+import type { WarPageTab } from "./tabs";
+import type { WarKillmailFeed } from "./useWarKillmailFeed";
+import { SectionHeading } from "~/components/EntityPage";
+import { formatInteger } from "~/lib/format";
+import { deriveWarStatus } from "~/lib/warStatus";
+import { AlliesGrid, KillmailList, WarTimeline } from "./parts";
+import { DEFAULT_WAR_PAGE_TAB, isWarPageTab, WAR_PAGE_TABS } from "./tabs";
+import { useWarKillmailFeed } from "./useWarKillmailFeed";
+import { WarHeader } from "./WarHeader";
 
-// How many killmail cards to mount at once. Each card fires its own ESI
-// requests, so rendering an entire war's worth (up to ~2000) at once floods
-// the rate-limited client and freezes the tab. We reveal them in batches.
-const KILLMAILS_PER_PAGE = 25;
+/** How many of the newest kills the Overview tab shows. */
+const RECENT_KILLMAILS = 5;
+
+/** How the Killmails tab owns up to what the sources failed to send. */
+function sourcesNote(feed: WarKillmailFeed) {
+  const notes: string[] = [];
+  if (feed.hasZkbError && feed.zkbPageCount === 0)
+    notes.push("zKillboard did not answer, so values are missing");
+  else if (feed.hasZkbError)
+    notes.push(
+      feed.hasEsiError
+        ? "zKillboard stopped answering, so older kills are missing"
+        : "zKillboard stopped answering, so older kills may lack values",
+    );
+  if (feed.hasEsiError)
+    notes.push("ESI did not answer for every page, so the list may be short");
+  return notes.length === 0
+    ? "."
+    : `. ${notes.join("; ")}. Reload the page to try again.`;
+}
+
+/** "694", or "200+" when only part of the list is known. */
+function killmailCount(feed: WarKillmailFeed) {
+  return `${formatInteger(feed.entries.length)}${feed.isCountPartial ? "+" : ""}`;
+}
+
+const toDate = (iso: string | undefined) =>
+  iso === undefined ? null : new Date(iso);
 
 export default function Page() {
   const params = useParams();
   const rawWarId = params.warId;
   const warId = Number(typeof rawWarId === "string" ? rawWarId : rawWarId?.[0]);
-  const character = useSelectedCharacter();
-  const { data: war } = useWar(warId);
-  const { data: killmails } = useWarKillmails(warId);
+  const { data } = useWar(warId);
+  const war = data?.data;
+  const feed = useWarKillmailFeed(warId);
+  // Fixed for the visit, so the status and timeline don't shift as it renders.
+  const [now] = useState(() => Date.now());
 
-  const [visibleKillmailCount, setVisibleKillmailCount] =
-    useState(KILLMAILS_PER_PAGE);
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(WAR_PAGE_TABS)
+      .withDefault(DEFAULT_WAR_PAGE_TAB)
+      .withOptions({ history: "replace" }),
+  );
 
-  // Reset the visible window when navigating between wars. The page component
-  // is reused across warId changes, so we reset during render (React's
-  // recommended pattern) instead of in an effect, which would cascade renders.
-  const [trackedWarId, setTrackedWarId] = useState(warId);
-  if (warId !== trackedWarId) {
-    setTrackedWarId(warId);
-    setVisibleKillmailCount(KILLMAILS_PER_PAGE);
-  }
+  if (!Number.isFinite(warId)) return null;
 
-  if (!Number.isFinite(warId)) {
-    return null;
-  }
+  const allies = war?.allies ?? [];
+  const status = war
+    ? deriveWarStatus(
+        {
+          startedDate: toDate(war.started),
+          finishedDate: toDate(war.finished),
+          retractedDate: toDate(war.retracted),
+        },
+        now,
+      )
+    : undefined;
 
-  const allKillmails = killmails?.data ?? [];
-  const visibleKillmails = allKillmails.slice(0, visibleKillmailCount);
-  const hasMoreKillmails = visibleKillmailCount < allKillmails.length;
+  const visibleTabs: Record<WarPageTab, boolean> = {
+    overview: true,
+    killmails: true,
+    allies: allies.length > 0,
+  };
+  const selectedTab = visibleTabs[activeTab] ? activeTab : DEFAULT_WAR_PAGE_TAB;
 
   return (
-    <Container size="lg">
-      <Stack>
-        <Group justify="space-between">
-          <Group>
-            <WarReportIcon width={64} />
-            <Title order={1}>War Report</Title>
-          </Group>
-          <Group>
-            <HoverPrefetchLink
-              href={`https://zkillboard.com/war/${warId}`}
-              target="_blank"
+    <Container size="lg" py="md">
+      <Stack gap="lg">
+        <WarHeader warId={warId} war={war} status={status} now={now} />
+
+        <Tabs
+          value={selectedTab}
+          onChange={(value) => {
+            if (isWarPageTab(value)) void setActiveTab(value);
+          }}
+          variant="outline"
+          keepMounted={false}
+        >
+          <Tabs.List>
+            <Tabs.Tab
+              value="overview"
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
-              <Button size="xs">
-                <Group gap="xs">
-                  <IconExternalLink size={14} />
+              Overview
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="killmails"
+              leftSection={<KillReportIcon size={16} alt="" />}
+            >
+              {feed.isLoading || feed.isError
+                ? "Killmails"
+                : `Killmails (${killmailCount(feed)})`}
+            </Tabs.Tab>
+            {visibleTabs.allies && (
+              <Tabs.Tab
+                value="allies"
+                leftSection={<WindowAlliancesIcon size={16} alt="" />}
+              >
+                Allies ({formatInteger(allies.length)})
+              </Tabs.Tab>
+            )}
+          </Tabs.List>
+
+          <Tabs.Panel value="overview" pt="lg">
+            <Stack gap="xl">
+              <Grid gap="lg">
+                {war && (
+                  <Grid.Col span={{ base: 12, md: 4 }}>
+                    <Stack gap="sm">
+                      <SectionHeading icon={<WarReportIcon size={20} alt="" />}>
+                        Timeline
+                      </SectionHeading>
+                      <Paper withBorder radius="md" p="md">
+                        <WarTimeline war={war} now={now} />
+                      </Paper>
+                    </Stack>
+                  </Grid.Col>
+                )}
+                <Grid.Col span={{ base: 12, md: war ? 8 : 12 }}>
+                  <Stack gap="sm">
+                    <SectionHeading icon={<KillReportIcon size={20} alt="" />}>
+                      Latest kills
+                    </SectionHeading>
+                    <KillmailList
+                      war={war}
+                      feed={feed}
+                      limit={RECENT_KILLMAILS}
+                      footer={
+                        feed.entries.length > RECENT_KILLMAILS && (
+                          <Button
+                            variant="subtle"
+                            onClick={() => void setActiveTab("killmails")}
+                          >
+                            See all {killmailCount(feed)} killmails
+                          </Button>
+                        )
+                      }
+                    />
+                  </Stack>
+                </Grid.Col>
+              </Grid>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="killmails" pt="lg">
+            <Stack gap="sm">
+              <Text size="xs" c="dimmed">
+                Newest first. Values and full killmails from{" "}
+                <a
+                  href={`https://zkillboard.com/war/${warId}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   zKillboard
-                </Group>
-              </Button>
-            </HoverPrefetchLink>
-            <HoverPrefetchLink
-              href={`https://evemaps.dotlan.net/war/${warId}`}
-              target="_blank"
-            >
-              <Button size="xs">
-                <Group gap="xs">
-                  <IconExternalLink size={14} />
-                  DOTLAN EveMaps
-                </Group>
-              </Button>
-            </HoverPrefetchLink>
-          </Group>
-        </Group>
-        <Group justify="space-between">
-          <Group gap="xl" wrap="nowrap">
-            <WarAggressorAvatar warId={warId} size="xl" />
-            <div>
-              <Group wrap="nowrap">
-                <Title order={3}>
-                  <WarAggressorAnchor warId={warId}>
-                    <WarAggressorName span warId={warId} />
-                  </WarAggressorAnchor>
-                </Title>
-                <WarAggressorTickerBadge warId={warId} />
-              </Group>
-              <Text c="dimmed">Aggressor</Text>
-              <Text c="dimmed">ISK Destroyed: </Text>
-              <ISKAmount span amount={war?.data.aggressor.isk_destroyed} />
-              <Text c="dimmed">
-                Ships Killed: {war?.data.aggressor.ships_killed}
+                </a>
+                {sourcesNote(feed)}
               </Text>
-            </div>
+              <KillmailList war={war} feed={feed} />
+            </Stack>
+          </Tabs.Panel>
 
-            {character && (
-              <OpenInformationWindowActionIcon
-                characterId={character.characterId}
-                entityId={
-                  war?.data.aggressor.corporation_id ??
-                  war?.data.aggressor.alliance_id
-                }
-              />
-            )}
-          </Group>
-          <Group gap="xl" wrap="nowrap">
-            <WarDefenderAvatar warId={warId} size="xl" />
-            <div>
-              <Group wrap="nowrap">
-                <Title order={3}>
-                  <WarDefenderAnchor warId={warId}>
-                    <WarDefenderName span warId={warId} />
-                  </WarDefenderAnchor>
-                </Title>
-                <WarDefenderTickerBadge warId={warId} />
-              </Group>
-              <Text c="dimmed">Defender</Text>
-              <Text c="dimmed">ISK Destroyed: </Text>
-              <ISKAmount span amount={war?.data.defender.isk_destroyed} />
-              <Text c="dimmed">
-                Ships Killed: {war?.data.defender.ships_killed}
-              </Text>
-            </div>
-
-            {character && (
-              <OpenInformationWindowActionIcon
-                characterId={character.characterId}
-                entityId={
-                  war?.data.aggressor.corporation_id ??
-                  war?.data.aggressor.alliance_id
-                }
-              />
-            )}
-          </Group>
-        </Group>
-
-        {war && (
-          <Group align="center" justify="space-between">
-            <Text>Declared on</Text>
-            <DateHoverCard date={new Date(war.data.declared)}>
-              <FormattedDateText date={new Date(war.data.declared)} />
-            </DateHoverCard>
-          </Group>
-        )}
-        {war?.data.started && (
-          <Group align="center" justify="space-between">
-            <Text>Started on</Text>
-            <DateHoverCard date={new Date(war.data.started)}>
-              <FormattedDateText date={new Date(war.data.started)} />
-            </DateHoverCard>
-          </Group>
-        )}
-        {war?.data.retracted && (
-          <Group align="center" justify="space-between">
-            <Text>Retracted on</Text>
-            <DateHoverCard date={new Date(war.data.retracted)}>
-              <FormattedDateText date={new Date(war.data.retracted)} />
-            </DateHoverCard>
-          </Group>
-        )}
-        {war?.data.finished && (
-          <Group align="center" justify="space-between">
-            <Text>Finished on</Text>
-            <DateHoverCard date={new Date(war.data.finished)}>
-              <FormattedDateText date={new Date(war.data.finished)} />
-            </DateHoverCard>
-          </Group>
-        )}
-        {war && (
-          <Group align="center" justify="space-between">
-            <Text>Mutual</Text>
-            <Text>{war.data.mutual ? "Yes" : "No"}</Text>
-          </Group>
-        )}
-        {war && (
-          <Group align="center" justify="space-between">
-            <Text>Open for allies</Text>
-            <Text>{war.data.open_for_allies ? "Yes" : "No"}</Text>
-          </Group>
-        )}
-        <Title order={4}>Allies ({(war?.data.allies ?? []).length})</Title>
-        <Stack>
-          {war?.data.allies?.map((ally) => (
-            <Group wrap="nowrap" key={ally.alliance_id ?? ally.corporation_id}>
-              {ally.alliance_id && (
-                <>
-                  <AllianceAvatar allianceId={ally.alliance_id} size="sm" />
-                  <AllianceAnchor allianceId={ally.alliance_id}>
-                    <AllianceName span allianceId={ally.alliance_id} />
-                  </AllianceAnchor>
-                  <AllianceTickerBadge allianceId={ally.alliance_id} />
-                </>
-              )}
-              {ally.corporation_id && (
-                <>
-                  <CorporationAvatar
-                    corporationId={ally.corporation_id}
-                    size="sm"
-                  />
-                  <CorporationAnchor corporationId={ally.corporation_id}>
-                    <CorporationName span corporationId={ally.corporation_id} />
-                  </CorporationAnchor>
-                  <CorporationTickerBadge corporationId={ally.corporation_id} />
-                </>
-              )}
-            </Group>
-          ))}
-        </Stack>
-        <Title order={4}>Killmails ({allKillmails.length})</Title>
-        <Stack>
-          {visibleKillmails.map((killmail) => (
-            <KillmailCard
-              key={killmail.killmail_id}
-              killmailId={killmail.killmail_id}
-              killmailHash={killmail.killmail_hash}
-            />
-          ))}
-          {hasMoreKillmails && (
-            <Button
-              w="100%"
-              variant="default"
-              onClick={() =>
-                setVisibleKillmailCount((count) => count + KILLMAILS_PER_PAGE)
-              }
-            >
-              Load more killmails (
-              {allKillmails.length - visibleKillmails.length} remaining)
-            </Button>
+          {visibleTabs.allies && (
+            <Tabs.Panel value="allies" pt="lg">
+              <AlliesGrid allies={allies} />
+            </Tabs.Panel>
           )}
-        </Stack>
+        </Tabs>
       </Stack>
     </Container>
   );

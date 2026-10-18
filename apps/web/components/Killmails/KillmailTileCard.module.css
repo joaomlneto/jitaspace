@@ -1,0 +1,72 @@
+/*
+  A compact tile for a grid that fills the page, about 230px wide
+  and 150px tall. The ship is an icon, not a banner; the accent runs along
+  the top edge.
+*/
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm) 6px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-top: 3px solid
+    var(--killmail-accent, var(--mantine-color-default-border));
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-color-default);
+  min-width: 0;
+}
+
+.head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--mantine-spacing-xs);
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.party {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.killer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--mantine-font-size-xs);
+}
+
+.glyph {
+  flex-shrink: 0;
+  color: var(--mantine-color-dimmed);
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 4px;
+  border-top: 1px solid var(--mantine-color-default-border);
+  min-width: 0;
+}
+
+.footWhere {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
