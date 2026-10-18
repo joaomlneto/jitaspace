@@ -576,6 +576,21 @@ describe("War page", () => {
     ).toBeInTheDocument();
   });
 
+  it("trusts the list it has when ESI's refetch fails", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    const ids = Array.from({ length: 200 }, (_, i) => 1000 - i);
+    // A failed background refetch: the error is set, the data kept.
+    mockUseWarKillmails.mockReturnValue({ ...esiList(ids), isError: true });
+    swrState = { data: [ids.map((id) => zkbKillmail(id))] };
+
+    renderPage("?tab=killmails");
+
+    expect(
+      screen.getByRole("tab", { name: /Killmails \(200\)/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/ESI did not answer/)).not.toBeInTheDocument();
+  });
+
   it("offers no more once ESI's complete list is all shown", () => {
     mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
     const ids = Array.from({ length: 200 }, (_, i) => 1000 - i);

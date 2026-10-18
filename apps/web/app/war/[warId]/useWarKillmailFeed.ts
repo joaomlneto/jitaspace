@@ -45,12 +45,20 @@ function pageCount(page: EsiPage | undefined): number {
   return Number.isSafeInteger(pages) && pages > 1 ? pages : 1;
 }
 
+/**
+ * Whether a page is missing because ESI failed. A failed background refetch
+ * also sets `isError` but keeps the page it had, which is still good.
+ */
+function failedWithoutData(result: UseQueryResult<EsiPage>) {
+  return result.isError && result.data === undefined;
+}
+
 /** ESI's later pages, folded into one result (stable while they settle). */
 function combineEsiPages(results: UseQueryResult<EsiPage>[]) {
   return {
     lists: results.map((result) => result.data?.data),
     isLoading: results.some((result) => result.isLoading),
-    isError: results.some((result) => result.isError),
+    isError: results.some(failedWithoutData),
   };
 }
 
@@ -74,7 +82,7 @@ export function useWarKillmailFeed(warId: number) {
     combine: combineEsiPages,
   });
   const isEsiLoading = firstEsiPage.isLoading || laterEsiPages.isLoading;
-  const isEsiError = firstEsiPage.isError || laterEsiPages.isError;
+  const isEsiError = failedWithoutData(firstEsiPage) || laterEsiPages.isError;
 
   const [visibleCount, setVisibleCount] = useState(KILLMAILS_PER_BATCH);
   // Reset when navigating between wars; the page component is reused, so this
