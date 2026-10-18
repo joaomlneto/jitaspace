@@ -151,11 +151,13 @@ export function useWarKillmailFeed(warId: number) {
   }, [firstEsiList, laterEsiLists, zkbById]);
 
   /**
-   * zKillboard has more pages than it was asked for: the last one came back
-   * full and none is on its way. When ESI's list is missing, this is the only
-   * sign that there is more to show.
+   * Only zKillboard can tell whether there is more to show: ESI's list failed,
+   * so the kills known are just those zKillboard sent, and its last page came
+   * back full with none on its way. With ESI's list in hand the list is
+   * complete, and further zKillboard pages only add values.
    */
-  const zkbHasMore =
+  const zkbExtendsList =
+    isEsiError &&
     !isZkbExhausted &&
     lastPage !== undefined &&
     (zkbPages?.length ?? 0) === zkb.size;
@@ -169,9 +171,9 @@ export function useWarKillmailFeed(warId: number) {
     // loaded kills run out.
     const wanted = Math.ceil(next / ZKB_PAGE_SIZE);
     void setSize(
-      remaining === 0 && zkbHasMore ? Math.max(wanted, size + 1) : wanted,
+      remaining === 0 && zkbExtendsList ? Math.max(wanted, size + 1) : wanted,
     );
-  }, [visibleCount, remaining, zkbHasMore, size, setSize]);
+  }, [visibleCount, remaining, zkbExtendsList, size, setSize]);
 
   const isEmpty = entries.length === 0;
   return {
@@ -179,14 +181,19 @@ export function useWarKillmailFeed(warId: number) {
     visible: entries.slice(0, visibleCount),
     remaining,
     /** More can be shown: loaded kills not yet visible, or zKillboard pages. */
-    hasMore: remaining > 0 || zkbHasMore,
-    /** A zKillboard page asked for by "load more" is on its way. */
-    isLoadingMore: !isEmpty && remaining === 0 && isZkbFetching,
+    hasMore: remaining > 0 || zkbExtendsList,
+    /** The next zKillboard page, asked for to extend a list ESI failed. */
+    isLoadingMore:
+      isEsiError &&
+      remaining === 0 &&
+      isZkbFetching &&
+      (zkbPages?.length ?? 0) > 0,
     /**
      * The count is a floor, not a total: ESI's list failed, so only what
-     * zKillboard has sent so far is known, and it may have more.
+     * zKillboard has sent is known, and unless its last page came back short
+     * it may have more.
      */
-    isCountPartial: isEsiError && !isZkbExhausted,
+    isCountPartial: isEsiError && (zkb.error !== undefined || !isZkbExhausted),
     showMore,
     awaitsZkb,
     /** Nothing to show yet, and an answer is still on its way. */

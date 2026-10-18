@@ -456,6 +456,10 @@ describe("War page", () => {
     swrState = { isLoading: true };
     const { unmount } = renderPage("?tab=killmails");
     expect(screen.getAllByTestId("killmail-skeleton")).toHaveLength(2);
+    // ESI's list is complete: zKillboard loading is no reason to offer more.
+    expect(
+      screen.queryByRole("button", { name: /Load more killmails/ }),
+    ).not.toBeInTheDocument();
     unmount();
 
     // zKillboard had one of the two, and nothing further back.
@@ -565,6 +569,32 @@ describe("War page", () => {
       screen.getByText(
         /zKillboard stopped answering, so older kills are missing; ESI did not answer/,
       ),
+    ).toBeInTheDocument();
+    // What arrived is a floor, not the war's total.
+    expect(
+      screen.getByRole("tab", { name: /Killmails \(1\+\)/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("offers no more once ESI's complete list is all shown", () => {
+    mockUseWar.mockReturnValue({ data: { data: FULL_WAR } });
+    const ids = Array.from({ length: 200 }, (_, i) => 1000 - i);
+    mockUseWarKillmails.mockReturnValue(esiList(ids));
+    // zKillboard's page is full, but the list is ESI's, and it is complete.
+    swrState = { data: [ids.map((id) => zkbKillmail(id))] };
+
+    renderPage("?tab=killmails");
+    for (let batch = 1; batch < 8; batch++)
+      fireEvent.click(
+        screen.getByRole("button", { name: /Load more killmails/ }),
+      );
+
+    expect(screen.getAllByTestId("killmail-card")).toHaveLength(200);
+    expect(
+      screen.queryByRole("button", { name: /Load more killmails/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: /Killmails \(200\)/ }),
     ).toBeInTheDocument();
   });
 
