@@ -1,0 +1,68 @@
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+}
+
+.iskFigure {
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 700;
+  color: var(--mantine-color-bright);
+  white-space: nowrap;
+}
+
+/* Mantine's Text resets white-space on the amount inside. */
+.iskFigure * {
+  white-space: nowrap;
+}
+
+/* Values that stand out on a killboard: a billion and up, then ten. */
+.iskFigure[data-tier="high"] {
+  color: var(--mantine-color-orange-5);
+
+  /* As with the accents, darkened on light backgrounds for AA contrast. */
+  @mixin light {
+    color: color-mix(in srgb, var(--mantine-color-orange-5) 65%, black);
+  }
+}
+
+.iskFigure[data-tier="huge"] {
+  color: var(--mantine-color-red-5);
+
+  @mixin light {
+    color: color-mix(in srgb, var(--mantine-color-red-5) 65%, black);
+  }
+}
+
+/*
+  Text in a side's accent: the accents are tuned for the dark themes, and on
+  a light background they fall short of AA contrast, so text darkens there.
+  Bars, rings and stripes keep the accent as is.
+*/
+.accentText {
+  color: var(--killmail-accent, var(--mantine-color-dimmed));
+
+  @mixin light {
+    color: color-mix(
+      in srgb,
+      var(--killmail-accent, var(--mantine-color-dimmed)) 65%,
+      black
+    );
+  }
+}
+
+/* Mantine sets --badge-color inline, so the text colour is set directly. */
+.tagBadge {
+  @mixin light {
+    color: color-mix(in srgb, var(--badge-color) 65%, black);
+  }
+}
