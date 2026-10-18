@@ -750,6 +750,11 @@ describe("War page", () => {
     expect(screen.queryByText("Finished")).not.toBeInTheDocument();
     expect(screen.queryByTestId("info-window")).not.toBeInTheDocument();
     expect(screen.getAllByTestId("killmail-skeleton")).toHaveLength(3);
+    // Neither side's figures pretend to be zero before the war loads.
+    const header = screen.getByRole("banner");
+    expect(within(header).queryByText("0")).not.toBeInTheDocument();
+    for (const amount of within(header).getAllByTestId("isk-amount"))
+      expect(amount).toBeEmptyDOMElement();
   });
 
   it("asks zKillboard for the next page only while the last one was full", async () => {

@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, Button, Group, Text, VisuallyHidden } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Group,
+  Skeleton,
+  Text,
+  VisuallyHidden,
+} from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { useSelectedCharacter } from "@jitaspace/hooks";
@@ -59,13 +66,18 @@ function Side({
           <div>
             <div className={classes.figureLabel}>ISK destroyed</div>
             <div className={classes.figureValue}>
-              <ISKAmount span inherit amount={party?.isk_destroyed ?? 0} />
+              {/* Undefined until the war loads: ISKAmount draws a skeleton. */}
+              <ISKAmount span inherit amount={party?.isk_destroyed} />
             </div>
           </div>
           <div>
             <div className={classes.figureLabel}>Ships killed</div>
             <div className={classes.figureValue}>
-              {formatInteger(party?.ships_killed ?? 0)}
+              {party ? (
+                formatInteger(party.ships_killed)
+              ) : (
+                <Skeleton h="1em" w="3ch" display="inline-block" />
+              )}
             </div>
           </div>
         </div>
