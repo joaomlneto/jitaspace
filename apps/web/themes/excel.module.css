@@ -4,31 +4,25 @@
    `classNames`. */
 
 /* The green title bar across the top of the window, with white text and a
-   tinted search box, as in Excel's own. The header's controls draw with the
-   theme's text, grey and primary colours, so this redefines those for the
-   bar alone; its dropdowns render in a portal, outside it. */
+   tinted search box, as in Excel's own: the header's own colour hooks
+   (layouts/MainLayout/HeaderMenu/HeaderMenu.module.css). The tints are dark
+   veils over the green, so the white text on them keeps 7:1 or more.
+   Mantine's text and dimmed colours, which the server status and the
+   search label use, turn white too, and so does the primary colour for the
+   focus ring, which would otherwise be green on green. The header's
+   dropdowns render in a portal, outside it. */
 .titleBar {
+  --app-header-text: #ffffff;
+  --app-header-hover: rgba(0, 0, 0, 0.18);
+  --app-header-accent: #ffffff;
+  --app-header-field: rgba(0, 0, 0, 0.18);
+  --app-header-field-hover: rgba(0, 0, 0, 0.26);
+  --app-header-field-border: rgba(255, 255, 255, 0.35);
+  --app-header-field-border-hover: rgba(255, 255, 255, 0.5);
+  --app-header-field-text: #e9f5ee;
   --mantine-color-text: #ffffff;
   --mantine-color-dimmed: #e9f5ee;
-  --mantine-color-black: #ffffff;
-  --mantine-color-dark-0: #ffffff;
   --mantine-primary-color-filled: #ffffff;
-  --mantine-primary-color-light-color: #ffffff;
-
-  /* Hover and the search box: darker veils over the green, so the white text
-     on them keeps 7:1 or more (a white veil left it under 4:1). Borders stay
-     white veils. */
-  --mantine-color-gray-0: rgba(0, 0, 0, 0.18);
-  --mantine-color-gray-1: rgba(0, 0, 0, 0.26);
-  --mantine-color-gray-3: rgba(255, 255, 255, 0.35);
-  --mantine-color-gray-4: rgba(255, 255, 255, 0.5);
-  --mantine-color-gray-6: #e9f5ee;
-  --mantine-color-gray-7: #ffffff;
-  --mantine-color-dark-1: #e9f5ee;
-  --mantine-color-dark-3: rgba(255, 255, 255, 0.5);
-  --mantine-color-dark-4: rgba(255, 255, 255, 0.35);
-  --mantine-color-dark-5: rgba(0, 0, 0, 0.26);
-  --mantine-color-dark-6: rgba(0, 0, 0, 0.18);
 
   background-color: #217346;
   border-bottom-color: #185c37;
@@ -63,6 +57,14 @@
 /* "Format as Table", Table Style Medium 2: a bold white-on-Accent 1 header
    row over banded rows (the banding is the theme's stripedColor). */
 .table thead th {
+  /* The sort and filter controls in it draw with the dimmed and grey
+     colours, which on the blue would be ~1.9:1; white, like the labels, with
+     a white veil on hover. */
+  --mantine-color-dimmed: #ffffff;
+  --mantine-color-text: #ffffff;
+  --mantine-color-gray-light-color: #ffffff;
+  --mantine-color-gray-light-hover: rgba(255, 255, 255, 0.2);
+
   background-color: #4472c4;
   color: #ffffff;
   font-weight: 700;

@@ -130,10 +130,6 @@ export const excelTheme = createTheme({
       defaultProps: { radius: 0, withBorder: true, bg: sheet },
     },
 
-    Button: {
-      defaultProps: { variant: "default" },
-    },
-
     Title: {
       classNames: { root: classes.title },
     },

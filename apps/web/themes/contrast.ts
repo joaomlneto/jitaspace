@@ -17,11 +17,14 @@ import {
 import { lightDark } from "./lightDark";
 
 /**
- * Readable text on filled colours, for the themes that use it (EVE and its
- * family, Excel): the theme's `variantColorResolver`, and `vars` for the
- * components that bypass it. Both pick, per colour scheme, whichever of the
- * theme's black and white contrasts more with the fill. A theme turns them
- * on with `autoContrast: true`, `variantColorResolver` and
+ * Readable text on coloured controls, for the themes that use it (EVE and
+ * its family, Excel), worked out per colour scheme against WCAG AA's 4.5:1:
+ * the theme's `variantColorResolver`, for the `filled` variant (the theme's
+ * black or white text, whichever contrasts more, on a fill stepped darker
+ * where neither reaches 4.5:1) and the `light` one (a darker or lighter shade
+ * of the colour on its tint, or black or white); and `vars` for the
+ * components that bypass the resolver. A theme turns them on with
+ * `autoContrast: true`, `variantColorResolver` and
  * `components: { ...contrastComponents }`.
  */
 
@@ -102,7 +105,8 @@ const lightVariantText = (
   scheme: Scheme,
 ): string | undefined => {
   const shades = theme.colors[color];
-  if (!shades) return undefined;
+  // A virtual colour's shades are CSS variables, which cannot be measured.
+  if (!shades || shades[0].startsWith("var(")) return undefined;
   const primary =
     typeof theme.primaryShade === "number"
       ? theme.primaryShade
