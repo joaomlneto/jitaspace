@@ -5,8 +5,10 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-// ContactsDataTable takes `contacts` / `labels` directly (no internal data
-// hook). Rendering the real DataTable executes the module-scope cell renderers
+import type { ContactRow } from "~/components/Contacts/contactRows";
+
+// ContactsDataTable takes ready-made `contacts` rows directly (no internal
+// data hook; label names arrive resolved, see contactRows). Rendering the real DataTable executes the module-scope cell renderers
 // (name, watched, blocked, standings and labels). @jitaspace/ui supplies
 // decorative EveEntity*/Standing children — stub them to no-ops; the
 // assertable text (the "watched" Badge, the "Unknown" blocked text, and the
@@ -17,12 +19,13 @@ jest.mock(
   () => new Proxy({}, { get: () => () => null }),
 );
 
-// Cast through unknown — the table reads a subset of the generated contact type.
-type Contact = Parameters<
-  (typeof import("~/components/Contacts/ContactsDataTable/ContactsDataTable"))["ContactsDataTable"]
->[0]["contacts"] extends (infer T)[] | undefined
-  ? T
-  : never;
+type Contact = ContactRow;
+
+const CHARACTER_SOURCE = { kind: "character", subjectId: 90000001 } as const;
+const CORPORATION_SOURCE = {
+  kind: "corporation",
+  subjectId: 98000001,
+} as const;
 
 const CONTACT_WATCHED = {
   contact_id: 1001,
@@ -31,7 +34,9 @@ const CONTACT_WATCHED = {
   is_watched: true,
   is_blocked: true, // defined true -> ContactBlockedCell renders "Yes"
   label_ids: [10],
-} as unknown as Contact;
+  labelNames: ["Friends"],
+  source: CHARACTER_SOURCE,
+} satisfies Contact;
 
 const CONTACT_PLAIN = {
   contact_id: 1002,
@@ -40,7 +45,9 @@ const CONTACT_PLAIN = {
   is_watched: false,
   is_blocked: undefined, // undefined -> ContactBlockedCell renders the dimmed "Unknown" text
   label_ids: [],
-} as unknown as Contact;
+  labelNames: [],
+  source: CHARACTER_SOURCE,
+} satisfies Contact;
 
 const CONTACT_NO_LABELS = {
   contact_id: 1003,
@@ -48,7 +55,9 @@ const CONTACT_NO_LABELS = {
   standing: 0,
   is_watched: false,
   // label_ids omitted entirely — ESI leaves it out for contacts with no labels.
-} as unknown as Contact;
+  labelNames: [],
+  source: CHARACTER_SOURCE,
+} satisfies Contact;
 
 const CONTACT_UNRESOLVED_LABEL = {
   contact_id: 1004,
@@ -56,19 +65,32 @@ const CONTACT_UNRESOLVED_LABEL = {
   standing: 1,
   is_watched: false,
   is_blocked: false,
-  // 10 resolves to "Friends"; 999 is absent from LABELS (deleted or not-yet-synced).
+  // 10 resolved to "Friends"; 999 was unknown, so its id stands in.
   label_ids: [10, 999],
-} as unknown as Contact;
+  labelNames: ["Friends", "999"],
+  source: CHARACTER_SOURCE,
+} satisfies Contact;
 
-const LABELS = [{ label_id: 10, label_name: "Friends" }];
+const CORPORATION_CONTACT = {
+  contact_id: 1005,
+  contact_type: "alliance",
+  standing: 5,
+  is_watched: false,
+  // Corporations have no blocked list, so ESI never sends is_blocked.
+  labelNames: [],
+  source: CORPORATION_SOURCE,
+} satisfies Contact;
 
-function renderTable(contacts: Contact[]) {
+function renderTable(contacts: Contact[], showSourceColumn = false) {
   const {
     ContactsDataTable,
   } = require("~/components/Contacts/ContactsDataTable/ContactsDataTable");
   return render(
     <MantineProvider>
-      <ContactsDataTable contacts={contacts} labels={LABELS} />
+      <ContactsDataTable
+        contacts={contacts}
+        showSourceColumn={showSourceColumn}
+      />
     </MantineProvider>,
   );
 }
@@ -85,20 +107,10 @@ describe("ContactsDataTable", () => {
     expect(screen.getByText("watched")).toBeInTheDocument();
   });
 
-  it("renders the label Badge using the resolved label name", () => {
-    renderTable([CONTACT_WATCHED]);
-    // labels cell: labelName[labelId] -> "Friends"
-    expect(screen.getByText("Friends")).toBeInTheDocument();
-  });
-
-  it("renders the raw label id when a label cannot be resolved", () => {
+  it("renders a label Badge for each resolved label name", () => {
     renderTable([CONTACT_UNRESOLVED_LABEL]);
-    // label_ids [10, 999]: 10 resolves to "Friends"; 999 is absent from LABELS.
-    // The fallback must render the individual id ("999"), not JSON.stringify of
-    // the whole label_ids array ("[10,999]").
     expect(screen.getByText("Friends")).toBeInTheDocument();
     expect(screen.getByText("999")).toBeInTheDocument();
-    expect(screen.queryByText("[10,999]")).not.toBeInTheDocument();
   });
 
   it("renders 'Yes' in the blocked column when is_blocked is true", () => {
@@ -111,6 +123,41 @@ describe("ContactsDataTable", () => {
     renderTable([CONTACT_PLAIN]);
     // ContactBlockedCell renders the dimmed "Unknown" Text only when is_blocked is undefined
     expect(screen.getByText("Unknown")).toBeInTheDocument();
+  });
+
+  it("leaves the blocked cell empty for a corporation's contact", () => {
+    // Only characters have a blocked list; "Unknown" would wrongly suggest
+    // ESI could have told us.
+    renderTable([CORPORATION_CONTACT]);
+    expect(screen.queryByText("Unknown")).not.toBeInTheDocument();
+    expect(screen.queryByText("No")).not.toBeInTheDocument();
+  });
+
+  it("shows the Source column only when asked to", () => {
+    const sourceHeader = () =>
+      screen
+        .queryAllByRole("columnheader")
+        .find((cell) => cell.textContent.startsWith("Source"));
+
+    const { unmount } = renderTable([CONTACT_WATCHED, CORPORATION_CONTACT]);
+    expect(sourceHeader()).toBeUndefined();
+    unmount();
+
+    renderTable([CONTACT_WATCHED, CORPORATION_CONTACT], true);
+    expect(sourceHeader()).toBeDefined();
+  });
+
+  it("keeps the same contact from two sources as two rows", () => {
+    // The row id must include the source: keyed by contact id alone, the two
+    // rows would collide.
+    renderTable(
+      [CONTACT_WATCHED, { ...CONTACT_WATCHED, source: CORPORATION_SOURCE }],
+      true,
+    );
+    const bodyRows = screen
+      .getAllByRole("row")
+      .filter((r) => r.querySelector("td"));
+    expect(bodyRows).toHaveLength(2);
   });
 
   it("renders without crashing when a contact has no label_ids", () => {

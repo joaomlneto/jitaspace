@@ -2,23 +2,23 @@ import { memo, useMemo } from "react";
 import { Badge, Group, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import type {
-  AllianceContact,
-  CharacterContact,
-  CorporationContact,
-} from "@jitaspace/hooks";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
 
+import type { ContactRow } from "../contactRows";
 import { EveEntityAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
+import { contactRowKey } from "../contactRows";
 
-type Contact = AllianceContact & CorporationContact & CharacterContact;
 export interface ContactsDataTableProps {
-  contacts?: Contact[];
-  labels?: { label_id: number; label_name: string }[];
-  hideBlockedColumn?: boolean;
-  hideWatchedColumn?: boolean;
+  contacts?: ContactRow[];
+  /**
+   * Show which character, corporation or alliance each contact belongs to.
+   * Pointless with a single source — it would repeat the same name on every
+   * row — so the page turns it on only when there is more than one.
+   */
+  showSourceColumn?: boolean;
+  isLoading?: boolean;
 }
 
 const CONTACT_TYPE_OPTIONS = [
@@ -28,12 +28,34 @@ const CONTACT_TYPE_OPTIONS = [
   { value: "faction", label: "Faction" },
 ];
 
-const NO_CONTACTS: Contact[] = [];
+const NO_CONTACTS: ContactRow[] = [];
 
 const capitalizeFirstLetter = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1);
 
-function contactNameCell(contact: Contact) {
+function contactSourceCell(contact: ContactRow) {
+  return (
+    <Group wrap="nowrap" gap="xs">
+      <EveEntityAvatar
+        entityId={contact.source.subjectId}
+        category={contact.source.kind}
+        size="sm"
+      />
+      <EveEntityAnchor
+        size="sm"
+        entityId={contact.source.subjectId}
+        category={contact.source.kind}
+      >
+        <EveEntityName
+          entityId={contact.source.subjectId}
+          category={contact.source.kind}
+        />
+      </EveEntityAnchor>
+    </Group>
+  );
+}
+
+function contactNameCell(contact: ContactRow) {
   return (
     <Group wrap="nowrap">
       <StandingIndicator standing={contact.standing}>
@@ -57,7 +79,7 @@ function contactNameCell(contact: Contact) {
   );
 }
 
-function contactWatchedCell(contact: Contact) {
+function contactWatchedCell(contact: ContactRow) {
   return contact.is_watched ? (
     <Badge variant="filled" size="xs">
       watched
@@ -65,7 +87,10 @@ function contactWatchedCell(contact: Contact) {
   ) : null;
 }
 
-function contactBlockedCell(contact: Contact) {
+function contactBlockedCell(contact: ContactRow) {
+  // Only characters can block a contact; corporations and alliances have no
+  // blocked list, so there is nothing to show rather than something unknown.
+  if (contact.source.kind !== "character") return null;
   if (contact.is_blocked === undefined) {
     return (
       <Text size="sm" c="dimmed" fs="italic">
@@ -76,11 +101,10 @@ function contactBlockedCell(contact: Contact) {
   return contact.is_blocked ? "Yes" : "No";
 }
 
-/** The label names the accessor resolved, as badges. */
-function contactLabelsCell(_contact: Contact, value: unknown) {
+function contactLabelsCell(contact: ContactRow) {
   return (
     <Group gap="xs">
-      {(value as string[] | undefined)?.map((name) => (
+      {contact.labelNames.map((name) => (
         <Badge size="sm" key={name}>
           {name}
         </Badge>
@@ -89,27 +113,29 @@ function contactLabelsCell(_contact: Contact, value: unknown) {
   );
 }
 
-function contactStandingsCell(contact: Contact) {
+function contactStandingsCell(contact: ContactRow) {
   return <StandingsBadge standing={contact.standing} />;
 }
 
 export const ContactsDataTable = memo(
   ({
     contacts,
-    labels,
-    hideBlockedColumn = false,
-    hideWatchedColumn = false,
+    showSourceColumn = false,
+    isLoading = false,
   }: ContactsDataTableProps) => {
-    const labelName = useMemo(() => {
-      const labelName: Record<number, string> = {};
-      labels?.forEach(
-        (label) => (labelName[label.label_id] = label.label_name),
-      );
-      return labelName;
-    }, [labels]);
-
-    const columns = useMemo<DataTableColumn<Contact>[]>(
+    const columns = useMemo<DataTableColumn<ContactRow>[]>(
       () => [
+        ...(showSourceColumn
+          ? [
+              {
+                id: "source",
+                header: "Source",
+                accessor: (contact) => contact.source.subjectId,
+                sortable: true,
+                cell: contactSourceCell,
+              } satisfies DataTableColumn<ContactRow>,
+            ]
+          : []),
         {
           id: "id",
           header: "Contact ID",
@@ -139,7 +165,6 @@ export const ContactsDataTable = memo(
           accessor: (contact) => contact.is_watched ?? false,
           sortable: true,
           filter: { type: "boolean" },
-          defaultVisible: !hideWatchedColumn,
           cell: contactWatchedCell,
         },
         {
@@ -147,17 +172,13 @@ export const ContactsDataTable = memo(
           header: "Blocked",
           accessor: "is_blocked",
           sortable: true,
-          defaultVisible: !hideBlockedColumn,
           cell: contactBlockedCell,
         },
         {
           id: "labels",
           header: "Labels",
           // The resolved names, so searching for a label finds its contacts.
-          accessor: (contact) =>
-            contact.label_ids?.map(
-              (labelId) => labelName[labelId] ?? String(labelId),
-            ),
+          accessor: "labelNames",
           filter: { type: "multi-select" },
           cell: contactLabelsCell,
         },
@@ -170,14 +191,17 @@ export const ContactsDataTable = memo(
           cell: contactStandingsCell,
         },
       ],
-      [labelName, hideBlockedColumn, hideWatchedColumn],
+      [showSourceColumn],
     );
 
     return (
       <DataTable
         data={contacts ?? NO_CONTACTS}
         columns={columns}
-        rowId={(contact) => contact.contact_id}
+        // The same contact can appear once per source, so the contact id
+        // alone is not unique in a merged list.
+        rowId={contactRowKey}
+        isLoading={isLoading}
         withGlobalFilter
         withColumnVisibility
         withPagination

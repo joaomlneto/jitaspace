@@ -11,7 +11,6 @@ import {
   CalendarIcon,
   CharacterSheetIcon,
   ContactsIcon,
-  CorporationIcon,
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
@@ -115,8 +114,8 @@ export const characterApps: Record<string, JitaApp> = {
   },
   contacts: {
     name: "Contacts",
-    description: "View and manage your character's contacts.",
-    url: "/contacts/character",
+    description: "View your character, corporation and alliance contacts.",
+    url: "/contacts",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
       optional: [
@@ -229,7 +228,7 @@ export const corporationApps: Record<string, JitaApp> = {
   contacts: {
     name: "Contacts",
     description: "View and manage your corporation's contacts.",
-    url: "/contacts/corporation",
+    url: "/contacts",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
       optional: [
@@ -279,7 +278,7 @@ export const allianceApps: Record<string, JitaApp> = {
   contacts: {
     name: "Contacts",
     description: "View and manage your alliance's contacts.",
-    url: "/contacts/alliance",
+    url: "/contacts",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
       optional: [
@@ -520,16 +519,6 @@ export const jitaApps: Record<
     apps: characterApps,
     name: "Character",
     Icon: (props) => <CharacterSheetIcon {...props} />,
-  },
-  corporation: {
-    apps: corporationApps,
-    name: "Corporation",
-    Icon: (props) => <CorporationIcon {...props} />,
-  },
-  alliance: {
-    apps: allianceApps,
-    name: "Alliance",
-    Icon: (props) => <AlliancesIcon {...props} />,
   },
   universe: {
     apps: universeApps,
