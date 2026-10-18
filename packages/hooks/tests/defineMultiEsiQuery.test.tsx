@@ -189,6 +189,36 @@ describe("defineMultiEsiQuery", () => {
     expect(result.current.errors[0]?.error).toBeInstanceOf(Error);
   });
 
+  it("lists only the subjects that are still pending", async () => {
+    login(
+      character({ characterId: 100, scopes: [SCOPE] }),
+      character({ characterId: 101, scopes: [SCOPE] }),
+    );
+
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings", subjectId],
+        // Subject 100 never settles; 101 resolves straight away.
+        queryFn: () =>
+          subjectId === 100
+            ? new Promise<ResponseConfig<Fitting[]>>(() => undefined)
+            : Promise.resolve(response([{ fitting_id: 1 }])),
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple(), { wrapper });
+
+    await waitFor(() =>
+      expect(result.current.data).toEqual([{ fitting_id: 1, subjectId: 101 }]),
+    );
+    // The envelope as a whole is still pending, but a consumer showing only
+    // subject 101 can tell that its data is complete.
+    expect(result.current.isPending).toBe(true);
+    expect(result.current.pendingSubjectIds).toEqual([100]);
+  });
+
   it("does not re-run select on every render", async () => {
     login(character({ characterId: 100, scopes: [SCOPE] }));
 

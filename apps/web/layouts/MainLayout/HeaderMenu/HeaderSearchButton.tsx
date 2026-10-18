@@ -28,12 +28,13 @@ export function HeaderSearchButton() {
         aria-label="Search New Eden"
       >
         <IconSearch size={16} stroke={1.5} />
-        <Text className={classes.searchLabel} size="sm" c="dimmed">
+        <Text className={classes.searchLabel} size="sm">
           Search New Eden…
         </Text>
-        <Kbd>{modKey} K</Kbd>
+        <Kbd className={classes.searchKbd}>{modKey} K</Kbd>
       </UnstyledButton>
       <ActionIcon
+        className={classes.searchIcon}
         variant="default"
         size="lg"
         radius="sm"

@@ -21,9 +21,9 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
 
 /**
  * The nav group that owns the current route, chosen by the longest matching app
- * URL (so /contacts/corporation lights up Corporation, not Character). Falls back
- * to the first path segment for apps whose configured URL is a deeper default,
- * so e.g. Travel's "/travel/jita/amarr" still matches any /travel/* page.
+ * URL. Falls back to the first path segment for apps whose configured URL is a
+ * deeper default, so e.g. Travel's "/travel/jita/amarr" still matches any
+ * /travel/* page.
  * Returns null on routes no group owns (e.g. the home page).
  */
 function activeGroupName(pathname: string): string | null {
@@ -89,7 +89,7 @@ function ActiveDesktopNavGroup() {
 
 /**
  * Top navigation header for the MainLayout. Labelled "mega menu"-style
- * dropdowns (Character / Corporation / Alliance / Universe) replace the older
+ * dropdowns (Character / Universe) replace the older
  * icon-only triggers, alongside a Spotlight-backed search box and the character
  * menu. Responsive: trigger labels and the full search box appear on wider
  * screens, and it collapses to the character avatar (opening the same character
@@ -147,6 +147,7 @@ export function HeaderMenu() {
             <Group gap="xs" hiddenFrom="sm" wrap="nowrap">
               {characterIds.length > 0 && <UserButton compact />}
               <Burger
+                className={classes.burger}
                 opened={drawerOpened}
                 onClick={toggleDrawer}
                 aria-label="Toggle navigation"

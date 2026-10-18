@@ -5,7 +5,7 @@ import {
   DEFAULT_THEME_SEASON,
   DEFAULT_THEME_SEASON_END,
 } from "~/themes/season";
-import { WALLPAPERS } from "~/themes/wallpapers";
+import { EXCEL_GRID, WALLPAPERS } from "~/themes/wallpapers";
 
 /**
  * Pre-paint theme: stops the default theme from flashing on load for anyone who
@@ -70,6 +70,12 @@ export const THEME_PRELOAD: Record<
   sisters_of_eve: preload("#101010", WALLPAPERS.cradleOfWar),
   carbon: preload("#101010", WALLPAPERS.cradleOfWar),
   photon: preload("#101010", WALLPAPERS.cradleOfWar),
+  // Mantine's own body colours under the spreadsheet's gridlines.
+  excel: {
+    body: lightDark("#ffffff", "#242424"),
+    background: EXCEL_GRID.appBackground,
+    backgroundMobile: EXCEL_GRID.appBackgroundMobile,
+  },
   whpd: {
     body: lightDark("#f1f1f1", "#101010"),
     background: lightDark("#f1f1f1", "#000"),
