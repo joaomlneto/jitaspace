@@ -115,33 +115,73 @@ export default function ContactsPageClient() {
   const isPending =
     characters.isPending || corporations.isPending || alliances.isPending;
 
-  // Skeleton rows only while something the user asked to see is still on its
-  // way, so a deselected source that is slow to load neither holds back the
-  // "no sources selected" message nor an empty list that has already loaded.
-  // Before the sources are known (the auth store rehydrating), anything
-  // pending counts.
+  // Skeleton rows only while a source the user asked to see is still on its
+  // way, so a deselected source that is slow to load — even one of the same
+  // kind — neither holds back the "no sources selected" message nor an empty
+  // list that has already loaded. Before the sources are known (the auth store
+  // rehydrating), anything pending counts.
+  const pendingKeys = useMemo(
+    () =>
+      new Set([
+        ...characters.pendingSubjectIds.map((subjectId) =>
+          contactSourceKey({ kind: "character", subjectId }),
+        ),
+        ...corporations.pendingSubjectIds.map((subjectId) =>
+          contactSourceKey({ kind: "corporation", subjectId }),
+        ),
+        ...alliances.pendingSubjectIds.map((subjectId) =>
+          contactSourceKey({ kind: "alliance", subjectId }),
+        ),
+      ]),
+    [
+      characters.pendingSubjectIds,
+      corporations.pendingSubjectIds,
+      alliances.pendingSubjectIds,
+    ],
+  );
   const isSelectionPending =
     sources.length === 0
       ? isPending
-      : sources.some(
-          (source) =>
-            activeKeys.has(contactSourceKey(source)) &&
-            {
-              character: characters.isPending,
-              corporation: corporations.isPending,
-              alliance: alliances.isPending,
-            }[source.kind],
-        );
+      : [...activeKeys].some((key) => pendingKeys.has(key));
 
   // A source whose labels failed still shows its contacts, with label ids in
-  // place of names, so it is reported apart from one whose contacts failed.
+  // place of names, so it is reported apart from one whose contacts failed —
+  // and not at all when its contacts failed too, since then there is nothing
+  // for the labels to name.
+  const contactErrors = [
+    ...characters.errors.map((error) => ({
+      ...error,
+      kind: "character" as const,
+    })),
+    ...corporations.errors.map((error) => ({
+      ...error,
+      kind: "corporation" as const,
+    })),
+    ...alliances.errors.map((error) => ({
+      ...error,
+      kind: "alliance" as const,
+    })),
+  ];
+  const failedContactKeys = new Set(
+    contactErrors.map((error) => contactSourceKey(error)),
+  );
+  const labelErrors = [
+    ...characterLabels.errors.map((error) => ({
+      ...error,
+      kind: "character" as const,
+    })),
+    ...corporationLabels.errors.map((error) => ({
+      ...error,
+      kind: "corporation" as const,
+    })),
+    ...allianceLabels.errors.map((error) => ({
+      ...error,
+      kind: "alliance" as const,
+    })),
+  ].filter((error) => !failedContactKeys.has(contactSourceKey(error)));
   const errors = [
-    ...characters.errors.map((error) => ({ ...error, what: "contacts" })),
-    ...corporations.errors.map((error) => ({ ...error, what: "contacts" })),
-    ...alliances.errors.map((error) => ({ ...error, what: "contacts" })),
-    ...characterLabels.errors.map((error) => ({ ...error, what: "labels" })),
-    ...corporationLabels.errors.map((error) => ({ ...error, what: "labels" })),
-    ...allianceLabels.errors.map((error) => ({ ...error, what: "labels" })),
+    ...contactErrors.map((error) => ({ ...error, what: "contacts" })),
+    ...labelErrors.map((error) => ({ ...error, what: "labels" })),
   ];
 
   return (
@@ -205,10 +245,20 @@ export default function ContactsPageClient() {
         )}
 
         {errors.length > 0 && (
-          <Alert color="orange" title="Some contacts could not be loaded">
+          <Alert
+            color="orange"
+            title={
+              contactErrors.length > 0
+                ? "Some contacts could not be loaded"
+                : "Some contact labels could not be loaded"
+            }
+          >
             <Stack gap={2}>
               {errors.map((error) => (
-                <Text key={`${error.what}:${error.subjectId}`} size="sm">
+                <Text
+                  key={`${error.what}:${error.kind}:${error.subjectId}`}
+                  size="sm"
+                >
                   <EveEntityName span inherit entityId={error.subjectId} />
                   {error.what === "labels"
                     ? " (labels, shown as numbers): "

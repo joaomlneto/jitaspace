@@ -63,9 +63,20 @@ const envelope = (
   isLoading: false,
   isPending: false,
   isError: false,
+  pendingSubjectIds: [],
   refetch: () => undefined,
   ...over,
 });
+
+/** Every subject in `subjectIds` still loading, as the hooks report it. */
+const loading = (subjectIds: number[]) =>
+  envelope([], subjectIds, {
+    isPending: true,
+    isLoading: true,
+    pendingSubjectIds: subjectIds,
+  });
+
+const OTHER_CHARACTER_ID = 90000002;
 
 const contact = (
   subjectId: number,
@@ -159,9 +170,7 @@ describe("Contacts page", () => {
 
   it("is not held in skeleton rows by a deselected source still loading", () => {
     withEverySource();
-    hooks.corporations.mockReturnValue(
-      envelope([], [CORPORATION_ID], { isPending: true, isLoading: true }),
-    );
+    hooks.corporations.mockReturnValue(loading([CORPORATION_ID]));
     hooks.alliances.mockReturnValue(envelope([], [ALLIANCE_ID]));
 
     const { container } = renderPage(`?sources=alliance:${ALLIANCE_ID}`);
@@ -170,14 +179,42 @@ describe("Contacts page", () => {
     expect(screen.getByText("No data")).toBeInTheDocument();
   });
 
-  it("shows skeleton rows while a selected source is loading", () => {
+  it("is not held in skeleton rows by a deselected source of the same kind", () => {
+    // Two alts: the selected one has loaded (with no contacts) while the other
+    // is still paging. The hook's own isPending is true for both together.
     hooks.characters.mockReturnValue(
-      envelope([], [CHARACTER_ID], { isPending: true, isLoading: true }),
+      envelope([], [CHARACTER_ID, OTHER_CHARACTER_ID], {
+        isPending: true,
+        isLoading: true,
+        pendingSubjectIds: [OTHER_CHARACTER_ID],
+      }),
     );
+
+    const { container } = renderPage(`?sources=character:${CHARACTER_ID}`);
+
+    expect(skeletonRows(container)).toHaveLength(0);
+    expect(screen.getByText("No data")).toBeInTheDocument();
+  });
+
+  it("shows skeleton rows while a selected source is loading", () => {
+    hooks.characters.mockReturnValue(loading([CHARACTER_ID]));
 
     const { container } = renderPage();
 
     expect(skeletonRows(container).length).toBeGreaterThan(0);
+  });
+
+  it("shows skeleton rows, not an empty state, before the sources are known", () => {
+    // The auth store rehydrating: no subjects yet, but every hook pending.
+    for (const hook of Object.values(hooks)) {
+      hook.mockReturnValue(envelope([], [], { isPending: true }));
+    }
+
+    const { container } = renderPage();
+
+    expect(skeletonRows(container).length).toBeGreaterThan(0);
+    expect(screen.queryByText("No contacts available")).not.toBeInTheDocument();
+    expect(screen.queryByText("No data")).not.toBeInTheDocument();
   });
 
   it("ignores a selection naming someone else when only one source exists", () => {
@@ -236,5 +273,44 @@ describe("Contacts page", () => {
     expect(screen.getByText(/nope/)).toHaveTextContent(
       `entity-${CORPORATION_ID} (labels, shown as numbers): nope`,
     );
+  });
+
+  it("reports a source once when both its contacts and labels failed", () => {
+    // Its contacts are not shown at all, so "labels shown as numbers" would be
+    // wrong.
+    const failed = (message: string) =>
+      envelope([], [CORPORATION_ID], {
+        isError: true,
+        errors: [{ subjectId: CORPORATION_ID, error: { message } }],
+      });
+    hooks.corporations.mockReturnValue(failed("contacts down"));
+    hooks.corporationLabels.mockReturnValue(failed("labels down"));
+    renderPage();
+
+    expect(screen.getByText(/contacts down/)).toBeInTheDocument();
+    expect(screen.queryByText(/labels down/)).not.toBeInTheDocument();
+  });
+
+  it("titles the alert after labels when only labels failed", () => {
+    hooks.characters.mockReturnValue(
+      envelope([contact(CHARACTER_ID, 1, [3])], [CHARACTER_ID]),
+    );
+    hooks.characterLabels.mockReturnValue(
+      envelope([], [CHARACTER_ID], {
+        isError: true,
+        errors: [{ subjectId: CHARACTER_ID, error: { message: "nope" } }],
+      }),
+    );
+    renderPage();
+
+    expect(
+      screen.getByText("Some contact labels could not be loaded"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Some contacts could not be loaded"),
+    ).not.toBeInTheDocument();
+    // The contact still shows, with its label as the bare id.
+    expect(bodyRows()).toHaveLength(1);
+    expect(screen.getByText("3")).toBeInTheDocument();
   });
 });
