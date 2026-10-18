@@ -30,8 +30,17 @@ export interface WarKillmailEntry {
 
 type EsiPage = ResponseConfig<GetWarsWarIdKillmailsQueryResponse>;
 
+/**
+ * How long to wait for a zKillboard page. Its origin can stall for a minute
+ * or more before Cloudflare gives up, and the cards waiting on the page show
+ * skeletons until then; past this, they fetch their killmails from ESI.
+ */
+const ZKB_TIMEOUT_MS = 10_000;
+
 async function fetchZkbPage(url: string): Promise<ZkbKillmail[]> {
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(ZKB_TIMEOUT_MS),
+  });
   if (!response.ok) throw new Error(`zKillboard answered ${response.status}`);
   const body: unknown = await response.json();
   // zKillboard reports some failures as a 200 carrying `{ error }`.

@@ -523,7 +523,9 @@ describe("War page", () => {
     mockEsiPage.mockResolvedValue({
       data: [{ killmail_id: 1, killmail_hash: "hash1" }],
     });
-    swrState = { data: [[zkbKillmail(2), zkbKillmail(1)]] };
+    // zKillboard lacks kill 1 and has no more pages: only ESI's second page
+    // can put it on the list.
+    swrState = { data: [[zkbKillmail(2)]] };
 
     renderPage("?tab=killmails");
 
@@ -531,6 +533,9 @@ describe("War page", () => {
       await screen.findByRole("tab", { name: /Killmails \(2\)/ }),
     ).toBeInTheDocument();
     expect(mockEsiPage).toHaveBeenCalledWith(2);
+    expect(screen.getByTestId("esi-killmail-card")).toHaveTextContent(
+      "ESI killmail 1",
+    );
   });
 
   it("owns up when a later ESI page fails", async () => {
@@ -784,6 +789,10 @@ describe("War page", () => {
     try {
       fetchMock.mockResolvedValueOnce(reply([zkbKillmail(1)]));
       await expect(swrFetcher("u")).resolves.toHaveLength(1);
+      // A stalled zKillboard gives up rather than hold the cards forever.
+      expect(fetchMock).toHaveBeenLastCalledWith("u", {
+        signal: expect.any(AbortSignal),
+      });
       fetchMock.mockResolvedValueOnce(reply({ error: "nope" }));
       await expect(swrFetcher("u")).rejects.toThrow("sent no killmails");
       fetchMock.mockResolvedValueOnce(reply(null, 429));
