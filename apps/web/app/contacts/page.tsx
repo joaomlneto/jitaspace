@@ -1,38 +1,24 @@
-"use client";
+import { Suspense } from "react";
 
-import { Container, Group, SimpleGrid, Title } from "@mantine/core";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { pageMetadata } from "~/lib/metadata";
+import ContactsPageClient from "./page.client";
 
-import { ContactsIcon } from "@jitaspace/eve-icons";
-
-import { SectionLinkCard } from "~/components/Card/SectionLinkCard";
+export const metadata = pageMetadata({
+  title: "Contacts",
+  description:
+    "Browse your EVE Online character, corporation and alliance contacts in one place.",
+  path: "/contacts",
+  badge: "Contacts",
+});
 
 export default function Page() {
+  // The source selection lives in the URL via nuqs, which reads
+  // useSearchParams internally — without a Suspense boundary the route
+  // silently drops out of static prerendering under cacheComponents.
   return (
-    <Container size="lg">
-      <Group>
-        <ContactsIcon width={48} />
-        <Title order={1}>Contacts</Title>
-      </Group>
-      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, md: 3 }}>
-        <SectionLinkCard
-          href="/contacts/character"
-          Icon={ContactsIcon}
-          title="Character Contacts"
-          description="View your character's contacts."
-        />
-        <SectionLinkCard
-          href="/contacts/corporation"
-          Icon={ContactsIcon}
-          title="Corporation Contacts"
-          description="View your corporation's contacts."
-        />
-        <SectionLinkCard
-          href="/contacts/alliance"
-          Icon={ContactsIcon}
-          title="Alliance Contacts"
-          description="View your alliance's contacts."
-        />
-      </SimpleGrid>
-    </Container>
+    <Suspense fallback={<PageSkeleton />}>
+      <ContactsPageClient />
+    </Suspense>
   );
 }

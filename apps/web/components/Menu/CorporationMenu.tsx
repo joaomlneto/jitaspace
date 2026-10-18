@@ -75,7 +75,7 @@ export const CorporationMenu = ({
               <Menu.Item
                 key={app.name}
                 component={Link}
-                href={app.url ?? ""}
+                href={app.subjectUrl?.(corporationId) ?? app.url ?? ""}
                 onClick={app.onClick}
                 leftSection={<app.Icon width={20} />}
               >
