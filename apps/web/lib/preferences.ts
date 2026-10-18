@@ -34,6 +34,7 @@ export const APP_THEME_OPTIONS = [
   { value: "carbon", label: "Carbon" },
   { value: "photon", label: "Photon" },
   { value: "whpd", label: "WHPD" },
+  { value: "excel", label: "Excel" },
 ] as const;
 
 /** The engines every data table can render with (`~/components/DataTable`). */

@@ -147,6 +147,7 @@ export function HeaderMenu() {
             <Group gap="xs" hiddenFrom="sm" wrap="nowrap">
               {characterIds.length > 0 && <UserButton compact />}
               <Burger
+                className={classes.burger}
                 opened={drawerOpened}
                 onClick={toggleDrawer}
                 aria-label="Toggle navigation"
