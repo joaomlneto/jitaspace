@@ -72,16 +72,17 @@ describe.each(["eve", "default", "caldari", "excel"] as const)(
       }
     });
 
-    // The light variant's tint, as Mantine's v8 variables paint it: the
-    // primary shade at 10% over the body on the light scheme, shade
-    // (primary - 2) at 15% on the dark one.
+    // The light variant's hover tint, as Mantine's v8 variables paint it (the
+    // deeper of its two tints, so the lower contrast): the primary shade at
+    // 12% over the body on the light scheme, shade (primary - 2) at 20% on
+    // the dark one.
     const tint = (color: string, scheme: "light" | "dark") => {
       const shades = theme.colors[color]!;
       const p = primaryShade(scheme);
       const [fill, opacity, body] =
         scheme === "light"
-          ? [shades[p], 0.1, theme.white]
-          : [shades[Math.max(0, p - 2)]!, 0.15, theme.colors.dark[7]];
+          ? [shades[p], 0.12, theme.white]
+          : [shades[Math.max(0, p - 2)]!, 0.2, theme.colors.dark[7]];
       const c = toRgba(fill);
       const b = toRgba(body);
       const mix = (x: number, y: number) =>

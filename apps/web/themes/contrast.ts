@@ -91,10 +91,12 @@ const over = (color: string, opacity: number, body: string) => {
 /**
  * Text for the `light` variant (a pale tint of the colour behind its own
  * shade), per scheme. Mantine's v8 variables put the primary shade on a 10%
- * tint on the light scheme, and shade (primary − 5) on a 15% tint of shade
- * (primary − 2) on the dark one; mid-tone colours fall short there (blue on
- * its tint is 3.2:1). This walks darker on the light scheme, lighter on the
- * dark one, until the text reaches 4.5:1 against the tint over the body, and
+ * tint on the light scheme (12% on hover), and shade (primary − 5) on a 15%
+ * tint of shade (primary − 2) on the dark one (20% on hover); mid-tone
+ * colours fall short there (blue on its tint is 3.2:1). This walks darker on
+ * the light scheme, lighter on the dark one, until the text reaches 4.5:1
+ * against the hover tint over the body (the deeper tint, so the lower
+ * contrast: a shade that passes there passes at rest too), and
  * where no shade does (EVE's teal.9 is ~4:1 on its tint) uses the theme's
  * black or white: the tint still carries the colour. Returns the CSS colour,
  * or undefined to keep Mantine's.
@@ -114,8 +116,8 @@ const lightVariantText = (
   const body = scheme === "light" ? theme.white : theme.colors.dark[7];
   const tint =
     scheme === "light"
-      ? over(shades[primary], 0.1, body)
-      : over(shades[Math.max(0, primary - 2)] ?? shades[primary], 0.15, body);
+      ? over(shades[primary], 0.12, body)
+      : over(shades[Math.max(0, primary - 2)] ?? shades[primary], 0.2, body);
   const start = scheme === "light" ? primary : Math.max(primary - 5, 0);
   const step = scheme === "light" ? 1 : -1;
   for (let shade = start; shade >= 0 && shade <= 9; shade += step) {
