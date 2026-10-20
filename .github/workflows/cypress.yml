@@ -134,7 +134,11 @@ jobs:
         run: pnpm build
       - name: Cypress run
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
-        uses: cypress-io/github-action@v7.3.0
+        # Keep at v7.4.4 or later: GitHub's runner 2.338.0 ships Node >=24.20, where a
+        # refused localhost connection raises ERR_SOCKET_CLOSED_BEFORE_CONNECTION, and
+        # earlier versions' got@11 treated that as fatal, so `wait-on` failed in 25ms
+        # instead of waiting for the server (cypress-io/github-action#1873).
+        uses: cypress-io/github-action@v7.4.6
         with:
           # Dependencies are already installed at monorepo root; skip action-level install
           # to avoid lockfile lookup in apps/web (pnpm lockfile is at repository root).
