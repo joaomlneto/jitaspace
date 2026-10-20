@@ -1,0 +1,68 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--mantine-radius-md);
+  background-color: #14080a;
+  background-image: url("/wallpapers/2026-csm-21/csm-21-nologo.webp");
+  background-size: cover;
+  background-position: 70% center;
+}
+
+/* Darken the left, where the logo and text sit; the art stays clear on the right. */
+.heroScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.82) 0%,
+    rgba(0, 0, 0, 0.6) 45%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+.heroContent {
+  position: relative;
+  padding: var(--mantine-spacing-xl);
+  min-height: 360px;
+  justify-content: center;
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    padding: var(--mantine-spacing-md);
+    min-height: 0;
+  }
+}
+
+.heroLogo {
+  width: min(360px, 80%);
+  height: auto;
+}
+
+.heroText {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.interview {
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 120ms ease;
+
+  &:hover {
+    border-color: #9146ff;
+  }
+}
+
+.pitch {
+  border-left: 3px solid #c8161d;
+  padding-left: var(--mantine-spacing-sm);
+}
+
+/* Room for the sticky header when a badge links to `/csm#candidate-…`. */
+.candidate {
+  scroll-margin-top: 80px;
+
+  &:target,
+  &[data-highlighted] {
+    outline: 2px solid #c8161d;
+    outline-offset: 2px;
+  }
+}

@@ -57,6 +57,34 @@ export function NewsBannerCard({
         }}
       />
 
+      {/* The whole card follows its link. The CTA button stays the accessible
+          link; this overlay is a bigger target for the pointer only, so the
+          text above it lets clicks through and the buttons sit on top. */}
+      {item.link &&
+        (item.link.external ? (
+          <Box
+            component="a"
+            href={item.link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-hidden
+            tabIndex={-1}
+            pos="absolute"
+            inset={0}
+            style={{ zIndex: 1 }}
+          />
+        ) : (
+          <Box
+            component={Link}
+            href={item.link.href}
+            aria-hidden
+            tabIndex={-1}
+            pos="absolute"
+            inset={0}
+            style={{ zIndex: 1 }}
+          />
+        ))}
+
       {/* Title — top-left */}
       <Text
         c="white"
@@ -69,6 +97,7 @@ export function NewsBannerCard({
         right={0}
         style={{
           zIndex: 1,
+          pointerEvents: "none",
           padding: "var(--mantine-spacing-md)",
           paddingRight: "2.75rem", // leave room for the close button
           textShadow: "0 1px 3px rgba(0, 0, 0, 0.55)",
@@ -96,7 +125,7 @@ export function NewsBannerCard({
         left={0}
         right={0}
         bottom={0}
-        style={{ zIndex: 1 }}
+        style={{ zIndex: 1, pointerEvents: "none" }}
       >
         {item.date && (
           <Badge
@@ -123,7 +152,7 @@ export function NewsBannerCard({
               size="xs"
               radius="md"
               mt={4}
-              style={{ alignSelf: "flex-start" }}
+              style={{ alignSelf: "flex-start", pointerEvents: "auto" }}
               rightSection={<IconExternalLink size={14} />}
             >
               {item.link.label}
@@ -136,7 +165,7 @@ export function NewsBannerCard({
               size="xs"
               radius="md"
               mt={4}
-              style={{ alignSelf: "flex-start" }}
+              style={{ alignSelf: "flex-start", pointerEvents: "auto" }}
             >
               {item.link.label}
             </Button>
