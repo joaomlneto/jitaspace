@@ -462,7 +462,9 @@ function EffectHero({
       }
     >
       <Stack gap={4}>
-        <Title order={2}>{title}</Title>
+        <Title order={1} size="h2">
+          {title}
+        </Title>
         {displayName && name && displayName !== name && (
           <Code w="fit-content">{name}</Code>
         )}

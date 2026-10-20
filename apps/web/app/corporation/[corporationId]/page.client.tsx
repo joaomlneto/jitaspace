@@ -446,7 +446,7 @@ export default function CorporationPage({
             <Text size="sm">{identity.name ?? corporationId}</Text>
           </Breadcrumbs>
           <Group gap="sm" align="center">
-            <Title order={2}>
+            <Title order={1} size="h2">
               {identity.name ?? `Corporation ${corporationId}`}
             </Title>
             {identity.ticker && (

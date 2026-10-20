@@ -88,6 +88,18 @@ describe("MarketGroupsNavigation", () => {
     expect(screen.queryByText("Frigates")).not.toBeInTheDocument();
   });
 
+  it("points each tab at a panel that exists", async () => {
+    mockFetch(jsonResponse(tree));
+    const { container } = renderNavigation();
+    await screen.findByText("Ammunition & Charges");
+
+    for (const tab of screen.getAllByRole("tab")) {
+      const panelId = tab.getAttribute("aria-controls");
+      expect(panelId).toBeTruthy();
+      expect(container.querySelector(`[id="${panelId}"]`)).not.toBeNull();
+    }
+  });
+
   it("filters to a matching item and opens the groups above it", async () => {
     mockFetch(jsonResponse(tree));
     renderNavigation();

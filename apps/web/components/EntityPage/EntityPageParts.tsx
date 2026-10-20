@@ -81,7 +81,9 @@ export function SectionHeading({
       <Box c="eve_accent.4" style={{ display: "flex" }}>
         {icon}
       </Box>
-      <Title order={4}>{children}</Title>
+      <Title order={2} size="h4">
+        {children}
+      </Title>
     </Group>
   );
 }

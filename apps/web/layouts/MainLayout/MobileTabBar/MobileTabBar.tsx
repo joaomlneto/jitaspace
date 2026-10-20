@@ -1,9 +1,10 @@
 "use client";
 
 import type { TablerIcon } from "@tabler/icons-react";
+import type { CSSProperties } from "react";
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
-import { Text } from "@mantine/core";
+import { Text, useMantineTheme } from "@mantine/core";
 import {
   IconHome,
   IconMap,
@@ -47,8 +48,21 @@ function isActive(pathname: string | null, tab: Tab): boolean {
 }
 
 function TabBarLinks({ pathname }: Readonly<{ pathname: string | null }>) {
+  const { primaryColor } = useMantineTheme();
   return (
-    <nav className={classes.bar} aria-label="Primary">
+    <nav
+      className={classes.bar}
+      aria-label="Primary"
+      // The active label is 10px text, so it takes the primary colour's
+      // text-safe shade (`-text`: lighter in dark mode) rather than the filled
+      // one, which is too dark to read on a dark bar (Crimson Harvest's
+      // crimson.6 on its near-black bar is 4.4:1).
+      style={
+        {
+          "--tab-active-color": `var(--mantine-color-${primaryColor}-text)`,
+        } as CSSProperties
+      }
+    >
       {tabs.map((tab) => {
         const active = isActive(pathname, tab);
         return (

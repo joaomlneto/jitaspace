@@ -170,7 +170,7 @@ describe("LP Store index page (client)", () => {
 
     // Sections keep their order: the factionless group comes last.
     const headings = screen
-      .getAllByRole("heading", { level: 4 })
+      .getAllByRole("heading", { level: 3 })
       .map((heading) => heading.textContent);
     expect(headings).toEqual([
       "Caldari State",

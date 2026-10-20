@@ -385,7 +385,7 @@ describe("regions route server data", () => {
     ]);
     const bucketed: Record<string, string[]> = {};
     let current = "";
-    for (const el of container.querySelectorAll("h3,[data-entity-id]")) {
+    for (const el of container.querySelectorAll("h2,[data-entity-id]")) {
       const text = el.textContent;
       if (GALAXIES.has(text)) {
         current = text;

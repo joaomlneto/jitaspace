@@ -280,7 +280,9 @@ export default function RegionPage({
             Region
           </Text>
           <Group gap="sm" align="center">
-            <Title order={2}>{name}</Title>
+            <Title order={1} size="h2">
+              {name}
+            </Title>
             <ActiveIncursionBadge
               active={active}
               onClick={() => void setActiveTab("incursions")}
