@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import Link from "next/link";
 import {
   Badge,
   Breadcrumbs,
@@ -89,6 +88,7 @@ import {
   StatCard,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import { BloodlineName, RaceName } from "~/components/Text";
 import {
   iskEfficiency,
@@ -560,7 +560,7 @@ export default function CharacterPage({
             {EXTERNAL_LINKS.map((link) => (
               <Button
                 key={link.label}
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`${link.href}${characterId}`}
                 target="_blank"
                 rel="noopener noreferrer"

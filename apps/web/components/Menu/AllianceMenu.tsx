@@ -1,5 +1,4 @@
 import type { MenuProps } from "@mantine/core";
-import Link from "next/link";
 import { Menu } from "@mantine/core";
 import { useShallow } from "zustand/shallow";
 
@@ -8,6 +7,7 @@ import { useAuthStore } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { ZkillboardIcon } from "~/components/Icon";
+import { HoverPrefetchLink } from "~/components/Link";
 import { allianceApps } from "~/config/apps";
 import { getEnabledApps } from "./appAccess";
 
@@ -66,7 +66,7 @@ export const AllianceMenu = ({
             {enabledAllianceApps.map((app) => (
               <Menu.Item
                 key={app.name}
-                component={Link}
+                component={HoverPrefetchLink}
                 href={app.subjectUrl?.(allianceId) ?? app.url ?? ""}
                 onClick={app.onClick}
                 leftSection={<app.Icon width={20} />}

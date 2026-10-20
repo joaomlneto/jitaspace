@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -26,6 +25,7 @@ import type { RegionalMarketOrder } from "@jitaspace/hooks";
 import { TypeAvatar } from "@jitaspace/eve-components";
 import { useTypeMarketOrders } from "@jitaspace/hooks";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   formatIsk,
   MarketOrdersDataTable,
@@ -201,7 +201,11 @@ export default function MarketTypePage({
         </Group>
         <Group gap="xs" wrap="nowrap">
           <QuickbarStar typeId={typeId} typeName={typeName} />
-          <Anchor component={Link} href={`/type/${typeId}`} size="sm">
+          <Anchor
+            component={HoverPrefetchLink}
+            href={`/type/${typeId}`}
+            size="sm"
+          >
             Item info
           </Anchor>
         </Group>

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Anchor,
   Breadcrumbs,
@@ -12,6 +11,7 @@ import {
 
 import { LPStoreIcon } from "@jitaspace/eve-icons";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import { LoyaltyPointsTable } from "~/components/LPStore";
 
 export interface LPStoreAllPageProps {
@@ -43,7 +43,7 @@ export default function LPStoreAllPage({
         <Breadcrumbs>
           <Group>
             <LPStoreIcon width={48} />
-            <Anchor component={Link} href="/lp-store">
+            <Anchor component={HoverPrefetchLink} href="/lp-store">
               <Title>LP Store</Title>
             </Anchor>
           </Group>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Box,
   Breadcrumbs,
@@ -29,6 +28,7 @@ import type { SystemsById } from "~/components/UniversePage/types";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import { RegionAnchor } from "~/components/Anchor";
 import { FactionLine, HeroCard } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   ActiveIncursionBadge,
   activeIncursions,
@@ -132,7 +132,7 @@ export default function ConstellationPage({
           {region?.name && (
             <Group gap="xs">
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`https://evemaps.dotlan.net/map/${dotlanName(region.name)}/${dotlanName(name)}`}
                 target="_blank"
                 rel="noopener noreferrer"

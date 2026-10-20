@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import { LineChart } from "@mantine/charts";
 import {
   ActionIcon,
@@ -22,6 +21,7 @@ import {
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 
 import type { FileEvent, FileHistory } from "~/lib/resource-pages";
+import { HoverPrefetchLink } from "~/components/Link";
 import { formatBytes } from "~/lib/resource-pages";
 
 const OP_COLOR = { added: "green", modified: "blue", removed: "red" } as const;
@@ -341,7 +341,7 @@ export default function FileHistoryPage({
                     <Table.Tr key={event.build}>
                       <Table.Td>
                         <Anchor
-                          component={Link}
+                          component={HoverPrefetchLink}
                           href={`/history/build/${event.build}`}
                         >
                           {event.build}

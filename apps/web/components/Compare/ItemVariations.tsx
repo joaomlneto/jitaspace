@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Badge,
   Button,
@@ -18,6 +17,7 @@ import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import { ISKAmount } from "@jitaspace/ui";
 
 import { TypeAnchor } from "~/components/Anchor";
+import { HoverPrefetchLink } from "~/components/Link";
 import { SHIP_CATEGORY_ID } from "./catalog";
 import classes from "./Compare.module.css";
 import { compareHref } from "./CompareEmptyState";
@@ -121,7 +121,7 @@ export function ItemVariations({
           </Button>
         ) : (
           <Button
-            component={Link}
+            component={HoverPrefetchLink}
             href={compareHref(compared)}
             size="xs"
             variant="light"

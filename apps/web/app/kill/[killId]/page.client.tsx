@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   Badge,
@@ -50,6 +49,7 @@ import {
   TypeAnchor,
 } from "~/components/Anchor";
 import { EsiKillmailFittingCard } from "~/components/Fitting";
+import { HoverPrefetchLink } from "~/components/Link";
 
 interface ZkillboardKill {
   killmail_id: number;
@@ -148,7 +148,10 @@ export default function Page() {
             Could not load killmail data. The kill may not exist or the API may
             be unavailable.
           </Text>
-          <Link href={`https://zkillboard.com/kill/${killId}`} target="_blank">
+          <HoverPrefetchLink
+            href={`https://zkillboard.com/kill/${killId}`}
+            target="_blank"
+          >
             <Button
               size="xs"
               variant="outline"
@@ -156,7 +159,7 @@ export default function Page() {
             >
               View on zKillboard
             </Button>
-          </Link>
+          </HoverPrefetchLink>
         </Stack>
       </Container>
     );
@@ -209,7 +212,7 @@ export default function Page() {
             {zkbMeta?.solo && <Badge color="blue">Solo</Badge>}
             {zkbMeta?.npc && <Badge color="gray">NPC</Badge>}
             {zkbMeta?.awox && <Badge color="red">AWOX</Badge>}
-            <Link
+            <HoverPrefetchLink
               href={`https://zkillboard.com/kill/${km.killmail_id}`}
               target="_blank"
               onClick={() => trackExternalLinkClick("zkillboard")}
@@ -221,8 +224,8 @@ export default function Page() {
               >
                 zKillboard
               </Button>
-            </Link>
-            <Link
+            </HoverPrefetchLink>
+            <HoverPrefetchLink
               href={`https://eve-kill.com/kill/${km.killmail_id}`}
               target="_blank"
               onClick={() => trackExternalLinkClick("eve-kill")}
@@ -234,7 +237,7 @@ export default function Page() {
               >
                 EVE-Kill
               </Button>
-            </Link>
+            </HoverPrefetchLink>
           </Group>
         </Group>
 

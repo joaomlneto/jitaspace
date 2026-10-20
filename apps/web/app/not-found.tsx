@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Box,
   Button,
@@ -12,6 +11,8 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
+
+import { HoverPrefetchLink } from "~/components/Link";
 
 export default function Page() {
   const theme = useMantineTheme();
@@ -64,11 +65,11 @@ export default function Page() {
         address, or the page has been moved to another URL.
       </Text>
       <Group justify="center">
-        <Link href="/">
+        <HoverPrefetchLink href="/">
           <Button variant="subtle" size="md">
             Take me back to home page
           </Button>
-        </Link>
+        </HoverPrefetchLink>
       </Group>
     </Container>
   );

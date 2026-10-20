@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -64,6 +63,7 @@ import {
   SectionHeading,
   StatCard,
 } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import { toWarRow, WarsTab } from "~/components/Wars/EntityWars";
 import {
   iskEfficiency,
@@ -385,7 +385,7 @@ export default function AlliancePage({
           }
         >
           <Breadcrumbs fz="sm">
-            <Anchor component={Link} href="/alliances" size="sm">
+            <Anchor component={HoverPrefetchLink} href="/alliances" size="sm">
               Alliances
             </Anchor>
             <Text size="sm">{name ?? allianceId}</Text>
@@ -493,7 +493,7 @@ export default function AlliancePage({
             {EXTERNAL_LINKS.map((link) => (
               <Button
                 key={link.label}
-                component={Link}
+                component="a"
                 href={`${link.href}${allianceId}`}
                 target="_blank"
                 rel="noopener noreferrer"

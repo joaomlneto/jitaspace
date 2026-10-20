@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -37,6 +36,7 @@ import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { MissionKind } from "~/lib/missions";
 import { FactionAnchor, MissionAnchor } from "~/components/Anchor";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   AgentLabel,
   EpicArcStepsTable,
@@ -312,7 +312,7 @@ export default function EpicArcPage({
     <Container size="lg" py="md">
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor component={Link} href="/epic-arcs" size="sm">
+          <Anchor component={HoverPrefetchLink} href="/epic-arcs" size="sm">
             Epic Arcs
           </Anchor>
           <Text size="sm">{arc.name}</Text>

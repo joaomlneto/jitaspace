@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComponentType } from "react";
-import Link from "next/link";
 import {
   Card,
   Container,
@@ -15,6 +14,7 @@ import {
 
 import type { EveIconProps } from "@jitaspace/eve-icons";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import classes from "./SectionLinkCard.module.css";
 
 export interface SectionLinkCardProps {
@@ -38,7 +38,7 @@ export function SectionLinkCard({
   const { colorScheme } = useMantineColorScheme();
 
   return (
-    <UnstyledButton component={Link} href={href}>
+    <UnstyledButton component={HoverPrefetchLink} href={href}>
       <Card
         shadow="md"
         radius="md"

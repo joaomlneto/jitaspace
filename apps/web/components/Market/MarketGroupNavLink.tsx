@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import Link from "next/link";
 import { Menu, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -16,6 +15,7 @@ import { EveIconAvatar } from "@jitaspace/ui";
 
 import type { MarketTreeFilter } from "./filterMarketTree";
 import type { MarketGroupIndex } from "~/lib/marketTree";
+import { HoverPrefetchLink } from "~/components/Link";
 import { useQuickbarStore } from "~/lib/quickbar";
 
 export type { MarketGroupIndex } from "~/lib/marketTree";
@@ -43,7 +43,7 @@ const MarketTypeNavLink = memo(
       <Menu position="bottom-start" withinPortal>
         <Menu.ContextMenu>
           <NavLink
-            component={Link}
+            component={HoverPrefetchLink}
             href={`/market/${typeId}`}
             leftSection={
               <TypeAvatar size={24} typeId={typeId} variation="icon" />
