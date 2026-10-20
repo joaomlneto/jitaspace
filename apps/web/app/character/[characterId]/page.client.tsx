@@ -73,6 +73,7 @@ import {
   StationAnchor,
   TypeAnchor,
 } from "~/components/Anchor";
+import { CsmCandidateBadge } from "~/components/Badge";
 import {
   CharacterLocationCard,
   CharacterSkillTrainingCard,
@@ -505,6 +506,7 @@ export default function CharacterPage({
               {identity.name ?? `Character ${characterId}`}
             </Title>
             {badge && <Badge variant="light">{badge}</Badge>}
+            <CsmCandidateBadge characterId={characterId} />
             {identity.securityStatus !== null && (
               <Badge
                 variant="light"

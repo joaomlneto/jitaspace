@@ -22,6 +22,7 @@ import {
   MarketIcon,
   ShipsIcon,
   SkillsIcon,
+  VotesIcon,
   WalletIcon,
   WarsIcon,
 } from "@jitaspace/eve-icons";
@@ -310,6 +311,14 @@ export const universeApps: Record<string, JitaApp> = {
       "Track active Sansha incursions, their spawn timeline and every past incursion since 2015.",
     url: "/incursions",
     Icon: (props) => <IncursionsIcon {...props} />,
+    scopes: {},
+  },
+  csm: {
+    name: "CSM 21",
+    description:
+      "Meet the candidates for the Council of Stellar Management, with their pitches, campaign threads and interviews.",
+    url: "/csm",
+    Icon: (props) => <VotesIcon {...props} />,
     scopes: {},
   },
   alliances: {

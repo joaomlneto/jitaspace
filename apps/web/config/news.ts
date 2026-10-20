@@ -1,3 +1,5 @@
+import { CSM_21_RED } from "./csm";
+
 export interface NewsItem {
   /** Stable, unique id — used to remember dismissal in localStorage. Never reuse. */
   id: string;
@@ -26,13 +28,18 @@ export interface NewsItem {
   publishAt?: string;
   /** ISO datetime after which the item is hidden automatically. */
   expiresAt?: string;
+  /**
+   * Cards with a higher priority come first, whatever their publish dates;
+   * within a priority the newest is first. Defaults to 0.
+   */
+  priority?: number;
 }
 
 /**
  * News / update items shown at the top of the home page.
  *
- * The carousel shows them newest first by publish date (`publishAt`, else
- * `date`), so their order here does not matter. Add an entry to publish; remove
+ * The carousel shows them by `priority`, then newest first by publish date
+ * (`publishAt`, else `date`), so their order here does not matter. Add an entry to publish; remove
  * it (or set `expiresAt`) to retire it. Each `id` must be unique and stable — it is the key used to
  * remember that a user has dismissed the item.
  *
@@ -42,6 +49,25 @@ export interface NewsItem {
  *  3. A recurring "support the project" reminder — no image needed.
  */
 export const newsItems: NewsItem[] = [
+  {
+    // CSM 21 election — shown only while the ballot is open: 22 Oct to 3 Nov
+    // 2026, downtime (11:00 UTC) to downtime. Ahead of every other card.
+    id: "csm-21-voting-open",
+    title: "CSM 21 voting is open",
+    message:
+      "Meet the 53 candidates for the Council of Stellar Management, read their pitches and watch their interviews. Voting closes on 3 November.",
+    date: "2026-10-22",
+    publishAt: "2026-10-22T11:00:00Z",
+    expiresAt: "2026-11-03T11:00:00Z",
+    priority: 100,
+    color: CSM_21_RED,
+    // A 1280x720 WebP of the unbranded key art.
+    image: "/wallpapers/2026-csm-21/csm-21-nologo-banner.webp",
+    link: {
+      label: "Meet the candidates",
+      href: "/csm",
+    },
+  },
   {
     // Seasonal event — shown only while it runs: 6 Oct to 3 Nov 2026, downtime
     // (11:00 UTC) to downtime.
