@@ -54,9 +54,10 @@ export function freelanceJobRewardPaid(job: Pick<FreelanceJob, "reward">) {
  */
 export function humanizeIdentifier(identifier: string): string {
   const words = identifier
-    .replace(/_/g, " ")
+    .replaceAll("_", " ")
     .replace(/([a-z\d])([A-Z])/g, "$1 $2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    // The last capital of a run starts the next word: NPCKill → NPC Kill.
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
     .trim()
     .split(/\s+/)
     .filter(Boolean)

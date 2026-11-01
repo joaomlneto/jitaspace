@@ -483,22 +483,29 @@ function JobDetails({
   );
 }
 
+/**
+ * The character whose token reads the job, from `?as=`: how a private job
+ * opens from "Your jobs". Until the auth store has rehydrated the id is kept
+ * (the token appears shortly); after, a character not logged in here is
+ * dropped and the job is read anonymously.
+ */
+function jobViewer(
+  as: number | null,
+  hydrated: boolean,
+  characterIds: readonly number[],
+): number | undefined {
+  if (as === null || as <= 0) return undefined;
+  if (hydrated && !characterIds.includes(as)) return undefined;
+  return as;
+}
+
 export default function FreelanceJobPage({
   jobId,
 }: Readonly<{ jobId: string }>) {
   const hydrated = useAuthStoreHasHydrated();
   const characterIds = useAuthenticatedCharacterIds();
   const [as, setAs] = useQueryState("as", parseAsInteger);
-  // `?as=` reads the job with that character's token, which is how a private
-  // job opens from "Your jobs". Until the auth store has rehydrated it is kept
-  // (the token appears shortly); after, a character not logged in here is
-  // dropped and the job is read anonymously.
-  const viewer =
-    as === null || as <= 0
-      ? undefined
-      : !hydrated || characterIds.includes(as)
-        ? as
-        : undefined;
+  const viewer = jobViewer(as, hydrated, characterIds);
 
   const { data: job, error } = useFreelanceJob(jobId, {
     characterId: viewer,
@@ -515,6 +522,23 @@ export default function FreelanceJobPage({
       (subject) => subject.id === job.details.creator.corporation.id,
     );
 
+  let content: ReactNode;
+  if (job) {
+    content = <JobDetails jobId={jobId} job={job} managesJob={managesJob} />;
+  } else if (error) {
+    content = (
+      <JobError
+        status={error.response?.status}
+        viewer={viewer}
+        characterIds={characterIds}
+        onViewAs={(characterId) => void setAs(characterId)}
+      />
+    );
+  } else {
+    // Also while a `?as=` character's token is still on its way.
+    content = <JobSkeleton />;
+  }
+
   return (
     <Container size="lg">
       <Stack>
@@ -530,19 +554,7 @@ export default function FreelanceJobPage({
           </Group>
         </Anchor>
 
-        {job ? (
-          <JobDetails jobId={jobId} job={job} managesJob={managesJob} />
-        ) : error ? (
-          <JobError
-            status={error.response?.status}
-            viewer={viewer}
-            characterIds={characterIds}
-            onViewAs={(characterId) => void setAs(characterId)}
-          />
-        ) : (
-          // Also while a `?as=` character's token is still on its way.
-          <JobSkeleton />
-        )}
+        {content}
       </Stack>
     </Container>
   );

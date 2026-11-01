@@ -73,6 +73,7 @@ describe("labels", () => {
     ["KillNPC", "Kill NPC"],
     ["destroyed_identity", "Destroyed identity"],
     ["FWComplexType", "FW complex type"],
+    ["NPCKillCount", "NPC kill count"],
     ["x", "X"],
   ])("humanizes %s as %s", (identifier, words) => {
     expect(humanizeIdentifier(identifier)).toBe(words);

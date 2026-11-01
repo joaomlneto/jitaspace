@@ -59,6 +59,22 @@ function requestFreelanceScopes() {
   });
 }
 
+type SourceBarStatus = "loading" | "signed-out" | "no-access" | "ready";
+
+/**
+ * Sources come from the session alone, so once there are any they show while
+ * their jobs load; with none, a pending query means the session is not known.
+ */
+function sourceBarStatus(
+  sourceCount: number,
+  isPending: boolean,
+  signedIn: boolean,
+): SourceBarStatus {
+  if (sourceCount > 0) return "ready";
+  if (isPending) return "loading";
+  return signedIn ? "no-access" : "signed-out";
+}
+
 /**
  * Sign-in prompt, access prompt or source chips, in one row whose height does
  * not change between them. The prerender cannot know who is signed in, so
@@ -73,7 +89,7 @@ function SourceBar({
   failedKeys,
   onChange,
 }: Readonly<{
-  status: "loading" | "signed-out" | "no-access" | "ready";
+  status: SourceBarStatus;
   sources: FreelanceJobSource[];
   activeKeys: ReadonlySet<string>;
   failedKeys: ReadonlySet<string>;
@@ -321,15 +337,7 @@ export default function FreelanceMinePage() {
         />
 
         <SourceBar
-          status={
-            sources.length > 0
-              ? "ready"
-              : isPending
-                ? "loading"
-                : signedIn
-                  ? "no-access"
-                  : "signed-out"
-          }
+          status={sourceBarStatus(sources.length, isPending, signedIn)}
           sources={sources}
           activeKeys={activeKeys}
           failedKeys={failedKeys}
