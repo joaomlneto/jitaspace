@@ -96,6 +96,15 @@ export function operationName(row: OperationRow): string {
   return "Unknown operation";
 }
 
+function detailsStatus(
+  operation: MercenaryTacticalOperation,
+  failedOperationIds: ReadonlySet<string>,
+): OperationDetailsStatus {
+  if (operation.details) return "loaded";
+  if (failedOperationIds.has(operation.operationId)) return "failed";
+  return "loading";
+}
+
 /**
  * Build the table's rows from the hook's operations.
  *
@@ -117,11 +126,7 @@ export function toOperationRows(
       operationId: operation.operationId,
       mercenaryDenId: operation.mercenaryDenId,
       characterIds: operation.characterIds,
-      detailsStatus: details
-        ? "loaded"
-        : failedOperationIds.has(operation.operationId)
-          ? "failed"
-          : "loading",
+      detailsStatus: detailsStatus(operation, failedOperationIds),
     };
     const planetId = denPlanets.get(operation.mercenaryDenId);
     if (planetId !== undefined) row.planetId = planetId;

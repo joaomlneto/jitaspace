@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useMemo } from "react";
 import {
   Alert,
@@ -116,6 +115,111 @@ function FilterLabel({ children }: Readonly<{ children: string }>) {
   );
 }
 
+/**
+ * What the characters row shows: a placeholder until the session loads, the
+ * login button when logged out, the one character by name, or a chip per
+ * character to filter by. Each fits the row's fixed height.
+ */
+function CharacterFilter({
+  hasHydrated,
+  isLoggedOut,
+  characterIds,
+  activeCharacterIds,
+  onChange,
+}: Readonly<{
+  hasHydrated: boolean;
+  isLoggedOut: boolean;
+  characterIds: number[];
+  activeCharacterIds: number[];
+  onChange: (characterIds: number[]) => void;
+}>) {
+  if (!hasHydrated) {
+    return <Skeleton height={28} width={160} radius="xl" aria-hidden="true" />;
+  }
+  if (isLoggedOut) {
+    return (
+      <LoginWithEveOnlineButton
+        size="small"
+        // 30px of image and 2px either side: the row's height. A block image
+        // drops the line box an inline one sits in, which would add ~9px.
+        style={{ padding: 2 }}
+        imageProps={{ style: { display: "block" } }}
+        onClick={() => {
+          loginWithEveOnline(PAGE_SCOPES);
+        }}
+      />
+    );
+  }
+  if (characterIds.length === 1) {
+    // Nothing to choose between, so the character is named, not offered.
+    const [characterId] = characterIds;
+    return (
+      <Group gap={6} wrap="nowrap">
+        <EveEntityAvatar
+          entityId={characterId}
+          category="character"
+          size={16}
+        />
+        <EveEntityName
+          span
+          size="sm"
+          entityId={characterId}
+          category="character"
+        />
+      </Group>
+    );
+  }
+  return (
+    <Chip.Group
+      multiple
+      value={activeCharacterIds.map(String)}
+      onChange={(value) => {
+        onChange(value.map(Number));
+      }}
+    >
+      {characterIds.map((characterId) => (
+        <Chip
+          key={characterId}
+          value={String(characterId)}
+          size="sm"
+          variant="light"
+        >
+          <Group gap={6} wrap="nowrap" component="span">
+            <EveEntityAvatar
+              entityId={characterId}
+              category="character"
+              size={16}
+            />
+            <EveEntityName span entityId={characterId} category="character" />
+          </Group>
+        </Chip>
+      ))}
+    </Chip.Group>
+  );
+}
+
+/**
+ * Why the table is empty. Logged out, the table stays (removing it after
+ * hydration would shift the page) but says why it is empty rather than that
+ * there is nothing to do.
+ */
+function emptyTextFor({
+  isLoggedOut,
+  nothingSelected,
+  hasOperations,
+}: Readonly<{
+  isLoggedOut: boolean;
+  nothingSelected: boolean;
+  hasOperations: boolean;
+}>): string {
+  if (isLoggedOut) return "Log in to see your operations.";
+  if (nothingSelected) {
+    return "Nothing selected. Pick a character and a status above to see operations.";
+  }
+  if (hasOperations) return "No operations match these filters.";
+  return "None of your characters has a Mercenary Tactical Operation right now.";
+}
+
 export default function MercenaryTacticalOperationsPage({
   kinds,
 }: Readonly<MercenaryTacticalOperationsPageProps>) {
@@ -220,88 +324,17 @@ export default function MercenaryTacticalOperationsPage({
   // not logged out, and not while the selected characters are still loading.
   const showStateCounts = hasHydrated && !isLoggedOut && !isSelectionPending;
 
-  // Logged out, the table stays (removing it after hydration would shift the
-  // page) but says why it is empty rather than that there is nothing to do.
-  const emptyText = isLoggedOut
-    ? "Log in to see your operations."
-    : stateFilter?.length === 0 ||
-        (characterFilter !== null && activeCharacterIds.length === 0)
-      ? "Nothing selected. Pick a character and a status above to see operations."
-      : allRows.length > 0
-        ? "No operations match these filters."
-        : "None of your characters has a Mercenary Tactical Operation right now.";
+  const emptyText = emptyTextFor({
+    isLoggedOut,
+    nothingSelected:
+      stateFilter?.length === 0 ||
+      (characterFilter !== null && activeCharacterIds.length === 0),
+    hasOperations: allRows.length > 0,
+  });
 
   // Both filter rows are in the prerendered HTML, whoever turns out to be
   // logged in, so nothing is inserted above the table once the session loads.
   // What only some visitors see (errors, characters left out) goes below it.
-  let characters: ReactNode;
-  if (!hasHydrated) {
-    characters = (
-      <Skeleton height={28} width={160} radius="xl" aria-hidden="true" />
-    );
-  } else if (isLoggedOut) {
-    characters = (
-      <LoginWithEveOnlineButton
-        size="small"
-        // 30px of image and 2px either side: the row's height. A block image
-        // drops the line box an inline one sits in, which would add ~9px.
-        style={{ padding: 2 }}
-        imageProps={{ style: { display: "block" } }}
-        onClick={() => {
-          loginWithEveOnline(PAGE_SCOPES);
-        }}
-      />
-    );
-  } else if (operations.characterIds.length === 1) {
-    // Nothing to choose between, so the character is named, not offered.
-    const [characterId] = operations.characterIds;
-    characters = (
-      <Group gap={6} wrap="nowrap">
-        <EveEntityAvatar
-          entityId={characterId}
-          category="character"
-          size={16}
-        />
-        <EveEntityName
-          span
-          size="sm"
-          entityId={characterId}
-          category="character"
-        />
-      </Group>
-    );
-  } else {
-    characters = (
-      <Chip.Group
-        multiple
-        value={activeCharacterIds.map(String)}
-        onChange={(value) => {
-          void setCharacterFilter(
-            nextSelection(value.map(Number), operations.characterIds),
-          );
-        }}
-      >
-        {operations.characterIds.map((characterId) => (
-          <Chip
-            key={characterId}
-            value={String(characterId)}
-            size="sm"
-            variant="light"
-          >
-            <Group gap={6} wrap="nowrap" component="span">
-              <EveEntityAvatar
-                entityId={characterId}
-                category="character"
-                size={16}
-              />
-              <EveEntityName span entityId={characterId} category="character" />
-            </Group>
-          </Chip>
-        ))}
-      </Chip.Group>
-    );
-  }
-
   return (
     <Container size="xl">
       <Stack>
@@ -325,7 +358,17 @@ export default function MercenaryTacticalOperationsPage({
             aria-label="Characters"
           >
             <FilterLabel>Characters</FilterLabel>
-            {characters}
+            <CharacterFilter
+              hasHydrated={hasHydrated}
+              isLoggedOut={isLoggedOut}
+              characterIds={operations.characterIds}
+              activeCharacterIds={activeCharacterIds}
+              onChange={(value) => {
+                void setCharacterFilter(
+                  nextSelection(value, operations.characterIds),
+                );
+              }}
+            />
             {unavailable.map((characterId) => (
               <UnavailableCharacter
                 key={characterId}

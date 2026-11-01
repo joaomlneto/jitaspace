@@ -138,15 +138,11 @@ export function useCharactersMercenaryTacticalOperations(
   // Keyed by content, so a caller passing a fresh array on every render does
   // not rebuild every query.
   const idsKey = characterIds?.join(",");
-  const requestedIds = useMemo(
-    () =>
-      idsKey === undefined
-        ? undefined
-        : idsKey === ""
-          ? []
-          : [...new Set(idsKey.split(",").map(Number))],
-    [idsKey],
-  );
+  const requestedIds = useMemo(() => {
+    if (idsKey === undefined) return undefined;
+    if (idsKey === "") return [];
+    return [...new Set(idsKey.split(",").map(Number))];
+  }, [idsKey]);
 
   const selectedSubjects = useMemo(() => {
     if (requestedIds === undefined) return subjects;
