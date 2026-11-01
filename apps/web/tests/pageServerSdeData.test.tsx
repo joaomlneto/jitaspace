@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 type Row = Record<string, unknown> | null;
 
 const solarSystemFindUnique = jest.fn<(args?: unknown) => Promise<Row>>();
-const typeFindUniqueOrThrow = jest.fn<(args?: unknown) => Promise<Row>>();
+const typeFindUnique = jest.fn<(args?: unknown) => Promise<Row>>();
 const typeAttributeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeFindMany =
@@ -32,7 +32,7 @@ jest.mock("~/lib/db", () => ({
   prisma: {
     solarSystem: { findUnique: (a?: unknown) => solarSystemFindUnique(a) },
     type: {
-      findUniqueOrThrow: (a?: unknown) => typeFindUniqueOrThrow(a),
+      findUnique: (a?: unknown) => typeFindUnique(a),
       findMany: (a?: unknown) => typeFindMany(a),
     },
     typeAttribute: { findMany: (a?: unknown) => typeAttributeFindMany(a) },
@@ -60,6 +60,19 @@ jest.mock("~/lib/history-entity-page", () => ({
   loadEntityHistory: () => Promise.resolve(null),
 }));
 jest.mock("~/components/PageSkeleton", () => ({ PageSkeleton: () => null }));
+
+// The ship's insurance read; nothing here insures anything.
+const mockReadLatestTypeInsurance = jest.fn<() => Promise<unknown>>();
+jest.mock("~/lib/insuranceData", () => ({
+  readLatestTypeInsurance: () => mockReadLatestTypeInsurance(),
+}));
+
+// A section that degrades after a failed read must keep that render out of the
+// page's ISR cache; the spy records that it asked to.
+const mockKeepOutOfCache = jest.fn(() => Promise.resolve());
+jest.mock("~/lib/keepOutOfCache", () => ({
+  keepOutOfCache: () => mockKeepOutOfCache(),
+}));
 
 // Each client page is replaced by a stub; the assertions read the props off the
 // element the server half produced, so the stub itself renders nothing.
@@ -95,13 +108,20 @@ async function runRoute(
   const resolved = await (child.type as (p: unknown) => Promise<ReactElement>)(
     child.props,
   );
-  // The resolved element is <Probe {...props} />; read the props straight off it.
-  return resolved.props as Record<string, unknown>;
+  // The resolved element is <Probe {...props} />, possibly inside wrappers
+  // such as the type page's NuqsAdapter; read the props straight off it.
+  let element = resolved;
+  while (element.type !== probe) {
+    element = (element.props as { children: ReactElement }).children;
+  }
+  return element.props as Record<string, unknown>;
 }
 
 beforeEach(() => {
+  mockKeepOutOfCache.mockClear();
+  mockReadLatestTypeInsurance.mockReset().mockResolvedValue(null);
   solarSystemFindUnique.mockReset();
-  typeFindUniqueOrThrow.mockReset();
+  typeFindUnique.mockReset();
   typeAttributeFindMany.mockReset().mockResolvedValue([]);
   typeFindMany.mockReset().mockResolvedValue([]);
   typeEffectFindMany.mockReset().mockResolvedValue([]);
@@ -221,7 +241,7 @@ describe("system route server data", () => {
 
 describe("type route dogma metadata", () => {
   beforeEach(() => {
-    typeFindUniqueOrThrow.mockResolvedValue({
+    typeFindUnique.mockResolvedValue({
       typeId: 587,
       name: "Rifter",
       description: "A frigate.",
@@ -387,6 +407,8 @@ describe("type route dogma metadata", () => {
       categoryNames: {},
       effects: {},
     });
+    // The page is cached whole: the degraded render must not be stored.
+    expect(mockKeepOutOfCache).toHaveBeenCalled();
   });
 });
 
@@ -406,7 +428,7 @@ describe("type route variations", () => {
   ) => ({ typeId, name, metaGroupId, metaLevel, group: { categoryId: 7 } });
 
   it("lists the base item's family by meta level, with meta group names", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(3839));
+    typeFindUnique.mockResolvedValue(typeRow(3839));
     typeFindMany.mockResolvedValue([
       variationRow(31930, "Caldari Navy Large Shield Extender", 4, 8),
       variationRow(3841, "Large Shield Extender II", 2, 5),
@@ -469,7 +491,7 @@ describe("type route variations", () => {
   });
 
   it("treats an item without a parent as the base of its family", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(null));
+    typeFindUnique.mockResolvedValue(typeRow(null));
 
     await runRoute("~/app/type/[typeId]/page", { typeId: "3841" });
 
@@ -483,7 +505,7 @@ describe("type route variations", () => {
   });
 
   it("returns nothing, and skips the meta group lookup, for a lone item", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(null));
+    typeFindUnique.mockResolvedValue(typeRow(null));
     typeFindMany.mockResolvedValue([
       variationRow(3841, "Large Shield Extender II", 2, 5),
     ]);
@@ -497,7 +519,7 @@ describe("type route variations", () => {
   });
 
   it("hides the tab rather than failing the page when the query fails", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(3839));
+    typeFindUnique.mockResolvedValue(typeRow(3839));
     typeFindMany.mockRejectedValue(new Error("connection lost"));
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -506,6 +528,8 @@ describe("type route variations", () => {
 
     expect(props.variations).toEqual([]);
     expect(props.typeName).toBe("Large Shield Extender II");
+    // The page is cached whole: the degraded render must not be stored.
+    expect(mockKeepOutOfCache).toHaveBeenCalled();
   });
 });
 
@@ -533,7 +557,7 @@ describe("type route type lists", () => {
   });
 
   it("looks up rules naming the type, its group or its category", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow);
+    typeFindUnique.mockResolvedValue(typeRow);
     typeListEntryFindMany.mockResolvedValue([
       rule(10, true, "category", 6, "KillreportEligable"),
       rule(41, true, "category", 6, "Ships only - NOT Capsules"),
@@ -578,7 +602,7 @@ describe("type route type lists", () => {
   });
 
   it("hides the tab rather than failing the page when the query fails", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow);
+    typeFindUnique.mockResolvedValue(typeRow);
     typeListEntryFindMany.mockRejectedValue(new Error("connection lost"));
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -587,6 +611,8 @@ describe("type route type lists", () => {
 
     expect(props.typeLists).toEqual([]);
     expect(props.typeName).toBe("Capsule");
+    // The page is cached whole: the degraded render must not be stored.
+    expect(mockKeepOutOfCache).toHaveBeenCalled();
   });
 });
 
@@ -632,7 +658,7 @@ describe("type route NPC combat stats", () => {
     });
 
   it("computes an NPC's damage, with its missile's, and hit points", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(11));
+    typeFindUnique.mockResolvedValue(typeRow(11));
     mockAttributes();
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -653,7 +679,7 @@ describe("type route NPC combat stats", () => {
   });
 
   it("computes a drone's, with what its effects say it does", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue({
+    typeFindUnique.mockResolvedValue({
       ...typeRow(18),
       typeId: 23536,
       name: "Berserker SW-900",
@@ -696,7 +722,7 @@ describe("type route NPC combat stats", () => {
 
   it("leaves out a drone that neither shoots nor does anything else", async () => {
     // A mutated drone's template: hit points, but no weapon and no effect.
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(18));
+    typeFindUnique.mockResolvedValue(typeRow(18));
     typeAttributeFindMany.mockImplementation((args) => {
       const query = args as { select: Record<string, unknown> };
       return Promise.resolve(
@@ -714,7 +740,7 @@ describe("type route NPC combat stats", () => {
   });
 
   it("leaves anything that is not an NPC without combat stats", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(6));
+    typeFindUnique.mockResolvedValue(typeRow(6));
     mockAttributes();
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -725,7 +751,7 @@ describe("type route NPC combat stats", () => {
   });
 
   it("drops the combat stats when the query fails", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(11));
+    typeFindUnique.mockResolvedValue(typeRow(11));
     typeAttributeFindMany.mockRejectedValue(new Error("connection lost"));
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -733,5 +759,97 @@ describe("type route NPC combat stats", () => {
     });
 
     expect(props.npcStats).toBeNull();
+    // The page is cached whole: the degraded render must not be stored.
+    expect(mockKeepOutOfCache).toHaveBeenCalled();
+  });
+});
+
+// The type page is cached whole (ISR), so a missing type is a stored 404, a
+// failed read of the type itself must throw rather than store one, and a
+// section that renders without its data must keep that render out of the cache.
+describe("type route ISR", () => {
+  const rifter = {
+    typeId: 587,
+    name: "Rifter",
+    description: "A frigate.",
+    groupId: 25,
+    variationParentTypeId: null,
+    group: { name: "Frigate", categoryId: 6, category: { name: "Ship" } },
+  };
+
+  /** The element the route renders, before any wrapper is unwrapped. */
+  async function renderedElement(typeId: string): Promise<ReactElement> {
+    const Page = (
+      require("~/app/type/[typeId]/page") as {
+        default: (p: {
+          params: Promise<Record<string, string>>;
+        }) => ReactElement<{ children: ReactElement }>;
+      }
+    ).default;
+    const child = Page({ params: Promise.resolve({ typeId }) }).props.children;
+    return (child.type as (p: unknown) => Promise<ReactElement>)(child.props);
+  }
+
+  it("renders a healthy type without opting out of the cache", async () => {
+    typeFindUnique.mockResolvedValue(rifter);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "587",
+    });
+
+    expect(props.typeName).toBe("Rifter");
+    expect(mockKeepOutOfCache).not.toHaveBeenCalled();
+  });
+
+  // The Next adapter's `useSearchParams()` would drop the page out of the
+  // cached HTML; the React adapter reads `?tab=` after hydration instead.
+  it("wraps the client page in nuqs's React adapter", async () => {
+    typeFindUnique.mockResolvedValue(rifter);
+    const { NuqsAdapter } = jest.requireActual<{ NuqsAdapter: unknown }>(
+      "nuqs/adapters/react",
+    );
+
+    expect((await renderedElement("587")).type).toBe(NuqsAdapter);
+  });
+
+  it("hides the Insurance tab and stays out of the cache when its read fails", async () => {
+    typeFindUnique.mockResolvedValue(rifter);
+    mockReadLatestTypeInsurance.mockRejectedValue(new Error("connection lost"));
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "587",
+    });
+
+    expect(props.insurance).toBeNull();
+    expect(mockKeepOutOfCache).toHaveBeenCalled();
+  });
+
+  it("404s a type that does not exist", async () => {
+    typeFindUnique.mockResolvedValue(null);
+
+    await expect(
+      runRoute("~/app/type/[typeId]/page", { typeId: "587" }),
+    ).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");
+  });
+
+  it("lets a failed type read throw instead of rendering a 404", async () => {
+    typeFindUnique.mockRejectedValue(new Error("connection lost"));
+
+    await expect(
+      runRoute("~/app/type/[typeId]/page", { typeId: "587" }),
+    ).rejects.toThrow("connection lost");
+  });
+
+  it("lists one placeholder param, which 404s without a query", async () => {
+    const { generateStaticParams } = require("~/app/type/[typeId]/page") as {
+      generateStaticParams: () => { typeId: string }[];
+    };
+    const params = generateStaticParams();
+    expect(params).toEqual([{ typeId: "0" }]);
+
+    await expect(
+      runRoute("~/app/type/[typeId]/page", params[0]!),
+    ).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");
+    expect(typeFindUnique).not.toHaveBeenCalled();
   });
 });

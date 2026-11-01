@@ -215,6 +215,11 @@ describe("system/[systemId] generateMetadata", () => {
       params: rp({ systemId: "30000142" }),
     });
     expect(result.title).toBe("Jita");
+    // Security, rounded as EVE shows it, and the region come from the same
+    // cached read as the page.
+    expect(result.description).toBe(
+      "Jita is a 0.9 security solar system in The Forge region of EVE Online. Browse its stations, planets, and market activity.",
+    );
   });
 
   it("returns empty for invalid id", async () => {
@@ -232,12 +237,12 @@ describe("system/[systemId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockSolarSystemFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/system/[systemId]/page");
-    expect(
-      await generateMetadata({ params: rp({ systemId: "30000142" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ systemId: "30000142" }) }),
+    ).rejects.toThrow("db");
   });
 });
 
@@ -328,12 +333,14 @@ describe("planet/[planetId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  // The route is cached whole, so generic metadata for a failed read would be
+  // stored with the page. The error must propagate.
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockPlanetFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/planet/[planetId]/page");
-    expect(
-      await generateMetadata({ params: rp({ planetId: "40009081" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ planetId: "40009081" }) }),
+    ).rejects.toThrow("db");
   });
 });
 

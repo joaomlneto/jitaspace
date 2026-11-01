@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { HttpStatusCode } from "axios";
+import { NuqsAdapter } from "nuqs/adapters/react";
 
 import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
@@ -15,6 +16,7 @@ import { prisma } from "~/lib/db";
 import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import { loadEntityHistory } from "~/lib/history-entity-page";
 import { readLatestTypeInsurance } from "~/lib/insuranceData";
+import { keepOutOfCache } from "~/lib/keepOutOfCache";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { hasCombatStats } from "~/lib/npcStats";
 import {
@@ -39,11 +41,17 @@ type TypeData = PageProps & {
   categoryId?: number;
 };
 
-async function getTypeData(typeId: number): Promise<TypeData> {
+/**
+ * Uncaught on purpose: this route is cached whole, so a database failure must
+ * throw rather than store a 404 (see "Never catch a database error inside a
+ * `"use cache"` scope" in CLAUDE.md). `null` is a type that genuinely does not
+ * exist.
+ */
+async function getTypeData(typeId: number): Promise<TypeData | null> {
   "use cache";
   cacheSdeRead();
 
-  const type = await prisma.type.findUniqueOrThrow({
+  const type = await prisma.type.findUnique({
     select: {
       typeId: true,
       name: true,
@@ -62,6 +70,7 @@ async function getTypeData(typeId: number): Promise<TypeData> {
       typeId,
     },
   });
+  if (!type) return null;
 
   const typeImageVariations = (await fetch(
     `https://images.evetech.net/types/${typeId}`,
@@ -208,12 +217,14 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
 
 /**
  * The page renders fine without this half, so a database failure degrades to
- * empty metadata instead of erroring the route.
+ * empty metadata instead of erroring the route, and keeps that degraded render
+ * out of the page's ISR cache so the next request retries.
  */
 async function getTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   try {
     return await readTypeDogmaMeta(typeId);
   } catch {
+    await keepOutOfCache();
     return emptyTypeDogmaMeta;
   }
 }
@@ -249,7 +260,8 @@ async function readTypeNpcStats(
 /**
  * Combat figures for NPCs and drones only: a player ship's damage comes from
  * its fitted modules, not from its own attributes. The page renders fine
- * without them, so a database failure just leaves the tab out.
+ * without them, so a database failure just leaves the tab out, and keeps that
+ * render out of the page's ISR cache.
  */
 async function getTypeNpcStats(
   typeId: number,
@@ -260,6 +272,7 @@ async function getTypeNpcStats(
   try {
     return await readTypeNpcStats(typeId, categoryId);
   } catch {
+    await keepOutOfCache();
     return null;
   }
 }
@@ -327,12 +340,14 @@ async function readTypeVariations(
 
 /**
  * The page renders fine without its Variations tab, so a database failure
- * hides the tab instead of erroring the route.
+ * hides the tab instead of erroring the route, and keeps that render out of
+ * the page's ISR cache.
  */
 async function getTypeVariations(baseTypeId: number): Promise<ItemVariation[]> {
   try {
     return await readTypeVariations(baseTypeId);
   } catch {
+    await keepOutOfCache();
     return [];
   }
 }
@@ -393,7 +408,8 @@ async function readTypeTypeLists(
 
 /**
  * The page renders fine without its Type Lists tab, so a database failure
- * hides the tab instead of erroring the route.
+ * hides the tab instead of erroring the route, and keeps that render out of
+ * the page's ISR cache.
  */
 async function getTypeTypeLists(
   typeId: number,
@@ -404,13 +420,15 @@ async function getTypeTypeLists(
   try {
     return await readTypeTypeLists(typeId, groupId, categoryId);
   } catch {
+    await keepOutOfCache();
     return [];
   }
 }
 
 /**
  * The ship's latest insurance prices, for its Insurance tab. The page renders
- * fine without them, so a database failure just leaves the tab out.
+ * fine without them, so a database failure just leaves the tab out, and keeps
+ * that render out of the page's ISR cache.
  */
 async function getTypeInsurance(
   typeId: number,
@@ -418,6 +436,7 @@ async function getTypeInsurance(
   try {
     return await readLatestTypeInsurance(typeId);
   } catch {
+    await keepOutOfCache();
     return null;
   }
 }
@@ -431,28 +450,40 @@ export async function generateMetadata({
   const typeId = parsePositiveEntityId(typeIdParam);
   if (typeId === null) return {};
 
-  try {
-    const { typeName, typeDescription, cardImageUrl, groupName, categoryName } =
-      await getTypeData(typeId);
-    if (!typeName) return {};
+  // Uncaught, like the page body: a database failure must throw rather than
+  // store generic metadata. It shares `getTypeData` with the page, so both
+  // resolve to one cache entry.
+  const type = await getTypeData(typeId);
+  if (!type) return {};
 
-    return pageMetadata({
-      title: typeName,
-      description: toDescription(
-        typeDescription,
-        `${typeName} in EVE Online — attributes, market prices, and where to buy it.`,
-      ),
-      path: `/type/${typeId}`,
-      badge: categoryName ?? "Item",
-      image: cardImageUrl,
-      facts: [
-        ...(groupName ? [{ label: "Group", value: groupName }] : []),
-        ...(categoryName ? [{ label: "Category", value: categoryName }] : []),
-      ],
-    });
-  } catch {
-    return {};
-  }
+  const { typeName, typeDescription, cardImageUrl, groupName, categoryName } =
+    type;
+  if (!typeName) return {};
+
+  return pageMetadata({
+    title: typeName,
+    description: toDescription(
+      typeDescription,
+      `${typeName} in EVE Online — attributes, market prices, and where to buy it.`,
+    ),
+    path: `/type/${typeId}`,
+    badge: categoryName ?? "Item",
+    image: cardImageUrl,
+    facts: [
+      ...(groupName ? [{ label: "Group", value: groupName }] : []),
+      ...(categoryName ? [{ label: "Category", value: categoryName }] : []),
+    ],
+  });
+}
+
+// ISR per type: without `generateStaticParams` an unlisted id re-renders, and
+// re-runs every query below, on every request (see apps/web/CLAUDE.md → "ISR
+// for a dynamic `[param]` route"). The real ids live in the database, which
+// `next build` cannot reach in CI, and Cache Components rejects an empty list
+// — so this lists one id `parsePositiveEntityId` refuses, which prerenders as
+// a 404 without a query.
+export function generateStaticParams() {
+  return [{ typeId: "0" }];
 }
 
 async function PageContent({
@@ -466,12 +497,8 @@ async function PageContent({
     notFound();
   }
 
-  let data: TypeData;
-  try {
-    data = await getTypeData(typeId);
-  } catch {
-    notFound();
-  }
+  const data = await getTypeData(typeId);
+  if (!data) notFound();
   // Only the client component's own props cross the boundary; the extra fields
   // `getTypeData` returns exist for the OpenGraph card and stay on the server.
   const props: PageProps = {
@@ -491,16 +518,22 @@ async function PageContent({
       getTypeNpcStats(typeId, data.categoryId),
       getTypeInsurance(typeId),
     ]);
+  // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
+  // `useSearchParams()`, which drops this subtree out of the cached render. The
+  // React adapter reads `?tab=` (and the Insurance tab's own params) after
+  // hydration instead.
   return (
-    <TypePage
-      {...props}
-      dogmaMeta={dogmaMeta}
-      variations={variations}
-      typeLists={typeLists}
-      history={history}
-      npcStats={npcStats}
-      insurance={insurance}
-    />
+    <NuqsAdapter>
+      <TypePage
+        {...props}
+        dogmaMeta={dogmaMeta}
+        variations={variations}
+        typeLists={typeLists}
+        history={history}
+        npcStats={npcStats}
+        insurance={insurance}
+      />
+    </NuqsAdapter>
   );
 }
 

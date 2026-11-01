@@ -19,54 +19,58 @@ export async function generateMetadata({
   const { systemId } = await params;
   const id = parsePositiveEntityId(systemId);
   if (id === null) return {};
-  try {
-    const system = await prisma.solarSystem.findUnique({
-      select: {
-        name: true,
-        securityStatus: true,
-        constellation: {
-          select: { name: true, region: { select: { name: true } } },
-        },
-      },
-      where: { solarSystemId: id },
-    });
-    if (!system) return {};
 
-    // EVE rounds security to one decimal everywhere it's displayed, and the
-    // rounded value is what determines high/low/null-sec rules.
-    const securityValue = Number(system.securityStatus);
-    const security = Number.isFinite(securityValue)
-      ? securityValue.toFixed(1)
-      : undefined;
-    const region = system.constellation.region?.name;
+  // Uncaught, like the page body: this route is cached whole, so a database
+  // failure must throw rather than store generic metadata. It shares
+  // `readSolarSystemPageData` with the page, so both resolve to one entry.
+  const system = await readSolarSystemPageData(id);
+  if (!system) return {};
 
-    const securityPhrase = security ? `${security} security ` : "";
-    const inRegion = region ? ` in ${withArticle(region)} region` : "";
+  // EVE rounds security to one decimal everywhere it's displayed, and the
+  // rounded value is what determines high/low/null-sec rules.
+  const security = Number.isFinite(system.securityStatus)
+    ? system.securityStatus.toFixed(1)
+    : undefined;
+  const region = system.regionName ?? undefined;
 
-    return pageMetadata({
-      title: system.name,
-      description: `${system.name} is a ${securityPhrase}solar system${inRegion} of EVE Online. Browse its stations, planets, and market activity.`,
-      path: `/system/${id}`,
-      badge: "Solar System",
-      facts: [
-        ...(security ? [{ label: "Security", value: security }] : []),
-        ...(region ? [{ label: "Region", value: region }] : []),
-        { label: "Constellation", value: system.constellation.name },
-      ],
-    });
-  } catch {
-    return {};
-  }
+  const securityPhrase = security ? `${security} security ` : "";
+  const inRegion = region ? ` in ${withArticle(region)} region` : "";
+
+  return pageMetadata({
+    title: system.name,
+    description: `${system.name} is a ${securityPhrase}solar system${inRegion} of EVE Online. Browse its stations, planets, and market activity.`,
+    path: `/system/${id}`,
+    badge: "Solar System",
+    facts: [
+      ...(security ? [{ label: "Security", value: security }] : []),
+      ...(region ? [{ label: "Region", value: region }] : []),
+      { label: "Constellation", value: system.constellationName },
+    ],
+  });
+}
+
+// ISR per system: without `generateStaticParams` an unlisted id re-renders,
+// and re-runs the query below, on every request (see apps/web/CLAUDE.md → "ISR
+// for a dynamic `[param]` route"). The real ids live in the database, which
+// `next build` cannot reach in CI, and Cache Components rejects an empty list
+// — so this lists one id `parsePositiveEntityId` refuses, which prerenders as
+// a 404 without a query.
+export function generateStaticParams() {
+  return [{ systemId: "0" }];
 }
 
 interface SolarSystemPageData {
   name: string;
+  /** A plain number: a Prisma `Decimal` cannot cross a cache boundary. */
+  securityStatus: number;
+  constellationName: string;
+  regionName: string | null;
   sde: SolarSystemSdeInfo;
 }
 
 /**
- * Read the system identity and SDE columns from our database. Returns null for
- * an unknown id.
+ * Read the system identity and SDE columns from our database, for the page and
+ * its metadata. Returns null for an unknown id.
  *
  * Cached until the next SDE build is ingested, like the type page's dogma
  * metadata: that is the only time these columns change. A failure throws
@@ -84,6 +88,7 @@ async function readSolarSystemPageData(
   const system = await prisma.solarSystem.findUnique({
     select: {
       name: true,
+      securityStatus: true,
       luminosity: true,
       radius: true,
       wormholeClassId: true,
@@ -91,6 +96,14 @@ async function readSolarSystemPageData(
       positionY: true,
       positionZ: true,
       ...systemFactionSelect,
+      // The faction select's constellation and region, plus their names.
+      constellation: {
+        select: {
+          name: true,
+          factionId: true,
+          region: { select: { name: true, factionId: true } },
+        },
+      },
       isHub: true,
       isBorder: true,
       isFringe: true,
@@ -105,6 +118,9 @@ async function readSolarSystemPageData(
   const { positionX, positionY, positionZ } = system;
   return {
     name: system.name,
+    securityStatus: Number(system.securityStatus),
+    constellationName: system.constellation.name,
+    regionName: system.constellation.region?.name ?? null,
     sde: {
       luminosity: system.luminosity,
       radius: system.radius,
@@ -138,7 +154,8 @@ async function PageContent({
   const system = await readSolarSystemPageData(id);
   if (!system) notFound();
 
-  return <PageClient systemName={system.name} sde={system.sde} />;
+  // The parsed id, not `useParams()`: the client then renders from its props.
+  return <PageClient systemId={id} systemName={system.name} sde={system.sde} />;
 }
 
 export default function Page({
