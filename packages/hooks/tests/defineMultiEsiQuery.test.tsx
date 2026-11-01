@@ -344,4 +344,78 @@ describe("defineMultiEsiQuery", () => {
     expect(result.current.subjectIds).toEqual([]);
     expect(result.current.isLoading).toBe(false);
   });
+
+  describe("subjectIds", () => {
+    const queried: number[] = [];
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings-by-id", subjectId],
+        queryFn: () => {
+          queried.push(subjectId);
+          return Promise.resolve(response([{ fitting_id: subjectId }]));
+        },
+      }),
+    });
+
+    beforeEach(() => {
+      queried.length = 0;
+      login(
+        character({ characterId: 100, scopes: [SCOPE] }),
+        character({ characterId: 101, scopes: [SCOPE] }),
+        character({ characterId: 102, scopes: [SCOPE] }),
+      );
+    });
+
+    it("queries only the subjects asked for", async () => {
+      const { result } = renderHook(
+        () => useMultiple({ subjectIds: [102, 100] }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+
+      // Subject order stays the login order, not the order asked for.
+      expect(result.current.subjectIds).toEqual([100, 102]);
+      expect(result.current.data.map((item) => item.subjectId)).toEqual([
+        100, 102,
+      ]);
+      expect(queried.sort()).toEqual([100, 102]);
+    });
+
+    it("leaves out an id no logged-in character can authorise", async () => {
+      const { result } = renderHook(
+        () => useMultiple({ subjectIds: [101, 999] }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+
+      expect(result.current.subjectIds).toEqual([101]);
+      expect(queried).toEqual([101]);
+    });
+
+    it("queries nothing for an empty list, unlike omitting it", async () => {
+      const { result } = renderHook(() => useMultiple({ subjectIds: [] }), {
+        wrapper,
+      });
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+
+      expect(result.current.subjectIds).toEqual([]);
+      expect(result.current.data).toEqual([]);
+      expect(queried).toEqual([]);
+    });
+
+    it("keeps its result stable when given an equal, fresh array", async () => {
+      const { result, rerender } = renderHook(
+        () => useMultiple({ subjectIds: [100] }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+      const first = result.current.data;
+
+      rerender();
+
+      expect(result.current.data).toBe(first);
+    });
+  });
 });

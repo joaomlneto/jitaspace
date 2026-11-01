@@ -9,6 +9,7 @@ import type {
   EsiQuerySource,
   MultiEsiQueryConfig,
   MultiEsiQueryEnvelope,
+  MultiEsiQueryOptions,
   SubjectQueryOptions,
 } from "./useEsiSubjectQueries";
 import { useEsiSubjectQueries } from "./useEsiSubjectQueries";
@@ -54,6 +55,10 @@ export interface MultiEsiValueQueryResult<
  *     getCharactersCharacterIdLocationQueryOptions(id, headers),
  * });
  * ```
+ *
+ * The built hook queries every reachable subject by default; pass
+ * `{ subjectIds }` to restrict it to a chosen few, e.g.
+ * `useMultipleCharacterLocation({ subjectIds: [characterId] })`.
  */
 export function defineMultiEsiValueQuery<TValue>(
   config: MultiEsiQueryConfig & {
@@ -79,10 +84,13 @@ export function defineMultiEsiValueQuery<TValue>(
       }),
     }) as unknown as SubjectQueryOptions<EsiSubjectValue<TValue>>;
 
-  return function useMultiEsiValueQuery(): MultiEsiValueQueryResult<TValue> {
+  return function useMultiEsiValueQuery(
+    options: MultiEsiQueryOptions = {},
+  ): MultiEsiValueQueryResult<TValue> {
     const { selected, ...envelope } = useEsiSubjectQueries(
       subjectConfig,
       buildQuery,
+      options,
     );
 
     const data = useMemo(
