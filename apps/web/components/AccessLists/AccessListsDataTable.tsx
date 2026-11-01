@@ -58,6 +58,13 @@ function AccessListNameCell({
   );
 }
 
+/** The name column's renderer, bound to the table's `onOpen`. */
+function nameCellFor(onOpen: (accessListId: number) => void) {
+  return function nameCell(row: AccessListRow) {
+    return <AccessListNameCell row={row} onOpen={onOpen} />;
+  };
+}
+
 function managersCell(row: AccessListRow) {
   return (
     <Stack gap={4}>
@@ -139,7 +146,7 @@ export const AccessListsDataTable = memo(
           header: "Name",
           accessor: "name",
           sortable: true,
-          cell: (row) => <AccessListNameCell row={row} onOpen={onOpen} />,
+          cell: nameCellFor(onOpen),
         },
         {
           // Hidden, but the search box still matches it.
