@@ -143,7 +143,13 @@ jobs:
           working-directory: apps/web
           # Starts web server for E2E tests - the web package exposes `start` which runs Next.js
           start: pnpm start
-          wait-on: "http://localhost:3000" # Waits for above
+          # Waits for the above. An IPv4 literal, not `localhost`: the action
+          # only retries the error codes `got` knows, and since the runner
+          # image of 2026-10-25 a refused connection to `localhost` (::1 and
+          # 127.0.0.1) fails with "Socket closed before the connection was
+          # established" instead of ECONNREFUSED, so the first ping, sent
+          # before `next start` is listening, ended the job.
+          wait-on: "http://127.0.0.1:3000"
           # Recording requires CYPRESS_RECORD_KEY, and --parallel requires
           # --record. Secrets are not exposed to pull_request runs from forks, so
           # hardcoding these fails the job before a single spec executes. Gate
