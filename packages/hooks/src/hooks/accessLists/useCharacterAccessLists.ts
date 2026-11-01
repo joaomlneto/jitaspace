@@ -23,7 +23,9 @@ export const useCharacterAccessLists = (
   });
 
   return {
-    hasToken: accessToken !== null,
+    // Without a character, useAccessToken matches whichever one holds the
+    // scope; that token is not this (absent) character's.
+    hasToken: !!characterId && accessToken !== null,
     ...useGetCharactersAccessListsListing(
       characterId ?? 0,
       { ...authHeaders },

@@ -230,10 +230,12 @@ describe("useCharacterAccessLists", () => {
   it("stays disabled without a character, rather than querying character 0", () => {
     login(character(ALICE));
 
-    renderHook(() => useCharacterAccessLists(undefined));
+    const { result } = renderHook(() => useCharacterAccessLists(undefined));
 
     expect(mockUseListing.mock.calls.at(-1)?.[0]).toBe(0);
     expect(enabledFrom(mockUseListing)).toBe(false);
+    // Alice holds the scope, but she is not the character asked about.
+    expect(result.current.hasToken).toBe(false);
   });
 
   it("holds the request when not enabled, but still reports the token", () => {
@@ -270,9 +272,12 @@ describe("useCharacterAccessList", () => {
   ])("stays disabled with %s", (_name, characterId, accessListId) => {
     login(character(ALICE));
 
-    renderHook(() => useCharacterAccessList(characterId, accessListId));
+    const { result } = renderHook(() =>
+      useCharacterAccessList(characterId, accessListId),
+    );
 
     expect(enabledFrom(mockUseDetail)).toBe(false);
+    expect(result.current.hasToken).toBe(characterId !== undefined);
   });
 
   it("stays disabled without a token", () => {

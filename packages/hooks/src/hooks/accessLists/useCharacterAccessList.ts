@@ -37,7 +37,8 @@ export const useCharacterAccessList = (
   });
 
   return {
-    hasToken: accessToken !== null,
+    // As in useCharacterAccessLists: no character, no token of its own.
+    hasToken: !!characterId && accessToken !== null,
     // The generated hook takes the list id first: the spec orders the path
     // parameters alphabetically.
     ...useGetCharactersAccessListsDetail(
