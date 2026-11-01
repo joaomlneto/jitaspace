@@ -41,6 +41,21 @@ describe("character app access", () => {
     expect(enabledApps.map((app) => app.name)).toContain("Contacts");
   });
 
+  it("enables Mercenary Operations with the activities scope alone", () => {
+    // Den locations need a structures scope too, but the page works without
+    // it, so it must not be what decides whether the app is offered.
+    const enabledApps = getEnabledCharacterApps([
+      "esi-activities.read_character.v1",
+    ]);
+
+    expect(enabledApps.map((app) => app.name)).toContain(
+      "Mercenary Operations",
+    );
+    expect(getEnabledCharacterApps([]).map((app) => app.name)).not.toContain(
+      "Mercenary Operations",
+    );
+  });
+
   it("disables optional-only apps when no optional scope is granted", () => {
     const enabledApps = getEnabledCharacterApps([]);
 

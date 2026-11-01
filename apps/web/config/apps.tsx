@@ -25,6 +25,7 @@ import {
   VotesIcon,
   WalletIcon,
   WarsIcon,
+  WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
 
 export interface AppScopeSet {
@@ -210,6 +211,25 @@ export const characterApps: Record<string, JitaApp> = {
           scopes: ["esi-wallet.read_corporation_wallets.v1"],
         },
       ],
+    },
+  },
+  mercenaryTacticalOperations: {
+    name: "Mercenary Operations",
+    description:
+      "See the Mercenary Tactical Operations your Mercenary Dens are offering.",
+    url: "/mercenary-tactical-operations",
+    Icon: (props) => React.createElement(WindowMercenaryIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Mercenary Tactical Operations",
+          scopes: ["esi-activities.read_character.v1"],
+        },
+      ],
+      // The den locations (esi-structures.read_character.v1) are not listed
+      // as optional: getEnabledApps treats an app with optional sets as
+      // needing one of them, which would hide this app from a character that
+      // granted only the activities scope. The page asks for it itself.
     },
   },
   /*

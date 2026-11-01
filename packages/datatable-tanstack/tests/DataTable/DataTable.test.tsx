@@ -77,6 +77,18 @@ describe("DataTable — empty state", () => {
     renderWithMantine(<DataTable columns={columns} data={[]} />);
     expect(screen.queryByText("Alice")).not.toBeInTheDocument();
   });
+
+  // jsdom does no layout, so this checks the mechanism, not the result: the
+  // message stays in view when a wide table is scrolled sideways on a phone.
+  it("keeps the empty text in the visible part of a table wider than the screen", () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={[]} emptyText="Nothing here" />,
+    );
+    expect(screen.getByText("Nothing here").parentElement).toHaveStyle({
+      position: "sticky",
+      left: "0px",
+    });
+  });
 });
 
 describe("DataTable — loading state", () => {
@@ -91,6 +103,26 @@ describe("DataTable — loading state", () => {
       <DataTable columns={columns} data={[]} isLoading emptyText="No data" />,
     );
     expect(screen.queryByText("No data")).not.toBeInTheDocument();
+  });
+
+  it("names the pagination arrows for screen readers", () => {
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={Array.from({ length: 30 }, (_, i) => ({
+          name: `n${i}`,
+          score: i,
+        }))}
+        withPagination
+        defaultPageSize={10}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next page" }),
+    ).toBeInTheDocument();
   });
 
   // A full page of placeholders keeps the table at its loaded height, so rows

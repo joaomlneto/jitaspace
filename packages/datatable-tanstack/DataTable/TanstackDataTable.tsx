@@ -125,6 +125,21 @@ function buildColumnDefs<TData extends RowData>(
   });
 }
 
+/**
+ * The previous/next arrows are icons alone, so without these a screen reader
+ * announces them as unnamed buttons (axe `button-name`).
+ */
+const PAGINATION_CONTROL_LABELS = {
+  first: "First page",
+  previous: "Previous page",
+  next: "Next page",
+  last: "Last page",
+} as const;
+
+const paginationControlProps = (
+  control: keyof typeof PAGINATION_CONTROL_LABELS,
+) => ({ "aria-label": PAGINATION_CONTROL_LABELS[control] });
+
 export function DataTable<TData extends object>({
   data,
   columns,
@@ -258,9 +273,23 @@ export function DataTable<TData extends object>({
   } else if (rows.length === 0) {
     tbodyContent = (
       <Table.Tr>
-        <Table.Td colSpan={Math.max(visibleColumns.length, 1)}>
-          <Center py="xl">
-            <Text c="dimmed">{emptyText}</Text>
+        <Table.Td colSpan={Math.max(visibleColumns.length, 1)} p={0}>
+          {/* A table wider than the screen scrolls sideways, and a message
+              centred across all of it lands off-screen. This one stays at the
+              left of what is visible and is never wider than the screen less
+              the page's gutters; a table that fits keeps it centred. */}
+          <Center
+            py="xl"
+            px="sm"
+            style={{
+              position: "sticky",
+              left: 0,
+              width: "min(100%, calc(100vw - 2 * var(--mantine-spacing-md)))",
+            }}
+          >
+            <Text c="dimmed" ta="center">
+              {emptyText}
+            </Text>
           </Center>
         </Table.Td>
       </Table.Tr>
@@ -415,6 +444,7 @@ export function DataTable<TData extends object>({
             total={table.getPageCount()}
             value={pagination.pageIndex + 1}
             onChange={(page) => table.setPageIndex(page - 1)}
+            getControlProps={paginationControlProps}
             size="sm"
           />
           <Text size="sm" c="dimmed">
