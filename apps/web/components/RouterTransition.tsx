@@ -14,5 +14,7 @@ export const RouterTransition = () => {
     };
   }, [pathname]);
 
-  return <NavigationProgress size={5} />;
+  // Mantine leaves the bar's progressbar role unnamed, which every page then
+  // fails on (axe/Lighthouse aria-progressbar-name).
+  return <NavigationProgress size={5} aria-label="Page loading" />;
 };

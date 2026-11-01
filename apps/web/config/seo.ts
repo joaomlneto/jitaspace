@@ -20,6 +20,7 @@ export const CRAWLER_DISALLOWED_PATHS = [
   "/contacts",
   "/debug",
   "/fittings",
+  "/freelance/mine",
   "/login",
   "/mail",
   "/notifications",
