@@ -100,12 +100,17 @@ console.log(
 );
 
 if (write) {
-  for (const change of changes) {
-    await prisma.dogmaEffectCategory.update({
-      where: { effectCategoryId: change.id },
-      data: { customName: change.name, customDescription: change.description },
-    });
-  }
+  await prisma.$transaction(
+    changes.map((change) =>
+      prisma.dogmaEffectCategory.update({
+        where: { effectCategoryId: change.id },
+        data: {
+          customName: change.name,
+          customDescription: change.description,
+        },
+      }),
+    ),
+  );
 }
 
 await prisma.$disconnect();
