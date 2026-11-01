@@ -37,6 +37,22 @@ const wallpaper = (
 
 const CRADLE_OF_WAR = "2026-cradle-of-war";
 
+// Not a wallpaper but the Excel theme's background (themes/excel.ts), here
+// for the pre-paint script to read: Excel's gridlines (#e1e1e1 on white;
+// #3b3b3b on its dark mode's #1f1f1f), ruled into its default cells, columns
+// 64px wide and rows 20px tall. Kept out of WALLPAPERS, which are images.
+const gridline = lightDark("#e1e1e1", "#3b3b3b");
+const excelGrid = [
+  `linear-gradient(to right, ${gridline} 1px, transparent 1px) 0 0 / 64px 20px`,
+  `linear-gradient(to bottom, ${gridline} 1px, transparent 1px) 0 0 / 64px 20px`,
+  lightDark("#ffffff", "#1f1f1f"),
+].join(", ");
+
+export const EXCEL_GRID = {
+  appBackground: excelGrid,
+  appBackgroundMobile: excelGrid,
+};
+
 export const WALLPAPERS = {
   cradleOfWar: wallpaper(
     CRADLE_OF_WAR,

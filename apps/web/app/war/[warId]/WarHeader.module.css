@@ -1,0 +1,204 @@
+/*
+  The war page's header: the aggressor and the defender facing each other,
+  each half washed in its side's colour, with the war's state between them
+  and the ISK balance, dates and links underneath.
+*/
+.header {
+  --agg: #d1795c;
+  --def: #5f9cba;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(209, 121, 92, 0.16) 0%,
+      rgba(209, 121, 92, 0.03) 42%,
+      rgba(95, 156, 186, 0.03) 58%,
+      rgba(95, 156, 186, 0.16) 100%
+    ),
+    var(--mantine-color-default);
+}
+
+.topBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-lg) 0;
+}
+
+.faceOff {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--mantine-spacing-lg);
+  padding: var(--mantine-spacing-lg);
+}
+
+.side {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-lg);
+  min-width: 0;
+}
+
+.side[data-side="defender"] {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.sideBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.side[data-side="defender"] .sideBody {
+  align-items: flex-end;
+}
+
+.logo {
+  flex-shrink: 0;
+  border-radius: var(--mantine-radius-md);
+  box-shadow: 0 0 0 2px var(--side-color);
+}
+
+.side[data-side="aggressor"] {
+  --side-color: var(--agg);
+}
+
+.side[data-side="defender"] {
+  --side-color: var(--def);
+}
+
+.role {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--side-color);
+
+  /* The accents fall short of AA contrast as text on a light background. */
+  @mixin light {
+    color: color-mix(in srgb, var(--side-color) 65%, black);
+  }
+}
+
+.name {
+  font-size: rem(26px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--mantine-color-bright);
+  overflow-wrap: anywhere;
+}
+
+.side[data-side="defender"] .tickerRow {
+  flex-direction: row-reverse;
+}
+
+.figures {
+  display: flex;
+  gap: var(--mantine-spacing-lg);
+  margin-top: 4px;
+}
+
+.side[data-side="defender"] .figures {
+  flex-direction: row-reverse;
+}
+
+.figureLabel {
+  font-size: var(--mantine-font-size-xs);
+  color: var(--mantine-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.figureValue {
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 700;
+  font-size: var(--mantine-font-size-lg);
+  color: var(--mantine-color-bright);
+}
+
+.versus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.vs {
+  font-size: rem(30px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--mantine-color-dimmed);
+  line-height: 1;
+}
+
+.balance {
+  padding: 0 var(--mantine-spacing-lg);
+}
+
+.bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--mantine-color-default-border);
+}
+
+.barAgg {
+  background: var(--agg);
+}
+
+.barDef {
+  background: var(--def);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  margin-top: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+@media (max-width: $mantine-breakpoint-sm) {
+  .faceOff {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--mantine-spacing-sm);
+  }
+
+  .side[data-side="defender"] {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  .side[data-side="defender"] .sideBody {
+    align-items: flex-start;
+  }
+
+  .side[data-side="defender"] .figures,
+  .side[data-side="defender"] .tickerRow {
+    flex-direction: row;
+  }
+
+  .versus {
+    flex-direction: row;
+  }
+
+  .vs {
+    font-size: rem(20px);
+  }
+
+  .name {
+    font-size: rem(20px);
+  }
+}

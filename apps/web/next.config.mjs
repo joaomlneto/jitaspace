@@ -281,6 +281,13 @@ const config = {
       permanent: true,
     },
     {
+      // Same story for contacts: /contacts now merges every readable
+      // character, corporation and alliance contact list into one table.
+      source: "/contacts/:section(character|corporation|alliance)",
+      destination: "/contacts",
+      permanent: true,
+    },
+    {
       // Deep-link to a specific tab on a type page: /type/<id>/<tab> sends the
       // browser to the canonical /type/<id>?tab=<tab>, which selects that tab.
       // Unrecognised tab names are harmless — the page falls back to Overview.

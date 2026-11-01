@@ -1,17 +1,22 @@
-export type PaginationControl = "first" | "previous" | "next" | "last";
-
-const PAGINATION_CONTROL_LABELS: Record<PaginationControl, string> = {
+/**
+ * Accessible names for the pagination arrows both engines render.
+ *
+ * Mantine's Pagination draws its previous/next/first/last controls as bare
+ * icons, so a screen reader announces them as "button" and axe fails every
+ * paginated table (`button-name`). The page numbers need nothing: their
+ * number is their name. TanStack passes this to `Pagination` as
+ * `getControlProps`; mantine-datatable, which already named previous and
+ * next the same way, as `getPaginationControlProps`.
+ */
+const CONTROL_LABELS = {
   first: "First page",
   previous: "Previous page",
   next: "Next page",
   last: "Last page",
-};
+} as const;
 
-/**
- * Accessible names for Mantine Pagination's icon-only arrow buttons, which have
- * none by default. Pass as `getControlProps` (Mantine) or
- * `getPaginationControlProps` (mantine-datatable).
- */
+export type PaginationControl = keyof typeof CONTROL_LABELS;
+
 export const getPaginationControlProps = (control: PaginationControl) => ({
-  "aria-label": PAGINATION_CONTROL_LABELS[control],
+  "aria-label": CONTROL_LABELS[control],
 });

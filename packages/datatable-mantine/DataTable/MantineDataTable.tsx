@@ -212,7 +212,6 @@ export function DataTable<TData extends object>({
     onPageChange: setPage,
     totalRecords: total,
     recordsPerPage: pageSize,
-    getPaginationControlProps,
     // The standard sizes, plus the table's own default if it is not one.
     recordsPerPageOptions: [
       ...new Set([...PAGE_SIZE_OPTIONS, defaultPageSize]),
@@ -223,6 +222,7 @@ export function DataTable<TData extends object>({
       setPage(Math.floor(((page - 1) * pageSize) / size) + 1);
       setPageSize(size);
     },
+    getPaginationControlProps,
   });
 
   const skeletonRecords: SkeletonRecord[] = Array.from(

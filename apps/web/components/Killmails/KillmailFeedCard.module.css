@@ -1,0 +1,152 @@
+/*
+  A killmail as an entry on a timeline. EVE time in a gutter, a dot in the
+  accent of the side that lost the ship on a line running down the list,
+  and the kill told as a sentence.
+*/
+.container {
+  container-type: inline-size;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 3.25rem 20px minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: var(--mantine-spacing-xs);
+  padding-right: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  cursor: pointer;
+  transition: background-color 100ms ease;
+}
+
+.item:hover {
+  background: var(--mantine-color-default-hover);
+}
+
+.time {
+  padding-top: 10px;
+  text-align: right;
+  line-height: 1.15;
+}
+
+.clock {
+  display: block;
+  font-family: var(--mantine-font-family-monospace);
+  font-weight: 700;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-bright);
+}
+
+.day {
+  display: block;
+  font-size: 10px;
+  color: var(--mantine-color-dimmed);
+}
+
+/* The rail: a line through every item, a dot on each. */
+.rail {
+  position: relative;
+  align-self: stretch;
+}
+
+.rail::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: rgba(150, 172, 200, 0.32);
+}
+
+.dot {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 3px solid var(--mantine-color-default);
+  background: var(--killmail-accent, var(--mantine-color-dimmed));
+}
+
+.body {
+  display: flex;
+  gap: var(--mantine-spacing-sm);
+  padding: 8px 0;
+  min-width: 0;
+}
+
+.sentence {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.55;
+  min-width: 0;
+}
+
+.inlineAvatar {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 2px;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding-top: 8px;
+}
+
+.actions {
+  opacity: 0.35;
+  transition: opacity 100ms ease;
+}
+
+.item:hover .actions,
+.item:focus-within .actions {
+  opacity: 1;
+}
+
+@container (max-width: 520px) {
+  .item {
+    grid-template-columns: 2.75rem 16px minmax(0, 1fr);
+    grid-template-areas:
+      "time rail body"
+      "time rail side";
+  }
+
+  .time {
+    grid-area: time;
+  }
+
+  .rail {
+    grid-area: rail;
+    grid-row: 1 / span 2;
+  }
+
+  .body {
+    grid-area: body;
+    padding-bottom: 0;
+  }
+
+  .bodyRender {
+    display: none;
+  }
+
+  .side {
+    grid-area: side;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0 8px;
+  }
+}
