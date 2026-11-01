@@ -244,6 +244,14 @@ export function parseColonyRowKey(
   return { characterId: Number(match[1]), planetId: Number(match[2]) };
 }
 
+function layoutStateOf(
+  ready: boolean,
+  failed: boolean,
+): ColonyRow["layoutState"] {
+  if (ready) return "ready";
+  return failed ? "error" : "loading";
+}
+
 export function toColonyRows(
   colonies: readonly EsiSubjectItem<CharacterColony>[],
   layouts: Record<string, ColonyLayout>,
@@ -263,12 +271,10 @@ export function toColonyRows(
         layout && now !== null
           ? summarizeColony(layout, catalog, now)
           : undefined,
-      layoutState:
-        layout && now !== null
-          ? "ready"
-          : failedKeys.has(key)
-            ? "error"
-            : "loading",
+      layoutState: layoutStateOf(
+        layout !== undefined && now !== null,
+        failedKeys.has(key),
+      ),
     };
   });
 }

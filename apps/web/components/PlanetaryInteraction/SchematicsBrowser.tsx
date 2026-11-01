@@ -176,7 +176,7 @@ export const SchematicsBrowser = memo(
             multiple
             value={[...activeTiers].map(String)}
             onChange={(value) => {
-              const next = value.map(Number).sort();
+              const next = value.map(Number).sort((a, b) => a - b);
               // Every tier is the default, so it is left out of the URL.
               void setTiers(next.length === TIERS.length ? null : next);
             }}

@@ -199,12 +199,12 @@ export default function PlanetaryInteractionPageClient({
   ];
 
   const colonyErrors = colonies.errors;
-  const emptyText =
-    showCharacter && activeCharacters.size === 0
-      ? "No characters selected. Pick one above to see their colonies."
-      : statuses !== null && allRows.length > 0
-        ? "No colony matches the selected statuses."
-        : "No colonies. Set one up in the planetary view in game.";
+  let emptyText = "No colonies. Set one up in the planetary view in game.";
+  if (showCharacter && activeCharacters.size === 0) {
+    emptyText = "No characters selected. Pick one above to see their colonies.";
+  } else if (statuses !== null && allRows.length > 0) {
+    emptyText = "No colony matches the selected statuses.";
+  }
 
   return (
     <Container size="xl">

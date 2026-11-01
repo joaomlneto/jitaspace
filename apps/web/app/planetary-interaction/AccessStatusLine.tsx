@@ -35,32 +35,40 @@ export function AccessStatusLine({
 }>) {
   const selectedCharacter = useSelectedCharacter();
   const granted = selectedCharacter?.accessTokenPayload.scp ?? [];
+  let content: ReactNode;
+  if (isPending) {
+    content = (
+      <Text size="sm" c="dimmed">
+        Loading your characters…
+      </Text>
+    );
+  } else if (hasAccess) {
+    content = (
+      <>
+        <Text size="sm" c="dimmed">
+          {summary}
+        </Text>
+        {children}
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <Text size="sm">{signedOut}</Text>
+        <Button
+          size="compact-sm"
+          onClick={() => {
+            loginWithEveOnline([...new Set([...granted, scope])]);
+          }}
+        >
+          Sign in with EVE Online
+        </Button>
+      </>
+    );
+  }
   return (
     <Group gap="sm" mih={30} aria-live="polite">
-      {isPending ? (
-        <Text size="sm" c="dimmed">
-          Loading your characters…
-        </Text>
-      ) : hasAccess ? (
-        <>
-          <Text size="sm" c="dimmed">
-            {summary}
-          </Text>
-          {children}
-        </>
-      ) : (
-        <>
-          <Text size="sm">{signedOut}</Text>
-          <Button
-            size="compact-sm"
-            onClick={() => {
-              loginWithEveOnline([...new Set([...granted, scope])]);
-            }}
-          >
-            Sign in with EVE Online
-          </Button>
-        </>
-      )}
+      {content}
     </Group>
   );
 }
