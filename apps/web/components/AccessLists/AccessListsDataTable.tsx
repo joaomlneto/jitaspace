@@ -29,6 +29,35 @@ const ROLE_OPTIONS = ACCESS_ORDER.slice(0, 2).map((access) => ({
 
 const accessListRowId = (row: AccessListRow) => row.id;
 
+function AccessListNameCell({
+  row,
+  onOpen,
+}: Readonly<{ row: AccessListRow; onOpen: (accessListId: number) => void }>) {
+  return (
+    <Stack gap={2} maw={480}>
+      {/*
+       * A button, not a row click: it is reachable by keyboard and announced
+       * as something that opens the list.
+       */}
+      <Anchor
+        component="button"
+        type="button"
+        size="sm"
+        fw={500}
+        ta="left"
+        onClick={() => onOpen(row.id)}
+      >
+        {row.name || `Access list ${row.id}`}
+      </Anchor>
+      {row.description && (
+        <Text size="xs" lineClamp={2} className={classes.secondary}>
+          {row.description}
+        </Text>
+      )}
+    </Stack>
+  );
+}
+
 function managersCell(row: AccessListRow) {
   return (
     <Stack gap={4}>
@@ -110,29 +139,7 @@ export const AccessListsDataTable = memo(
           header: "Name",
           accessor: "name",
           sortable: true,
-          cell: (row) => (
-            <Stack gap={2} maw={480}>
-              {/*
-               * A button, not a row click: it is reachable by keyboard and
-               * announced as something that opens the list.
-               */}
-              <Anchor
-                component="button"
-                type="button"
-                size="sm"
-                fw={500}
-                ta="left"
-                onClick={() => onOpen(row.id)}
-              >
-                {row.name || `Access list ${row.id}`}
-              </Anchor>
-              {row.description && (
-                <Text size="xs" lineClamp={2} className={classes.secondary}>
-                  {row.description}
-                </Text>
-              )}
-            </Stack>
-          ),
+          cell: (row) => <AccessListNameCell row={row} onOpen={onOpen} />,
         },
         {
           // Hidden, but the search box still matches it.

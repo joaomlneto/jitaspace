@@ -89,6 +89,12 @@ export default function AccessListsPageClient() {
     openAccessListId !== null &&
     (accessLists.isPending || pendingDetailIds.has(openAccessListId));
 
+  const pendingNoun = pendingListCount === 1 ? "list" : "lists";
+  const loadingAnnouncement =
+    rows.length > 0 && pendingListCount > 0
+      ? `Loading ${pendingListCount} more access ${pendingNoun}…`
+      : "";
+
   // An empty name is as good as none, so this tests truthiness.
   let drawerTitle = "Access list";
   if (openRow?.name) drawerTitle = openRow.name;
@@ -241,9 +247,7 @@ export default function AccessListsPageClient() {
          * shift it twice; the title's spinner shows the same to sighted users.
          */}
         <VisuallyHidden role="status" aria-live="polite">
-          {rows.length > 0 && pendingListCount > 0
-            ? `Loading ${pendingListCount} more access ${pendingListCount === 1 ? "list" : "lists"}…`
-            : ""}
+          {loadingAnnouncement}
         </VisuallyHidden>
 
         {!hasNoCharacters && (
