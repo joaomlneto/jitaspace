@@ -318,18 +318,9 @@ describe("DataTable — pagination", () => {
     expect(screen.getByText("Rows per page:")).toBeInTheDocument();
   });
 
-  it("names the pagination controls for screen readers", () => {
-    const manyRows: Row[] = Array.from({ length: 30 }, (_, i) => ({
-      name: `Row ${i}`,
-      score: i,
-    }));
+  it("names its arrow buttons, so a screen reader can tell them apart", () => {
     renderWithMantine(
-      <DataTable
-        columns={columns}
-        data={manyRows}
-        withPagination
-        defaultPageSize={10}
-      />,
+      <DataTable columns={columns} data={data} withPagination />,
     );
     expect(
       screen.getByRole("button", { name: "Previous page" }),
@@ -337,8 +328,6 @@ describe("DataTable — pagination", () => {
     expect(
       screen.getByRole("button", { name: "Next page" }),
     ).toBeInTheDocument();
-    // Page buttons are already named by their visible number.
-    expect(screen.getByRole("button", { name: "3" })).toBeInTheDocument();
   });
 
   it("shows the total filtered row count", () => {

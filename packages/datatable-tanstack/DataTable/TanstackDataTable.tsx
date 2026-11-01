@@ -32,6 +32,7 @@ import {
   columnSortKey,
   compareSortKeys,
   DataTableToolbar,
+  getPaginationControlProps,
   matchesColumnFilter,
   matchesGlobalFilter,
   primitiveString,
@@ -124,17 +125,6 @@ function buildColumnDefs<TData extends RowData>(
     } satisfies ColumnDef<Features, TData>;
   });
 }
-
-const PAGINATION_CONTROL_LABELS = {
-  first: "First page",
-  previous: "Previous page",
-  next: "Next page",
-  last: "Last page",
-} as const;
-
-const paginationControlProps = (
-  control: keyof typeof PAGINATION_CONTROL_LABELS,
-) => ({ "aria-label": PAGINATION_CONTROL_LABELS[control] });
 
 export function DataTable<TData extends object>({
   data,
@@ -427,9 +417,7 @@ export function DataTable<TData extends object>({
             value={pagination.pageIndex + 1}
             onChange={(page) => table.setPageIndex(page - 1)}
             size="sm"
-            // Mantine renders the arrows as bare icons, so without a label a
-            // screen reader announces each one as just "button".
-            getControlProps={paginationControlProps}
+            getControlProps={getPaginationControlProps}
           />
           <Text size="sm" c="dimmed">
             {table.getFilteredRowModel().rows.length} rows
