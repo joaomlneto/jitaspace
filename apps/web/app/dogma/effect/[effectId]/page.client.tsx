@@ -14,6 +14,7 @@ import {
   Table,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -112,7 +113,14 @@ export interface PageProps {
   iconId: number | null;
   guid: string | null;
   distribution: number | null;
-  category: { effectCategoryId: number; name: string | null } | null;
+  category: {
+    effectCategoryId: number;
+    /** CCP's internal name, e.g. `dgmEffPassive`. */
+    name: string | null;
+    /** Ours: a player-facing name and description, written by hand. */
+    customName: string | null;
+    customDescription: string | null;
+  } | null;
   flags: Record<keyof typeof FLAG_LABELS, boolean | null>;
   /** The attribute each of the effect's own pointers names, if any. */
   stats: Record<keyof typeof STAT_LABELS, number | null>;
@@ -130,8 +138,9 @@ export interface PageProps {
   types: EffectType[];
 }
 
-/** `dgmEffTarget` → `Target`. */
+/** Our name for the category, else CCP's with the prefix dropped: `dgmEffTarget` → `Target`. */
 function categoryLabel(category: NonNullable<PageProps["category"]>): string {
+  if (category.customName) return category.customName;
   if (!category.name) return `Category ${category.effectCategoryId}`;
   return category.name.replace(/^dgmEff/, "");
 }
@@ -474,9 +483,17 @@ function EffectHero({
           </Badge>
         )}
         {category && (
-          <Badge variant="light" color="eve_accent">
-            {categoryLabel(category)}
-          </Badge>
+          <Tooltip
+            label={category.customDescription}
+            disabled={!category.customDescription}
+            multiline
+            w={320}
+            withArrow
+          >
+            <Badge variant="light" color="eve_accent">
+              {categoryLabel(category)}
+            </Badge>
+          </Tooltip>
         )}
         {flagEntries
           .filter(({ value }) => value)
@@ -717,12 +734,23 @@ function effectDetails(
           {
             label: "Category",
             value: (
-              <>
-                {categoryLabel(category)}{" "}
-                <Text component="span" c="dimmed" size="sm">
-                  ({category.effectCategoryId})
+              <Stack gap={2}>
+                <Text component="span">
+                  {categoryLabel(category)}{" "}
+                  <Text component="span" c="dimmed" size="sm">
+                    ({category.effectCategoryId}
+                    {category.customName && category.name
+                      ? `, ${category.name}`
+                      : ""}
+                    )
+                  </Text>
                 </Text>
-              </>
+                {category.customDescription && (
+                  <Text size="sm" c="dimmed">
+                    {category.customDescription}
+                  </Text>
+                )}
+              </Stack>
             ),
           },
         ]

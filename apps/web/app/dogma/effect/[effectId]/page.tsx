@@ -44,7 +44,9 @@ async function getEffectData(effectId: number): Promise<PageProps | null> {
       guid: true,
       distribution: true,
       effectCategoryId: true,
-      effectCategory: { select: { name: true } },
+      effectCategory: {
+        select: { name: true, customName: true, customDescription: true },
+      },
       disallowAutoRepeat: true,
       electronicChance: true,
       isAssistance: true,
@@ -213,6 +215,12 @@ async function getEffectData(effectId: number): Promise<PageProps | null> {
         : {
             effectCategoryId: effect.effectCategoryId,
             name: effect.effectCategory?.name ?? null,
+            customName: effect.effectCategory?.customName?.trim()
+              ? effect.effectCategory.customName
+              : null,
+            customDescription: effect.effectCategory?.customDescription?.trim()
+              ? effect.effectCategory.customDescription
+              : null,
           },
     flags: {
       isOffensive: effect.isOffensive,
