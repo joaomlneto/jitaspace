@@ -391,6 +391,18 @@ describe("TypeAvatar", () => {
     );
   });
 
+  it("passes a fallback through, shown when the image fails", () => {
+    const { container, getByTestId } = renderWithMantine(
+      <TypeAvatar
+        typeId={45000}
+        variation="icon"
+        fallback={<span data-testid="contract-icon" />}
+      />,
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(getByTestId("contract-icon")).toBeInTheDocument();
+  });
+
   it("looks the variations up only once the icon fails to load", () => {
     // Blueprints have only bp/bpc, and the image server answers their /icon
     // with a 400.

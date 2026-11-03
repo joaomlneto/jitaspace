@@ -13,6 +13,7 @@ import {
   SolarSystemName,
   StationName,
   StructureName,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import {
@@ -63,6 +64,57 @@ export function ContractTypeIcon({
 }: Readonly<{ type: ContractKind } & EveIconProps>) {
   const Icon = KIND_ICON[type];
   return <Icon alt={CONTRACT_KIND_LABEL[type]} {...props} />;
+}
+
+/**
+ * The picture for a contract: its first offered item's image, or the
+ * contract type's icon when it has no item (couriers, title-only contracts)
+ * or the item has no image of its own (SKINs and the like).
+ */
+export function ContractArtwork({
+  type,
+  item,
+  size,
+}: Readonly<{
+  type: ContractKind;
+  item:
+    | { typeId: number; name?: string | null; imageVariation?: string }
+    | null
+    | undefined;
+  size: number;
+}>) {
+  const icon = <ContractTypeIcon type={type} size={size} />;
+  if (!item) {
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          width: size,
+          height: size,
+          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {icon}
+      </span>
+    );
+  }
+  return (
+    <TypeAvatar
+      typeId={item.typeId}
+      variation={item.imageVariation}
+      size={size}
+      radius="sm"
+      // Named after the item, not the debug-ish "types <id> icon" default,
+      // which Mantine also shows as the fallback's tooltip.
+      alt={item.name ?? undefined}
+      // Without its own tile the fallback icon looks the same as for a
+      // contract with no item at all.
+      variant="transparent"
+      fallback={icon}
+    />
+  );
 }
 
 export function ContractTypeBadge({

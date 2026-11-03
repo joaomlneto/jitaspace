@@ -3,7 +3,6 @@
 import { Group, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { TypeAvatar } from "@jitaspace/eve-components";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type { ContractSummary } from "./contract";
@@ -11,6 +10,7 @@ import { ContractAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { CONTRACT_KIND_LABEL, contractHeadlineIsk } from "./contract";
 import {
+  ContractArtwork,
   contractDisplayName,
   ContractIssuer,
   ContractLocationLine,
@@ -51,14 +51,7 @@ function columns(
       accessor: (row) => row.items?.first?.name ?? row.title,
       cell: (row) => (
         <Group gap="xs" wrap="nowrap" miw={0}>
-          {row.items?.first && (
-            <TypeAvatar
-              typeId={row.items.first.typeId}
-              variation={row.items.first.imageVariation}
-              size={24}
-              radius="sm"
-            />
-          )}
+          <ContractArtwork type={row.type} item={row.items?.first} size={24} />
           <ContractAnchor
             contractId={row.contractId}
             size="sm"
