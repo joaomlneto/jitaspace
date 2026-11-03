@@ -30,6 +30,7 @@ import {
   customsOfficeTotals,
   reinforceWindow,
   standingTaxRate,
+  taxRatePercent,
 } from "~/components/PlanetaryInteraction/customsOffices";
 import {
   formatCycleTime,
@@ -482,6 +483,14 @@ describe("customs offices", () => {
         allow_access_with_standings: false,
       }),
     ).toBe("Corporation");
+  });
+
+  it("turns tax rates into exact percentages, so range filters keep their bounds", () => {
+    // Multiplied out, these are 7.000000000000001 and 28.999999999999996.
+    expect(taxRatePercent(0.07)).toBe(7);
+    expect(taxRatePercent(0.29)).toBe(29);
+    expect(taxRatePercent(0.125)).toBe(12.5);
+    expect(taxRatePercent(undefined)).toBeUndefined();
   });
 
   it("writes the reinforcement window in UTC hours", () => {

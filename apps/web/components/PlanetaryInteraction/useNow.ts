@@ -11,9 +11,6 @@ let timer: ReturnType<typeof setInterval> | undefined;
 function subscribe(listener: () => void) {
   listeners.add(listener);
   if (timer === undefined) {
-    // The first listener after a quiet spell (the page left and came back)
-    // must not see the reading taken before it: React re-reads the snapshot
-    // right after subscribing, so this lands before anything is judged by it.
     now = Date.now();
     timer = setInterval(() => {
       now = Date.now();
@@ -30,7 +27,13 @@ function subscribe(listener: () => void) {
 }
 
 function getSnapshot() {
-  now ??= Date.now();
+  // With nothing subscribed nothing ticks, so a reading from before a quiet
+  // spell (the page left and came back) would be judged by on the first
+  // render back. Re-read once it is a tick old; within a render the value
+  // stays put, as useSyncExternalStore requires.
+  if (now === null || (timer === undefined && Date.now() - now >= TICK_MS)) {
+    now = Date.now();
+  }
   return now;
 }
 

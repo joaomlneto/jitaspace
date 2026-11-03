@@ -56,7 +56,8 @@ export interface MultiEsiQueryResult<TItem> extends MultiEsiQueryEnvelope {
  * `useMultipleCharacterFittings({ subjectIds: [characterId] })`.
  */
 export function defineMultiEsiQuery<TItem>(
-  config: MultiEsiQueryConfig & {
+  // `subjectIds` is chosen per call (see MultiEsiQueryOptions), not per hook.
+  config: Omit<MultiEsiQueryConfig, "subjectIds"> & {
     query: (
       subjectId: number,
       authHeaders: Record<string, string>,

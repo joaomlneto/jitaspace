@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
+import {
+  focusManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 import type { ResponseConfig } from "@jitaspace/esi-client";
 import type { ESIScope } from "@jitaspace/esi-metadata";
@@ -343,6 +347,49 @@ describe("defineMultiEsiQuery", () => {
     expect(result.current.data).toEqual([]);
     expect(result.current.subjectIds).toEqual([]);
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it("does not go back to pending while a failed subject is retried", async () => {
+    login(
+      character({ characterId: 100, scopes: [SCOPE] }),
+      character({ characterId: 101, scopes: [SCOPE] }),
+    );
+    let fail = () => Promise.reject(new Error("boom"));
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings-retry", subjectId],
+        queryFn: () =>
+          subjectId === 100 ? fail() : Promise.resolve(response([])),
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple(), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.isPending).toBe(false);
+
+    // Focus refetches the failed query, which react-query resets to pending
+    // with no error while it runs: a page reading isPending would flash its
+    // loading state on every focus.
+    let release: (() => void) | undefined;
+    fail = () =>
+      new Promise((_resolve, reject) => {
+        release = () => {
+          reject(new Error("boom"));
+        };
+      });
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await waitFor(() => expect(release).toBeDefined());
+
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.pendingSubjectIds).toEqual([]);
+
+    act(() => release?.());
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 
   describe("subjectIds", () => {

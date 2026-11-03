@@ -13,6 +13,7 @@ import {
   STANDING_LEVEL_LABELS,
   STANDING_LEVELS,
   standingTaxRate,
+  taxRatePercent,
 } from "./customsOffices";
 
 const NO_ROWS: CustomsOfficeRow[] = [];
@@ -73,10 +74,7 @@ export const CustomsOfficesDataTable = memo(
           header: "Corporation tax",
           // In percent, as the cells show it, so the range filter reads the
           // same numbers the table does.
-          accessor: (row) =>
-            row.corporation_tax_rate === undefined
-              ? undefined
-              : row.corporation_tax_rate * 100,
+          accessor: (row) => taxRatePercent(row.corporation_tax_rate),
           sortable: true,
           align: "right",
           filter: { type: "range", min: 0, max: 100, step: 1 },

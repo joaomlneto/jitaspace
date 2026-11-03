@@ -29,14 +29,27 @@ export interface CharacterPlanetLayouts {
   data: Record<string, ColonyLayout>;
   /** True while any colony is still on its first load. */
   isLoading: boolean;
-  /** Failures, attributed to the colony whose layout failed. */
+  /**
+   * Failures, attributed to the colony whose layout failed. Momentarily empty
+   * while a failed colony is retried (on window focus, say), since react-query
+   * clears the error for the retry; read {@link failedKeys} to know which
+   * colonies have nothing to show.
+   */
   errors: (ColonyRef & { error: ResponseErrorConfig<Error> })[];
+  /**
+   * Keys of the colonies that failed and have nothing to show. Unlike
+   * `errors`, this holds through a retry of the failed colony.
+   */
+  failedKeys: string[];
   /**
    * The colonies no logged-in character can read: not logged in, or without
    * the planets scope. They are not requested.
    */
   unauthorized: ColonyRef[];
-  /** Keys of the colonies still on their first load. */
+  /**
+   * Keys of the colonies still on their first load. A colony that has failed
+   * is not pending while it is retried: it is in {@link failedKeys} instead.
+   */
   pendingKeys: string[];
 }
 
@@ -101,21 +114,30 @@ export const useCharacterPlanetLayouts = (
     ): CharacterPlanetLayouts => {
       const data: Record<string, ColonyLayout> = {};
       const errors: CharacterPlanetLayouts["errors"] = [];
+      const failedKeys: string[] = [];
       const pendingKeys: string[] = [];
       // Index-aligned: the queries were built from `authorized`, in order.
       results.forEach((result, index) => {
         const ref = authorized[index];
         if (!ref) return;
-        if (result.data) data[colonyKey(ref)] = result.data.data;
+        const key = colonyKey(ref);
+        if (result.data) data[key] = result.data.data;
         if (result.error) errors.push({ ...ref, error: result.error });
-        if (result.isPending) pendingKeys.push(colonyKey(ref));
+        // A retry of a failed query resets it to pending with no error, as if
+        // it had never loaded; the error count survives the retry.
+        const hasFailed = !result.data && result.errorUpdateCount > 0;
+        if (hasFailed) failedKeys.push(key);
+        else if (result.isPending) pendingKeys.push(key);
       });
       return {
         data,
         errors,
+        failedKeys,
         unauthorized,
         pendingKeys,
-        isLoading: results.some((result) => result.isLoading),
+        isLoading: results.some(
+          (result) => result.isLoading && result.errorUpdateCount === 0,
+        ),
       };
     },
     [authorized, unauthorized],

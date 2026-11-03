@@ -94,19 +94,28 @@ export type SubjectQueryOptions<TSelected> = UseQueryOptions<
  * over nothing, so it cannot go stale; each subject's data is already tagged
  * by that query's own `select`.
  */
+/**
+ * Whether a subject's first load is still outstanding. A subject that failed
+ * is retried with react-query's state reset to pending, as if it had never
+ * loaded (on every window focus, by default), so `isPending` alone would put
+ * the whole envelope back to loading each time; its error count survives.
+ */
+const isFirstLoadPending = (result: UseQueryResult<unknown, unknown>) =>
+  result.isPending && result.errorUpdateCount === 0;
+
 function combineSubjectResults<TSelected>(
   results: UseQueryResult<TSelected, ResponseErrorConfig<Error>>[],
 ) {
   return {
     selected: results.map((result) => result.data),
     isLoading: results.some((result) => result.isLoading),
-    isSettling: results.some((result) => result.isPending),
+    isSettling: results.some(isFirstLoadPending),
     isError: results.some((result) => result.isError),
     // Index-aligned with the queries, and so with the subjects that built them.
     // Attribution happens below, where the subjects are in scope, rather than
     // in a closure here that could drift from the results it describes.
     errorByIndex: results.map((result) => result.error ?? null),
-    pendingByIndex: results.map((result) => result.isPending),
+    pendingByIndex: results.map(isFirstLoadPending),
     refetch: () => results.forEach((result) => void result.refetch()),
   };
 }

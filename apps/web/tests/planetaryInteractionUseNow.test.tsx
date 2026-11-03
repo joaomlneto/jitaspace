@@ -46,9 +46,17 @@ describe("useNow", () => {
 
     // Two hours elsewhere, with nothing listening and so nothing ticking.
     jest.setSystemTime(before + 2 * 60 * 60 * 1000);
-    const again = renderHook(() => useNow());
+    const rendered: (number | null)[] = [];
+    renderHook(() => {
+      const now = useNow();
+      rendered.push(now);
+      return now;
+    });
 
-    expect(again.result.current).toBe(before + 2 * 60 * 60 * 1000);
+    // Every render, the very first included: one painted with the old
+    // reading would judge two hours of extractors as still running.
+    expect(rendered.length).toBeGreaterThan(0);
+    expect(new Set(rendered)).toEqual(new Set([before + 2 * 60 * 60 * 1000]));
   });
 
   it("is null while prerendering, so a static page stays static", () => {

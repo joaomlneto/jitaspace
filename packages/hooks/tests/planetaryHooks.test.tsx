@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import {
+  focusManager,
   QueryClient,
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
@@ -338,6 +339,42 @@ describe("useCharacterPlanetLayouts", () => {
       planetId: 1,
     });
     expect(result.current.data["100:1"]).toBeUndefined();
+    expect(result.current.failedKeys).toEqual(["100:1"]);
+  });
+
+  it("keeps a failed colony failed, not loading, while it is retried", async () => {
+    login(character({ characterId: 100, scopes: [PLANETS] }));
+    mockFetchLayout.mockImplementation(() => Promise.reject(new Error("boom")));
+
+    const { result } = renderHook(
+      () => useCharacterPlanetLayouts([{ characterId: 100, planetId: 1 }]),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.failedKeys).toEqual(["100:1"]));
+
+    // The window regains focus: react-query refetches the failed, stale query
+    // and resets it to pending with no error while it runs.
+    let release: (() => void) | undefined;
+    mockFetchLayout.mockImplementation(
+      () =>
+        new Promise((_resolve, reject) => {
+          release = () => {
+            reject(new Error("boom"));
+          };
+        }),
+    );
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await waitFor(() => expect(release).toBeDefined());
+
+    expect(result.current.pendingKeys).toEqual([]);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.failedKeys).toEqual(["100:1"]);
+
+    act(() => release?.());
+    await waitFor(() => expect(result.current.errors).toHaveLength(1));
   });
 
   it("reports colonies still on their first load as pending", () => {
@@ -363,6 +400,7 @@ describe("useCharacterPlanetLayouts", () => {
     expect(result.current).toMatchObject({
       data: {},
       errors: [],
+      failedKeys: [],
       unauthorized: [],
       pendingKeys: [],
       isLoading: false,

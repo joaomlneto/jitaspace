@@ -147,12 +147,12 @@ export const SchematicsBrowser = memo(
     );
 
     const entries = useMemo(() => schematicEntries(catalog), [catalog]);
-    // Tiers a hand-edited URL names that do not exist are dropped, and a list
-    // of nothing but those means no filter. An empty list stays empty: that is
-    // what deselecting every chip writes.
+    // Tiers a hand-edited URL names that do not exist are dropped (nuqs drops
+    // ones it cannot parse), and a list left with none means no filter. The
+    // chips never write an empty list: the last one checked stays checked.
     const activeTiers = useMemo(() => {
       const known = (tiers ?? TIERS).filter((tier) => TIERS.includes(tier));
-      return new Set(tiers?.length && known.length === 0 ? TIERS : known);
+      return new Set(known.length === 0 ? TIERS : known);
     }, [tiers]);
     const shown = useMemo(
       () =>
@@ -192,6 +192,9 @@ export const SchematicsBrowser = memo(
             value={[...activeTiers].map(String)}
             onChange={(value) => {
               const next = value.map(Number).sort((a, b) => a - b);
+              // Showing no tier at all would show nothing, so unchecking the
+              // last one is ignored.
+              if (next.length === 0) return;
               // Every tier is the default, so it is left out of the URL.
               void setTiers(next.length === TIERS.length ? null : next);
             }}

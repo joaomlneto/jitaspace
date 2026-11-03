@@ -36,6 +36,14 @@ export const standingTaxRate = (
     ? office[STANDING_TAX_FIELD[level]]
     : undefined;
 
+/**
+ * A tax rate as the percentage the table shows, rounded to its one decimal.
+ * Rounded because `0.07 * 100` is 7.000000000000001, which a "max 7" range
+ * filter would drop.
+ */
+export const taxRatePercent = (rate: number | undefined) =>
+  rate === undefined ? undefined : Math.round(rate * 1000) / 10;
+
 /** Who besides the owner may use the office, in words. */
 export function accessSummary(office: CustomsOffice): string {
   const parts = ["Corporation"];

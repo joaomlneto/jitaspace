@@ -92,6 +92,7 @@ const layouts = (
 ) => ({
   data,
   errors: [],
+  failedKeys: [],
   unauthorized: [],
   pendingKeys: [],
   isLoading: false,
@@ -241,6 +242,16 @@ describe("Planetary Interaction page", () => {
     expect(bodyRows()[0]).toHaveTextContent("Planet 40000001");
   });
 
+  it("ignores a status filter that names no real status", () => {
+    withTwoCharacters();
+    renderPage("?status=bogus");
+
+    expect(bodyRows()).toHaveLength(2);
+    expect(
+      screen.queryByText("No colony matches the selected statuses."),
+    ).not.toBeInTheDocument();
+  });
+
   it("reads the status filter from the URL", () => {
     withTwoCharacters();
     renderPage("?status=expired");
@@ -371,6 +382,7 @@ describe("Planetary Interaction page", () => {
               error: new Error("boom"),
             },
           ],
+          failedKeys: [`${ALICE}:40000001`],
         },
       ),
     );
@@ -384,6 +396,23 @@ describe("Planetary Interaction page", () => {
       screen.getByText(/One colony is listed without its extractors/),
     ).toBeInTheDocument();
     expect(bodyRows()[0]).toHaveTextContent("Unavailable");
+  });
+
+  it("keeps a failed colony reported while it is retried", () => {
+    withTwoCharacters();
+    // Mid-retry: react-query has cleared the error, the failure count stays.
+    mockLayouts.mockReturnValue(
+      layouts({}, { errors: [], failedKeys: [`${ALICE}:40000001`] }),
+    );
+    renderPage();
+
+    expect(
+      screen.getByText(/One colony is listed without its extractors/),
+    ).toBeInTheDocument();
+    const alice = bodyRows().find((row) =>
+      row.textContent.includes("Planet 40000001"),
+    );
+    expect(alice).toHaveTextContent("Unavailable");
   });
 
   it("waits for the clock before judging expiry", () => {

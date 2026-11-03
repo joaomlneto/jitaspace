@@ -88,6 +88,29 @@ describe("Schematics browser URL state", () => {
     expect(screen.getAllByRole("article")).toHaveLength(1);
   });
 
+  it.each(["?tier=7", "?tier=abc", "?tier="])(
+    "ignores a tier filter naming no real tier (%s)",
+    async (search) => {
+      await hydrateAt(search);
+
+      expect(screen.getAllByRole("article")).toHaveLength(3);
+      expect(screen.getByRole("checkbox", { name: "P1" })).toBeChecked();
+    },
+  );
+
+  it("keeps the last tier checked rather than showing nothing", async () => {
+    await hydrateAt("?tier=2");
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+
+    await act(async () => {
+      screen.getByRole("checkbox", { name: "P2" }).click();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByRole("checkbox", { name: "P2" })).toBeChecked();
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+  });
+
   it("ignores tiers that do not exist", async () => {
     await hydrateAt("?tier=7");
 

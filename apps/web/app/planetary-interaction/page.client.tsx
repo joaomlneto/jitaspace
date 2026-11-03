@@ -79,10 +79,14 @@ export default function PlanetaryInteractionPageClient({
     "characters",
     parseAsArrayOf(parseAsInteger),
   );
-  const [statuses, setStatuses] = useQueryState(
+  const [statusParam, setStatuses] = useQueryState(
     "status",
     parseAsArrayOf(parseAsStringLiteral(COLONY_STATUSES)),
   );
+  // The UI never writes an empty list (clearing every chip removes the
+  // param), so one can only come from a hand-edited URL: a bare `?status=` or
+  // values nuqs could not parse, which it drops. Either means no filter.
+  const statuses = statusParam?.length ? statusParam : null;
   const [view, setView] = useQueryState(
     "view",
     parseAsStringLiteral(VIEWS).withDefault("colonies"),
@@ -123,14 +127,11 @@ export default function PlanetaryInteractionPageClient({
     [shownColonies],
   );
   const layouts = useCharacterPlanetLayouts(colonyRefs);
+  // Not built from `layouts.errors`, which empties while a failed colony is
+  // retried (on every window focus), so the row and the alert would flicker.
   const failedKeys = useMemo(
-    () =>
-      new Set(
-        layouts.errors.map((error) =>
-          colonyRowKey(error.characterId, error.planetId),
-        ),
-      ),
-    [layouts.errors],
+    () => new Set(layouts.failedKeys),
+    [layouts.failedKeys],
   );
 
   const allRows = useMemo(
@@ -340,11 +341,11 @@ export default function PlanetaryInteractionPageClient({
             </Stack>
           </Alert>
         )}
-        {layouts.errors.length > 0 && (
+        {failedKeys.size > 0 && (
           <Alert color="orange" title="Some colony layouts could not be loaded">
-            {layouts.errors.length === 1
+            {failedKeys.size === 1
               ? "One colony is listed without its extractors, factories and storage."
-              : `${layouts.errors.length} colonies are listed without their extractors, factories and storage.`}
+              : `${failedKeys.size} colonies are listed without their extractors, factories and storage.`}
           </Alert>
         )}
 
