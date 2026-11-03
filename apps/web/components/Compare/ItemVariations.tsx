@@ -114,7 +114,15 @@ export function ItemVariations({
           <Button
             size="xs"
             variant="light"
-            leftSection={<WindowCompareToolIcon size={14} alt="" />}
+            leftSection={
+              // A full-colour icon ignores the disabled text colour, so
+              // dim it to match the greyed-out label.
+              <WindowCompareToolIcon
+                size={14}
+                alt=""
+                style={{ opacity: 0.5 }}
+              />
+            }
             disabled
           >
             Compare {compared.length} selected
