@@ -1612,7 +1612,9 @@ export default function RacePage(race: Readonly<PageProps>) {
             Race
           </Text>
           <Group gap="sm" align="center">
-            <Title order={2}>{race.name}</Title>
+            <Title order={1} size="h2">
+              {race.name}
+            </Title>
             {isPlayable && (
               <Badge color="teal" variant="light">
                 Playable

@@ -281,10 +281,12 @@ function Campaigns({
                       <Stack gap={2}>
                         <Progress.Root size="md">
                           <Progress.Section
+                            aria-label="Defender"
                             value={defender * 100}
                             color="teal"
                           />
                           <Progress.Section
+                            aria-label="Attackers"
                             value={attackers * 100}
                             color="red"
                           />
@@ -457,6 +459,7 @@ export function SovereigntyTab({
                   </Table.Td>
                   <Table.Td>
                     <Progress
+                      aria-label="Share of held systems"
                       value={(region.systems / summary.systems) * 100}
                       size="sm"
                     />

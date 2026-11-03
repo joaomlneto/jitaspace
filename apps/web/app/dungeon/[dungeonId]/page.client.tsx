@@ -453,7 +453,9 @@ function DungeonHero({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
         </HeroImage>
         <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
           <Group gap="sm" align="center">
-            <Title order={2}>{dungeonDisplayName(dungeon)}</Title>
+            <Title order={1} size="h2">
+              {dungeonDisplayName(dungeon)}
+            </Title>
             {archetypeTitle && (
               <Badge variant="light" size="md">
                 {archetypeTitle}
@@ -850,7 +852,9 @@ export default function DungeonPage({
                   >
                     <Stack gap="sm">
                       <Group gap="sm">
-                        <Title order={4}>{operation.name}</Title>
+                        <Title order={2} size="h4">
+                          {operation.name}
+                        </Title>
                         <Badge variant="light" color="gray">
                           ID {operation.mercenaryTacticalOperationId}
                         </Badge>

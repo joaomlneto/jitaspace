@@ -15,6 +15,7 @@ import {
   Table,
   Text,
   Tooltip,
+  VisuallyHidden,
 } from "@mantine/core";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 import { formatDistanceStrict } from "date-fns";
@@ -336,7 +337,9 @@ function SystemsTable({
     <Table verticalSpacing={4} horizontalSpacing="xs" fz="sm">
       <Table.Thead>
         <Table.Tr>
-          <Table.Th w={28} />
+          <Table.Th w={28}>
+            <VisuallyHidden>Stations</VisuallyHidden>
+          </Table.Th>
           <Table.Th>System</Table.Th>
           <Table.Th ta="right">
             <Tooltip

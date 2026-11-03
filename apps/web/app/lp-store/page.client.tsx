@@ -89,7 +89,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
           <LPStoreIcon width={48} />
           <Title>LP Store</Title>
         </Group>
-        <Title order={3}>
+        <Title order={2} size="h3">
           Select a corporation below or{" "}
           <Anchor inherit component={Link} href="/lp-store/all">
             show all offers
@@ -166,7 +166,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
                       factionId={group.faction.factionId}
                       size="md"
                     />
-                    <Title order={4}>
+                    <Title order={3} size="h4">
                       <Anchor
                         inherit
                         component={Link}
@@ -177,7 +177,9 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
                     </Title>
                   </>
                 ) : (
-                  <Title order={4}>Other corporations</Title>
+                  <Title order={3} size="h4">
+                    Other corporations
+                  </Title>
                 )}
                 <Badge variant="light" color="gray">
                   {group.corporations.length}
