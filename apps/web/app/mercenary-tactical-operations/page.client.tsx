@@ -1,5 +1,6 @@
 "use client";
 
+import type { SingleParser } from "nuqs";
 import { useMemo } from "react";
 import {
   Alert,
@@ -13,6 +14,7 @@ import {
   Title,
 } from "@mantine/core";
 import {
+  createParser,
   parseAsArrayOf,
   parseAsInteger,
   parseAsStringLiteral,
@@ -52,15 +54,41 @@ const PAGE_SCOPES: ESIScope[] = [
   DENS_SCOPE,
 ];
 
+/**
+ * `parseAsArrayOf`, except that a value none of whose items is valid reads as
+ * unset rather than as an empty selection: a hand-edited or stale link shows
+ * everything instead of nothing. An empty value (`?states=`), which is how a
+ * deliberate "nothing selected" is written, stays empty.
+ */
+function parseAsSelection<T>(item: SingleParser<T>) {
+  const array = parseAsArrayOf(item);
+  return createParser<T[]>({
+    parse: (value) => {
+      if (value === "") return [];
+      const parsed = array.parse(value);
+      return parsed !== null && parsed.length > 0 ? parsed : null;
+    },
+    serialize: array.serialize,
+    eq: array.eq,
+  });
+}
+
+/** The scopes a character's token holds. EVE writes a lone scope as a string. */
+function grantedScopesOf(scp: readonly string[] | string | undefined) {
+  if (scp === undefined) return [];
+  return typeof scp === "string" ? [scp] : [...scp];
+}
+
 export interface MercenaryTacticalOperationsPageProps {
   /** The SDE's description of every kind of operation, read at build time. */
   kinds: MercenaryTacticalOperationKind[];
 }
 
 /**
- * The height of the characters row, whichever of its states it is in: a
- * skeleton before the session loads, the login button, or the characters.
- * Fixed, so the row appearing after hydration does not push the table down.
+ * The least height of each filter row, whichever state it is in: a skeleton
+ * before the session loads, the login button, or the characters. Each state
+ * fits it on one line, so the rows filling in after hydration do not push the
+ * table down; only a row that wraps (many characters, a narrow screen) can.
  */
 const FILTER_ROW_HEIGHT = 34;
 
@@ -90,10 +118,11 @@ function ReloginButton({
           entityId={characterId}
           category="character"
           size={16}
+          alt=""
         />
       }
       onClick={() => {
-        loginWithEveOnline([...(grantedScopes ?? []), ...PAGE_SCOPES]);
+        loginWithEveOnline([...grantedScopesOf(grantedScopes), ...PAGE_SCOPES]);
       }}
     >
       <EveEntityName span inherit entityId={characterId} category="character" />
@@ -161,6 +190,7 @@ function CharacterFilter({
           entityId={characterId}
           category="character"
           size={16}
+          alt=""
         />
         <EveEntityName
           span
@@ -191,6 +221,7 @@ function CharacterFilter({
               entityId={characterId}
               category="character"
               size={16}
+              alt=""
             />
             <EveEntityName span entityId={characterId} category="character" />
           </Group>
@@ -209,20 +240,26 @@ function emptyTextFor({
   isLoggedOut,
   nothingSelected,
   noneQueryable,
+  selectionFailed,
   hasOperations,
 }: Readonly<{
   isLoggedOut: boolean;
   nothingSelected: boolean;
   /** Logged in, but no character granted access or has a live session. */
   noneQueryable: boolean;
+  /** A selected character's operations could not be listed. */
+  selectionFailed: boolean;
   hasOperations: boolean;
 }>): string {
   if (isLoggedOut) return "Log in to see your operations.";
   if (noneQueryable) {
-    return "None of your characters can be shown yet. Log in again with the buttons above.";
+    return "None of your characters can be shown yet. Log in again by their names above.";
   }
   if (nothingSelected) {
     return "Nothing selected. Pick a character and a status above to see operations.";
+  }
+  if (selectionFailed) {
+    return "Some operations could not be loaded. The error is below the table.";
   }
   if (hasOperations) return "No operations match these filters.";
   return "None of your characters has a Mercenary Tactical Operation right now.";
@@ -238,11 +275,11 @@ export default function MercenaryTacticalOperationsPage({
 
   const [characterFilterParam, setCharacterFilter] = useQueryState(
     "characters",
-    parseAsArrayOf(parseAsInteger),
+    parseAsSelection(parseAsInteger),
   );
   const [stateFilter, setStateFilter] = useQueryState(
     "states",
-    parseAsArrayOf(parseAsStringLiteral(OPERATION_STATES)),
+    parseAsSelection(parseAsStringLiteral(OPERATION_STATES)),
   );
 
   const denPlanets = useMemo(
@@ -348,7 +385,11 @@ export default function MercenaryTacticalOperationsPage({
   );
   // Counts only once they describe something: not before the session loads,
   // not logged out, and not while the selected characters are still loading.
-  const showStateCounts = hasHydrated && !isLoggedOut && !isSelectionPending;
+  const showStateCounts =
+    hasHydrated &&
+    !isLoggedOut &&
+    !isSelectionPending &&
+    operations.characterIds.length > 0;
 
   const emptyText = emptyTextFor({
     isLoggedOut,
@@ -360,6 +401,9 @@ export default function MercenaryTacticalOperationsPage({
       !isLoggedOut &&
       operations.characterIds.length === 0 &&
       unavailable.length > 0,
+    selectionFailed: listingErrors.some((error) =>
+      activeCharacterIds.includes(error.characterId),
+    ),
     hasOperations: allRows.length > 0,
   });
 
@@ -448,8 +492,15 @@ export default function MercenaryTacticalOperationsPage({
           isLoading={isSelectionPending && rows.length === 0}
         />
 
-        {operations.isError && (
-          <Alert color="orange" title="Some operations could not be loaded">
+        {(operations.isError || dens.isError) && (
+          <Alert
+            color="orange"
+            title={
+              operations.isError
+                ? "Some operations could not be loaded"
+                : "Some Mercenary Dens could not be located"
+            }
+          >
             <Stack gap={2}>
               {listingErrors.map((error) => (
                 <Text key={error.characterId} size="sm">
@@ -469,6 +520,17 @@ export default function MercenaryTacticalOperationsPage({
                     : `The details of ${failedOperationIds.size} operations could not be loaded.`}
                 </Text>
               )}
+              {dens.errors.map((error) => (
+                <Text key={error.subjectId} size="sm">
+                  <EveEntityName
+                    span
+                    inherit
+                    entityId={error.subjectId}
+                    category="character"
+                  />
+                  {": where their Mercenary Dens are could not be loaded."}
+                </Text>
+              ))}
             </Stack>
           </Alert>
         )}

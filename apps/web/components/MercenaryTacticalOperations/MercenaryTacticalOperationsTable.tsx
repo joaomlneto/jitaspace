@@ -117,6 +117,7 @@ function charactersCell(row: OperationRow) {
             entityId={characterId}
             category="character"
             size="sm"
+            alt=""
           />
           <EveEntityAnchor
             size="sm"

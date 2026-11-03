@@ -8,6 +8,7 @@ import type { ESIScope } from "@jitaspace/esi-metadata";
 import type * as AuthModule from "../src/hooks/auth";
 import type * as AuthStoreModule from "../src/hooks/auth/useAuthStore";
 import type { CharacterSsoSession } from "../src/hooks/auth/useAuthStore";
+import type * as ConstantsModule from "../src/hooks/mercenary/constants";
 import type * as DetailModule from "../src/hooks/mercenary/useCharacterMercenaryTacticalOperation";
 import type * as ListingModule from "../src/hooks/mercenary/useCharacterMercenaryTacticalOperations";
 import type * as MultiModule from "../src/hooks/mercenary/useCharactersMercenaryTacticalOperations";
@@ -86,6 +87,8 @@ const { useCharacterMercenaryTacticalOperation } =
   require("../src/hooks/mercenary/useCharacterMercenaryTacticalOperation") as typeof DetailModule;
 const { useCharactersMercenaryTacticalOperations } =
   require("../src/hooks/mercenary/useCharactersMercenaryTacticalOperations") as typeof MultiModule;
+const { mercenaryTacticalOperationDetailsStaleTime } =
+  require("../src/hooks/mercenary/constants") as typeof ConstantsModule;
 
 const SCOPE: ESIScope = "esi-activities.read_character.v1";
 const FIVE_MINUTES = 5 * 60 * 1000;
@@ -254,6 +257,28 @@ describe("useCharacterMercenaryTacticalOperations", () => {
   });
 });
 
+describe("mercenaryTacticalOperationDetailsStaleTime", () => {
+  const withState = (state?: string) => ({
+    state: { data: state === undefined ? undefined : { data: { state } } },
+  });
+
+  it("keeps an operation that is over fresh for good", () => {
+    for (const state of ["Completed", "Expired", "Removed"]) {
+      expect(mercenaryTacticalOperationDetailsStaleTime(withState(state))).toBe(
+        Number.POSITIVE_INFINITY,
+      );
+    }
+  });
+
+  it("refreshes one that can still change as often as ESI does", () => {
+    for (const state of ["Available", "Started", "Unspecified", undefined]) {
+      expect(mercenaryTacticalOperationDetailsStaleTime(withState(state))).toBe(
+        FIVE_MINUTES,
+      );
+    }
+  });
+});
+
 describe("useCharacterMercenaryTacticalOperation", () => {
   const HEADERS = { Authorization: "Bearer token" };
   const queryOptions = () =>
@@ -285,7 +310,10 @@ describe("useCharacterMercenaryTacticalOperation", () => {
       HEADERS,
       expect.anything(),
     );
-    expect(queryOptions()).toEqual({ enabled: true, staleTime: FIVE_MINUTES });
+    expect(queryOptions()).toEqual({
+      enabled: true,
+      staleTime: mercenaryTacticalOperationDetailsStaleTime,
+    });
   });
 
   it("stays disabled without an operation", () => {
@@ -642,6 +670,29 @@ describe("useCharactersMercenaryTacticalOperations", () => {
 
     expect(result.current.operations).toBe(operations);
     expect(mockFetchListing).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not report a failed refetch while the earlier data is still shown", async () => {
+    login(character({ characterId: ALICE }));
+    listings({ [ALICE]: listing([OPERATION_A, DEN_1]) });
+
+    const { result } = renderHook(
+      () => useCharactersMercenaryTacticalOperations(),
+      { wrapper },
+    );
+    await waitFor(() =>
+      expect(result.current.operations[0]?.details).toBeDefined(),
+    );
+
+    mockFetchListing.mockRejectedValue(new Error("ESI is down"));
+    mockFetchDetail.mockRejectedValue(new Error("ESI is down"));
+    result.current.refetch();
+    await waitFor(() => expect(mockFetchDetail).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.isError).toBe(false);
+    expect(result.current.errors).toEqual([]);
+    expect(result.current.operations[0]?.details).toBeDefined();
   });
 
   it("refetches every listing and every operation", async () => {

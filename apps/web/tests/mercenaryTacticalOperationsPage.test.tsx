@@ -676,4 +676,105 @@ describe("Mercenary Tactical Operations page", () => {
 
     expect(skeletonRows(container).length).toBeGreaterThan(0);
   });
+
+  it("shows every status for a link whose statuses are all invalid", () => {
+    withTwoCharacters();
+    renderPage("?states=Bogus");
+
+    expect(bodyRows()).toHaveLength(2);
+    expect(
+      screen.getByRole("checkbox", { name: "Available (1)" }),
+    ).toBeChecked();
+    expect(screen.queryByText(/Nothing selected/)).not.toBeInTheDocument();
+  });
+
+  it("shows every character for a link whose characters are all invalid", () => {
+    withTwoCharacters();
+    renderPage("?characters=abc");
+
+    expect(bodyRows()).toHaveLength(2);
+  });
+
+  it("says a selected character's operations failed to load, not that there are none", () => {
+    hooks.loggedIn.mockReturnValue([ALICE, BOB]);
+    hooks.operations.mockReturnValue(
+      operationsResult({
+        characterIds: [ALICE, BOB],
+        isError: true,
+        errors: [{ characterId: BOB, error: new Error("Service unavailable") }],
+      }),
+    );
+    renderPage();
+
+    expect(
+      screen.getByText(
+        /Some operations could not be loaded. The error is below/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/has a Mercenary Tactical Operation right now/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("says which characters' dens could not be located", () => {
+    hooks.loggedIn.mockReturnValue([ALICE]);
+    hooks.operations.mockReturnValue(
+      operationsResult({
+        characterIds: [ALICE],
+        operations: [operation("a", [ALICE], "Available")],
+      }),
+    );
+    hooks.dens.mockReturnValue(
+      densResult([], [ALICE], {
+        isError: true,
+        errors: [{ subjectId: ALICE, error: new Error("nope") }],
+      }),
+    );
+    renderPage();
+
+    expect(
+      screen.getByText("Some Mercenary Dens could not be located"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/where their Mercenary Dens are could not be loaded/),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps a lone granted scope that EVE wrote as a string", async () => {
+    hooks.loggedIn.mockReturnValue([ALICE, CAROL]);
+    sessions = {
+      [CAROL]: {
+        accessTokenPayload: {
+          scp: "esi-mail.read_mail.v1" as unknown as string[],
+        },
+      },
+    };
+    hooks.operations.mockReturnValue(
+      operationsResult({
+        characterIds: [ALICE],
+        unavailableCharacterIds: [CAROL],
+      }),
+    );
+    renderPage();
+
+    await userEvent.click(screen.getByRole("button", { name: /Log in again/ }));
+
+    expect(mockLogin).toHaveBeenCalledWith([
+      "esi-mail.read_mail.v1",
+      ACTIVITIES,
+      STRUCTURES,
+    ]);
+  });
+
+  it("shows no counts when no character could be queried", () => {
+    hooks.loggedIn.mockReturnValue([CAROL]);
+    hooks.operations.mockReturnValue(
+      operationsResult({ unavailableCharacterIds: [CAROL] }),
+    );
+    renderPage();
+
+    expect(
+      screen.getByRole("checkbox", { name: "Available" }),
+    ).toBeInTheDocument();
+  });
 });

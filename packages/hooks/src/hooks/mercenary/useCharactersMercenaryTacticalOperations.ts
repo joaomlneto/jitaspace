@@ -24,6 +24,7 @@ import {
 import {
   MERCENARY_TACTICAL_OPERATIONS_SCOPE,
   MERCENARY_TACTICAL_OPERATIONS_STALE_TIME_MS,
+  mercenaryTacticalOperationDetailsStaleTime,
 } from "./constants";
 
 /** One operation, merged across every character whose listing includes it. */
@@ -32,15 +33,19 @@ export interface MercenaryTacticalOperation {
   mercenaryDenId: number;
   /**
    * The characters whose listing includes this operation, in the order they
-   * were queried. The first one is the character its details were read
-   * through.
+   * were queried. Its details are read through one of them: the first, unless
+   * another one's read was already cached when the first one's listing landed.
    */
   characterIds: number[];
   /** Absent while the details are loading, or if reading them failed. */
   details?: MercenaryTacticalOperationDetails;
 }
 
-/** A failed request, attributed to the character that made it. */
+/**
+ * A failed request with nothing to show for it, attributed to the character
+ * that made it. A refetch that fails while earlier data is still on hand is
+ * not one: that data is still shown.
+ */
 export interface MercenaryTacticalOperationError {
   characterId: number;
   /**
@@ -95,7 +100,11 @@ function combineResults<TData>(
   return {
     data: results.map((result) => result.data?.data),
     pending: results.map((result) => result.isPending),
-    errors: results.map((result) => result.error ?? null),
+    // Only a failure with nothing to show: a failed background refetch keeps
+    // the earlier data, which is still shown.
+    errors: results.map((result) =>
+      result.data === undefined ? (result.error ?? null) : null,
+    ),
     isLoading: results.some((result) => result.isLoading),
     refetch: () => results.forEach((result) => void result.refetch()),
   };
@@ -231,7 +240,7 @@ export function useCharactersMercenaryTacticalOperations(
           subject.id,
           subject.authHeaders,
         ),
-        staleTime: MERCENARY_TACTICAL_OPERATIONS_STALE_TIME_MS,
+        staleTime: mercenaryTacticalOperationDetailsStaleTime,
       })),
     [listedOperations],
   );

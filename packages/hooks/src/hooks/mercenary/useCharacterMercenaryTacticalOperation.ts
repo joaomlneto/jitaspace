@@ -9,7 +9,7 @@ import { useGetCharactersMercenaryTacticalOperationsDetail } from "@jitaspace/es
 import { useAccessToken } from "../auth";
 import {
   MERCENARY_TACTICAL_OPERATIONS_SCOPE,
-  MERCENARY_TACTICAL_OPERATIONS_STALE_TIME_MS,
+  mercenaryTacticalOperationDetailsStaleTime,
 } from "./constants";
 
 export type MercenaryTacticalOperationDetails =
@@ -41,7 +41,7 @@ export const useCharacterMercenaryTacticalOperation = (
       query: {
         enabled:
           characterId !== undefined && !!operationId && accessToken !== null,
-        staleTime: MERCENARY_TACTICAL_OPERATIONS_STALE_TIME_MS,
+        staleTime: mercenaryTacticalOperationDetailsStaleTime,
       },
     },
   );
