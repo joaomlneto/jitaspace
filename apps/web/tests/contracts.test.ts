@@ -21,7 +21,6 @@ describe("parseContractFilters", () => {
     expect(parse("")).toEqual({
       type: "all",
       regionId: null,
-      typeId: null,
       q: "",
       minPrice: null,
       maxPrice: null,
@@ -33,12 +32,11 @@ describe("parseContractFilters", () => {
   it("reads every filter", () => {
     expect(
       parse(
-        "type=auction&region=10000002&item=638&q=%20raven%20&minPrice=1000000&maxPrice=2.5e9&sort=price-desc&page=3",
+        "type=auction&region=10000002&q=%20raven%20&minPrice=1000000&maxPrice=2.5e9&sort=price-desc&page=3",
       ),
     ).toEqual({
       type: "auction",
       regionId: 10000002,
-      typeId: 638,
       q: "raven",
       minPrice: 1_000_000,
       maxPrice: 2_500_000_000,
@@ -49,11 +47,18 @@ describe("parseContractFilters", () => {
 
   it("drops malformed values back to their defaults", () => {
     expect(
-      parse(
-        "type=loan&region=0&item=-5&minPrice=-1&maxPrice=abc&sort=random&page=0",
-      ),
+      parse("type=loan&region=0&minPrice=-1&maxPrice=abc&sort=random&page=0"),
     ).toEqual(parse(""));
     expect(parse("region=10000002.5&page=1e3")).toEqual(parse(""));
+  });
+
+  it("refuses ids and pages that cannot exist", () => {
+    // Region ids are Postgres integers: a larger one would fail the query.
+    expect(parse("region=2147483648").regionId).toBeNull();
+    expect(parse("region=2147483647").regionId).toBe(2147483647);
+    expect(parse("page=2000").page).toBe(2000);
+    expect(parse("page=2001").page).toBe(1);
+    expect(parse(`page=${"9".repeat(20)}`).page).toBe(1);
   });
 
   it("caps the search length", () => {

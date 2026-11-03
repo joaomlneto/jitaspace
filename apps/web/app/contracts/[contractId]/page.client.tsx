@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Alert,
   Anchor,
@@ -15,17 +14,16 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconArrowsExchange,
-  IconGavel,
-  IconInfoCircle,
-  IconPackage,
-  IconPackageImport,
-} from "@tabler/icons-react";
+import { IconInfoCircle, IconPackageImport } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { EsiContractBid, EsiContractItem } from "@jitaspace/hooks";
 import { CharacterName, TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import {
+  ContractAuctionIcon,
+  ContractCourierIcon,
+  ControlCargoInventoryIcon,
+} from "@jitaspace/eve-icons";
 import { useAuthenticatedContract } from "@jitaspace/hooks";
 import { ISKAmount } from "@jitaspace/ui";
 
@@ -57,6 +55,7 @@ import {
   SectionHeading,
   StatCard,
 } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 
 /** A bid, from the snapshots (no bidder) or from ESI (with one). */
 interface BidRow extends ContractBidDetail {
@@ -76,6 +75,13 @@ function fromEsiItem(item: EsiContractItem): ContractItemDetail {
     isIncluded: item.is_included,
     // ESI marks a copy with raw_quantity -2.
     isBlueprintCopy: item.raw_quantity === -2 ? true : null,
+    // -1 is an original blueprint, -2 a copy; anything else is not one.
+    imageVariation:
+      item.raw_quantity === -1
+        ? "bp"
+        : item.raw_quantity === -2
+          ? "bpc"
+          : undefined,
     materialEfficiency: null,
     timeEfficiency: null,
     runs: null,
@@ -100,7 +106,12 @@ const itemColumns: DataTableColumn<ContractItemDetail>[] = [
     sortable: true,
     cell: (row) => (
       <Group gap="xs" wrap="nowrap">
-        <TypeAvatar typeId={row.typeId} size={24} radius="sm" />
+        <TypeAvatar
+          typeId={row.typeId}
+          variation={row.imageVariation}
+          size={24}
+          radius="sm"
+        />
         <TypeAnchor typeId={row.typeId} size="sm">
           {row.name ?? <TypeName typeId={row.typeId} span inherit />}
         </TypeAnchor>
@@ -130,22 +141,6 @@ const itemColumns: DataTableColumn<ContractItemDetail>[] = [
           ? `${row.mutation.mutatorName ?? "Mutaplasmid"} applied`
           : blueprintDetails(row)}
       </Text>
-    ),
-  },
-  {
-    id: "find",
-    header: "",
-    accessor: () => null,
-    width: 150,
-    cell: (row) => (
-      <Anchor
-        component={Link}
-        href={`/contracts?item=${row.typeId}`}
-        size="xs"
-        prefetch={false}
-      >
-        Other contracts
-      </Anchor>
     ),
   },
 ];
@@ -226,8 +221,11 @@ function ItemsSection({
 
 function ContractHero({
   contract,
-  firstTypeId,
-}: Readonly<{ contract: ContractSummary; firstTypeId: number | null }>) {
+  firstItem,
+}: Readonly<{
+  contract: ContractSummary;
+  firstItem: { typeId: number; imageVariation?: string } | null;
+}>) {
   const amounts: { label: string; amount: number | null }[] = [
     {
       label: contract.type === "auction" ? "Starting bid" : "Price",
@@ -244,8 +242,12 @@ function ContractHero({
   return (
     <HeroCard
       artwork={
-        firstTypeId !== null ? (
-          <TypeAvatar typeId={firstTypeId} size={128} variation="icon" />
+        firstItem !== null ? (
+          <TypeAvatar
+            typeId={firstItem.typeId}
+            variation={firstItem.imageVariation ?? "icon"}
+            size={128}
+          />
         ) : (
           <ContractTypeIcon type={contract.type} size={96} />
         )
@@ -275,7 +277,7 @@ function ContractHero({
           </Badge>
         )}
       </Group>
-      <Title order={2} lh={1.2}>
+      <Title order={1} size="h2" lh={1.2}>
         {contractDisplayName(contract)}
       </Title>
       {contract.title && (
@@ -331,7 +333,8 @@ export default function ContractPage({
     // Our rows carry blueprint and mutation details ESI's private listing
     // does not, so they win when both exist.
     if (detail && detail.items.length > 0) return detail.items;
-    return esi.items?.map(fromEsiItem);
+    // A public courier has no item lines; say so rather than wait on ESI.
+    return esi.items?.map(fromEsiItem) ?? detail?.items;
   }, [detail, esi.items]);
 
   const bids: BidRow[] = useMemo(() => {
@@ -346,11 +349,14 @@ export default function ContractPage({
       <Container size="xl">
         <Stack mt="xl">
           <Breadcrumbs>
-            <Anchor component={Link} href="/contracts" size="sm">
+            <Anchor component={HoverPrefetchLink} href="/contracts" size="sm">
               Contracts
             </Anchor>
             <Text size="sm">#{contractId}</Text>
           </Breadcrumbs>
+          <Title order={1} size="h2">
+            Contract #{contractId}
+          </Title>
           {esi.isPending ? (
             <Group gap="sm">
               <Loader size="sm" />
@@ -376,15 +382,21 @@ export default function ContractPage({
 
   const offered = items?.filter((item) => item.isIncluded) ?? [];
   const asked = items?.filter((item) => !item.isIncluded) ?? [];
-  const firstTypeId =
-    offered[0]?.typeId ?? contract.items?.first?.typeId ?? null;
+  const firstItem = offered[0] ?? contract.items?.first ?? null;
   const isCourier = contract.type === "courier";
+  // A structure's name needs a token on its access list. The issuer listed
+  // the contract there, so their own contracts' start locations are safe to
+  // ask about; anyone else's could 403, which ESI counts against the error
+  // budget.
+  const viewerIssued =
+    esi.source?.kind === "character" &&
+    esi.contract?.issuer_id === esi.source.subjectId;
 
   return (
     <Container size="xl">
       <Stack gap="lg" mt="md">
         <Breadcrumbs>
-          <Anchor component={Link} href="/contracts" size="sm">
+          <Anchor component={HoverPrefetchLink} href="/contracts" size="sm">
             Contracts
           </Anchor>
           <Text size="sm" c="dimmed">
@@ -393,7 +405,18 @@ export default function ContractPage({
           <Text size="sm">#{contract.contractId}</Text>
         </Breadcrumbs>
 
-        <ContractHero contract={contract} firstTypeId={firstTypeId} />
+        <ContractHero
+          contract={
+            // The live bids, when ESI has them, are newer than our snapshot's.
+            bids.length > 0
+              ? {
+                  ...contract,
+                  highestBid: Math.max(...bids.map((b) => b.amount)),
+                }
+              : contract
+          }
+          firstItem={firstItem}
+        />
 
         {detail && !esi.contract && detail.contract.isOpen === false && (
           <Alert
@@ -438,7 +461,7 @@ export default function ContractPage({
               <ContractLocationLine
                 location={contract.start}
                 regionName={contract.regionName}
-                resolveStructures={esi.contract !== undefined}
+                resolveStructures={viewerIssued}
               />
             }
             sub={contract.regionName ?? undefined}
@@ -449,7 +472,9 @@ export default function ContractPage({
               value={
                 <ContractLocationLine
                   location={contract.end}
-                  resolveStructures={esi.contract !== undefined}
+                  // Who can see the destination is not ours to know; asking
+                  // ESI would risk a 403 against the error budget.
+                  resolveStructures={false}
                 />
               }
               sub={
@@ -488,7 +513,9 @@ export default function ContractPage({
         )}
         <ItemsSection
           title={asked.length > 0 ? "You get" : "Items"}
-          icon={<IconPackage size={20} />}
+          icon={
+            <ControlCargoInventoryIcon size={20} color="currentColor" alt="" />
+          }
           items={offered}
         />
         <ItemsSection
@@ -498,14 +525,14 @@ export default function ContractPage({
         />
         {isCourier && items?.length === 0 && (
           <Text c="dimmed" size="sm">
-            <IconArrowsExchange size={14} /> Courier contracts do not list their
-            cargo publicly.
+            <ContractCourierIcon size={14} alt="" /> Courier contracts do not
+            list their cargo publicly.
           </Text>
         )}
 
         {contract.type === "auction" && (
           <Stack gap="sm">
-            <SectionHeading icon={<IconGavel size={20} />}>
+            <SectionHeading icon={<ContractAuctionIcon size={20} alt="" />}>
               Bids{" "}
               <Text span c="dimmed" inherit fw={400}>
                 ({bids.length})

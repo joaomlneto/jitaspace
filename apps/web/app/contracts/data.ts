@@ -6,10 +6,13 @@ import type {
   ContractSummary,
 } from "~/components/Contracts/contract";
 import type { ContractFilters } from "~/components/Contracts/filters";
-import type { Prisma } from "~/lib/db";
-import { locationKind } from "~/components/Contracts/contract";
+import {
+  BLUEPRINT_CATEGORY_ID,
+  locationKind,
+  typeImageVariation,
+} from "~/components/Contracts/contract";
 import { PUBLIC_CONTRACTS_PAGE_SIZE } from "~/components/Contracts/filters";
-import { prisma } from "~/lib/db";
+import { Prisma, prisma } from "~/lib/db";
 
 /**
  * Public contracts, read from the snapshots the background jobs store.
@@ -68,7 +71,14 @@ export const contractSummarySelect = {
     where: { isIncluded: true },
     orderBy: { recordId: "asc" },
     take: 1,
-    select: { typeId: true, quantity: true, type: { select: { name: true } } },
+    select: {
+      typeId: true,
+      quantity: true,
+      isBlueprintCopy: true,
+      type: {
+        select: { name: true, group: { select: { categoryId: true } } },
+      },
+    },
   },
   bids: {
     orderBy: { amount: "desc" },
@@ -152,9 +162,11 @@ async function readPageExtras(
   const contractId = { in: rows.map((row) => row.contractId) };
   const [endStations, items, bids] = await Promise.all([
     readEndStations(rows),
+    // Offered items only: the count says how many more a contract offers
+    // than the one that names it (contractDisplayName).
     prisma.contractItem.groupBy({
       by: ["contractId"],
-      where: { contractId },
+      where: { contractId, isIncluded: true },
       _count: { _all: true },
     }),
     prisma.contractBid.groupBy({
@@ -241,6 +253,10 @@ export function toContractSummary(
             typeId: firstItem.typeId,
             name: firstItem.type.name,
             quantity: firstItem.quantity,
+            imageVariation: typeImageVariation(
+              firstItem.type.group.categoryId === BLUEPRINT_CATEGORY_ID,
+              firstItem.isBlueprintCopy,
+            ),
           }
         : null,
     },
@@ -251,60 +267,65 @@ export function toContractSummary(
   };
 }
 
-function whereFor(filters: ContractFilters): Prisma.ContractWhereInput {
-  const and: Prisma.ContractWhereInput[] = [{ isDeleted: false }];
-  // Loans have not been offered since 2019, and "unknown" is a placeholder;
-  // neither is listed.
-  and.push({
-    type:
-      filters.type === "all"
-        ? { in: ["ItemExchange", "Auction", "Courier"] }
-        : DB_TYPE[filters.type],
-  });
-  if (filters.regionId !== null) and.push({ regionId: filters.regionId });
-  if (filters.q) {
-    and.push({ title: { contains: filters.q, mode: "insensitive" } });
-  }
-  if (filters.typeId !== null) {
-    and.push({ items: { some: { typeId: filters.typeId } } });
-  }
-  // A courier's headline amount is its reward; everyone else's is the price.
-  if (filters.minPrice !== null || filters.maxPrice !== null) {
-    const range = {
-      ...(filters.minPrice !== null && { gte: filters.minPrice }),
-      ...(filters.maxPrice !== null && { lte: filters.maxPrice }),
-    };
-    and.push({
-      OR: [
-        { type: { not: "Courier" }, price: range },
-        { type: "Courier", reward: range },
-      ],
-    });
-  }
-  return { AND: and };
+/** Each listed type's enum value, as a SQL literal Postgres can compare. */
+const LISTED_TYPES = ["ItemExchange", "Auction", "Courier"] as const;
+
+const enumValue = (type: string) => Prisma.sql`CAST(${type} AS "ContractType")`;
+
+/**
+ * The amount a contract is listed at, as its card shows it
+ * (`contractHeadlineIsk`): a courier's reward, a "want to buy" exchange's
+ * reward (its price is 0), everyone else's price. ESI reports unused amounts
+ * as 0, hence the NULLIFs. Sorting and the price filter use this, so a sort
+ * by price does not open with every courier's 0.
+ */
+// A function, not a constant: building it at import would touch Prisma before
+// anything runs, which pages' tests (which stub the client) cannot load.
+const headlineIsk = () => Prisma.sql`COALESCE(
+  NULLIF(CASE WHEN c."type" = 'Courier' THEN c."reward" ELSE c."price" END, 0),
+  NULLIF(c."reward", 0)
+)`;
+
+/** A title search means `%` and `_` literally; LIKE escapes them with a backslash. */
+function likeContaining(text: string): string {
+  return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
 
-function orderFor(
-  filters: ContractFilters,
-): Prisma.ContractOrderByWithRelationInput[] {
-  const priceColumn = filters.type === "courier" ? "reward" : "price";
+function whereFor(filters: ContractFilters): Prisma.Sql {
+  // Loans have not been offered since 2019, and "unknown" is a placeholder;
+  // neither is listed.
+  const types = filters.type === "all" ? LISTED_TYPES : [DB_TYPE[filters.type]];
+  const conditions = [
+    Prisma.sql`c."isDeleted" = false`,
+    Prisma.sql`c."type" IN (${Prisma.join(types.map(enumValue))})`,
+  ];
+  if (filters.regionId !== null) {
+    conditions.push(Prisma.sql`c."regionId" = ${filters.regionId}`);
+  }
+  if (filters.q) {
+    conditions.push(Prisma.sql`c."title" ILIKE ${likeContaining(filters.q)}`);
+  }
+  if (filters.minPrice !== null) {
+    conditions.push(Prisma.sql`${headlineIsk()} >= ${filters.minPrice}`);
+  }
+  if (filters.maxPrice !== null) {
+    conditions.push(Prisma.sql`${headlineIsk()} <= ${filters.maxPrice}`);
+  }
+  return Prisma.join(conditions, " AND ");
+}
+
+function orderFor(filters: ContractFilters): Prisma.Sql {
   switch (filters.sort) {
     case "oldest":
-      return [{ dateIssued: "asc" }, { contractId: "asc" }];
+      return Prisma.sql`c."dateIssued" ASC, c."contractId" ASC`;
     case "expiring":
-      return [{ dateExpired: "asc" }, { contractId: "asc" }];
+      return Prisma.sql`c."dateExpired" ASC, c."contractId" ASC`;
     case "price-desc":
-      return [
-        { [priceColumn]: { sort: "desc", nulls: "last" } },
-        { contractId: "asc" },
-      ];
+      return Prisma.sql`${headlineIsk()} DESC NULLS LAST, c."contractId" ASC`;
     case "price-asc":
-      return [
-        { [priceColumn]: { sort: "asc", nulls: "last" } },
-        { contractId: "asc" },
-      ];
+      return Prisma.sql`${headlineIsk()} ASC NULLS LAST, c."contractId" ASC`;
     case "newest":
-      return [{ dateIssued: "desc" }, { contractId: "desc" }];
+      return Prisma.sql`c."dateIssued" DESC, c."contractId" DESC`;
   }
 }
 
@@ -324,17 +345,27 @@ export interface PublicContractsPage {
 export async function readPublicContracts(
   filters: ContractFilters,
 ): Promise<PublicContractsPage> {
+  // Raw SQL for the page's ids, so the order and the price filter can use
+  // headlineIsk(); Prisma's query builder cannot order by an expression. The
+  // rows themselves still come through the typed select.
   const where = whereFor(filters);
-  const [rows, total] = await Promise.all([
-    prisma.contract.findMany({
-      where,
-      orderBy: orderFor(filters),
-      skip: (filters.page - 1) * PUBLIC_CONTRACTS_PAGE_SIZE,
-      take: PUBLIC_CONTRACTS_PAGE_SIZE,
-      select: contractSummarySelect,
-    }),
-    prisma.contract.count({ where }),
+  const [page, [{ total }]] = await Promise.all([
+    prisma.$queryRaw<{ contractId: number }[]>`
+      SELECT c."contractId" FROM "Contract" c
+      WHERE ${where}
+      ORDER BY ${orderFor(filters)}
+      LIMIT ${PUBLIC_CONTRACTS_PAGE_SIZE}
+      OFFSET ${(filters.page - 1) * PUBLIC_CONTRACTS_PAGE_SIZE}`,
+    prisma.$queryRaw<[{ total: number }]>`
+      SELECT count(*)::int AS total FROM "Contract" c WHERE ${where}`,
   ]);
+  const ids = page.map((row) => row.contractId);
+  const found = await prisma.contract.findMany({
+    where: { contractId: { in: ids } },
+    select: contractSummarySelect,
+  });
+  const byId = new Map(found.map((row) => [row.contractId, row]));
+  const rows = ids.flatMap((id) => byId.get(id) ?? []);
   const extras = await readPageExtras(rows);
   return {
     contracts: rows.map((row) => toContractSummary(row, extras)),
@@ -343,6 +374,9 @@ export async function readPublicContracts(
     pageSize: PUBLIC_CONTRACTS_PAGE_SIZE,
   };
 }
+
+/** Older than this, the public snapshot is a backfill still catching up. */
+const BACKFILL_LAG_MS = 2 * 24 * 60 * 60 * 1000;
 
 export interface ContractRegionFacet {
   regionId: number;
@@ -356,6 +390,12 @@ export interface OpenContractsOverview {
   total: number;
   /** The latest snapshot the open contracts come from, or null when empty. */
   snapshotAt: string | null;
+  /**
+   * The snapshot is over two days old as of this read, so the contracts are
+   * still being imported. Decided here, inside the cached read, so the page
+   * renders the same notice on the server as in the browser.
+   */
+  isBackfilling: boolean;
 }
 
 /**
@@ -401,5 +441,8 @@ export async function readOpenContractsOverview(): Promise<OpenContractsOverview
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
     total: groups.reduce((sum, group) => sum + group._count._all, 0),
     snapshotAt: latest._max.lastSeenAt?.toISOString() ?? null,
+    isBackfilling:
+      latest._max.lastSeenAt !== null &&
+      Date.now() - latest._max.lastSeenAt.getTime() > BACKFILL_LAG_MS,
   };
 }

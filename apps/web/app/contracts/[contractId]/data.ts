@@ -1,6 +1,10 @@
 import { cacheLife } from "next/cache";
 
 import type { ContractSummary } from "~/components/Contracts/contract";
+import {
+  BLUEPRINT_CATEGORY_ID,
+  typeImageVariation,
+} from "~/components/Contracts/contract";
 import { prisma } from "~/lib/db";
 import {
   contractSummarySelect,
@@ -21,6 +25,8 @@ export interface ContractItemDetail {
   timeEfficiency: number | null;
   runs: number | null;
   /** Set for mutated items, whose rolled stats live in `DynamicItem`. */
+  /** See typeImageVariation. */
+  imageVariation?: string;
   mutation: {
     itemId: string;
     sourceTypeId: number;
@@ -74,7 +80,9 @@ export async function readContractDetail(
       select: {
         recordId: true,
         typeId: true,
-        type: { select: { name: true } },
+        type: {
+          select: { name: true, group: { select: { categoryId: true } } },
+        },
         quantity: true,
         isIncluded: true,
         itemId: true,
@@ -111,7 +119,9 @@ export async function readContractDetail(
   return {
     contract: toContractSummary(row, {
       endStations,
-      itemCounts: new Map([[contractId, items.length]]),
+      itemCounts: new Map([
+        [contractId, items.filter((item) => item.isIncluded).length],
+      ]),
       bidCounts: new Map([[contractId, bids.length]]),
     }),
     items: items.map((item) => {
@@ -127,6 +137,10 @@ export async function readContractDetail(
         materialEfficiency: item.materialEfficiency,
         timeEfficiency: item.timeEfficiency,
         runs: item.runs,
+        imageVariation: typeImageVariation(
+          item.type.group.categoryId === BLUEPRINT_CATEGORY_ID,
+          item.isBlueprintCopy,
+        ),
         mutation: mutation
           ? {
               itemId: mutation.itemId.toString(),

@@ -23,7 +23,6 @@ import {
 const parsers = {
   type: parseAsStringLiteral(CONTRACT_TYPE_FILTERS).withDefault("all"),
   region: parseAsInteger,
-  item: parseAsInteger,
   q: parseAsString.withDefault(""),
   minPrice: parseAsFloat,
   maxPrice: parseAsFloat,
@@ -36,7 +35,6 @@ const urlOptions = { history: "replace" as const };
 export type ContractFilterUpdate = Partial<{
   type: ContractFilters["type"];
   region: number | null;
-  item: number | null;
   q: string;
   minPrice: number | null;
   maxPrice: number | null;
@@ -51,7 +49,6 @@ export function useContractFilters() {
     () => ({
       type: state.type,
       regionId: state.region !== null && state.region > 0 ? state.region : null,
-      typeId: state.item !== null && state.item > 0 ? state.item : null,
       q: state.q.trim(),
       minPrice:
         state.minPrice !== null && state.minPrice >= 0 ? state.minPrice : null,

@@ -72,10 +72,33 @@ export interface ContractLocation {
 }
 
 export interface ContractItemSummary {
-  /** Item lines in the contract, offered and asked for. */
+  /** Item lines the issuer offers (not the ones they ask for). */
   count: number;
   /** The first offered item, which names the contract when it has no title. */
-  first: { typeId: number; name?: string | null; quantity: number } | null;
+  first: {
+    typeId: number;
+    name?: string | null;
+    quantity: number;
+    /** See typeImageVariation. */
+    imageVariation?: string;
+  } | null;
+}
+
+/** The SDE category every blueprint type belongs to. */
+export const BLUEPRINT_CATEGORY_ID = 9;
+
+/**
+ * Which image the type server has for an item, when we know better than its
+ * default. Blueprints have no `icon`: asking for one is a 400 before the
+ * avatar falls back to `bp`/`bpc`, so a page of blueprints logged a console
+ * error each. Undefined lets the avatar use its default.
+ */
+export function typeImageVariation(
+  isBlueprint: boolean,
+  isBlueprintCopy: boolean | null | undefined,
+): string | undefined {
+  if (!isBlueprint) return undefined;
+  return isBlueprintCopy ? "bpc" : "bp";
 }
 
 export const CONTRACT_KIND_LABEL: Record<ContractKind, string> = {

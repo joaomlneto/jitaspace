@@ -3,6 +3,7 @@
 import {
   Alert,
   Badge,
+  Button,
   Center,
   Group,
   Loader,
@@ -68,6 +69,19 @@ export function PublicContracts({
         count={PUBLIC_CONTRACTS_PAGE_SIZE / 4}
       />
     );
+  } else if (data.contracts.length === 0 && data.total > 0) {
+    // A shared or old link to a page past the end: contracts have closed
+    // since, so the filters still match, just not this many pages.
+    content = (
+      <Group gap="sm">
+        <Text size="sm" c="dimmed">
+          Page {filters.page} is past the last page of these contracts.
+        </Text>
+        <Button size="xs" variant="default" onClick={() => onPageChange(1)}>
+          Go to the first page
+        </Button>
+      </Group>
+    );
   } else if (data.contracts.length === 0) {
     content = (
       <Text size="sm" c="dimmed">
@@ -85,7 +99,9 @@ export function PublicContracts({
   return (
     <Stack gap="sm">
       <Group gap="xs" align="center">
-        <Title order={3}>Public contracts</Title>
+        <Title order={2} size="h3">
+          Public contracts
+        </Title>
         {data && (
           <Badge variant="light" color="gray">
             {data.total.toLocaleString()}

@@ -97,7 +97,12 @@ export const ContractCard = memo(function ContractCard({
 
         <Group gap="sm" wrap="nowrap" align="flex-start">
           {first ? (
-            <TypeAvatar typeId={first.typeId} size={40} radius="sm" />
+            <TypeAvatar
+              typeId={first.typeId}
+              variation={first.imageVariation}
+              size={40}
+              radius="sm"
+            />
           ) : (
             <ThemeIcon variant="default" size={40} radius="sm">
               <ContractTypeIcon type={contract.type} size={28} />

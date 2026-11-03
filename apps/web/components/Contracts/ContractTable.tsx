@@ -52,7 +52,12 @@ function columns(
       cell: (row) => (
         <Group gap="xs" wrap="nowrap" miw={0}>
           {row.items?.first && (
-            <TypeAvatar typeId={row.items.first.typeId} size={24} radius="sm" />
+            <TypeAvatar
+              typeId={row.items.first.typeId}
+              variation={row.items.first.imageVariation}
+              size={24}
+              radius="sm"
+            />
           )}
           <ContractAnchor
             contractId={row.contractId}

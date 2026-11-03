@@ -146,12 +146,14 @@ export function MyContracts({
   if (!hasHydrated) return null;
 
   const canRead = characterIds.length > 0 || corporationIds.length > 0;
-  const publicOnly = filters.regionId !== null || filters.typeId !== null;
+  const publicOnly = filters.regionId !== null;
 
   return (
     <Stack gap="sm">
       <Group gap="xs" align="baseline">
-        <Title order={3}>Your contracts</Title>
+        <Title order={2} size="h3">
+          Your contracts
+        </Title>
         {canRead && !isPending && (
           <Badge variant="light" color="gray">
             {shown.length === own.length
@@ -169,8 +171,8 @@ export function MyContracts({
       )}
       {canRead && publicOnly && (
         <Text size="xs" c="dimmed">
-          The region and item filters apply to public contracts only: ESI does
-          not list your contracts&apos; regions or items.
+          The region filter applies to public contracts only: ESI does not list
+          your contracts&apos; regions.
         </Text>
       )}
       {canRead && isPending && <ContractListSkeleton view={view} count={3} />}
@@ -182,7 +184,7 @@ export function MyContracts({
         </Text>
       )}
       {canRead && !isPending && shown.length > 0 && (
-        <ContractList contracts={shown} view={view} resolveStructures />
+        <ContractList contracts={shown} view={view} />
       )}
     </Stack>
   );

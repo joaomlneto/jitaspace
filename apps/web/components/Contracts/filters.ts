@@ -36,11 +36,19 @@ export const PUBLIC_CONTRACTS_PAGE_SIZE = 48;
 /** Longest title search the API accepts; titles themselves cap at 30. */
 export const CONTRACT_SEARCH_MAX_LENGTH = 64;
 
+/**
+ * Deepest page the API serves. About 50k contracts are open at a time, or
+ * ~1,100 pages; past this, every request would only sort the whole set to
+ * return nothing.
+ */
+export const PUBLIC_CONTRACTS_MAX_PAGE = 2_000;
+
+/** Region and contract ids are Postgres `integer`s; larger ones cannot exist. */
+const INT4_MAX = 2_147_483_647;
+
 export interface ContractFilters {
   type: ContractTypeFilter;
   regionId: number | null;
-  /** Only contracts offering or asking for this item type. */
-  typeId: number | null;
   /** Case-insensitive substring of the title. */
   q: string;
   minPrice: number | null;
@@ -50,10 +58,10 @@ export interface ContractFilters {
   page: number;
 }
 
-function positiveInt(raw: string | null): number | null {
-  if (raw === null || !/^[1-9]\d{0,15}$/.test(raw)) return null;
+function positiveInt(raw: string | null, max = INT4_MAX): number | null {
+  if (raw === null || !/^[1-9]\d{0,9}$/.test(raw)) return null;
   const value = Number(raw);
-  return Number.isSafeInteger(value) ? value : null;
+  return value <= max ? value : null;
 }
 
 function nonNegativeNumber(raw: string | null): number | null {
@@ -75,12 +83,11 @@ export function parseContractFilters(params: URLSearchParams): ContractFilters {
   return {
     type: oneOf(CONTRACT_TYPE_FILTERS, params.get("type"), "all"),
     regionId: positiveInt(params.get("region")),
-    typeId: positiveInt(params.get("item")),
     q: (params.get("q") ?? "").trim().slice(0, CONTRACT_SEARCH_MAX_LENGTH),
     minPrice: nonNegativeNumber(params.get("minPrice")),
     maxPrice: nonNegativeNumber(params.get("maxPrice")),
     sort: oneOf(CONTRACT_SORTS, params.get("sort"), "newest"),
-    page: positiveInt(params.get("page")) ?? 1,
+    page: positiveInt(params.get("page"), PUBLIC_CONTRACTS_MAX_PAGE) ?? 1,
   };
 }
 
@@ -89,7 +96,6 @@ export function contractFiltersQuery(filters: ContractFilters): string {
   const params = new URLSearchParams();
   if (filters.type !== "all") params.set("type", filters.type);
   if (filters.regionId !== null) params.set("region", `${filters.regionId}`);
-  if (filters.typeId !== null) params.set("item", `${filters.typeId}`);
   if (filters.q) params.set("q", filters.q);
   if (filters.minPrice !== null) params.set("minPrice", `${filters.minPrice}`);
   if (filters.maxPrice !== null) params.set("maxPrice", `${filters.maxPrice}`);

@@ -9,17 +9,30 @@ import { parsePositiveEntityId } from "~/lib/routeParams";
 import { readContractDetail } from "./data";
 import ContractPage from "./page.client";
 
-/** What a contract is called in a title: its first item, or its own title. */
+/**
+ * The contract id in the route, or null. Contract ids are Postgres
+ * `integer`s, so a larger one cannot exist; querying with it would fail with
+ * an out-of-range error (a 500) rather than find nothing.
+ */
+function parseContractId(raw: string): number | null {
+  const id = parsePositiveEntityId(raw);
+  return id !== null && id <= 2_147_483_647 ? id : null;
+}
+
+/**
+ * What a contract is called in a title: its first item, or its own title.
+ * Null when it has neither (most couriers), so the title falls back to its id.
+ */
 function contractName(
   detail: NonNullable<Awaited<ReturnType<typeof readContractDetail>>>,
-): string {
+): string | null {
   const { contract } = detail;
   const first = contract.items?.first;
   if (first?.name) {
     const more = (contract.items?.count ?? 1) - 1;
     return `${first.name}${more > 0 ? ` + ${more} more` : ""}`;
   }
-  return contract.title || CONTRACT_KIND_LABEL[contract.type];
+  return contract.title || null;
 }
 
 export async function generateMetadata({
@@ -28,7 +41,7 @@ export async function generateMetadata({
   params: Promise<{ contractId: string }>;
 }>): Promise<Metadata> {
   const { contractId: raw } = await params;
-  const contractId = parsePositiveEntityId(raw);
+  const contractId = parseContractId(raw);
   if (contractId === null) return {};
 
   // Uncaught, like the page body: this route is cached whole.
@@ -36,13 +49,24 @@ export async function generateMetadata({
   if (detail === null) {
     // A private contract, or one we never recorded: the page looks it up
     // through the visitor's own ESI access, so there is nothing to describe.
-    return { title: `Contract #${contractId}`, robots: { index: false } };
+    return {
+      ...pageMetadata({
+        title: `Contract #${contractId}`,
+        description: `EVE Online contract #${contractId}, for the characters who can see it.`,
+        path: `/contracts/${contractId}`,
+        badge: "Contract",
+      }),
+      robots: { index: false },
+    };
   }
   const { contract } = detail;
   const kind = CONTRACT_KIND_LABEL[contract.type];
+  const name = contractName(detail);
   const where = contract.start?.solarSystemName ?? contract.regionName;
   return pageMetadata({
-    title: `${contractName(detail)} — ${kind} Contract`,
+    title: name
+      ? `${name} — ${kind} Contract`
+      : `${kind} Contract #${contractId}`,
     description: `${kind} contract #${contractId}${
       where ? ` in ${where}` : ""
     } on EVE Online's public contract market — its items${
@@ -76,7 +100,7 @@ async function PageContent({
   params: Promise<{ contractId: string }>;
 }>) {
   const { contractId: raw } = await params;
-  const contractId = parsePositiveEntityId(raw);
+  const contractId = parseContractId(raw);
   if (contractId === null) notFound();
   // Uncaught: a database failure must throw rather than cache a page that
   // says the contract does not exist. `null` is not a 404 either: the client

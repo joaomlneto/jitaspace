@@ -7,17 +7,15 @@ import {
   Group,
   NumberInput,
   Paper,
-  Pill,
   Select,
   Stack,
   Text,
   TextInput,
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { IconFilterOff, IconPackage, IconSearch } from "@tabler/icons-react";
+import { IconFilterOff } from "@tabler/icons-react";
 
-import { postUniverseIds } from "@jitaspace/esi-client";
-import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import type { ContractView } from "./ContractList";
 import type { ContractRegionFacet } from "./data";
@@ -38,109 +36,44 @@ const TYPE_OPTIONS = CONTRACT_TYPE_FILTERS.map((value) => ({
   label: value === "all" ? "All" : CONTRACT_KIND_LABEL[value],
 }));
 
+const trim = (value: string) => value.trim();
+
 const SORT_OPTIONS = CONTRACT_SORTS.map((value) => ({
   value,
   label: CONTRACT_SORT_LABELS[value],
 }));
 
-/** A text field that commits to the URL once typing pauses. */
+/**
+ * A field that commits to the URL once typing pauses.
+ *
+ * `normalize` is what the URL holds for a draft (a search trims). The field
+ * follows the URL only when the two really differ — the back button, "Clear
+ * filters" — and not when the URL is just this draft normalized: following
+ * then would strip the space a user just typed between two words.
+ */
 function useDebouncedCommit<T>(
   committed: T,
   commit: (value: T) => void,
+  normalize: (value: T) => T = (value) => value,
   delay = 400,
 ) {
   const [draft, setDraft] = useState(committed);
   const [debounced] = useDebouncedValue(draft, delay);
 
-  // Follow the URL when it changes underneath (back button, "clear filters").
   const [lastCommitted, setLastCommitted] = useState(committed);
   if (!Object.is(committed, lastCommitted)) {
     setLastCommitted(committed);
-    setDraft(committed);
+    if (!Object.is(committed, normalize(draft))) setDraft(committed);
   }
 
   useEffect(() => {
-    if (!Object.is(debounced, committed)) commit(debounced);
+    const value = normalize(debounced);
+    if (!Object.is(value, committed)) commit(value);
     // Only a settled draft commits; `committed` changing is handled above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced]);
 
   return [draft, setDraft] as const;
-}
-
-/**
- * Narrow the list to contracts with one item type. ESI resolves an exact name
- * to its type id without a login (`POST /universe/ids`), which is what the
- * public listing filters on.
- */
-function ItemFilter({
-  typeId,
-  onChange,
-}: Readonly<{
-  typeId: number | null;
-  onChange: (typeId: number | null) => void;
-}>) {
-  const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [resolving, setResolving] = useState(false);
-
-  if (typeId !== null) {
-    return (
-      <Pill.Group>
-        <Pill
-          size="lg"
-          withRemoveButton
-          onRemove={() => onChange(null)}
-          removeButtonProps={{ "aria-label": "Clear item filter" }}
-        >
-          <Group gap={6} wrap="nowrap">
-            <TypeAvatar typeId={typeId} size={20} radius="sm" />
-            <TypeName typeId={typeId} span size="sm" />
-          </Group>
-        </Pill>
-      </Pill.Group>
-    );
-  }
-
-  const resolve = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setResolving(true);
-    setError(null);
-    try {
-      const response = await postUniverseIds([trimmed]);
-      const match = response.data.inventory_types?.[0];
-      if (match?.id !== undefined) {
-        onChange(match.id);
-        setName("");
-      } else {
-        setError("No item has exactly that name");
-      }
-    } catch {
-      setError("Could not look the item up");
-    } finally {
-      setResolving(false);
-    }
-  };
-
-  return (
-    <TextInput
-      style={{ flex: 1, minWidth: 200 }}
-      aria-label="Filter by item"
-      placeholder="Item name, e.g. Raven — press Enter"
-      leftSection={<IconPackage size={16} />}
-      value={name}
-      error={error}
-      disabled={resolving}
-      onChange={(event) => {
-        setName(event.currentTarget.value);
-        setError(null);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") void resolve();
-      }}
-    />
-  );
 }
 
 export function FiltersBar({
@@ -158,7 +91,11 @@ export function FiltersBar({
   view: ContractView;
   onViewChange: (view: ContractView) => void;
 }>) {
-  const [query, setQuery] = useDebouncedCommit(filters.q, (q) => update({ q }));
+  const [query, setQuery] = useDebouncedCommit(
+    filters.q,
+    (q) => update({ q }),
+    trim,
+  );
   const [minPrice, setMinPrice] = useDebouncedCommit(
     filters.minPrice,
     (value) => update({ minPrice: value }),
@@ -171,7 +108,6 @@ export function FiltersBar({
   const isFiltered =
     filters.type !== "all" ||
     filters.regionId !== null ||
-    filters.typeId !== null ||
     filters.q !== "" ||
     filters.minPrice !== null ||
     filters.maxPrice !== null ||
@@ -228,7 +164,9 @@ export function FiltersBar({
             style={{ flex: 2, minWidth: 220 }}
             aria-label="Search contract titles"
             placeholder="Search titles"
-            leftSection={<IconSearch size={16} />}
+            leftSection={
+              <SystemSearchIcon size={16} color="currentColor" alt="" />
+            }
             maxLength={CONTRACT_SEARCH_MAX_LENGTH}
             rightSectionPointerEvents="all"
             rightSection={
@@ -241,10 +179,6 @@ export function FiltersBar({
             }
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
-          />
-          <ItemFilter
-            typeId={filters.typeId}
-            onChange={(item) => update({ item })}
           />
           <Select
             style={{ flex: 1, minWidth: 200 }}
@@ -275,6 +209,10 @@ export function FiltersBar({
             min={0}
             thousandSeparator=","
             hideControls
+            // Whole ISK, never negative: a "1." or "-" mid-typing is not a
+            // number, and would blank the field or set a filter not applied.
+            allowDecimal={false}
+            allowNegative={false}
             value={minPrice ?? ""}
             onChange={(value) => setMinPrice(numberValue(value))}
           />
@@ -289,6 +227,8 @@ export function FiltersBar({
             min={0}
             thousandSeparator=","
             hideControls
+            allowDecimal={false}
+            allowNegative={false}
             value={maxPrice ?? ""}
             onChange={(value) => setMaxPrice(numberValue(value))}
           />

@@ -53,7 +53,12 @@ export const ContractRow = memo(function ContractRow({
           <ContractTypeIcon type={contract.type} size={18} />
         </span>
         {first ? (
-          <TypeAvatar typeId={first.typeId} size={28} radius="sm" />
+          <TypeAvatar
+            typeId={first.typeId}
+            variation={first.imageVariation}
+            size={28}
+            radius="sm"
+          />
         ) : (
           <span className={classes.avatarGap} />
         )}
