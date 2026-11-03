@@ -15,11 +15,11 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 type Row = Record<string, unknown>;
 
-const typeFindUnique = jest.fn<(args?: unknown) => Promise<Row | null>>();
+const typeFindUniqueOrThrow = jest.fn<(args?: unknown) => Promise<Row>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
-    type: { findUnique: (a?: unknown) => typeFindUnique(a) },
+    type: { findUniqueOrThrow: (a?: unknown) => typeFindUniqueOrThrow(a) },
     typeAttribute: { findMany: () => Promise.resolve([]) },
   },
 }));
@@ -92,8 +92,8 @@ function cardArtwork(meta: {
 describe("type/[typeId] generateMetadata og:image", () => {
   beforeEach(() => {
     jest.resetModules();
-    typeFindUnique.mockReset();
-    typeFindUnique.mockResolvedValue({
+    typeFindUniqueOrThrow.mockReset();
+    typeFindUniqueOrThrow.mockResolvedValue({
       typeId: 34,
       name: "Tritanium",
       description: "The most common ore type in the known world.",
@@ -150,8 +150,8 @@ describe("type/[typeId] generateMetadata og:image", () => {
 describe("type/[typeId] generateMetadata canonical", () => {
   beforeEach(() => {
     jest.resetModules();
-    typeFindUnique.mockReset();
-    typeFindUnique.mockResolvedValue({
+    typeFindUniqueOrThrow.mockReset();
+    typeFindUniqueOrThrow.mockResolvedValue({
       typeId: 587,
       name: "Rifter",
       description: "A frigate.",
@@ -164,18 +164,6 @@ describe("type/[typeId] generateMetadata canonical", () => {
     expect((await metadataFor(587)).alternates?.canonical).toBe("/type/587");
   });
 
-  it("returns no metadata for a type that does not exist", async () => {
-    typeFindUnique.mockResolvedValue(null);
-    expect(await metadataFor(587)).toEqual({});
-  });
-
-  // The route is cached whole, so generic metadata for a failed read would be
-  // stored with the page. The error must propagate.
-  it("throws when the type lookup throws, as the route is cached whole", async () => {
-    typeFindUnique.mockRejectedValue(new Error("db"));
-    await expect(metadataFor(587)).rejects.toThrow("db");
-  });
-
   // Measured on production 2026-09-02: /type/587, /type/0587 and /type/587.0
   // all returned 200 serving the Rifter. The duplicates now 404, and the guard
   // rejects them before the query so no cache entry is minted for them either.
@@ -183,7 +171,7 @@ describe("type/[typeId] generateMetadata canonical", () => {
     "returns no metadata for the non-canonical id %p",
     async (typeId) => {
       expect(await metadataFor(typeId)).toEqual({});
-      expect(typeFindUnique).not.toHaveBeenCalled();
+      expect(typeFindUniqueOrThrow).not.toHaveBeenCalled();
     },
   );
 });

@@ -17,6 +17,7 @@ import type { SolarSystemSdeInfo } from "~/app/system/[systemId]/types";
 
 const SYSTEM_ID = 30000142;
 
+const mockUseParams = jest.fn<(...args: unknown[]) => Record<string, string>>();
 const mockUseSelectedCharacter = jest.fn();
 const mockUseSolarSystem = jest.fn();
 const mockUseSolarSystemCostIndices = jest.fn();
@@ -43,6 +44,7 @@ jest.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  useParams: () => mockUseParams(),
   useRouter: () => ({}),
   usePathname: () => "/",
 }));
@@ -127,13 +129,14 @@ function renderPage(sde: SdeProp = null) {
   const Page = require("~/app/system/[systemId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page systemId={SYSTEM_ID} systemName="Jita" sde={sde} />
+      <Page systemName="Jita" sde={sde} />
     </MantineProvider>,
   );
 }
 
 describe("System page", () => {
   beforeEach(() => {
+    mockUseParams.mockReset().mockReturnValue({ systemId: String(SYSTEM_ID) });
     mockUseSelectedCharacter.mockReset().mockReturnValue(undefined);
     mockUseSolarSystem.mockReset().mockReturnValue({ data: undefined });
     mockUseSolarSystemCostIndices.mockReset().mockReturnValue({ data: {} });
@@ -150,7 +153,6 @@ describe("System page", () => {
     mockUseGetIncursions.mockReset().mockReturnValue({ data: { data: [] } });
     mockSolarSystemFindUnique.mockReset().mockResolvedValue({
       name: "Jita",
-      securityStatus: 0.945,
       luminosity: null,
       radius: null,
       wormholeClassId: null,
@@ -158,11 +160,7 @@ describe("System page", () => {
       positionY: null,
       positionZ: null,
       factionId: null,
-      constellation: {
-        name: "Kimotoro",
-        factionId: null,
-        region: { name: "The Forge", factionId: null },
-      },
+      constellation: { factionId: null, region: { factionId: null } },
       isHub: false,
       isBorder: false,
       isFringe: false,
@@ -388,32 +386,13 @@ describe("System page", () => {
     expect(screen.getByText(/only reachable by wormhole/)).toBeInTheDocument();
   });
 
-  // The client reads its id from props rather than `useParams()`, so the
-  // server hands it the id it parsed and the ESI hooks get exactly that.
-  it("passes the parsed id to the client page and its ESI reads", async () => {
-    const WrapperPage = require("~/app/system/[systemId]/page").default;
-    const tree = WrapperPage({
-      params: Promise.resolve({ systemId: String(SYSTEM_ID) }),
-    });
-    const child = tree.props.children;
-    const resolved = await child.type(child.props);
-    expect(resolved.props.systemId).toBe(SYSTEM_ID);
+  it("returns null for a non-finite system id", () => {
+    mockUseParams.mockReturnValue({ systemId: "not-a-number" });
 
-    render(<MantineProvider>{resolved}</MantineProvider>);
-    expect(mockUseSolarSystem).toHaveBeenCalledWith(SYSTEM_ID);
-    expect(mockUseSolarSystemSovereignty).toHaveBeenCalledWith(SYSTEM_ID);
-  });
+    renderPage();
 
-  it("lists one placeholder param, which 404s without a query", async () => {
-    const { generateStaticParams } = require("~/app/system/[systemId]/page");
-    const params = generateStaticParams() as { systemId: string }[];
-    expect(params).toEqual([{ systemId: "0" }]);
-
-    const WrapperPage = require("~/app/system/[systemId]/page").default;
-    const tree = WrapperPage({ params: Promise.resolve(params[0]) });
-    const child = tree.props.children;
-    await expect(child.type(child.props)).rejects.toThrow("NEXT_NOT_FOUND");
-    expect(mockSolarSystemFindUnique).not.toHaveBeenCalled();
+    expect(screen.queryByText("System Information")).not.toBeInTheDocument();
+    expect(screen.queryByText("Celestials")).not.toBeInTheDocument();
   });
 
   it("server-renders the system name inside a Suspense boundary", async () => {

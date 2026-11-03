@@ -3,6 +3,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   Anchor,
   Badge,
@@ -505,14 +506,15 @@ const EXTERNAL_TOOLS = [
 ];
 
 export default function Page({
-  systemId,
   systemName,
   sde,
-}: Readonly<{
-  systemId: number;
-  systemName: string;
-  sde: SolarSystemSdeInfo | null;
-}>) {
+}: Readonly<{ systemName: string; sde: SolarSystemSdeInfo | null }>) {
+  const params = useParams();
+  const rawSystemId = params.systemId;
+  const systemId = Number(
+    typeof rawSystemId === "string" ? rawSystemId : rawSystemId?.[0],
+  );
+
   const character = useSelectedCharacter();
   const { data: solarSystem } = useSolarSystem(systemId);
   const starId = solarSystem?.data.star_id;
@@ -526,6 +528,10 @@ export default function Page({
   const { data: incursions } = useGetIncursions();
   const { data: fwSystems } = useGetFwSystems();
   const [show3D, setShow3D] = useState(false);
+
+  if (!Number.isFinite(systemId)) {
+    return null;
+  }
 
   const data = solarSystem?.data;
 

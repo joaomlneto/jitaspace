@@ -7,7 +7,6 @@ import { prisma } from "~/lib/db";
 import { getCachedEntityTimeline } from "~/lib/history-cache";
 import { readEntityNames, readMessages } from "~/lib/history-entity-names";
 import { collectLabelRefs, MESSAGE_KIND } from "~/lib/history-labels";
-import { keepOutOfCache } from "~/lib/keepOutOfCache";
 import { SDE_CACHE_TAG } from "~/lib/sdeCache";
 
 /**
@@ -68,7 +67,7 @@ export async function getCachedEntityHistory(
 /**
  * {@link getCachedEntityHistory} for a page that renders fine without its
  * History tab (the item, race, faction, dungeon, mission and epic-arc pages). A
- * failure is reported and hides the tab, and `keepOutOfCache()` keeps that
+ * failure is reported and hides the tab, and `connection()` keeps that
  * degraded render out of the page's ISR cache, so the next request retries
  * instead of the cache serving the page without its history.
  *
@@ -95,7 +94,10 @@ export async function loadEntityHistory(
     ]);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: "entity-history" } });
-    await keepOutOfCache();
+    // Imported here, on the failure path only: `next/server` cannot load in the
+    // jsdom suites that import the six host pages.
+    const { connection } = await import("next/server");
+    await connection();
     return null;
   } finally {
     clearTimeout(timer);
