@@ -51,15 +51,16 @@ export function useCorporationFreelanceJobParticipants(
         PARAMS,
       ),
       direction: "after",
-      fetchPage: (cursor, signal) =>
+      fetchPage: (cursor, request) =>
         getCorporationsFreelanceJobsParticipants(
           corporationId ?? 0,
           jobId ?? "",
           { ...PARAMS, after: cursor },
           authHeaders,
-          { signal },
+          request,
         ),
       items: (data) => data.participants,
+      key: (participant) => participant.id,
     }),
     enabled:
       corporationId !== undefined &&

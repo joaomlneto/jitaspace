@@ -2,7 +2,15 @@
 
 import type { ReactNode } from "react";
 import { memo } from "react";
-import { Badge, Group, Progress, Stack, Text, Tooltip } from "@mantine/core";
+import {
+  Badge,
+  Group,
+  Progress,
+  Stack,
+  Text,
+  Tooltip,
+  VisuallyHidden,
+} from "@mantine/core";
 
 import type { FreelanceJob, FreelanceJobState } from "@jitaspace/hooks";
 import {
@@ -15,6 +23,7 @@ import {
 
 import type { FreelanceParticipantState } from "./freelanceJobs";
 import {
+  formatProgressPercent,
   FREELANCE_JOB_STATE_COLORS,
   FREELANCE_PARTICIPANT_STATE_COLORS,
   freelanceJobProgressPercent,
@@ -113,13 +122,13 @@ export const FreelanceJobProgress = memo(
           value={percent}
           size={size}
           color={percent >= 100 ? "blue" : "green"}
-          aria-label={`${job.name}: ${exact} (${percent.toFixed(0)}%)`}
+          aria-label={`${job.name}: ${exact} (${formatProgressPercent(percent)}%)`}
         />
         <Tooltip label={exact} openDelay={300}>
           <Text size="xs" c="dimmed">
             {formatCompact(current)} / {formatCompact(desired)}
             {" · "}
-            {percent.toFixed(percent > 0 && percent < 1 ? 1 : 0)}%
+            {formatProgressPercent(percent)}%
           </Text>
         </Tooltip>
       </Stack>
@@ -133,8 +142,11 @@ export const IskText = memo(
   ({ amount, size = "sm" }: { amount?: number; size?: "xs" | "sm" | "md" }) => {
     if (amount === undefined) {
       return (
-        <Text size={size} c="dimmed" aria-label="No reward">
-          —
+        // A paragraph cannot carry a name (axe aria-prohibited-attr), so the
+        // dash is hidden and the words are read instead.
+        <Text size={size} c="dimmed">
+          <span aria-hidden>—</span>
+          <VisuallyHidden>No reward</VisuallyHidden>
         </Text>
       );
     }

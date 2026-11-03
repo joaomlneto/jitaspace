@@ -8,6 +8,7 @@ import {
   contributionMethodLabel,
   describeParameter,
   describeParameters,
+  formatProgressPercent,
   freelanceJobProgressPercent,
   freelanceJobRewardPaid,
   freelanceJobSourceKey,
@@ -47,6 +48,22 @@ describe("freelanceJobProgressPercent", () => {
     [{ current: 0, desired: 0 }, 100],
   ])("%j is %d%%", (progress, percent) => {
     expect(freelanceJobProgressPercent({ progress })).toBe(percent);
+  });
+});
+
+describe("formatProgressPercent", () => {
+  it.each([
+    [0, "0"],
+    [0.04, "0.0"],
+    [0.4, "0.4"],
+    [1, "1"],
+    [37.9, "37"],
+    // Still open, so it must not read as done.
+    [99.6, "99"],
+    [100, "100"],
+    [140, "100"],
+  ])("shows %s%% as %s", (percent, text) => {
+    expect(formatProgressPercent(percent)).toBe(text);
   });
 });
 

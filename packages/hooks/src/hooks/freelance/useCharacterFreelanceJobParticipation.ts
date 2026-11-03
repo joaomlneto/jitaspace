@@ -20,6 +20,8 @@ import {
   isFreelanceJobId,
 } from "./freelanceJobTypes";
 
+const NO_CHARACTERS: readonly number[] = [];
+
 const selectParticipation = (
   response: ResponseConfig<GetCharactersFreelanceJobsParticipationQueryResponse>,
 ) => response.data;
@@ -89,7 +91,9 @@ export function useCharactersFreelanceJobParticipation(
     {
       kind: "character",
       scopes: [CHARACTER_FREELANCE_JOBS_SCOPE],
-      subjectIds: characterIds,
+      // Nobody to ask about a malformed id, rather than queries left disabled
+      // that would report pending forever.
+      subjectIds: enabled ? characterIds : NO_CHARACTERS,
     },
     buildQuery,
   );

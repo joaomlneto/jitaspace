@@ -488,8 +488,9 @@ describe("useCharacterFreelanceJobParticipation", () => {
       () => useCharactersFreelanceJobParticipation("nope", [1]),
       { wrapper },
     );
-    await waitFor(() => expect(result.current.pendingSubjectIds).toEqual([1]));
-
+    // Settled, not pending forever: a caller would otherwise spin.
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(result.current.pendingSubjectIds).toEqual([]);
     expect(mockParticipation).not.toHaveBeenCalled();
     expect(result.current.data).toEqual([]);
   });

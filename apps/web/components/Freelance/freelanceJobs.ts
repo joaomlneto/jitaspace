@@ -41,6 +41,17 @@ export function freelanceJobProgressPercent(
   return Math.min(100, Math.max(0, (current / desired) * 100));
 }
 
+/**
+ * A job's progress as a whole percentage, rounded down so a job 99.6% done
+ * does not read "100%" while it is still open. Below 1% it keeps one decimal,
+ * so a started job does not read "0%".
+ */
+export function formatProgressPercent(percent: number): string {
+  if (percent >= 100) return "100";
+  if (percent > 0 && percent < 1) return percent.toFixed(1);
+  return String(Math.floor(percent));
+}
+
 /** ISK already paid out: what was reserved minus what is left. */
 export function freelanceJobRewardPaid(job: Pick<FreelanceJob, "reward">) {
   if (!job.reward) return undefined;

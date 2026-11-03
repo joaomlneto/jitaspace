@@ -124,6 +124,11 @@ const axiosError = (status: number) =>
     response: { status },
   });
 
+/** The robots directive the page added, wherever React placed the tag. */
+const robotsMeta = () =>
+  document.querySelector('meta[name="robots"]')?.getAttribute("content") ??
+  undefined;
+
 function renderPage(searchParams = "") {
   const Page = require("~/app/freelance/[jobId]/page.client").default;
   return render(
@@ -238,6 +243,8 @@ describe("Freelance job page", () => {
     renderPage();
 
     expect(screen.getByRole("alert")).toHaveTextContent("Job not found");
+    // Any well-formed id is a 200 shell, so a missing job asks not to be indexed.
+    expect(robotsMeta()).toBe("noindex");
     await userEvent.click(
       screen.getByRole("button", { name: `entity-${OTHER_CHARACTER}` }),
     );
@@ -253,12 +260,16 @@ describe("Freelance job page", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "This job could not be loaded",
     );
+    // An outage is transient: the page stays indexable.
+    expect(robotsMeta()).toBeUndefined();
   });
 
   it("shows a skeleton while the job loads", () => {
     hooks.job.mockReturnValue({ data: undefined, error: null });
     renderPage();
-    expect(screen.getByLabelText("Loading freelance job")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading freelance job" }),
+    ).toHaveAttribute("aria-busy", "true");
   });
 
   it("shows each participating character's contribution", () => {

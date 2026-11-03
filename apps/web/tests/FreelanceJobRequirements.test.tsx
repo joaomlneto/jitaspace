@@ -138,6 +138,20 @@ describe("FreelanceJobRequirements", () => {
     expect(valueOf("Delivery")).toHaveTextContent("Jita - Trade Hub");
   });
 
+  it("shows an id it cannot read as it came, without linking or fetching it", () => {
+    renderRequirements({
+      destroyed_identity: {
+        matcher: {
+          values: [{ value_type: "character", values: ["not-an-id"] }],
+        },
+      },
+    });
+
+    expect(valueOf("Target")).toHaveTextContent("not-an-id");
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.queryByText(/entity-NaN/)).toBeNull();
+  });
+
   it("says so when a job sets no conditions", () => {
     renderRequirements({});
     expect(

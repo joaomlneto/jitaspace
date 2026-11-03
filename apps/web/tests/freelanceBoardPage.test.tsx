@@ -98,6 +98,20 @@ describe("Freelance job board", () => {
     ).toBeInTheDocument();
   });
 
+  it("reads a job without a reward as 'No reward', not a dash", () => {
+    const { reward: _reward, ...unpaid } = job(
+      "5d0c5c33-8e0a-4a39-8b3e-2a8f1f2b6c11",
+      "Volunteer patrol",
+      0,
+    );
+    mockUseFreelanceJobs.mockReturnValue(result({ data: [unpaid] }));
+    renderPage();
+
+    const row = screen.getByRole("row", { name: /Volunteer patrol/ });
+    expect(row).toHaveTextContent("No reward");
+    expect(row.querySelector('[aria-label="No reward"]')).toBeNull();
+  });
+
   it("summarises the board", () => {
     mockUseFreelanceJobs.mockReturnValue(result({ data: JOBS }));
     renderPage();

@@ -41,11 +41,14 @@ export function freelanceJobsQueryOptions(filter: FreelanceJobsFilter = {}) {
   return esiCursorQueryOptions({
     queryKey: getFreelanceJobsListingQueryKey(params),
     direction,
-    fetchPage: (cursor, signal) =>
-      getFreelanceJobsListing({ ...params, [direction]: cursor }, undefined, {
-        signal,
-      }),
+    fetchPage: (cursor, request) =>
+      getFreelanceJobsListing(
+        { ...params, [direction]: cursor },
+        undefined,
+        request,
+      ),
     items: (data) => data.freelance_jobs,
+    key: (job) => job.id,
   });
 }
 

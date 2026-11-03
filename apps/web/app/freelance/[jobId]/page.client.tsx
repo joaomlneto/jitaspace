@@ -96,7 +96,7 @@ function DateFact({ label, date }: Readonly<{ label: string; date?: string }>) {
 
 function JobSkeleton() {
   return (
-    <Stack aria-busy="true" aria-label="Loading freelance job">
+    <Stack role="status" aria-busy="true" aria-label="Loading freelance job">
       <Skeleton height={36} width="60%" />
       <Skeleton height={24} width={240} />
       <Grid>
@@ -141,6 +141,10 @@ function JobError({
   const others = characterIds.filter((id) => id !== viewer);
   return (
     <Alert color="yellow" title="Job not found" role="alert">
+      {/* The shell is a 200 for any well-formed id, so a crawler would
+          otherwise index every missing or private job as a page of its own.
+          React hoists this into <head>; robots take the strictest value. */}
+      <meta name="robots" content="noindex" />
       <Stack gap="xs" align="flex-start">
         <Text size="sm">
           {viewer === undefined

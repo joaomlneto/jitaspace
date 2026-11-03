@@ -48,14 +48,15 @@ export function corporationFreelanceJobsQueryOptions(
       PARAMS,
     ),
     direction: "after",
-    fetchPage: (cursor, signal) =>
+    fetchPage: (cursor, request) =>
       getCorporationsFreelanceJobsListing(
         corporationId ?? 0,
         { ...PARAMS, after: cursor },
         authHeaders,
-        { signal },
+        request,
       ),
     items: (data) => data.freelance_jobs,
+    key: (job) => job.id,
   });
 }
 

@@ -54,14 +54,16 @@ function ParameterValue({
   const kind = parameterValueKind(valueType);
   const id = Number(value);
 
-  if (kind.kind === "group") return <GroupNameAnchor groupId={id} />;
-  if (kind.kind === "other") {
+  // An id ESI sent in a form we cannot read is shown as it came, rather than
+  // linking to /character/NaN and asking ESI for it.
+  if (kind.kind === "other" || !Number.isSafeInteger(id)) {
     return (
       <Text size="sm" span>
-        {kind.label} {value}
+        {kind.kind === "other" ? `${kind.label} ${value}` : value}
       </Text>
     );
   }
+  if (kind.kind === "group") return <GroupNameAnchor groupId={id} />;
 
   const { category } = kind;
   return (

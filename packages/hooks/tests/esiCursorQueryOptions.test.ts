@@ -29,11 +29,13 @@ const respond = (page: Page) =>
 
 /** A fake endpoint serving `pages` in order, keyed by the cursor that asks for each. */
 function endpoint(pages: Record<string, Page>) {
-  return jest.fn((cursor: string, _signal?: AbortSignal) => {
-    const page = pages[cursor];
-    if (!page) throw new Error(`unexpected cursor ${cursor}`);
-    return respond(page);
-  });
+  return jest.fn(
+    (cursor: string, _request: CursorModule.EsiCursorPageRequest) => {
+      const page = pages[cursor];
+      if (!page) throw new Error(`unexpected cursor ${cursor}`);
+      return respond(page);
+    },
+  );
 }
 
 const run = (options: { queryFn: (context?: object) => Promise<number[]> }) =>
@@ -138,7 +140,7 @@ describe("esiCursorQueryOptions", () => {
     expect(retry(3, new Error("network"))).toBe(false);
   });
 
-  it("threads the abort signal into every page", async () => {
+  it("asks for every page fresh, with the abort signal", async () => {
     const fetchPage = endpoint({
       "0": { rows: full(0), cursor: { after: "a1" } },
       a1: { rows: [1] },
@@ -152,10 +154,59 @@ describe("esiCursorQueryOptions", () => {
       items: (data: Page) => data.rows,
     }).queryFn({ signal: controller.signal });
 
-    expect(fetchPage.mock.calls.map(([, signal]) => signal)).toEqual([
-      controller.signal,
-      controller.signal,
+    // ESI marks cursor pages immutable for a year; without this the browser
+    // would replay the first walk on every refetch.
+    expect(fetchPage.mock.calls.map(([, request]) => request)).toEqual([
+      { signal: controller.signal, headers: { "Cache-Control": "no-cache" } },
+      { signal: controller.signal, headers: { "Cache-Control": "no-cache" } },
     ]);
+  });
+
+  it("keeps the later copy of a record read twice, in the earlier's place", async () => {
+    interface Row {
+      id: number;
+      version: number;
+    }
+    const rows = (ids: number[], version: number) =>
+      ids.map((id) => ({ id, version }));
+    const first = [
+      ...rows([1, 2], 1),
+      ...rows(
+        Array.from({ length: ESI_CURSOR_PAGE_SIZE - 2 }, (_, i) => i + 10),
+        1,
+      ),
+    ];
+    interface RowPage {
+      cursor?: Page["cursor"];
+      rows: Row[];
+    }
+    const pages: Record<string, RowPage> = {
+      "0": { rows: first, cursor: { after: "a1" } },
+      // Job 2 changed while the walk was reading, so it comes round again.
+      a1: { rows: rows([3, 2], 2) },
+    };
+    const fetchPage = jest.fn((cursor: string) =>
+      Promise.resolve({
+        data: pages[cursor],
+        headers: {},
+      } as ResponseConfig<RowPage>),
+    );
+
+    const options = esiCursorQueryOptions({
+      queryKey: ["jobs"],
+      direction: "after",
+      fetchPage,
+      items: (data: RowPage) => data.rows,
+      key: (row) => row.id,
+    });
+    const result = await options.queryFn({});
+
+    expect(result).toHaveLength(ESI_CURSOR_PAGE_SIZE + 1);
+    expect(result.slice(0, 2)).toEqual([
+      { id: 1, version: 1 },
+      { id: 2, version: 2 },
+    ]);
+    expect(result.at(-1)).toEqual({ id: 3, version: 2 });
   });
 
   it("marks the key as a whole collection and passes `enabled` through", () => {
