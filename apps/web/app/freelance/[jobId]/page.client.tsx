@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Anchor,
@@ -16,7 +16,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useMounted } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { parseAsInteger, useQueryState } from "nuqs";
 
@@ -506,6 +505,30 @@ function JobDetails({
 }
 
 /**
+ * False on any render before this page's effects have run since it was last
+ * put on screen; true after.
+ *
+ * Until then the URL may not be this page's yet, so `?as=` can read as absent:
+ * - while hydrating, the React nuqs adapter sees no URL at all;
+ * - after a client-side navigation, Next pushes the new URL only as it commits
+ *   the page, which first renders with the previous page's query string;
+ * - a page Next kept in a hidden `<Activity>` and shows again renders once
+ *   with the old URL too, and a plain "has mounted" flag would still be true.
+ * Hiding runs effect cleanups, which re-arm the flag for the next reveal.
+ */
+function useShownSinceLastCommit() {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    // The re-render is the point: it is the first one that reads the URL
+    // after Next has pushed it.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShown(true);
+    return () => setShown(false);
+  }, []);
+  return shown;
+}
+
+/**
  * The character whose token reads the job, from `?as=`: how a private job
  * opens from "Your jobs". Until the auth store has rehydrated the id is kept
  * (the token appears shortly); after, a character without a usable token here
@@ -526,7 +549,7 @@ export default function FreelanceJobPage({
   jobId,
 }: Readonly<{ jobId: string }>) {
   const hydrated = useAuthStoreHasHydrated();
-  const mounted = useMounted();
+  const shown = useShownSinceLastCommit();
   // Characters with a usable token: one whose session expired can read
   // nothing, so `?as=` naming it would wait for a token that never comes.
   const usableCharacters = useEsiSubjects({ kind: "character" });
@@ -539,14 +562,10 @@ export default function FreelanceJobPage({
 
   const { data: job, error } = useFreelanceJob(jobId, {
     characterId: viewer,
-    // Not before the page has mounted. Until then `?as=` can read as absent:
-    // while hydrating the React nuqs adapter sees no URL at all, and after a
-    // client-side navigation Next pushes the new URL only as it commits this
-    // page, which then first renders with the previous page's query string.
-    // Either way a private job would first be asked for anonymously, a 4xx
-    // that ESI counts against the error limit. By the first effect the URL is
-    // the job's, and the re-render after it reads `?as=` from there.
-    enabled: mounted,
+    // Not on a render before the page is on screen: `?as=` can read as absent
+    // then (see useShownSinceLastCommit), and a private job would first be
+    // asked for anonymously, a 4xx that ESI counts against the error limit.
+    enabled: shown,
   });
 
   const managedCorporations = useEsiSubjects({
