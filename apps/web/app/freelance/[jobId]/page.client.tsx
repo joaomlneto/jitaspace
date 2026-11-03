@@ -537,6 +537,11 @@ export default function FreelanceJobPage({
 
   const { data: job, error } = useFreelanceJob(jobId, {
     characterId: viewer,
+    // Not before the session has loaded. The React nuqs adapter reads the URL
+    // in that same re-render, so until then `?as=` reads as absent, and a
+    // private job would first be asked for anonymously: a 4xx that ESI counts
+    // against the error limit.
+    enabled: hydrated,
   });
 
   const managedCorporations = useEsiSubjects({

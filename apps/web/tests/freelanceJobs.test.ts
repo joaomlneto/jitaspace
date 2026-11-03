@@ -49,6 +49,21 @@ describe("freelanceJobProgressPercent", () => {
   ])("%j is %d%%", (progress, percent) => {
     expect(freelanceJobProgressPercent({ progress })).toBe(percent);
   });
+
+  it("lands exactly on whole percentages, so the label does not round one low", () => {
+    // 29 / 100 * 100 is 28.999…; every exact ratio up to 1,000 is checked.
+    for (let desired = 1; desired <= 1000; desired++) {
+      for (let current = 0; current <= desired; current++) {
+        if ((current * 100) % desired !== 0) continue;
+        const percent = freelanceJobProgressPercent({
+          progress: { current, desired },
+        });
+        expect(formatProgressPercent(percent)).toBe(
+          String((current * 100) / desired),
+        );
+      }
+    }
+  });
 });
 
 describe("formatProgressPercent", () => {

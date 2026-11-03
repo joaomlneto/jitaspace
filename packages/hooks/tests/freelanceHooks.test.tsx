@@ -327,6 +327,14 @@ describe("useFreelanceJob", () => {
     expect(mockDetail).not.toHaveBeenCalled();
   });
 
+  it("waits while its caller says so", () => {
+    login(pilot(1));
+    renderHook(() => useFreelanceJob(JOB_ID, { enabled: false }), {
+      wrapper,
+    });
+    expect(mockDetail).not.toHaveBeenCalled();
+  });
+
   it("never sends a malformed id to ESI", () => {
     renderHook(() => useFreelanceJob("not-a-job"), { wrapper });
     renderHook(() => useFreelanceJob(undefined), { wrapper });

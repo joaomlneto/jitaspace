@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import { Activity } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
@@ -9,6 +10,8 @@ import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 const hooks = {
   hydrated: jest.fn(),
   characterIds: jest.fn(),
+  // Of those, the ones with a usable token. Defaults to all of them.
+  usable: jest.fn(),
   job: jest.fn(),
   listings: jest.fn(),
   participation: jest.fn(),
@@ -31,7 +34,7 @@ jest.mock("@jitaspace/hooks", () => ({
   // corporations from `subjects`.
   useEsiSubjects: ({ kind }: { kind: string }) =>
     kind === "character"
-      ? (hooks.characterIds() as number[]).map((id) => ({
+      ? (hooks.usable() as number[]).map((id) => ({
           id,
           characterId: id,
           authHeaders: {},
@@ -152,6 +155,7 @@ describe("Freelance job page", () => {
     for (const hook of Object.values(hooks)) hook.mockReset();
     hooks.hydrated.mockReturnValue(true);
     hooks.characterIds.mockReturnValue([]);
+    hooks.usable.mockImplementation(() => hooks.characterIds());
     hooks.job.mockReturnValue({ data: details(), error: null });
     hooks.listings.mockReturnValue(envelope([]));
     hooks.participation.mockReturnValue(envelope([]));
@@ -215,7 +219,10 @@ describe("Freelance job page", () => {
 
   it("reads anonymously without ?as=", () => {
     renderPage();
-    expect(hooks.job).toHaveBeenCalledWith(JOB_ID, { characterId: undefined });
+    expect(hooks.job).toHaveBeenCalledWith(JOB_ID, {
+      characterId: undefined,
+      enabled: true,
+    });
   });
 
   it("reads as the ?as= character once it is known to be logged in", () => {
@@ -223,14 +230,28 @@ describe("Freelance job page", () => {
     renderPage(`?as=${CHARACTER}`);
     expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
       characterId: CHARACTER,
+      enabled: true,
+    });
+  });
+
+  it("reads a job whose ?as= character's session expired anonymously, not never", () => {
+    // Still stored, so still listed as signed in, but its token is unusable.
+    hooks.characterIds.mockReturnValue([CHARACTER]);
+    hooks.usable.mockReturnValue([]);
+    renderPage(`?as=${CHARACTER}`);
+    expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
+      characterId: undefined,
+      enabled: true,
     });
   });
 
   it("keeps ?as= while the auth store rehydrates, and drops a character without a usable token after", () => {
     hooks.hydrated.mockReturnValue(false);
     const { unmount } = renderPage(`?as=${CHARACTER}`);
+    // Nothing is read before the session (and so `?as=`) is known.
     expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
       characterId: CHARACTER,
+      enabled: false,
     });
     unmount();
 
@@ -238,6 +259,7 @@ describe("Freelance job page", () => {
     renderPage(`?as=${CHARACTER}`);
     expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
       characterId: undefined,
+      enabled: true,
     });
   });
 
@@ -265,14 +287,28 @@ describe("Freelance job page", () => {
     expect(robotsMeta()).toBeUndefined();
   });
 
-  it("takes its noindex away when the page goes, so the next page is not marked", () => {
+  it("takes its noindex away while Next keeps the page hidden, so the next page is not marked", () => {
     hooks.job.mockReturnValue({ data: undefined, error: axiosError(404) });
-    const { unmount } = renderPage();
+    const Page = require("~/app/freelance/[jobId]/page.client").default;
+    // How Next keeps a recently visited page for back/forward: still mounted,
+    // inside a hidden <Activity>. A hoisted <meta> would stay in <head>.
+    const at = (mode: "visible" | "hidden") => (
+      <MantineProvider>
+        <Activity mode={mode}>
+          <Page jobId={JOB_ID} />
+        </Activity>
+      </MantineProvider>
+    );
+    const { rerender } = render(at("visible"), {
+      wrapper: withNuqsTestingAdapter({ hasMemory: true }),
+    });
     expect(robotsMeta()).toBe("noindex");
 
-    // Next hides a page it keeps for back/forward the same way: effects clean up.
-    unmount();
+    rerender(at("hidden"));
     expect(robotsMeta()).toBeUndefined();
+
+    rerender(at("visible"));
+    expect(robotsMeta()).toBe("noindex");
   });
 
   it("does not blame access for an ESI outage", () => {

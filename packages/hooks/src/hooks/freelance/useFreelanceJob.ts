@@ -43,9 +43,9 @@ export function freelanceJobQueryKey(jobId: string, characterId?: number) {
  */
 export function useFreelanceJob(
   jobId: string | undefined,
-  options: { characterId?: number } = {},
+  options: { characterId?: number; enabled?: boolean } = {},
 ) {
-  const { characterId } = options;
+  const { characterId, enabled = true } = options;
   // Called unconditionally for the rules of hooks; without a `characterId` it
   // would pick any logged-in character, so its result is ignored then.
   const { accessToken, authHeaders } = useAccessToken({ characterId });
@@ -67,7 +67,7 @@ export function useFreelanceJob(
         // that "View as" makes, or a private job to a later anonymous read.
         { signal, headers: ESI_NO_CACHE_HEADERS },
       ),
-    enabled: validId && (!authenticated || accessToken !== null),
+    enabled: enabled && validId && (!authenticated || accessToken !== null),
     select: (response) => response.data,
   });
 }

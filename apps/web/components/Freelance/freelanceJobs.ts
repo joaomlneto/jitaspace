@@ -38,7 +38,8 @@ export function freelanceJobProgressPercent(
 ) {
   const { current, desired } = job.progress;
   if (desired <= 0) return 100;
-  return Math.min(100, Math.max(0, (current / desired) * 100));
+  // Multiplied first: 29 / 100 * 100 is 28.999…, which the label rounds down.
+  return Math.min(100, Math.max(0, (current * 100) / desired));
 }
 
 /**

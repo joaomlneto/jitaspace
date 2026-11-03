@@ -62,12 +62,15 @@ function SourcesCell({ sources }: Readonly<{ sources: FreelanceJobSource[] }>) {
           openDelay={300}
         >
           <span>
-            <EveEntityAvatar
-              entityId={source.subjectId}
-              category={source.kind}
-              size="sm"
-              aria-hidden
-            />
+            {/* On the wrapper: the avatar's fallback icon, shown when the
+                lookup fails, does not pass aria-hidden on. */}
+            <span aria-hidden>
+              <EveEntityAvatar
+                entityId={source.subjectId}
+                category={source.kind}
+                size="sm"
+              />
+            </span>
             <VisuallyHidden>
               <EveEntityName
                 span
