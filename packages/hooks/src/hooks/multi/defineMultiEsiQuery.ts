@@ -81,9 +81,8 @@ export function defineMultiEsiQuery<TItem>(
     options: MultiEsiQueryOptions = {},
   ): MultiEsiQueryResult<TItem> {
     const { selected, ...envelope } = useEsiSubjectQueries(
-      subjectConfig,
+      { ...subjectConfig, subjectIds: options.subjectIds },
       buildQuery,
-      options,
     );
 
     const data = useMemo(

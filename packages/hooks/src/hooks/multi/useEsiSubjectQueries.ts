@@ -115,19 +115,22 @@ export interface MultiEsiQueryConfig {
   kind: EsiSubjectKind;
   scopes?: ESIScope[];
   roles?: CharactersCharacterIdRolesGetRolesEnum[];
-}
-
-/** What a caller of a multi-subject hook may pass when calling it. */
-export interface MultiEsiQueryOptions {
   /**
-   * Query only these subjects, rather than every one the logged-in characters
-   * can reach. Ids no logged-in character can authorise (no token, a missing
-   * scope or role) are left out rather than queried, so compare against the
-   * envelope's `subjectIds` to tell which were. Omit for every subject; an
-   * empty list queries none.
+   * Restrict the fan-out to these subjects. Omit it for every subject the
+   * logged-in characters can reach; ids none of them can reach are ignored
+   * rather than queried, since there is no token to authorise them.
    */
   subjectIds?: readonly number[];
 }
+
+/**
+ * What a caller of a hook built with `defineMultiEsiQuery` or
+ * `defineMultiEsiValueQuery` may pass when calling it: the same subject filter
+ * as {@link MultiEsiQueryConfig.subjectIds}, chosen per call instead of per
+ * hook. Ids no logged-in character can reach are left out of the envelope's
+ * `subjectIds`; an empty list queries none.
+ */
+export type MultiEsiQueryOptions = Pick<MultiEsiQueryConfig, "subjectIds">;
 
 /**
  * Run one query per reachable subject and assemble the shared envelope.
@@ -139,20 +142,18 @@ export interface MultiEsiQueryOptions {
 export function useEsiSubjectQueries<TSelected>(
   config: MultiEsiQueryConfig,
   buildQuery: (subject: EsiSubject) => SubjectQueryOptions<TSelected>,
-  options: MultiEsiQueryOptions = {},
 ): MultiEsiQueryEnvelope & { selected: (TSelected | undefined)[] } {
-  const reachable = useEsiSubjects(config);
-
-  // Keyed by content, so a caller passing a fresh array each render keeps the
-  // same subjects, and so the same queries and memoised results.
-  const wantedKey = options.subjectIds?.join(",");
+  const reachableSubjects = useEsiSubjects(config);
+  // Keyed on the ids' contents rather than the array, so a caller passing a
+  // fresh array literal each render does not rebuild every query.
+  const subjectIdsKey = config.subjectIds?.join(",");
   const subjects = useMemo(() => {
-    if (wantedKey === undefined) return reachable;
+    if (subjectIdsKey === undefined) return reachableSubjects;
     const wanted = new Set(
-      wantedKey === "" ? [] : wantedKey.split(",").map(Number),
+      subjectIdsKey === "" ? [] : subjectIdsKey.split(",").map(Number),
     );
-    return reachable.filter((subject) => wanted.has(subject.id));
-  }, [reachable, wantedKey]);
+    return reachableSubjects.filter((subject) => wanted.has(subject.id));
+  }, [reachableSubjects, subjectIdsKey]);
   const hasHydrated = useAuthStoreHasHydrated();
 
   // Memoised so each `select` keeps its identity between renders: React Query
