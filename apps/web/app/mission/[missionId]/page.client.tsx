@@ -229,7 +229,9 @@ function EpicArcPanel({
           <EveIconAvatar iconId={arc.iconId} size="lg" radius="sm" />
           <Stack gap={2}>
             <EpicArcAnchor epicArcId={arc.epicArcId}>
-              <Title order={3}>{arc.name}</Title>
+              <Title order={2} size="h3">
+                {arc.name}
+              </Title>
             </EpicArcAnchor>
             <Group gap="xs">
               {arc.faction && <FactionLabel faction={arc.faction} />}
@@ -448,7 +450,9 @@ function MissionHero({ mission }: Readonly<{ mission: MissionDetail }>) {
         </HeroImage>
         <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
           <Group gap="sm" align="center">
-            <Title order={2}>{mission.name}</Title>
+            <Title order={1} size="h2">
+              {mission.name}
+            </Title>
             <MissionKindBadge kind={mission.kind} size="md" />
             {mission.epicArcs.length > 0 && (
               <Badge variant="light" color="grape" size="md">

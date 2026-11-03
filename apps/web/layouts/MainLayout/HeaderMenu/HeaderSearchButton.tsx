@@ -13,7 +13,8 @@ import classes from "./HeaderMenu.module.css";
  * bar fits on narrower screens (the labelled nav + wide EVE login button leave
  * no room for the box until `lg`). `useOs()` reports "undetermined" on the server
  * and first client render, resolving the platform only in an effect, so the
- * shortcut hint stays hydration-safe.
+ * shortcut hint stays hydration-safe. The box is named by its visible text (no
+ * aria-label), so speech-input users can say what they see (WCAG 2.5.3).
  */
 export function HeaderSearchButton() {
   const os = useOs();
@@ -25,7 +26,6 @@ export function HeaderSearchButton() {
         className={classes.search}
         visibleFrom="lg"
         onClick={() => openSpotlight()}
-        aria-label="Search New Eden"
       >
         <IconSearch size={16} stroke={1.5} />
         <Text className={classes.searchLabel} size="sm">

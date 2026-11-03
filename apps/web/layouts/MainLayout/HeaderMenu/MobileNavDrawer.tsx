@@ -227,7 +227,7 @@ export const MobileNavDrawer = memo(
         {Object.values(jitaApps).map((group) => (
           <Stack gap={2} key={group.name} mb="sm">
             <Group gap="xs" px="md" py={4}>
-              <group.Icon width={20} />
+              <group.Icon width={20} alt="" />
               <Text fw={600} size="sm">
                 {group.name}
               </Text>
@@ -241,7 +241,7 @@ export const MobileNavDrawer = memo(
                 onClick={close}
               >
                 <Group gap="sm" wrap="nowrap">
-                  <app.Icon width={24} />
+                  <app.Icon width={24} alt="" />
                   <Text size="sm">{app.name}</Text>
                 </Group>
               </UnstyledButton>

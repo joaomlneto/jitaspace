@@ -110,7 +110,9 @@ export default function ConstellationPage({
             Constellation
           </Text>
           <Group gap="sm" align="center">
-            <Title order={2}>{name}</Title>
+            <Title order={1} size="h2">
+              {name}
+            </Title>
             <ActiveIncursionBadge
               active={activeIncursions(incursions)}
               onClick={() => void setActiveTab("incursions")}
