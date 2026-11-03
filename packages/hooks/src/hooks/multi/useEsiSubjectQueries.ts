@@ -115,6 +115,12 @@ export interface MultiEsiQueryConfig {
   kind: EsiSubjectKind;
   scopes?: ESIScope[];
   roles?: CharactersCharacterIdRolesGetRolesEnum[];
+  /**
+   * Restrict the fan-out to these subjects. Omit it for every subject the
+   * logged-in characters can reach; ids none of them can reach are ignored
+   * rather than queried, since there is no token to authorise them.
+   */
+  subjectIds?: readonly number[];
 }
 
 /**
@@ -128,7 +134,17 @@ export function useEsiSubjectQueries<TSelected>(
   config: MultiEsiQueryConfig,
   buildQuery: (subject: EsiSubject) => SubjectQueryOptions<TSelected>,
 ): MultiEsiQueryEnvelope & { selected: (TSelected | undefined)[] } {
-  const subjects = useEsiSubjects(config);
+  const reachableSubjects = useEsiSubjects(config);
+  // Keyed on the ids' contents rather than the array, so a caller passing a
+  // fresh array literal each render does not rebuild every query.
+  const subjectIdsKey = config.subjectIds?.join(",");
+  const subjects = useMemo(() => {
+    if (subjectIdsKey === undefined) return reachableSubjects;
+    const wanted = new Set(
+      subjectIdsKey === "" ? [] : subjectIdsKey.split(",").map(Number),
+    );
+    return reachableSubjects.filter((subject) => wanted.has(subject.id));
+  }, [reachableSubjects, subjectIdsKey]);
   const hasHydrated = useAuthStoreHasHydrated();
 
   // Memoised so each `select` keeps its identity between renders: React Query
