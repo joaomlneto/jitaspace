@@ -13,6 +13,7 @@ import {
   SolarSystemName,
   StationName,
   StructureName,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import {
@@ -63,6 +64,48 @@ export function ContractTypeIcon({
 }: Readonly<{ type: ContractKind } & EveIconProps>) {
   const Icon = KIND_ICON[type];
   return <Icon alt={CONTRACT_KIND_LABEL[type]} {...props} />;
+}
+
+/**
+ * The picture for a contract: its first offered item's image, or the
+ * contract type's icon when it has no item (couriers, title-only contracts)
+ * or the item has no image of its own (SKINs and the like).
+ */
+export function ContractArtwork({
+  type,
+  item,
+  size,
+}: Readonly<{
+  type: ContractKind;
+  item: { typeId: number; imageVariation?: string } | null | undefined;
+  size: number;
+}>) {
+  const icon = <ContractTypeIcon type={type} size={size} />;
+  if (!item) {
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          width: size,
+          height: size,
+          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {icon}
+      </span>
+    );
+  }
+  return (
+    <TypeAvatar
+      typeId={item.typeId}
+      variation={item.imageVariation}
+      size={size}
+      radius="sm"
+      fallback={icon}
+    />
+  );
 }
 
 export function ContractTypeBadge({

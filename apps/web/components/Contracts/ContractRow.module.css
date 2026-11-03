@@ -31,11 +31,8 @@
 .kind {
   display: flex;
   flex-shrink: 0;
-}
-
-.avatarGap {
-  width: 28px;
-  flex-shrink: 0;
+  /* Fixed, so rows without an item (and so without this icon) still align. */
+  width: 18px;
 }
 
 .name {

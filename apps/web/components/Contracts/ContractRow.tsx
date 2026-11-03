@@ -3,13 +3,13 @@
 import { memo } from "react";
 import { Paper, Skeleton, Text } from "@mantine/core";
 
-import { TypeAvatar } from "@jitaspace/eve-components";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type { ContractSummary } from "./contract";
 import { ContractAnchor } from "~/components/Anchor";
 import { CONTRACT_KIND_LABEL, contractHeadlineIsk } from "./contract";
 import {
+  ContractArtwork,
   contractDisplayName,
   ContractIssuer,
   ContractLocationLine,
@@ -50,18 +50,10 @@ export const ContractRow = memo(function ContractRow({
           className={classes.kind}
           title={CONTRACT_KIND_LABEL[contract.type]}
         >
-          <ContractTypeIcon type={contract.type} size={18} />
+          {/* Without an item the artwork already is the type's icon. */}
+          {first ? <ContractTypeIcon type={contract.type} size={18} /> : null}
         </span>
-        {first ? (
-          <TypeAvatar
-            typeId={first.typeId}
-            variation={first.imageVariation}
-            size={28}
-            radius="sm"
-          />
-        ) : (
-          <span className={classes.avatarGap} />
-        )}
+        <ContractArtwork type={contract.type} item={first} size={28} />
         <div className={classes.name}>
           <ContractAnchor
             contractId={contract.contractId}

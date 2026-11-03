@@ -245,8 +245,10 @@ function ContractHero({
         firstItem !== null ? (
           <TypeAvatar
             typeId={firstItem.typeId}
-            variation={firstItem.imageVariation ?? "icon"}
+            variation={firstItem.imageVariation}
             size={128}
+            // A SKIN or the like has no image: show what the contract is.
+            fallback={<ContractTypeIcon type={contract.type} size={96} />}
           />
         ) : (
           <ContractTypeIcon type={contract.type} size={96} />

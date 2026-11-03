@@ -1,6 +1,7 @@
 "use client";
 
 import type { AvatarProps } from "@mantine/core";
+import type { ReactNode } from "react";
 import { memo } from "react";
 
 import { UnknownIcon } from "@jitaspace/eve-icons";
@@ -16,6 +17,11 @@ export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
    * back to the placeholder.
    */
   variation?: string;
+  /**
+   * What to show when the type has no image to load (a SKIN, say). Defaults
+   * to the unknown-item glyph.
+   */
+  fallback?: ReactNode;
 };
 
 /**
@@ -25,7 +31,12 @@ export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
  * the package stay free of network dependencies.
  */
 export const TypeAvatar = memo(
-  ({ typeId, variation = "icon", ...otherProps }: TypeAvatarProps) => {
+  ({
+    typeId,
+    variation = "icon",
+    fallback,
+    ...otherProps
+  }: TypeAvatarProps) => {
     return (
       <EveImageServerAvatar
         category="types"
@@ -35,7 +46,7 @@ export const TypeAvatar = memo(
         {...otherProps}
       >
         {/* FIXME: size should depend on props */}
-        <UnknownIcon width={32} />
+        {fallback ?? <UnknownIcon width={32} />}
       </EveImageServerAvatar>
     );
   },
