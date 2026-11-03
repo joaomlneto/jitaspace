@@ -721,7 +721,7 @@ function TypesSection({
 function effectDetails(
   props: Readonly<PageProps>,
   flagEntries: FlagEntry[],
-): { label: string; value: ReactNode }[] {
+): { label: string; value: ReactNode; sub?: ReactNode }[] {
   const { effectId, name, displayName, category, guid } = props;
   const optional = (label: string, value: number | null) =>
     value === null ? [] : [{ label, value }];
@@ -734,24 +734,18 @@ function effectDetails(
           {
             label: "Category",
             value: (
-              <Stack gap={2}>
-                <Text component="span">
-                  {categoryLabel(category)}{" "}
-                  <Text component="span" c="dimmed" size="sm">
-                    ({category.effectCategoryId}
-                    {category.customName && category.name
-                      ? `, ${category.name}`
-                      : ""}
-                    )
-                  </Text>
+              <>
+                {categoryLabel(category)}{" "}
+                <Text component="span" c="dimmed" size="sm">
+                  ({category.effectCategoryId}
+                  {category.customName && category.name
+                    ? `, ${category.name}`
+                    : ""}
+                  )
                 </Text>
-                {category.customDescription && (
-                  <Text size="sm" c="dimmed">
-                    {category.customDescription}
-                  </Text>
-                )}
-              </Stack>
+              </>
             ),
+            sub: category.customDescription ?? undefined,
           },
         ]
       : []),
@@ -819,6 +813,7 @@ export default function DogmaEffectPage(props: Readonly<PageProps>) {
                 key={detail.label}
                 label={detail.label}
                 value={detail.value}
+                sub={detail.sub}
               />
             ))}
           </SimpleGrid>

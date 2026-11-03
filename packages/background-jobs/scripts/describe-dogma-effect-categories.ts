@@ -39,7 +39,7 @@ const CATEGORIES: Record<number, { name: string; description: string }> = {
   4: {
     name: "Online",
     description:
-      "Applies while a module is online, without activating it: armor plates, damage and rate-of-fire modules, power and capacitor upgrades, sensor and tracking enhancers. It stops when the module goes offline, and needs no capacitor per cycle.",
+      "Applies while a module is online, without activating it: armor plates, damage and rate-of-fire modules, power and capacitor upgrades, signal amplifiers, tracking enhancers. It stops when the module goes offline, and needs no capacitor per cycle.",
   },
   5: {
     name: "Overheated",
