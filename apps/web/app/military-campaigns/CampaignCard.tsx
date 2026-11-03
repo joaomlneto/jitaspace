@@ -24,7 +24,12 @@ import type { Participation } from "./parts";
 import { FactionAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { MailMessageViewer } from "~/components/EveMail";
-import { formatDateTime, formatInteger, formatPercent } from "~/lib/format";
+import {
+  formatCountOf,
+  formatDateTime,
+  formatInteger,
+  formatPercent,
+} from "~/lib/format";
 import {
   campaignAnchorId,
   campaignTitle,
@@ -93,7 +98,7 @@ export function ParticipantAvatars({
               <Text size="xs">
                 {sumContributions
                   ? `Contributed ${formatInteger(entry.contributed)}`
-                  : `Joined ${entry.objectives === 1 ? "1 objective" : `${formatInteger(entry.objectives)} objectives`}`}
+                  : `Joined ${formatCountOf(entry.objectives, "objective", "objectives")}`}
                 {entry.committed ? " · committed" : ""}
               </Text>
             </Stack>

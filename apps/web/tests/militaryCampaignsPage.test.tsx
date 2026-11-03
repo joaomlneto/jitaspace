@@ -266,7 +266,7 @@ describe("Military campaigns page", () => {
     // The campaign it joined shows the "Your characters" column, and only the
     // objectives it joined have someone in it.
     const card = campaignCard("bbbbbbbb");
-    expect(within(card).getAllByText("Your characters").length).toBe(2);
+    expect(within(card).getAllByText("Your characters")).toHaveLength(2);
   });
 
   it("offers to grant the scope to a character that has not, keeping its others", () => {
