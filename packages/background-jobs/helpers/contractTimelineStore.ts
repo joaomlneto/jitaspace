@@ -12,9 +12,11 @@
  */
 import type { Prisma } from "../db";
 import type {
+  AppliedObservation,
   ContractEndReason,
   ContractTimelineState,
   LoggedObservation,
+  RegionObservation,
   StoredContract,
 } from "./contractTimeline";
 import type { ContractRow } from "./publicContracts";
@@ -210,6 +212,101 @@ const writeAbsences = async (
   }
 };
 
+const loadLog = async (tx: Prisma.TransactionClient, regionId: number) =>
+  (
+    await tx.$queryRaw<
+      { observedAt: Date; contractCount: number; isSeed: boolean }[]
+    >`SELECT "observedAt", "contractCount", "isSeed" FROM "ContractRegionObservation"
+      WHERE "regionId" = ${regionId}`
+  ).map<LoggedObservation>((o) => ({
+    observedAt: o.observedAt.getTime(),
+    contractCount: o.contractCount,
+    isSeed: o.isSeed,
+  }));
+
+/** Seed an empty log with the region's outstanding count. */
+const seedLog = async (
+  tx: Prisma.TransactionClient,
+  regionId: number,
+  outstanding: number,
+) => {
+  const log = seedLogOf(outstanding);
+  for (const seed of log) {
+    await tx.$executeRaw`
+      INSERT INTO "ContractRegionObservation" ("regionId", "observedAt", "contractCount", "isSeed")
+      VALUES (${regionId}, ${iso(seed.observedAt)}::timestamptz AT TIME ZONE 'UTC',
+        ${seed.contractCount}, true)
+      ON CONFLICT DO NOTHING`;
+  }
+  return log;
+};
+
+/**
+ * Every stored contract the observation can affect: the region's outstanding
+ * ones, the ended ones it lists, and the ended absences within its reach.
+ * One connection per transaction, so these run one after the other.
+ */
+const loadStored = async (
+  tx: Prisma.TransactionClient,
+  regionId: number,
+  outstanding: StoredRow[],
+  log: readonly LoggedObservation[],
+  observation: RegionObservation,
+) => {
+  const reach = observationReach(log, observation);
+  const readAll =
+    reach.completenessChanged || !Number.isFinite(reach.endedSince);
+  const listedEnded = await tx.$queryRawUnsafe<StoredRow[]>(
+    `SELECT ${SELECT_STORED} FROM "Contract" c
+     LEFT JOIN "ContractAbsence" a ON a."contractId" = c."contractId"
+     WHERE c."contractId" = ANY($1::int[]) AND c."isDeleted" = true`,
+    [...observation.contractIds],
+  );
+  const endedAbsences = await tx.$queryRawUnsafe<StoredRow[]>(
+    `SELECT ${SELECT_STORED} FROM "ContractAbsence" a
+     JOIN "Contract" c ON c."contractId" = a."contractId"
+     WHERE a."regionId" = $1 AND a.ended
+       AND ($2::bool OR a."lastSeenAt" >= $3::timestamptz AT TIME ZONE 'UTC')`,
+    regionId,
+    readAll,
+    iso(Number.isFinite(reach.endedSince) ? reach.endedSince : 0),
+  );
+  const stored = new Map<number, StoredContract>();
+  for (const r of [...outstanding, ...listedEnded, ...endedAbsences]) {
+    stored.set(r.contractId, toStored(r));
+  }
+  return stored;
+};
+
+/** What changed, for the caller's stats and work queues. */
+const summarise = (
+  regionId: number,
+  stored: ReadonlyMap<number, StoredContract>,
+  applied: AppliedObservation,
+): Omit<AppliedListing, "missing"> => {
+  const result = {
+    regionId,
+    refused: false,
+    inserted: applied.inserts.map((i) => i.contractId),
+    reopened: [] as number[],
+    ended: applied.inserts.flatMap((i) =>
+      i.state.isDeleted
+        ? [{ contractId: i.contractId, reason: i.state.endReason }]
+        : [],
+    ),
+    corrected: [] as number[],
+  };
+  for (const { contractId, state } of applied.updates) {
+    const wasEnded = stored.get(contractId)?.isDeleted;
+    if (wasEnded === undefined) continue;
+    if (wasEnded && !state.isDeleted) result.reopened.push(contractId);
+    else if (!wasEnded && state.isDeleted) {
+      result.ended.push({ contractId, reason: state.endReason });
+    } else if (wasEnded) result.corrected.push(contractId);
+  }
+  return result;
+};
+
 /**
  * Apply one region's listing to the contract timeline. Idempotent, and
  * independent of the order listings arrive in (see `contractTimeline.ts`).
@@ -224,91 +321,55 @@ export const applyRegionListing = (
       const { regionId, observedAt } = listing;
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${LOCK_NAMESPACE}::int, ${regionId}::int)`;
 
-      let log = (
-        await tx.$queryRaw<
-          { observedAt: Date; contractCount: number; isSeed: boolean }[]
-        >`SELECT "observedAt", "contractCount", "isSeed" FROM "ContractRegionObservation"
-          WHERE "regionId" = ${regionId}`
-      ).map<LoggedObservation>((o) => ({
-        observedAt: o.observedAt.getTime(),
-        contractCount: o.contractCount,
-        isSeed: o.isSeed,
-      }));
+      let log = await loadLog(tx, regionId);
+      const latest = Math.max(
+        ...log.filter((o) => !o.isSeed).map((o) => o.observedAt),
+      );
+      if (observedAt < latest - TIMELINE_RETENTION_MS) {
+        return {
+          regionId,
+          refused: true,
+          inserted: [],
+          reopened: [],
+          ended: [],
+          corrected: [],
+          missing: 0,
+        };
+      }
       const outstanding = await tx.$queryRawUnsafe<StoredRow[]>(
         `SELECT ${SELECT_STORED} FROM "Contract" c
          LEFT JOIN "ContractAbsence" a ON a."contractId" = c."contractId"
          WHERE c."regionId" = $1 AND c."isDeleted" = false`,
         regionId,
       );
-      const result: AppliedListing = {
-        regionId,
-        refused: false,
-        inserted: [],
-        reopened: [],
-        ended: [],
-        corrected: [],
-        missing: 0,
-      };
+      if (log.length === 0)
+        log = await seedLog(tx, regionId, outstanding.length);
 
-      const latest = Math.max(
-        ...log.filter((o) => !o.isSeed).map((o) => o.observedAt),
-      );
-      if (observedAt < latest - TIMELINE_RETENTION_MS) {
-        return { ...result, refused: true };
-      }
-      if (log.length === 0) {
-        log = seedLogOf(outstanding.length);
-        for (const seed of log) {
-          await tx.$executeRaw`
-            INSERT INTO "ContractRegionObservation" ("regionId", "observedAt", "contractCount", "isSeed")
-            VALUES (${regionId}, ${iso(seed.observedAt)}::timestamptz AT TIME ZONE 'UTC',
-              ${seed.contractCount}, true)
-            ON CONFLICT DO NOTHING`;
-        }
-      }
-
-      const ids = listing.contracts.map((c) => c.contractId);
-      const observation = {
+      const rows = new Map(listing.contracts.map((c) => [c.contractId, c]));
+      const observation: RegionObservation = {
         observedAt,
-        contractIds: new Set(ids),
+        contractIds: new Set(rows.keys()),
         dateExpired: new Map(
           listing.contracts.map((c) => [c.contractId, c.dateExpired.getTime()]),
         ),
       };
-      const reach = observationReach(log, observation);
-      const readAll =
-        reach.completenessChanged || !Number.isFinite(reach.endedSince);
-      // One connection per transaction: these run one after the other.
-      const listedEnded = await tx.$queryRawUnsafe<StoredRow[]>(
-        `SELECT ${SELECT_STORED} FROM "Contract" c
-           LEFT JOIN "ContractAbsence" a ON a."contractId" = c."contractId"
-           WHERE c."contractId" = ANY($1::int[]) AND c."isDeleted" = true`,
-        ids,
-      );
-      const endedAbsences = await tx.$queryRawUnsafe<StoredRow[]>(
-        `SELECT ${SELECT_STORED} FROM "ContractAbsence" a
-           JOIN "Contract" c ON c."contractId" = a."contractId"
-           WHERE a."regionId" = $1 AND a.ended
-             AND ($2::bool OR a."lastSeenAt" >= $3::timestamptz AT TIME ZONE 'UTC')`,
+      const stored = await loadStored(
+        tx,
         regionId,
-        readAll,
-        iso(Number.isFinite(reach.endedSince) ? reach.endedSince : 0),
+        outstanding,
+        log,
+        observation,
       );
-      const stored = new Map<number, StoredContract>();
-      for (const r of [...outstanding, ...listedEnded, ...endedAbsences]) {
-        stored.set(r.contractId, toStored(r));
-      }
-      const rows = new Map(listing.contracts.map((c) => [c.contractId, c]));
-      const fresh = [...rows.values()].filter((c) => !stored.has(c.contractId));
-
       const applied = applyRegionObservation({
         log,
         observation,
         stored: [...stored.values()],
-        fresh: fresh.map((c) => ({
-          contractId: c.contractId,
-          dateExpired: c.dateExpired.getTime(),
-        })),
+        fresh: listing.contracts
+          .filter((c) => !stored.has(c.contractId))
+          .map((c) => ({
+            contractId: c.contractId,
+            dateExpired: c.dateExpired.getTime(),
+          })),
       });
 
       await insertContracts(
@@ -334,31 +395,12 @@ export const applyRegionListing = (
         ON CONFLICT ("regionId", "observedAt") DO UPDATE
           SET "contractCount" = GREATEST("ContractRegionObservation"."contractCount", EXCLUDED."contractCount")`;
 
-      result.inserted = applied.inserts.map((i) => i.contractId);
-      for (const { contractId, state } of applied.updates) {
-        const before = stored.get(contractId);
-        if (!before) continue;
-        if (before.isDeleted && !state.isDeleted)
-          result.reopened.push(contractId);
-        else if (!before.isDeleted && state.isDeleted) {
-          result.ended.push({ contractId, reason: state.endReason });
-        } else if (before.isDeleted && state.isDeleted) {
-          result.corrected.push(contractId);
-        }
-      }
-      for (const i of applied.inserts) {
-        if (i.state.isDeleted) {
-          result.ended.push({
-            contractId: i.contractId,
-            reason: i.state.endReason,
-          });
-        }
-      }
-      result.missing = await tx.$queryRaw<{ n: number }[]>`
-        SELECT count(*)::int n FROM "ContractAbsence" WHERE "regionId" = ${regionId} AND NOT ended`.then(
-        (r) => r[0]?.n ?? 0,
-      );
-      return result;
+      const [missing] = await tx.$queryRaw<{ n: number }[]>`
+        SELECT count(*)::int n FROM "ContractAbsence" WHERE "regionId" = ${regionId} AND NOT ended`;
+      return {
+        ...summarise(regionId, stored, applied),
+        missing: missing?.n ?? 0,
+      };
     },
     { timeout: 120_000, maxWait: 60_000 },
   );
