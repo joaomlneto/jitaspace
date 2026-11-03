@@ -105,26 +105,6 @@ describe("DataTable — loading state", () => {
     expect(screen.queryByText("No data")).not.toBeInTheDocument();
   });
 
-  it("names the pagination arrows for screen readers", () => {
-    renderWithMantine(
-      <DataTable
-        columns={columns}
-        data={Array.from({ length: 30 }, (_, i) => ({
-          name: `n${i}`,
-          score: i,
-        }))}
-        withPagination
-        defaultPageSize={10}
-      />,
-    );
-    expect(
-      screen.getByRole("button", { name: "Previous page" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Next page" }),
-    ).toBeInTheDocument();
-  });
-
   // A full page of placeholders keeps the table at its loaded height, so rows
   // arriving do not push the page down (the market page's CLS fix needs this).
   it("renders one skeleton row per row of the page size", () => {
@@ -348,6 +328,18 @@ describe("DataTable — pagination", () => {
       <DataTable columns={columns} data={data} withPagination />,
     );
     expect(screen.getByText("Rows per page:")).toBeInTheDocument();
+  });
+
+  it("names its arrow buttons, so a screen reader can tell them apart", () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withPagination />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next page" }),
+    ).toBeInTheDocument();
   });
 
   it("shows the total filtered row count", () => {

@@ -427,15 +427,24 @@ model DogmaAttributeCategory {
 }
 
 model DogmaEffectCategory {
-  effectCategoryId Int           @id
-  name             String
+  effectCategoryId  Int           @id
+  /// CCP's internal name, e.g. `dgmEffPassive`.
+  name              String
+  /// Not from CCP: a player-facing name for the category ("Passive",
+  /// "Overheated"), since CCP only ships the internal `dgmEff…` one.
+  /// No scraper writes it; written by
+  /// packages/background-jobs/scripts/describe-dogma-effect-categories.ts.
+  customName        String?
+  /// Not from CCP: a plain-language description of when the category's effects
+  /// apply. Plain text. Same owner as `customName`.
+  customDescription String?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt()
-  isDeleted        Boolean       @default(false)
-  effects          DogmaEffect[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt()
+  isDeleted         Boolean       @default(false)
+  effects           DogmaEffect[]
 }
 
 model DogmaEffect {

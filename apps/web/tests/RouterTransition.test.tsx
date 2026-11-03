@@ -20,8 +20,16 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@mantine/nprogress", () => ({
   __esModule: true,
-  NavigationProgress: ({ size }: { size?: number }) => (
-    <div data-testid="nav-progress">{`progress-${size}`}</div>
+  NavigationProgress: ({
+    size,
+    "aria-label": label,
+  }: {
+    size?: number;
+    "aria-label"?: string;
+  }) => (
+    <div data-testid="nav-progress" aria-label={label}>
+      {`progress-${size}`}
+    </div>
   ),
   nprogress: {
     complete: () => mockComplete(),
@@ -46,6 +54,14 @@ describe("RouterTransition", () => {
     expect(screen.getByTestId("nav-progress")).toHaveTextContent("progress-5");
     expect(mockComplete).toHaveBeenCalledTimes(1);
     expect(mockStart).not.toHaveBeenCalled();
+  });
+
+  it("names the bar for assistive technology", () => {
+    renderTransition();
+    expect(screen.getByTestId("nav-progress")).toHaveAttribute(
+      "aria-label",
+      "Page loading",
+    );
   });
 
   it("starts progress on unmount (effect cleanup)", () => {
