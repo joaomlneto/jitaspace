@@ -127,7 +127,20 @@ interface DogmaMetaStub {
   categoryNames: Record<number, string>;
   effects: Record<
     number,
-    { name?: string; description?: { text: string; source: "ccp" | "ai" } }
+    {
+      name?: string;
+      description?: { text: string; source: "ccp" | "ai" };
+      categoryId?: number;
+    }
+  >;
+  effectCategories?: Record<
+    number,
+    {
+      effectCategoryId: number;
+      name: string | null;
+      customName: string | null;
+      customDescription: string | null;
+    }
   >;
 }
 
@@ -145,7 +158,10 @@ interface TypePageProps {
   npcStats?: unknown;
 }
 
-/** Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized. */
+/**
+ * Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized.
+ * Effect 11 is Passive (effect category 0), effect 12 Online (4).
+ */
 const DEFAULT_DOGMA_META: DogmaMetaStub = {
   attributes: { 4: { categoryId: 7 }, 161: { categoryId: 7 }, 999: {} },
   unitSymbols: {},
@@ -154,6 +170,7 @@ const DEFAULT_DOGMA_META: DogmaMetaStub = {
     11: {
       name: "Low power",
       description: { text: "Requires a low power slot", source: "ccp" },
+      categoryId: 0,
     },
     12: {
       name: "trackingSpeedBonusEffectLasers",
@@ -161,6 +178,21 @@ const DEFAULT_DOGMA_META: DogmaMetaStub = {
         text: "Increases the Turret Tracking of lasers.",
         source: "ai",
       },
+      categoryId: 4,
+    },
+  },
+  effectCategories: {
+    0: {
+      effectCategoryId: 0,
+      name: "dgmEffPassive",
+      customName: "Passive",
+      customDescription: "Always applies.",
+    },
+    4: {
+      effectCategoryId: 4,
+      name: "dgmEffOnline",
+      customName: "Online",
+      customDescription: null,
     },
   },
 };
@@ -418,6 +450,42 @@ describe("Type page (client)", () => {
     expect(screen.getByText("Armor")).toBeInTheDocument();
     expect(screen.getByText("Other")).toBeInTheDocument();
     expect(screen.getByText("Effects")).toBeInTheDocument();
+  });
+
+  it("groups effects by effect category, in category-id order", () => {
+    renderPage();
+    clickTab(/Attributes/);
+
+    const passive = screen.getByText("Passive");
+    const online = screen.getByText("Online");
+    expect(
+      passive.compareDocumentPosition(online) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // Each effect sits under its own category's heading.
+    const lowPower = screen.getByText("Low power");
+    const tracking = screen.getByText("trackingSpeedBonusEffectLasers");
+    expect(
+      passive.compareDocumentPosition(lowPower) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      lowPower.compareDocumentPosition(online) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      online.compareDocumentPosition(tracking) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("names no effect group when there is no category data at all", () => {
+    renderPage({
+      dogmaMeta: { ...DEFAULT_DOGMA_META, effects: {}, effectCategories: {} },
+    });
+    clickTab(/Attributes/);
+    // Only the attributes' uncategorized bucket is called "Other".
+    expect(screen.getAllByText("Other")).toHaveLength(1);
   });
 
   it("describes each effect under its name, labelling ours as AI", () => {

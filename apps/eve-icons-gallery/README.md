@@ -18,3 +18,9 @@ pnpm --filter @jitaspace/eve-icons-gallery build   # static site in out/
 The icons are © CCP hf. (Fenris Creations) and are not MIT-licensed; see the
 package's [LICENSE](../../packages/eve-icons/LICENSE). The footer carries the
 required notices.
+
+On Vercel (project `eve-icons-gallery`), `vercel.json`'s `ignoreCommand` skips
+the build unless the commit changes this app or a workspace it depends on
+(`turbo query affected`), measured from the last deployed commit on the branch.
+A change to `turbo.json`, the root `package.json` or the root of the lockfile
+counts as affecting every package, so those still build.
