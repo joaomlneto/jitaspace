@@ -47,7 +47,9 @@ function SearchView() {
   return (
     <Container size="sm">
       <Stack gap="md">
-        <Title order={2}>Search</Title>
+        <Title order={1} size="h2">
+          Search
+        </Title>
         <TextInput
           ref={inputRef}
           size="md"

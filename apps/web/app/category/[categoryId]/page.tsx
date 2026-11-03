@@ -108,7 +108,9 @@ async function PageContent({
         </Group>
         <CategoryBreadcrumbs categoryId={categoryId} categoryName={name} />
         <Stack gap="xs">
-          <Title order={3}>Groups</Title>
+          <Title order={2} size="h3">
+            Groups
+          </Title>
           <SimpleGrid spacing="xs" cols={{ base: 1, xs: 2, md: 3 }}>
             {sortedGroups.map((group) => (
               <Group key={group.groupId}>

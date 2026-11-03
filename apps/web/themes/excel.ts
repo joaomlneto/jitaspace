@@ -1,10 +1,32 @@
-import type { MantineColorsTuple } from "@mantine/core";
+import type { MantineColorsTuple, TitleProps } from "@mantine/core";
 import { createTheme } from "@mantine/core";
 
 import { contrastComponents, variantColorResolver } from "./contrast";
 import classes from "./excel.module.css";
 import { lightDark } from "./lightDark";
 import { EXCEL_GRID } from "./wallpapers";
+
+/**
+ * The heading level a Title is drawn at: its `size` when that names a heading
+ * (`size="h2"`), otherwise its `order` (Mantine's default is 1).
+ */
+export function titleVisualLevel({
+  order,
+  size,
+}: Pick<TitleProps, "order" | "size">): number {
+  const match = typeof size === "string" ? /^h([1-6])$/.exec(size) : null;
+  return match ? Number(match[1]) : (order ?? 1);
+}
+
+const HEADING_LEVEL_CLASSES: Partial<Record<number, string>> = {
+  2: classes.heading2,
+  3: classes.heading3,
+  4: classes.heading4,
+};
+
+function headingLevelClass(level: number): string | undefined {
+  return HEADING_LEVEL_CLASSES[level];
+}
 
 /**
  * Excel — for fun: the app as a spreadsheet.
@@ -130,8 +152,14 @@ export const excelTheme = createTheme({
       defaultProps: { radius: 0, withBorder: true, bg: sheet },
     },
 
+    // Headings are styled by how they look, not their level: a page title
+    // is an h1 drawn at h2 size, and should still get Heading 1's rule.
     Title: {
-      classNames: { root: classes.title },
+      classNames: (_theme: unknown, props: TitleProps) => ({
+        root: [classes.title, headingLevelClass(titleVisualLevel(props))]
+          .filter(Boolean)
+          .join(" "),
+      }),
     },
 
     Anchor: {
