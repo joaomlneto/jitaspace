@@ -262,7 +262,8 @@ export const characterApps: Record<string, JitaApp> = {
       // The den locations (esi-structures.read_character.v1) are not listed
       // as optional: getEnabledApps treats an app with optional sets as
       // needing one of them, which would hide this app from a character that
-      // granted only the activities scope. The page asks for it itself.
+      // granted only the activities scope. They are in extraJitaFeatures, so
+      // the login modal asks for them, and the page asks for them itself.
     },
   },
   freelance: {
@@ -616,6 +617,14 @@ export const extraJitaFeatures: AppScopeSet[] = [
   {
     reason: "View your character assets (and active ship fitting)",
     scopes: ["esi-assets.read_assets.v1"],
+  },
+  {
+    // Here rather than as an optional scope of Mercenary Operations, which
+    // would hide that app from a character without it (getEnabledApps). Being
+    // in the login modal's default set also keeps a later login from dropping
+    // it.
+    reason: "Read where your Mercenary Dens are",
+    scopes: ["esi-structures.read_character.v1"],
   },
 ];
 

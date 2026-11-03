@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import { describe, expect, it } from "@jest/globals";
 
 import { getEnabledApps } from "~/components/Menu/appAccess";
-import { characterApps } from "~/config/apps";
+import { characterApps, extraJitaFeatures } from "~/config/apps";
 
 const getEnabledCharacterApps = (
   scopes: Parameters<typeof getEnabledApps>[1],
@@ -54,6 +54,18 @@ describe("character app access", () => {
     expect(getEnabledCharacterApps([]).map((app) => app.name)).not.toContain(
       "Mercenary Operations",
     );
+  });
+
+  it("asks for the Mercenary Den locations at login, without gating the app on them", () => {
+    // The login modal requests every extra feature by default, so a later
+    // login keeps the scope instead of quietly dropping it.
+    expect(extraJitaFeatures.flatMap((feature) => feature.scopes)).toContain(
+      "esi-structures.read_character.v1",
+    );
+    const mercenaryApp = Object.values(characterApps).find(
+      (app) => app.url === "/mercenary-tactical-operations",
+    );
+    expect(mercenaryApp?.scopes.optional).toBeUndefined();
   });
 
   it("disables optional-only apps when no optional scope is granted", () => {

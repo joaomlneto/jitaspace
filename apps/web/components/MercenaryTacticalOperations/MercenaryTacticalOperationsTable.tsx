@@ -132,6 +132,9 @@ function charactersCell(row: OperationRow) {
 }
 
 function locationCell(row: OperationRow) {
+  if (row.planetId === undefined && row.locationPending) {
+    return <Skeleton height={14} width={80} radius="sm" />;
+  }
   if (row.planetId === undefined) {
     return (
       <Text size="sm" className={classes.secondary} fs="italic">

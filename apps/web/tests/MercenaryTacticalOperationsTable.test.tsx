@@ -172,6 +172,15 @@ describe("MercenaryTacticalOperationsTable", () => {
     ).toHaveAttribute("href", `/planet/${PLANET}`);
   });
 
+  it("holds a placeholder, not Unknown, while the den is still being located", () => {
+    const { container } = renderTable([row({ locationPending: true })]);
+
+    expect(screen.queryByText("Unknown")).not.toBeInTheDocument();
+    expect(
+      container.querySelectorAll("td .mantine-Skeleton-root").length,
+    ).toBeGreaterThan(0);
+  });
+
   it("says the den's location is unknown when it was not shared", () => {
     renderTable([row()]);
 

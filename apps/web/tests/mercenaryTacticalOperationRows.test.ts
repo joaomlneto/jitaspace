@@ -125,6 +125,30 @@ describe("toOperationRows", () => {
 
     expect(result?.planetId).toBe(PLANET);
   });
+
+  it("marks an unlocated den pending while a character listing it loads its dens", () => {
+    const rows = toOperationRows(
+      [
+        operation("bob", { characterIds: [BOB] }),
+        operation("alice", { characterIds: [ALICE] }),
+        operation("located", {
+          characterIds: [BOB],
+          mercenaryDenId: OTHER_DEN,
+        }),
+      ],
+      [],
+      new Set(),
+      new Map([[OTHER_DEN, PLANET]]),
+      new Set([BOB]),
+    );
+
+    expect(rows.map((r) => [r.operationId, r.locationPending])).toEqual([
+      ["bob", true],
+      // Alice's dens settled without this one: it is unknown, not pending.
+      ["alice", undefined],
+      ["located", undefined],
+    ]);
+  });
 });
 
 describe("operationName", () => {
@@ -191,6 +215,12 @@ describe("filterOperationRows", () => {
         states: ["Started"],
       }),
     ).toEqual([sharedStarted, bobLoading]);
+  });
+
+  it("keeps nothing, not even operations still loading, with no state selected", () => {
+    expect(
+      filterOperationRows(rows, { characterIds: null, states: [] }),
+    ).toEqual([]);
   });
 
   it("keeps nothing for an empty character selection", () => {

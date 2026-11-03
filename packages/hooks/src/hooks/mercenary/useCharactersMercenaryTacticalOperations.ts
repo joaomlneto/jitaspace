@@ -2,7 +2,7 @@
 
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 
 import type {
   GetCharactersMercenaryTacticalOperationsListingQueryResponse,
@@ -123,7 +123,9 @@ const SCOPES = [MERCENARY_TACTICAL_OPERATIONS_SCOPE];
  *
  * ESI only lists ids, so this reads each operation's details as well — once
  * per operation rather than once per character listing it, through the first
- * character that does. Every listing and every operation is its own query, so
+ * character that does. A character whose read of it is already cached keeps
+ * it, so a listing that lands late does not move the read to another
+ * character and fetch it again. Every listing and every operation is its own query, so
  * the cache is shared with {@link useCharacterMercenaryTacticalOperations} and
  * {@link useCharacterMercenaryTacticalOperation}, and a failure affects only
  * the character or operation it belongs to.
@@ -134,6 +136,7 @@ export function useCharactersMercenaryTacticalOperations(
   const hasHydrated = useAuthStoreHasHydrated();
   const loggedInCharacterIds = useAuthenticatedCharacterIds();
   const subjects = useEsiSubjects({ kind: "character", scopes: SCOPES });
+  const queryClient = useQueryClient();
 
   // Keyed by content, so a caller passing a fresh array on every render does
   // not rebuild every query.
@@ -193,8 +196,32 @@ export function useCharactersMercenaryTacticalOperations(
         });
       }
     });
+    // Listings land in any order, so the first character to list an operation
+    // can change as they do. Reading the details through another character
+    // would fetch them again and blank the row meanwhile, so a character whose
+    // read is already in the cache (loaded or on its way) keeps it.
+    const subjectById = new Map(
+      selectedSubjects.map((subject) => [subject.id, subject]),
+    );
+    for (const operation of byId.values()) {
+      if (operation.characterIds.length < 2) continue;
+      const cached = operation.characterIds
+        .map((characterId) => subjectById.get(characterId))
+        .find(
+          (subject) =>
+            subject !== undefined &&
+            queryClient.getQueryState(
+              getCharactersMercenaryTacticalOperationsDetailQueryOptions(
+                operation.operationId,
+                subject.id,
+                subject.authHeaders,
+              ).queryKey,
+            ) !== undefined,
+        );
+      if (cached) operation.subject = cached;
+    }
     return [...byId.values()];
-  }, [selectedSubjects, listings.data]);
+  }, [selectedSubjects, listings.data, queryClient]);
 
   const detailQueries = useMemo(
     () =>

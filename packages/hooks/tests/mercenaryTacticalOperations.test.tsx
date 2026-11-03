@@ -41,13 +41,14 @@ jest.mock("@jitaspace/esi-client", () => ({
     mockUseListing(...args),
   useGetCharactersMercenaryTacticalOperationsDetail: (...args: unknown[]) =>
     mockUseDetail(...args),
-  // Shaped like the generated options: a key naming the request, and a
-  // queryFn that performs it with the headers it was built with.
+  // Shaped like the generated options: a key naming the request (and, like
+  // the generated one, not the token), and a queryFn that performs it with the
+  // headers it was built with.
   getCharactersMercenaryTacticalOperationsListingQueryOptions: (
     characterId: number,
     headers: Record<string, string>,
   ) => ({
-    queryKey: [{ url: "listing", characterId, headers }],
+    queryKey: [{ url: "listing", characterId }],
     queryFn: () => mockFetchListing(characterId, headers),
   }),
   getCharactersMercenaryTacticalOperationsDetailQueryOptions: (
@@ -55,7 +56,7 @@ jest.mock("@jitaspace/esi-client", () => ({
     characterId: number,
     headers: Record<string, string>,
   ) => ({
-    queryKey: [{ url: "detail", operationId, characterId, headers }],
+    queryKey: [{ url: "detail", operationId, characterId }],
     queryFn: () => mockFetchDetail(operationId, characterId, headers),
   }),
 }));
@@ -377,6 +378,40 @@ describe("useCharactersMercenaryTacticalOperations", () => {
       [OPERATION_A, ALICE],
       [OPERATION_B, BOB],
     ]);
+  });
+
+  it("keeps reading a shared operation through the character that got there first", async () => {
+    // Bob's listing lands before Alice's. Moving the read to Alice, who comes
+    // first in order, would fetch the details again and blank the row.
+    login(character({ characterId: ALICE }), character({ characterId: BOB }));
+    let releaseAlice: (() => void) | undefined;
+    mockFetchListing.mockImplementation((characterId) =>
+      characterId === ALICE
+        ? new Promise((resolve) => {
+            releaseAlice = () => resolve(listing([OPERATION_A, DEN_1]));
+          })
+        : Promise.resolve(listing([OPERATION_A, DEN_1])),
+    );
+
+    const { result } = renderHook(
+      () => useCharactersMercenaryTacticalOperations(),
+      { wrapper },
+    );
+    await waitFor(() =>
+      expect(result.current.operations[0]?.details).toBeDefined(),
+    );
+
+    releaseAlice?.();
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+
+    expect(result.current.operations[0]?.characterIds).toEqual([ALICE, BOB]);
+    expect(result.current.operations[0]?.details).toBeDefined();
+    expect(
+      mockFetchDetail.mock.calls.map(([operationId, characterId]) => [
+        operationId,
+        characterId,
+      ]),
+    ).toEqual([[OPERATION_A, BOB]]);
   });
 
   it("counts a character listing the same operation twice only once", async () => {

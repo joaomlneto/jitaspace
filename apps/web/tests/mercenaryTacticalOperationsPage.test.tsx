@@ -566,8 +566,9 @@ describe("Mercenary Tactical Operations page", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("suggests sharing structures when a character's den locations are unknown", () => {
+  it("offers to grant the structures scope when a character's dens cannot be located", async () => {
     hooks.loggedIn.mockReturnValue([ALICE]);
+    sessions = { [ALICE]: { accessTokenPayload: { scp: [ACTIVITIES] } } };
     hooks.operations.mockReturnValue(
       operationsResult({
         characterIds: [ALICE],
@@ -579,6 +580,66 @@ describe("Mercenary Tactical Operations page", () => {
     expect(
       screen.getByText(/To see where each Mercenary Den is/),
     ).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: `entity-${ALICE} · Grant access` }),
+    );
+
+    // What Alice already granted, plus the page's scopes.
+    expect(mockLogin).toHaveBeenCalledWith([
+      ACTIVITIES,
+      ACTIVITIES,
+      STRUCTURES,
+    ]);
+  });
+
+  it("holds a placeholder, not Unknown, while a character's dens are loading", () => {
+    hooks.loggedIn.mockReturnValue([ALICE]);
+    hooks.operations.mockReturnValue(
+      operationsResult({
+        characterIds: [ALICE],
+        operations: [operation("a", [ALICE], "Available")],
+      }),
+    );
+    hooks.dens.mockReturnValue(
+      densResult([], [ALICE], { isPending: true, pendingSubjectIds: [ALICE] }),
+    );
+    renderPage();
+
+    expect(screen.queryByText("Unknown")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/To see where each Mercenary Den is/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("ignores a link's character filter when only one character can be shown", () => {
+    // A stale link naming Bob, who is not logged in: with no chips to pick
+    // Alice again, honouring it would leave the table empty for good.
+    hooks.loggedIn.mockReturnValue([ALICE]);
+    hooks.operations.mockReturnValue(
+      operationsResult({
+        characterIds: [ALICE],
+        operations: [operation("a", [ALICE], "Available")],
+      }),
+    );
+    renderPage(`?characters=${BOB}`);
+
+    expect(bodyRows()).toHaveLength(1);
+    expect(screen.queryByText(/Nothing selected/)).not.toBeInTheDocument();
+  });
+
+  it("says no character can be shown, rather than that none has operations", () => {
+    hooks.loggedIn.mockReturnValue([CAROL]);
+    hooks.operations.mockReturnValue(
+      operationsResult({ unavailableCharacterIds: [CAROL] }),
+    );
+    renderPage();
+
+    expect(
+      screen.getByText(/None of your characters can be shown yet/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/has a Mercenary Tactical Operation right now/),
+    ).not.toBeInTheDocument();
   });
 
   it("is not held in skeleton rows by a deselected character still loading", () => {

@@ -65,16 +65,18 @@ export interface MercenaryTacticalOperationsPageProps {
 const FILTER_ROW_HEIGHT = 34;
 
 /**
- * One character that cannot be shown, as a button that signs it in again. It
- * sits with the character filter, where the user looks for their characters.
+ * A button that signs one character in again with this page's scopes: for a
+ * character that cannot be shown, next to the character filter, or for one
+ * whose dens cannot be located, next to that hint.
  *
  * The new token replaces the old one, so it asks for every scope the
  * character already granted as well as this page's: asking for this page's
  * alone would quietly take the rest of the app away from that character.
  */
-function UnavailableCharacter({
+function ReloginButton({
   characterId,
-}: Readonly<{ characterId: number }>) {
+  label,
+}: Readonly<{ characterId: number; label: string }>) {
   const grantedScopes = useAuthStore(
     (state) => state.characters[characterId]?.accessTokenPayload.scp,
   );
@@ -96,7 +98,7 @@ function UnavailableCharacter({
     >
       <EveEntityName span inherit entityId={characterId} category="character" />
       <Text span inherit fw={400}>
-        &nbsp;· Log in again
+        &nbsp;· {label}
       </Text>
     </Button>
   );
@@ -206,13 +208,19 @@ function CharacterFilter({
 function emptyTextFor({
   isLoggedOut,
   nothingSelected,
+  noneQueryable,
   hasOperations,
 }: Readonly<{
   isLoggedOut: boolean;
   nothingSelected: boolean;
+  /** Logged in, but no character granted access or has a live session. */
+  noneQueryable: boolean;
   hasOperations: boolean;
 }>): string {
   if (isLoggedOut) return "Log in to see your operations.";
+  if (noneQueryable) {
+    return "None of your characters can be shown yet. Log in again with the buttons above.";
+  }
   if (nothingSelected) {
     return "Nothing selected. Pick a character and a status above to see operations.";
   }
@@ -228,7 +236,7 @@ export default function MercenaryTacticalOperationsPage({
   const operations = useCharactersMercenaryTacticalOperations();
   const dens = useMultipleCharacterStructuresMercenaryDens();
 
-  const [characterFilter, setCharacterFilter] = useQueryState(
+  const [characterFilterParam, setCharacterFilter] = useQueryState(
     "characters",
     parseAsArrayOf(parseAsInteger),
   );
@@ -257,6 +265,11 @@ export default function MercenaryTacticalOperationsPage({
     [operations.errors],
   );
 
+  const denPendingCharacterIds = useMemo(
+    () => new Set(dens.pendingSubjectIds),
+    [dens.pendingSubjectIds],
+  );
+
   const allRows = useMemo(
     () =>
       toOperationRows(
@@ -264,9 +277,21 @@ export default function MercenaryTacticalOperationsPage({
         kinds,
         failedOperationIds,
         denPlanets,
+        denPendingCharacterIds,
       ),
-    [operations.operations, kinds, failedOperationIds, denPlanets],
+    [
+      operations.operations,
+      kinds,
+      failedOperationIds,
+      denPlanets,
+      denPendingCharacterIds,
+    ],
   );
+
+  // With one character there are no chips to change the selection with, so a
+  // stale link naming another character must not leave the page empty.
+  const characterFilter =
+    operations.characterIds.length > 1 ? characterFilterParam : null;
 
   // A character in the URL that is no longer logged in selects nothing, so
   // the active selection is the URL's intersected with what was queried.
@@ -316,10 +341,11 @@ export default function MercenaryTacticalOperationsPage({
   const listingErrors = operations.errors.filter(
     (error) => error.operationId === undefined,
   );
-  const missingDenLocations =
-    operations.characterIds.length > 0 &&
-    !dens.isPending &&
-    operations.characterIds.some((id) => !dens.subjectIds.includes(id));
+  // Characters whose dens cannot be located: they never shared their
+  // structures, so there is no request to wait for.
+  const missingDenCharacterIds = operations.characterIds.filter(
+    (id) => !dens.subjectIds.includes(id),
+  );
   // Counts only once they describe something: not before the session loads,
   // not logged out, and not while the selected characters are still loading.
   const showStateCounts = hasHydrated && !isLoggedOut && !isSelectionPending;
@@ -329,6 +355,11 @@ export default function MercenaryTacticalOperationsPage({
     nothingSelected:
       stateFilter?.length === 0 ||
       (characterFilter !== null && activeCharacterIds.length === 0),
+    noneQueryable:
+      hasHydrated &&
+      !isLoggedOut &&
+      operations.characterIds.length === 0 &&
+      unavailable.length > 0,
     hasOperations: allRows.length > 0,
   });
 
@@ -370,9 +401,10 @@ export default function MercenaryTacticalOperationsPage({
               }}
             />
             {unavailable.map((characterId) => (
-              <UnavailableCharacter
+              <ReloginButton
                 key={characterId}
                 characterId={characterId}
+                label="Log in again"
               />
             ))}
           </Group>
@@ -455,14 +487,25 @@ export default function MercenaryTacticalOperationsPage({
           </Text>
         )}
 
-        {missingDenLocations && (
-          <Text
-            size="sm"
-            className={mercenaryTacticalOperationsClasses.secondary}
-          >
-            To see where each Mercenary Den is, log in again and grant access to
-            your structures.
-          </Text>
+        {missingDenCharacterIds.length > 0 && (
+          <Stack gap="xs" align="flex-start">
+            <Text
+              size="sm"
+              className={mercenaryTacticalOperationsClasses.secondary}
+            >
+              To see where each Mercenary Den is, grant access to your
+              structures:
+            </Text>
+            <Group gap="xs">
+              {missingDenCharacterIds.map((characterId) => (
+                <ReloginButton
+                  key={characterId}
+                  characterId={characterId}
+                  label="Grant access"
+                />
+              ))}
+            </Group>
+          </Stack>
         )}
       </Stack>
     </Container>

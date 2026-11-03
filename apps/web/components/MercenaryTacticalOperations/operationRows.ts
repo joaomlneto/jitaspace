@@ -34,6 +34,11 @@ export interface OperationRow {
   kind?: MercenaryTacticalOperationKind;
   /** The planet whose skyhook the den is attached to, when the den is known. */
   planetId?: number;
+  /**
+   * The den is not located yet, but a character listing the operation is
+   * still loading its dens, so it may well be.
+   */
+  locationPending?: boolean;
 }
 
 /**
@@ -111,13 +116,15 @@ function detailsStatus(
  * `failedOperationIds` tells an operation whose details failed apart from one
  * whose details are still on their way: both arrive without details.
  * `denPlanets` maps a Mercenary Den to the planet it orbits, for the dens whose
- * owners shared their structures.
+ * owners shared their structures; `denPendingCharacterIds` are the characters
+ * whose dens are still loading.
  */
 export function toOperationRows(
   operations: readonly MercenaryTacticalOperation[],
   kinds: readonly MercenaryTacticalOperationKind[],
   failedOperationIds: ReadonlySet<string>,
   denPlanets: ReadonlyMap<number, number>,
+  denPendingCharacterIds: ReadonlySet<number> = new Set(),
 ): OperationRow[] {
   const kindByDungeon = new Map(kinds.map((kind) => [kind.dungeonId, kind]));
   return operations.map((operation) => {
@@ -130,6 +137,10 @@ export function toOperationRows(
     };
     const planetId = denPlanets.get(operation.mercenaryDenId);
     if (planetId !== undefined) row.planetId = planetId;
+    else if (
+      operation.characterIds.some((id) => denPendingCharacterIds.has(id))
+    )
+      row.locationPending = true;
     if (details) {
       row.state = details.state;
       row.expires = details.expires;
@@ -154,8 +165,9 @@ export interface OperationFilters {
  *
  * A row matches the character filter when any character that can see it is
  * selected. A row with no state yet — its details loading or failed — is kept
- * whatever the state filter says: hiding it would hide an operation the user
- * may well be looking for, on account of a request that has not answered.
+ * whatever states are selected: hiding it would hide an operation the user
+ * may well be looking for, on account of a request that has not answered. With
+ * no state selected at all, nothing is kept.
  */
 export function filterOperationRows(
   rows: readonly OperationRow[],
@@ -167,7 +179,9 @@ export function filterOperationRows(
     (row) =>
       (!wantedCharacters ||
         row.characterIds.some((id) => wantedCharacters.has(id))) &&
-      (!wantedStates || row.state === undefined || wantedStates.has(row.state)),
+      (!wantedStates ||
+        (wantedStates.size > 0 &&
+          (row.state === undefined || wantedStates.has(row.state)))),
   );
 }
 
