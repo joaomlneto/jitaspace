@@ -1,15 +1,16 @@
 "use client";
 
-import type { TablerIcon } from "@tabler/icons-react";
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { Text } from "@mantine/core";
+
+import type { EveIconComponent } from "@jitaspace/eve-icons";
 import {
-  IconHome,
-  IconMap,
-  IconSearch,
-  IconShoppingCart,
-} from "@tabler/icons-react";
+  CategoryIskIcon,
+  ControlRegionLayoutIcon,
+  SystemHouseIcon,
+  SystemSearchIcon,
+} from "@jitaspace/eve-icons";
 
 import { HoverPrefetchLink } from "~/components/Link";
 import classes from "./MobileTabBar.module.css";
@@ -17,7 +18,7 @@ import classes from "./MobileTabBar.module.css";
 interface Tab {
   label: string;
   href: string;
-  Icon: TablerIcon;
+  Icon: EveIconComponent;
   /** Marks the tab active when the pathname starts with one of these. */
   match: string[];
 }
@@ -25,18 +26,23 @@ interface Tab {
 // A small, thumb-reachable set of top destinations. The full navigation stays
 // available via the header burger menu. All of these work without logging in.
 const tabs: Tab[] = [
-  { label: "Home", href: "/", Icon: IconHome, match: ["/"] },
-  { label: "Search", href: "/search", Icon: IconSearch, match: ["/search"] },
+  { label: "Home", href: "/", Icon: SystemHouseIcon, match: ["/"] },
+  {
+    label: "Search",
+    href: "/search",
+    Icon: SystemSearchIcon,
+    match: ["/search"],
+  },
   {
     label: "Market",
     href: "/market",
-    Icon: IconShoppingCart,
+    Icon: CategoryIskIcon,
     match: ["/market"],
   },
   {
     label: "Map",
     href: "/regions",
-    Icon: IconMap,
+    Icon: ControlRegionLayoutIcon,
     match: ["/regions", "/region"],
   },
 ];
@@ -63,7 +69,7 @@ function TabBarLinks({ pathname }: Readonly<{ pathname: string | null }>) {
             data-active={active || undefined}
             aria-current={active ? "page" : undefined}
           >
-            <tab.Icon size={22} stroke={1.6} />
+            <tab.Icon size={22} color="currentColor" alt="" />
             <Text size="0.625rem" fw={500} className={classes.label}>
               {tab.label}
             </Text>

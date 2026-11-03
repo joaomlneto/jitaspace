@@ -11,8 +11,10 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconSearch, IconX } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
+
+import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import type { MarketTree } from "./readMarketTree";
 import type { MarketSidebarView } from "~/lib/quickbar";
@@ -134,7 +136,9 @@ export function MarketGroupsNavigation() {
           onChange={(event) => setQuery(event.currentTarget.value)}
           placeholder="Search market…"
           aria-label="Search market"
-          leftSection={<IconSearch size={16} />}
+          leftSection={
+            <SystemSearchIcon size={16} color="currentColor" alt="" />
+          }
           rightSection={
             query ? (
               <ActionIcon

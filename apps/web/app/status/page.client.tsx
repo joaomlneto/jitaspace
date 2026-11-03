@@ -18,17 +18,17 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconActivity,
-  IconCircleCheck,
-  IconCircleX,
-} from "@tabler/icons-react";
 
 import {
   getRateLimitBuildDate,
   useGetMetaCompatibilityDates,
   useGetMetaStatus,
 } from "@jitaspace/esi-client";
+import {
+  SystemCircleCheckmarkIcon,
+  SystemCloseIcon,
+  SystemSignalStrengthIcon,
+} from "@jitaspace/eve-icons";
 import { useServerStatus } from "@jitaspace/hooks";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
@@ -167,13 +167,17 @@ export default function StatusPage({
                       latestCompatibilityDate &&
                       (buildDate >= latestCompatibilityDate ? (
                         <Tooltip label="ESI compatibility date is up to date!">
-                          <IconCircleCheck color="green" size={14} />
+                          <SystemCircleCheckmarkIcon
+                            size={14}
+                            color="green"
+                            alt=""
+                          />
                         </Tooltip>
                       ) : (
                         <Tooltip
                           label={`ESI compatibility date is outdated! Latest: ${latestCompatibilityDate}`}
                         >
-                          <IconCircleX color="red" size={14} />
+                          <SystemCloseIcon size={14} color="red" alt="" />
                         </Tooltip>
                       ))}
                   </Group>
@@ -198,13 +202,17 @@ export default function StatusPage({
                         <Tooltip
                           label={`Our SDE data is up to date (build ${ourSdeBuild})`}
                         >
-                          <IconCircleCheck color="green" size={14} />
+                          <SystemCircleCheckmarkIcon
+                            size={14}
+                            color="green"
+                            alt=""
+                          />
                         </Tooltip>
                       ) : (
                         <Tooltip
                           label={`Our SDE data is outdated (build ${ourSdeBuild}, latest ${latestSdeBuild})`}
                         >
-                          <IconCircleX color="red" size={14} />
+                          <SystemCloseIcon size={14} color="red" alt="" />
                         </Tooltip>
                       ))}
                   </Group>
@@ -287,7 +295,11 @@ export default function StatusPage({
                     onClick={open}
                     title="View detailed status"
                   >
-                    <IconActivity size={20} />
+                    <SystemSignalStrengthIcon
+                      size={20}
+                      color="currentColor"
+                      alt=""
+                    />
                   </ActionIcon>
                 </Group>
                 {esiStatus ? (

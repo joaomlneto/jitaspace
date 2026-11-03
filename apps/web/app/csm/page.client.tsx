@@ -16,12 +16,12 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import { IconBrandTwitch, IconExternalLink } from "@tabler/icons-react";
+
 import {
-  IconBrandTwitch,
-  IconExternalLink,
-  IconMessages,
-  IconSearch,
-} from "@tabler/icons-react";
+  ControlStartConversationIcon,
+  SystemSearchIcon,
+} from "@jitaspace/eve-icons";
 
 import type { CsmCandidate, CsmElection } from "~/config/csm";
 import { CharacterCard } from "~/components/Card";
@@ -126,7 +126,13 @@ function Hero({ election }: Readonly<CsmPageProps>) {
             rel="noopener noreferrer"
             variant="white"
             color="dark"
-            leftSection={<IconMessages size={16} />}
+            leftSection={
+              <ControlStartConversationIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />
+            }
           >
             Campaign threads
           </Button>
@@ -213,7 +219,13 @@ function CandidateCard({
           variant="light"
           color={CSM_21_RED}
           size="xs"
-          leftSection={<IconMessages size={14} />}
+          leftSection={
+            <ControlStartConversationIcon
+              size={14}
+              color="currentColor"
+              alt=""
+            />
+          }
           rightSection={<IconExternalLink size={12} />}
           style={{ alignSelf: "flex-start" }}
         >
@@ -250,7 +262,9 @@ function Candidates({ election }: Readonly<CsmPageProps>) {
         <TextInput
           aria-label="Search candidates"
           placeholder="Search names and pitches"
-          leftSection={<IconSearch size={16} />}
+          leftSection={
+            <SystemSearchIcon size={16} color="currentColor" alt="" />
+          }
           value={query}
           onChange={(event) => setQuery(event.currentTarget.value)}
           w={{ base: "100%", sm: 280 }}

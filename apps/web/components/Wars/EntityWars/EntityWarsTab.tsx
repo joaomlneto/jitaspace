@@ -1,9 +1,9 @@
 "use client";
 
 import { Badge, SimpleGrid, Stack, Text } from "@mantine/core";
-import { IconSwords } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { WindowWarsIcon } from "@jitaspace/eve-icons";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type {
@@ -296,7 +296,7 @@ export function WarsTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconSwords size={18} />}>
+        <SectionHeading icon={<WindowWarsIcon size={18} alt="" />}>
           War record
         </SectionHeading>
         <WarSummaryCards summary={summary} />
@@ -306,7 +306,9 @@ export function WarsTab({
         </Text>
       </Stack>
       <Stack gap="sm">
-        <SectionHeading icon={<IconSwords size={18} />}>Wars</SectionHeading>
+        <SectionHeading icon={<WindowWarsIcon size={18} alt="" />}>
+          Wars
+        </SectionHeading>
         <DataTable
           data={rows}
           isLoading={isLoading}

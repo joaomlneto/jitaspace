@@ -19,14 +19,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconBook,
-  IconHistory,
-  IconMessages,
-  IconTarget,
-  IconUser,
-  IconVersions,
-} from "@tabler/icons-react";
+import { IconTarget } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -34,7 +27,13 @@ import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
   CategoryIskIcon,
+  ControlStartConversationIcon,
+  SystemPersonIcon,
+  SystemVariationIcon,
+  WindowEvemailIcon,
   WindowInfoIcon,
+  WindowJournalIcon,
+  WindowLogIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import {
@@ -175,7 +174,7 @@ function DialogueLine({
   const avatar =
     avatarId === null ? (
       <Avatar size="md">
-        <IconUser size={18} />
+        <SystemPersonIcon size={18} color="currentColor" alt="" />
       </Avatar>
     ) : (
       <CharacterAvatar characterId={avatarId} size="md" />
@@ -749,7 +748,7 @@ function MissionBriefing({
       )}
       {journal.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconBook size={18} />}>
+          <SectionHeading icon={<WindowJournalIcon size={18} alt="" />}>
             Epic Journal
           </SectionHeading>
           {journal.map((entry) => (
@@ -784,7 +783,15 @@ function MissionDialogue({
     <Stack gap="lg">
       {groups.dialogueStages.map(([stage, lines]) => (
         <Stack key={stage} gap="sm">
-          <SectionHeading icon={<IconMessages size={18} />}>
+          <SectionHeading
+            icon={
+              <ControlStartConversationIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             {stage}
           </SectionHeading>
           {lines.map((line) => (
@@ -804,7 +811,7 @@ function MissionDialogue({
       ))}
       {groups.mailPairs.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconMessages size={18} />}>
+          <SectionHeading icon={<WindowEvemailIcon size={18} alt="" />}>
             Notification Mails
           </SectionHeading>
           {groups.mailPairs.map(([label, mail]) => (
@@ -902,14 +909,23 @@ export default function MissionPage({
               Overview
             </Tabs.Tab>
             {available.briefing && (
-              <Tabs.Tab value="briefing" leftSection={<IconBook size={16} />}>
+              <Tabs.Tab
+                value="briefing"
+                leftSection={<WindowJournalIcon size={16} alt="" />}
+              >
                 Briefing
               </Tabs.Tab>
             )}
             {available.dialogue && (
               <Tabs.Tab
                 value="dialogue"
-                leftSection={<IconMessages size={16} />}
+                leftSection={
+                  <ControlStartConversationIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Dialogue
               </Tabs.Tab>
@@ -927,12 +943,17 @@ export default function MissionPage({
             {available.variants && (
               <Tabs.Tab
                 value="variants"
-                leftSection={<IconVersions size={16} />}
+                leftSection={
+                  <SystemVariationIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Variants ({mission.variants.length})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={<WindowLogIcon size={16} alt="" />}
+            >
               History
             </Tabs.Tab>
           </Tabs.List>
@@ -979,7 +1000,17 @@ export default function MissionPage({
           {available.variants && (
             <Tabs.Panel value="variants" pt="lg">
               <Stack gap="sm">
-                <Alert variant="light" color="gray" icon={<IconVersions />}>
+                <Alert
+                  variant="light"
+                  color="gray"
+                  icon={
+                    <SystemVariationIcon
+                      size={20}
+                      color="currentColor"
+                      alt=""
+                    />
+                  }
+                >
                   Other missions named “{mission.name}” — usually the same
                   mission offered by another faction, corporation or agent
                   level.

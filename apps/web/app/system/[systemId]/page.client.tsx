@@ -19,7 +19,6 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconAlertTriangle,
   IconChevronRight,
   IconExternalLink,
   IconMeteor,
@@ -42,6 +41,7 @@ import {
   CategoryNpcActivityIcon,
   CategorySovereigntyIcon,
   ControlJumpToIcon,
+  WindowIncursionsIcon,
 } from "@jitaspace/eve-icons";
 import {
   useAllSolarSystemJumps,
@@ -373,10 +373,7 @@ function SystemControlPanels({
           <Paper p="md" radius="md">
             <Group justify="space-between" mb="xs">
               <Group gap="xs">
-                <IconAlertTriangle
-                  size={18}
-                  color="var(--mantine-color-red-5)"
-                />
+                <WindowIncursionsIcon size={18} alt="" />
                 <Text fw={600}>Incursion</Text>
               </Group>
               <Badge variant="light" color="red" tt="capitalize">

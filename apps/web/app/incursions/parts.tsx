@@ -3,9 +3,10 @@
 import { useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Anchor, Badge, Group, Text, Tooltip } from "@mantine/core";
-import { IconExternalLink, IconSkull } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { CategorySkullIcon } from "@jitaspace/eve-icons";
 import {
   AllianceAvatar,
   DateHoverCard,
@@ -239,7 +240,9 @@ export function BossBadge() {
         variant="filled"
         color="red"
         miw="max-content"
-        leftSection={<IconSkull size={12} />}
+        leftSection={
+          <CategorySkullIcon size={12} color="currentColor" alt="" />
+        }
       >
         Boss
       </Badge>

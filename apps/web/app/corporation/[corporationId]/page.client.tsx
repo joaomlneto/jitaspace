@@ -17,14 +17,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconBuildingWarehouse,
-  IconChartPie,
-  IconExternalLink,
-  IconFileText,
-  IconSwords,
-  IconWorld,
-} from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CorporationsDetail } from "@jitaspace/esi-client";
@@ -35,12 +28,17 @@ import {
   StationName,
 } from "@jitaspace/eve-components";
 import {
+  CategoryCorporationIcon,
+  CategoryIskIcon,
   CategoryLpIcon,
   CategoryOngoingConflictsIcon,
   CategorySkullIcon,
   WindowAgentIcon,
   WindowEmploymentHistoryIcon,
   WindowInfoIcon,
+  WindowNoteIcon,
+  WindowStationIcon,
+  WindowWarsIcon,
 } from "@jitaspace/eve-icons";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -217,7 +215,9 @@ function NpcDetails({
 }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconWorld size={18} />}>
+      <SectionHeading
+        icon={<CategoryCorporationIcon size={18} color="currentColor" alt="" />}
+      >
         NPC corporation
       </SectionHeading>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -603,7 +603,7 @@ export default function CorporationPage({
             {visibleTabs.description && (
               <Tabs.Tab
                 value="description"
-                leftSection={<IconFileText size={16} />}
+                leftSection={<WindowNoteIcon size={16} alt="" />}
               >
                 Description
               </Tabs.Tab>
@@ -619,7 +619,7 @@ export default function CorporationPage({
             {visibleTabs.stations && profile && (
               <Tabs.Tab
                 value="stations"
-                leftSection={<IconBuildingWarehouse size={16} />}
+                leftSection={<WindowStationIcon size={16} alt="" />}
               >
                 Stations ({formatInteger(profile.counts.stations)})
               </Tabs.Tab>
@@ -635,7 +635,9 @@ export default function CorporationPage({
             {visibleTabs.economy && (
               <Tabs.Tab
                 value="economy"
-                leftSection={<IconChartPie size={16} />}
+                leftSection={
+                  <CategoryIskIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Economy
               </Tabs.Tab>
@@ -810,7 +812,7 @@ export default function CorporationPage({
 
               {warSummary && warSummary.total > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSwords size={18} />}>
+                  <SectionHeading icon={<WindowWarsIcon size={18} alt="" />}>
                     War record
                   </SectionHeading>
                   <WarSummaryCards summary={warSummary} />

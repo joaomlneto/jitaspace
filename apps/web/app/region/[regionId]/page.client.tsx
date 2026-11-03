@@ -13,7 +13,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink, IconHistory } from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -23,6 +23,7 @@ import {
   ControlRegionLayoutIcon,
   IncursionsIcon,
   WindowInfoIcon,
+  WindowLogIcon,
 } from "@jitaspace/eve-icons";
 
 import type { RegionPageTab } from "./tabs";
@@ -362,7 +363,10 @@ export default function RegionPage({
                 Incursions ({formatInteger(incursions.incursions.length)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={<WindowLogIcon size={16} alt="" />}
+            >
               History
             </Tabs.Tab>
           </Tabs.List>

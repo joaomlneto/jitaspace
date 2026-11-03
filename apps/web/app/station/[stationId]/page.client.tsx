@@ -18,12 +18,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconExternalLink,
-  IconHistory,
-  IconMapPin,
-  IconSchool,
-} from "@tabler/icons-react";
+import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
@@ -32,7 +27,10 @@ import {
   WindowAgentIcon,
   WindowDirectoryServicesIcon,
   WindowInfoIcon,
+  WindowLocationsIcon,
+  WindowLogIcon,
   WindowReprocessingIcon,
+  WindowTutorialIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 import { ISKAmount, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
@@ -263,7 +261,7 @@ function OverviewPanel({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconMapPin size={18} />}>
+        <SectionHeading icon={<WindowLocationsIcon size={18} alt="" />}>
           Location
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -464,7 +462,7 @@ function OverviewPanel({
 
       {station.schools.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconSchool size={18} />}>
+          <SectionHeading icon={<WindowTutorialIcon size={18} alt="" />}>
             Starting station
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -698,7 +696,10 @@ export default function StationPage({
                 Agents ({formatInteger(station.agents.length)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={<WindowLogIcon size={16} alt="" />}
+            >
               History
             </Tabs.Tab>
           </Tabs.List>
