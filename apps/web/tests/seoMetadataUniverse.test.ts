@@ -328,12 +328,14 @@ describe("planet/[planetId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  // The route is cached whole, so generic metadata for a failed read would be
+  // stored with the page. The error must propagate.
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockPlanetFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/planet/[planetId]/page");
-    expect(
-      await generateMetadata({ params: rp({ planetId: "40009081" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ planetId: "40009081" }) }),
+    ).rejects.toThrow("db");
   });
 });
 

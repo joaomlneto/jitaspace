@@ -1,6 +1,5 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
@@ -14,17 +13,8 @@ import { Position3DText } from "@jitaspace/ui";
 import { SolarSystemAnchor, TypeAnchor } from "~/components/Anchor";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
-export default function Page() {
-  const params = useParams();
-  const rawPlanetId = params.planetId;
-  const planetId = Number(
-    typeof rawPlanetId === "string" ? rawPlanetId : rawPlanetId?.[0],
-  );
+export default function Page({ planetId }: Readonly<{ planetId: number }>) {
   const { data: planet } = usePlanet(planetId);
-
-  if (!Number.isFinite(planetId)) {
-    return null;
-  }
 
   return (
     <Container size="sm">
