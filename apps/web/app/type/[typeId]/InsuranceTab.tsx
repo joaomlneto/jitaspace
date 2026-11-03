@@ -12,7 +12,6 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import { IconChartLine } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryStates } from "nuqs";
 import {
@@ -26,7 +25,10 @@ import {
 } from "recharts";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { WindowInsuranceIcon } from "@jitaspace/eve-icons";
+import {
+  CategoryStatisticsIcon,
+  WindowInsuranceIcon,
+} from "@jitaspace/eve-icons";
 
 import type {
   InsuranceChartPoint,
@@ -352,7 +354,11 @@ export function InsuranceTab({
 
       <Stack gap="sm">
         <Group justify="space-between" gap="xs">
-          <SectionHeading icon={<IconChartLine size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryStatisticsIcon size={18} color="currentColor" alt="" />
+            }
+          >
             Price history
           </SectionHeading>
           <Segmented

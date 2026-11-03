@@ -16,12 +16,6 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconCalendarStats,
-  IconChartBar,
-  IconClock,
-  IconSkull,
-} from "@tabler/icons-react";
 
 import {
   CharacterName,
@@ -31,8 +25,12 @@ import {
   TypeName,
 } from "@jitaspace/eve-components";
 import {
+  CategorySkullIcon,
   CategorySpaceshipCommandIcon,
+  CategoryStatisticsIcon,
   CategoryTrophyIcon,
+  SystemClockIcon,
+  WindowCalendarIcon,
   WindowMapIcon,
 } from "@jitaspace/eve-icons";
 import { CharacterAvatar, CorporationAvatar, ISKAmount } from "@jitaspace/ui";
@@ -415,7 +413,11 @@ export function KillboardTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconSkull size={18} />}>All time</SectionHeading>
+        <SectionHeading
+          icon={<CategorySkullIcon size={18} color="currentColor" alt="" />}
+        >
+          All time
+        </SectionHeading>
         <KillboardSummaryCards
           entity={entity}
           stats={stats}
@@ -425,7 +427,7 @@ export function KillboardTab({
 
       {months.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconCalendarStats size={18} />}>
+          <SectionHeading icon={<WindowCalendarIcon size={18} alt="" />}>
             Last {months.length} months on record
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -459,7 +461,9 @@ export function KillboardTab({
         )}
         {timezones.length > 0 && (
           <Stack gap="sm">
-            <SectionHeading icon={<IconClock size={18} />}>
+            <SectionHeading
+              icon={<SystemClockIcon size={18} color="currentColor" alt="" />}
+            >
               When they fight
             </SectionHeading>
             <Paper withBorder radius="md" p="sm">
@@ -477,7 +481,11 @@ export function KillboardTab({
 
       {stats?.activity && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconChartBar size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryStatisticsIcon size={18} color="currentColor" alt="" />
+            }
+          >
             Recent activity (EVE time)
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">

@@ -10,7 +10,8 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconFilter, IconTrash } from "@tabler/icons-react";
+
+import { SystemFilterIcon, SystemTrashcanIcon } from "@jitaspace/eve-icons";
 
 import type { Comparison } from "./comparison";
 
@@ -62,7 +63,9 @@ export const CompareToolbar = memo(
             w={220}
             aria-label="Filter attributes"
             placeholder="Filter attributes"
-            leftSection={<IconFilter size={14} />}
+            leftSection={
+              <SystemFilterIcon size={14} color="currentColor" alt="" />
+            }
             value={filter}
             onChange={(event) => onFilterChange(event.currentTarget.value)}
             rightSection={
@@ -88,7 +91,9 @@ export const CompareToolbar = memo(
               variant="subtle"
               color="gray"
               size="compact-xs"
-              leftSection={<IconTrash size={12} />}
+              leftSection={
+                <SystemTrashcanIcon size={12} color="currentColor" alt="" />
+              }
               onClick={onClear}
             >
               Clear all
