@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 
+import type { MilitaryCampaignsSdeInfo } from "~/app/military-campaigns/data";
 import type {
   MilitaryCampaign,
   MilitaryCampaignsSnapshot,
@@ -15,6 +16,7 @@ const participation = jest.fn();
 const login = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
+  MILITARY_CAMPAIGN_ACTIVITY_SCOPE: "esi.activity.char:read",
   useAuthenticatedCharacterIds: () => characterIds(),
   useMultipleCharacterMilitaryCampaignObjectives: () => participation(),
   useAuthStore: (
@@ -42,7 +44,17 @@ jest.mock("@jitaspace/eve-components", () => ({
   EveEntityName: ({ entityId }: { entityId?: number }) => (
     <span>{`entity-${entityId}`}</span>
   ),
+}));
+// The EVE rich-text viewer is a TipTap editor; its own tests cover it. Here it
+// only has to receive the campaign's subtitle.
+jest.mock("~/components/EveMail", () => ({
+  MailMessageViewer: ({ content }: { content: string }) => (
+    <div data-testid="eve-rich-text">{content}</div>
+  ),
+}));
+jest.mock("~/components/Anchor", () => ({
   CharacterAnchor: ({ children }: { children?: ReactNode }) => children,
+  FactionAnchor: ({ children }: { children?: ReactNode }) => children,
 }));
 
 const campaign = (over: Partial<MilitaryCampaign>): MilitaryCampaign => ({
@@ -90,6 +102,7 @@ const snapshot: MilitaryCampaignsSnapshot = {
 const envelope = (data: unknown[], subjectIds: number[], over = {}) => ({
   data,
   subjectIds,
+  pendingSubjectIds: [],
   errors: [],
   isLoading: false,
   isPending: false,
@@ -98,14 +111,37 @@ const envelope = (data: unknown[], subjectIds: number[], over = {}) => ({
   ...over,
 });
 
-function renderPage(data: MilitaryCampaignsSnapshot | null = snapshot) {
+function renderPage(
+  data: MilitaryCampaignsSnapshot | null = snapshot,
+  sdeInfo: MilitaryCampaignsSdeInfo | null = null,
+) {
   const Page = require("~/app/military-campaigns/page.client").default;
   return render(
     <MantineProvider>
-      <Page snapshot={data} />
+      <Page snapshot={data} sdeInfo={sdeInfo} />
     </MantineProvider>,
   );
 }
+
+const sdeInfo: MilitaryCampaignsSdeInfo = {
+  campaigns: {
+    "bbbbbbbb-0000-0000-0000-000000000000": {
+      title: "State Corridor Initiative",
+      subtitle: "Secure the corridor.",
+      targetProgress: 30,
+      issuerFactionId: 500001,
+      issuerFactionName: "Caldari State",
+    },
+  },
+  objectives: {
+    "o1111111-x": {
+      title: "Complete Basic Courier Missions",
+      subtitle: null,
+      targetProgress: 2000,
+      contributionMethodName: "CompleteAgentMission",
+    },
+  },
+};
 
 const campaignCard = (shortId: string) => {
   const card = document.getElementById(
@@ -124,7 +160,7 @@ describe("Military campaigns page", () => {
     participation.mockReturnValue(envelope([], []));
   });
 
-  it("lists every campaign, active first, without a character section when signed out", () => {
+  it("lists every campaign, active first, by UUID when the SDE has no names, without a character section when signed out", () => {
     renderPage();
 
     const titles = screen
@@ -139,6 +175,45 @@ describe("Military campaigns page", () => {
     expect(within(campaignCard("bbbbbbbb")).getAllByRole("row")).toHaveLength(
       3,
     );
+  });
+
+  it("names campaigns and objectives from the SDE, with issuer and target", () => {
+    characterIds.mockReturnValue([1]);
+    participation.mockReturnValue(
+      envelope(
+        [
+          {
+            subjectId: 1,
+            id: "o1111111-x",
+            campaign_id: "bbbbbbbb-0000-0000-0000-000000000000",
+            is_committed: true,
+            contributed: 70,
+            last_modified: "2026-09-03T00:00:00.000Z",
+          },
+        ],
+        [1],
+      ),
+    );
+
+    renderPage(snapshot, sdeInfo);
+
+    const card = campaignCard("bbbbbbbb");
+    expect(
+      within(card).getByRole("heading", { name: "State Corridor Initiative" }),
+    ).toBeVisible();
+    expect(within(card).getByText("Caldari State")).toBeVisible();
+    expect(within(card).getByTestId("eve-rich-text")).toHaveTextContent(
+      "Secure the corridor.",
+    );
+    expect(within(card).getByText("30 / 30")).toBeVisible();
+    expect(within(card).getByText("Complete agent missions")).toBeVisible();
+    expect(within(card).getByText("1,234 / 2,000")).toBeVisible();
+    // An objective the SDE does not know keeps its UUID.
+    expect(within(card).getByText("Objective o2222222")).toBeVisible();
+    // The character's table names them too, linking to the campaign's card.
+    expect(
+      screen.getByRole("link", { name: "State Corridor Initiative" }),
+    ).toHaveAttribute("href", "#campaign-bbbbbbbb-0000-0000-0000-000000000000");
   });
 
   it("says so when ESI did not answer, instead of an empty list", () => {
@@ -184,8 +259,9 @@ describe("Military campaigns page", () => {
       .getAllByRole("row")
       .filter((row) => row.textContent.includes("entity-1"));
     expect(participationRows.length).toBeGreaterThanOrEqual(2);
-    // Character 1's totals: 1 campaign, 2 objectives, 1 committed, 75 given.
-    expect(screen.getByText("75")).toBeVisible();
+    // No total contribution across objectives: they count in different units
+    // (missions for one, ISK for another), so 70 + 5 would mean nothing.
+    expect(screen.queryByText("75")).not.toBeInTheDocument();
 
     // The campaign it joined shows the "Your characters" column, and only the
     // objectives it joined have someone in it.

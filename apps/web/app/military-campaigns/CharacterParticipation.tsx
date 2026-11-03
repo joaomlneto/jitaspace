@@ -18,19 +18,24 @@ import {
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { EsiSubjectError } from "@jitaspace/hooks";
-import { CharacterAnchor, EveEntityName } from "@jitaspace/eve-components";
-import { useAuthStore } from "@jitaspace/hooks";
+import { EveEntityName } from "@jitaspace/eve-components";
+import {
+  MILITARY_CAMPAIGN_ACTIVITY_SCOPE,
+  useAuthStore,
+} from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
+import type { MilitaryCampaignsSdeInfo } from "./data";
 import type { MilitaryCampaign, MilitaryCampaignObjective } from "./esi";
 import type { Participation } from "./parts";
+import { CharacterAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 import { formatDateTime, formatInteger } from "~/lib/format";
 import {
   campaignAnchorId,
-  MILITARY_CAMPAIGNS_SCOPE,
-  shortId,
+  campaignTitle,
+  objectiveTitle,
   Stat,
   StateBadge,
 } from "./parts";
@@ -38,6 +43,10 @@ import {
 interface ParticipationRow extends Participation {
   campaign: MilitaryCampaign | undefined;
   objective: MilitaryCampaignObjective | undefined;
+  campaignTitle: string;
+  objectiveTitle: string;
+  /** The objective's target, in its own unit (see data.ts). */
+  objectiveTarget: number | null;
 }
 
 function GrantAccessButton({ characterId }: Readonly<{ characterId: number }>) {
@@ -52,7 +61,12 @@ function GrantAccessButton({ characterId }: Readonly<{ characterId: number }>) {
         // Re-request what the character already granted, plus this one, so
         // signing in again does not take anything else away.
         loginWithEveOnline(
-          [...new Set([...(grantedScopes ?? []), MILITARY_CAMPAIGNS_SCOPE])],
+          [
+            ...new Set([
+              ...(grantedScopes ?? []),
+              MILITARY_CAMPAIGN_ACTIVITY_SCOPE,
+            ]),
+          ],
           "/military-campaigns",
         );
       }}
@@ -80,7 +94,8 @@ function CharacterSummaryCard({
       campaigns: new Set(rows.map((row) => row.campaign_id)).size,
       objectives: rows.length,
       committed: rows.filter((row) => row.is_committed).length,
-      contributed: rows.reduce((sum, row) => sum + row.contributed, 0),
+      // No contribution total: each objective counts in its own unit
+      // (missions for one, raw ISK for another), so a sum would mix them.
     }),
     [rows],
   );
@@ -105,11 +120,10 @@ function CharacterSummaryCard({
     body = <Skeleton height={44} />;
   } else {
     body = (
-      <SimpleGrid cols={4} spacing="xs">
+      <SimpleGrid cols={3} spacing="xs">
         <Stat label="Campaigns">{formatInteger(totals.campaigns)}</Stat>
         <Stat label="Objectives">{formatInteger(totals.objectives)}</Stat>
         <Stat label="Committed">{formatInteger(totals.committed)}</Stat>
-        <Stat label="Contributed">{formatInteger(totals.contributed)}</Stat>
       </SimpleGrid>
     );
   }
@@ -118,7 +132,7 @@ function CharacterSummaryCard({
     <Card withBorder radius="md" padding="md">
       <Stack gap="sm">
         <Group gap="sm" wrap="nowrap">
-          <CharacterAvatar characterId={characterId} size={40} radius="sm" />
+          <CharacterAvatar characterId={characterId} size={40} />
           <CharacterAnchor characterId={characterId} fw={600}>
             <EveEntityName entityId={characterId} />
           </CharacterAnchor>
@@ -147,19 +161,21 @@ const columns: DataTableColumn<ParticipationRow>[] = [
   {
     id: "campaign",
     header: "Campaign",
-    accessor: (row) => shortId(row.campaign_id),
+    accessor: "campaignTitle",
     sortable: true,
     filter: { type: "select" },
     cell: (row) => (
       <Group gap="xs" wrap="nowrap">
         {row.campaign ? (
           <Anchor href={`#${campaignAnchorId(row.campaign_id)}`} size="sm">
-            {shortId(row.campaign_id)}
+            {row.campaignTitle}
           </Anchor>
         ) : (
           // A campaign ESI no longer lists has no card to jump to.
           <Tooltip label="ESI no longer lists this campaign">
-            <Code>{shortId(row.campaign_id)}</Code>
+            <Text size="sm" span>
+              {row.campaignTitle}
+            </Text>
           </Tooltip>
         )}
         {row.campaign && <StateBadge state={row.campaign.state} size="xs" />}
@@ -169,11 +185,14 @@ const columns: DataTableColumn<ParticipationRow>[] = [
   {
     id: "objective",
     header: "Objective",
-    accessor: "id",
+    accessor: "objectiveTitle",
+    sortable: true,
     cell: (row) => (
       <Group gap="xs" wrap="nowrap">
-        <Tooltip label={row.id}>
-          <Code>{shortId(row.id)}</Code>
+        <Tooltip label={<Code>{row.id}</Code>}>
+          <Text size="sm" span>
+            {row.objectiveTitle}
+          </Text>
         </Tooltip>
         {row.objective && <StateBadge state={row.objective.state} size="xs" />}
       </Group>
@@ -202,8 +221,13 @@ const columns: DataTableColumn<ParticipationRow>[] = [
     accessor: (row) => row.objective?.progress,
     sortable: true,
     align: "right",
-    cell: (row) =>
-      row.objective ? formatInteger(row.objective.progress) : "—",
+    cell: (row) => {
+      if (!row.objective) return "—";
+      const progress = formatInteger(row.objective.progress);
+      return row.objectiveTarget === null
+        ? progress
+        : `${progress} / ${formatInteger(row.objectiveTarget)}`;
+    },
   },
   {
     id: "lastModified",
@@ -225,7 +249,9 @@ export function CharacterParticipation({
   participations,
   errors,
   isPending,
+  pendingCharacterIds,
   campaigns,
+  sdeInfo,
 }: Readonly<{
   /** Every signed-in character. */
   characterIds: number[];
@@ -233,8 +259,15 @@ export function CharacterParticipation({
   readableCharacterIds: number[];
   participations: Participation[];
   errors: EsiSubjectError[];
+  /** True until every character has settled (or the auth store hydrated). */
   isPending: boolean;
+  /**
+   * The characters still loading. Each card waits only for its own, so one
+   * slow character does not hold every other card on a skeleton.
+   */
+  pendingCharacterIds: number[];
   campaigns: MilitaryCampaign[];
+  sdeInfo: MilitaryCampaignsSdeInfo;
 }>) {
   const byCharacter = useMemo(() => {
     const map = new Map<number, Participation[]>();
@@ -253,10 +286,14 @@ export function CharacterParticipation({
       ...row,
       campaign: campaignsById.get(row.campaign_id),
       objective: objectivesById.get(row.id),
+      campaignTitle: campaignTitle(row.campaign_id, sdeInfo),
+      objectiveTitle: objectiveTitle(row.id, sdeInfo),
+      objectiveTarget: sdeInfo.objectives[row.id]?.targetProgress ?? null,
     }));
-  }, [participations, campaigns]);
+  }, [participations, campaigns, sdeInfo]);
 
   const readable = new Set(readableCharacterIds);
+  const pending = new Set(pendingCharacterIds);
   const errorByCharacter = new Map(errors.map((e) => [e.subjectId, e]));
 
   return (
@@ -269,7 +306,7 @@ export function CharacterParticipation({
             characterId={characterId}
             rows={byCharacter.get(characterId) ?? []}
             canRead={readable.has(characterId)}
-            isLoading={isPending}
+            isLoading={pending.has(characterId)}
             error={errorByCharacter.get(characterId)}
           />
         ))}

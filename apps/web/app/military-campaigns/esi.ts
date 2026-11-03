@@ -5,10 +5,10 @@ import type {
   MilitaryCampaignsObjectivesDetailObjective,
 } from "@jitaspace/esi-client";
 import {
-  ESI_CURSOR_PAGE_LIMIT,
-  fetchAllEsiCursorPages,
+  ESI_CURSOR_PAGE_SIZE,
   getMilitaryCampaignsListing,
   getMilitaryCampaignsObjectivesListing,
+  walkEsiCursor,
 } from "@jitaspace/esi-client";
 
 export type MilitaryCampaignState = MilitaryCampaignsDetailCampaignStateEnum;
@@ -77,14 +77,21 @@ export async function readMilitaryCampaigns(): Promise<MilitaryCampaignsSnapshot
   const { data } = await getMilitaryCampaignsListing();
   const campaigns = await Promise.all(
     data.campaigns.map(async (campaign): Promise<MilitaryCampaign> => {
-      const { data: objectives } = await fetchAllEsiCursorPages(
-        (before) =>
-          getMilitaryCampaignsObjectivesListing(campaign.id, {
-            before,
-            limit: ESI_CURSOR_PAGE_LIMIT,
-          }),
-        (page) => page.objectives,
-      );
+      // `after` from the start, the walk that includes finished records (see
+      // `EsiCursorDirection`): a campaign's expired and completed objectives
+      // are as much a part of it as the active ones.
+      const objectives = await walkEsiCursor({
+        direction: "after",
+        fetchPage: (cursor, request) =>
+          getMilitaryCampaignsObjectivesListing(
+            campaign.id,
+            { after: cursor, limit: ESI_CURSOR_PAGE_SIZE },
+            undefined,
+            request,
+          ),
+        items: (page) => page.objectives,
+        key: (objective) => objective.id,
+      });
       return {
         id: campaign.id,
         state: campaign.state,

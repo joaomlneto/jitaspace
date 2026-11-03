@@ -1,110 +1,109 @@
 import type { ResponseConfig } from "./client";
-import type { EsiCursor } from "./cursor";
+import type { EsiCursor, EsiCursorPageRequest } from "./cursor";
 import {
+  ESI_CURSOR_PAGE_SIZE,
+  ESI_NO_CACHE_HEADERS,
   EsiCursorCeilingError,
-  fetchAllEsiCursorPages,
-  MAX_ESI_CURSOR_PAGES,
+  walkEsiCursor,
 } from "./cursor";
 
 interface Page {
   cursor?: EsiCursor;
-  records: number[];
+  rows: { id: number; v?: string }[];
 }
 
-const response = (data: Page): ResponseConfig<Page> => ({
-  data,
-  status: 200,
-  statusText: "OK",
-  headers: { etag: "first" },
-});
+const full = (start: number): Page["rows"] =>
+  Array.from({ length: ESI_CURSOR_PAGE_SIZE }, (_, i) => ({ id: start + i }));
 
-/** A collection of `pages`, newest first, walked back by `before` cursors. */
-const fakeCollection = (pages: number[][]) => {
-  const fetchPage = jest.fn((before: string | undefined) => {
-    const index = before === undefined ? 0 : Number(before);
-    return Promise.resolve(
-      response({
-        records: pages[index] ?? [],
-        cursor: { before: String(index + 1), after: "ignored" },
-      }),
-    );
-  });
-  return fetchPage;
-};
+const respond = (data: Page) =>
+  Promise.resolve({ data, headers: {} } as ResponseConfig<Page>);
 
-describe("fetchAllEsiCursorPages", () => {
-  it("walks `before` until a page comes back empty", async () => {
-    const fetchPage = fakeCollection([[1, 2], [3, 4], [5]]);
-
-    const result = await fetchAllEsiCursorPages(fetchPage, (p) => p.records);
-
-    expect(result.data).toEqual([1, 2, 3, 4, 5]);
-    expect(fetchPage.mock.calls.map(([before]) => before)).toEqual([
-      undefined,
-      "1",
-      "2",
-      "3",
-    ]);
-    // Shaped like the first response, so callers cannot tell it was paged.
-    expect(result.status).toBe(200);
-    expect(result.headers).toEqual({ etag: "first" });
+/** A fake endpoint serving `pages`, keyed by the cursor that asks for each. */
+const endpoint = (pages: Record<string, Page>) =>
+  jest.fn((cursor: string, _request: EsiCursorPageRequest) => {
+    const page = pages[cursor];
+    if (!page) throw new Error(`unexpected cursor ${cursor}`);
+    return respond(page);
   });
 
-  it("makes one request for an empty collection", async () => {
-    const fetchPage = fakeCollection([]);
+const rows = (data: Page) => data.rows;
 
-    const result = await fetchAllEsiCursorPages(fetchPage, (p) => p.records);
+describe("walkEsiCursor", () => {
+  it("starts at 0, follows its direction and stops at a short page", async () => {
+    const fetchPage = endpoint({
+      "0": { rows: full(0), cursor: { after: "a1", before: "b1" } },
+      a1: { rows: [{ id: 500 }], cursor: { after: "a2", before: "b2" } },
+    });
 
-    expect(result.data).toEqual([]);
-    expect(fetchPage).toHaveBeenCalledTimes(1);
+    const result = await walkEsiCursor({
+      direction: "after",
+      fetchPage,
+      items: rows,
+    });
+
+    expect(result).toHaveLength(ESI_CURSOR_PAGE_SIZE + 1);
+    expect(fetchPage.mock.calls.map(([cursor]) => cursor)).toEqual(["0", "a1"]);
   });
 
-  it("stops when a page has no cursor", async () => {
-    const fetchPage = jest.fn(() =>
-      Promise.resolve(response({ records: [1] })),
-    );
+  it("stops when ESI returns no cursor, or the same one again", async () => {
+    const noCursor = endpoint({ "0": { rows: full(0) } });
+    await walkEsiCursor({
+      direction: "before",
+      fetchPage: noCursor,
+      items: rows,
+    });
+    expect(noCursor).toHaveBeenCalledTimes(1);
 
-    const result = await fetchAllEsiCursorPages(fetchPage, (p) => p.records);
-
-    expect(result.data).toEqual([1]);
-    expect(fetchPage).toHaveBeenCalledTimes(1);
+    const stuck = endpoint({
+      "0": { rows: full(0), cursor: { before: "x" } },
+      x: { rows: full(100), cursor: { before: "x" } },
+    });
+    await walkEsiCursor({ direction: "before", fetchPage: stuck, items: rows });
+    expect(stuck).toHaveBeenCalledTimes(2);
   });
 
-  it("stops when the cursor does not advance", async () => {
-    const fetchPage = jest.fn(() =>
-      Promise.resolve(response({ records: [1], cursor: { before: "same" } })),
-    );
+  it("asks for every page fresh, with the abort signal", async () => {
+    const fetchPage = endpoint({
+      "0": { rows: full(0), cursor: { after: "a1" } },
+      a1: { rows: [] },
+    });
+    const signal = new AbortController().signal;
 
-    const result = await fetchAllEsiCursorPages(fetchPage, (p) => p.records);
+    await walkEsiCursor({ direction: "after", fetchPage, items: rows, signal });
 
-    expect(result.data).toEqual([1, 1]);
-    expect(fetchPage).toHaveBeenCalledTimes(2);
+    for (const [, request] of fetchPage.mock.calls) {
+      expect(request).toEqual({ signal, headers: ESI_NO_CACHE_HEADERS });
+    }
+  });
+
+  it("keeps the later copy of a record read twice, in the earlier's place", async () => {
+    const first = full(0);
+    first[0] = { id: 0, v: "old" };
+    const fetchPage = endpoint({
+      "0": { rows: first, cursor: { after: "a1" } },
+      a1: { rows: [{ id: 0, v: "new" }] },
+    });
+
+    const result = await walkEsiCursor({
+      direction: "after",
+      fetchPage,
+      items: rows,
+      key: (row) => row.id,
+    });
+
+    expect(result).toHaveLength(ESI_CURSOR_PAGE_SIZE);
+    expect(result[0]).toEqual({ id: 0, v: "new" });
   });
 
   it("refuses a walk that never ends instead of returning part of it", async () => {
-    let counter = 0;
+    let n = 0;
     const fetchPage = jest.fn(() =>
-      Promise.resolve(
-        response({ records: [counter], cursor: { before: String(counter++) } }),
-      ),
+      respond({ rows: full(0), cursor: { after: `a${++n}` } }),
     );
 
     await expect(
-      fetchAllEsiCursorPages(fetchPage, (p) => p.records),
+      walkEsiCursor({ direction: "after", fetchPage, items: rows }),
     ).rejects.toBeInstanceOf(EsiCursorCeilingError);
-    expect(fetchPage).toHaveBeenCalledTimes(MAX_ESI_CURSOR_PAGES);
-  });
-
-  it("propagates a failed page", async () => {
-    const fetchPage = jest
-      .fn()
-      .mockResolvedValueOnce(
-        response({ records: [1], cursor: { before: "1" } }),
-      )
-      .mockRejectedValueOnce(new Error("HTTP 502"));
-
-    await expect(
-      fetchAllEsiCursorPages(fetchPage, (p: Page) => p.records),
-    ).rejects.toThrow("HTTP 502");
+    expect(fetchPage).toHaveBeenCalledTimes(200);
   });
 });

@@ -7,20 +7,50 @@ import { formatDistanceStrict } from "date-fns";
 import type { CharactersMilitaryCampaignsObjectivesParticipationCharacterobjective } from "@jitaspace/esi-client";
 import type { EsiSubjectItem } from "@jitaspace/hooks";
 
+import type { MilitaryCampaignsSdeInfo } from "./data";
 import type { MilitaryCampaignState } from "./esi";
 
 /** One character's part in one objective, tagged with the character's id. */
 export type Participation =
   EsiSubjectItem<CharactersMilitaryCampaignsObjectivesParticipationCharacterobjective>;
 
-/** The scope behind a character's campaign participation. */
-export const MILITARY_CAMPAIGNS_SCOPE = "esi.activity.char:read";
-
 /**
- * ESI names campaigns and objectives by UUID only, so the page does too — by
- * the first block, which is unique among the handful listed at once.
+ * ESI names campaigns and objectives by UUID only. The SDE carries their
+ * titles under the same UUIDs; without its row, the page falls back to the
+ * UUID's first block, which is unique among the handful listed at once.
  */
 export const shortId = (uuid: string) => uuid.slice(0, 8);
+
+/** Stands in for SDE info that failed to load, so lookups need no null check. */
+export const NO_SDE_INFO: MilitaryCampaignsSdeInfo = {
+  campaigns: {},
+  objectives: {},
+};
+
+export const campaignTitle = (id: string, sde: MilitaryCampaignsSdeInfo) =>
+  sde.campaigns[id]?.title ?? `Campaign ${shortId(id)}`;
+
+export const objectiveTitle = (id: string, sde: MilitaryCampaignsSdeInfo) =>
+  sde.objectives[id]?.title ?? `Objective ${shortId(id)}`;
+
+/**
+ * Every `contributionMethodConfiguration.name` in the SDE (build 3667080), in
+ * words. An unknown one shows as CCP spells it rather than being guessed at.
+ */
+const CONTRIBUTION_METHOD_LABELS: Record<string, string> = {
+  CaptureDefendFWComplex: "Capture or defend FW complexes",
+  CompleteAgentMission: "Complete agent missions",
+  DamageShip: "Damage ships",
+  HackSomething: "Hack",
+  KillCapsuleer: "Kill capsuleers",
+  KillNPC: "Kill NPCs",
+  Manufacture: "Manufacture",
+  MineOre: "Mine ore",
+  RemoteRepairArmorOrShield: "Remote repair",
+};
+
+export const contributionMethodLabel = (name: string | null) =>
+  name === null ? null : (CONTRIBUTION_METHOD_LABELS[name] ?? name);
 
 export const campaignAnchorId = (campaignId: string) =>
   `campaign-${campaignId}`;

@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 
+import type { MilitaryCampaignsSdeInfo } from "./data";
 import type { MilitaryCampaignsSnapshot } from "./esi";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { pageMetadata } from "~/lib/metadata";
+import { readMilitaryCampaignsSdeInfo } from "./data";
 import { readMilitaryCampaigns } from "./esi";
 import MilitaryCampaignsPage from "./page.client";
 
@@ -29,9 +31,25 @@ async function loadMilitaryCampaigns(): Promise<MilitaryCampaignsSnapshot | null
   }
 }
 
+/**
+ * The names, issuers and targets, from our database. Same split as the ESI
+ * read: without them the page still lists every campaign, by UUID.
+ */
+async function loadMilitaryCampaignsSdeInfo(): Promise<MilitaryCampaignsSdeInfo | null> {
+  try {
+    return await readMilitaryCampaignsSdeInfo();
+  } catch {
+    await connection();
+    return null;
+  }
+}
+
 async function MilitaryCampaignsContent() {
-  const snapshot = await loadMilitaryCampaigns();
-  return <MilitaryCampaignsPage snapshot={snapshot} />;
+  const [snapshot, sdeInfo] = await Promise.all([
+    loadMilitaryCampaigns(),
+    loadMilitaryCampaignsSdeInfo(),
+  ]);
+  return <MilitaryCampaignsPage snapshot={snapshot} sdeInfo={sdeInfo} />;
 }
 
 export default function Page() {

@@ -9,18 +9,25 @@ import {
   useMultipleCharacterMilitaryCampaignObjectives,
 } from "@jitaspace/hooks";
 
+import type { MilitaryCampaignsSdeInfo } from "./data";
 import type { MilitaryCampaignsSnapshot } from "./esi";
 import type { Participation } from "./parts";
 import { formatCountOf } from "~/lib/format";
 import { CampaignCard } from "./CampaignCard";
 import { CharacterParticipation } from "./CharacterParticipation";
-import { STATE_ORDER } from "./parts";
+import { NO_SDE_INFO, STATE_ORDER } from "./parts";
 
 const NO_PARTICIPATION: Participation[] = [];
 
 export default function MilitaryCampaignsPage({
   snapshot,
-}: Readonly<{ snapshot: MilitaryCampaignsSnapshot | null }>) {
+  sdeInfo,
+}: Readonly<{
+  snapshot: MilitaryCampaignsSnapshot | null;
+  /** Names, issuers and targets; null when our database could not be read. */
+  sdeInfo: MilitaryCampaignsSdeInfo | null;
+}>) {
+  const sde = sdeInfo ?? NO_SDE_INFO;
   const characterIds = useAuthenticatedCharacterIds();
   const participation = useMultipleCharacterMilitaryCampaignObjectives();
 
@@ -81,7 +88,9 @@ export default function MilitaryCampaignsPage({
             participations={participation.data}
             errors={participation.errors}
             isPending={participation.isPending}
+            pendingCharacterIds={participation.pendingSubjectIds}
             campaigns={campaigns}
+            sdeInfo={sde}
           />
         )}
 
@@ -109,6 +118,7 @@ export default function MilitaryCampaignsPage({
                 key={campaign.id}
                 campaign={campaign}
                 readAt={snapshot.readAt}
+                sdeInfo={sde}
                 participations={
                   participationByCampaign.get(campaign.id) ?? NO_PARTICIPATION
                 }

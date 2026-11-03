@@ -7,7 +7,10 @@ import type * as QueryKeysModule from "../src/hooks/utils/esiQueryKeys";
 
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
-  // The app-wide policy; stubbed so the ceiling's own veto is what is tested.
+  // The walk itself is real (esiCursorQueryOptions delegates to it); only the
+  // app-wide retry policy is stubbed, so the ceiling's own veto is what is
+  // tested.
+  ...jest.requireActual<object>("@jitaspace/esi-client"),
   shouldRetryEsiRequest: (failureCount: number) => failureCount < 3,
 }));
 
