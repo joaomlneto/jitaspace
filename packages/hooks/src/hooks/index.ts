@@ -9,6 +9,7 @@ export * from "./calendar";
 export * from "./clones";
 export * from "./character";
 export * from "./contacts";
+export * from "./contracts";
 export * from "./dogma";
 export * from "./fittings";
 export * from "./freelance";
