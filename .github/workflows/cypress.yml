@@ -157,10 +157,7 @@ jobs:
           exit 1
       - name: Cypress run
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
-        # At least v7.4.4: earlier versions' wait-on fails at once with
-        # ERR_SOCKET_CLOSED_BEFORE_CONNECTION on the runner's Node >= 24.20
-        # instead of waiting for the server (cypress-io/github-action#1873).
-        uses: cypress-io/github-action@v7.4.8
+        uses: cypress-io/github-action@v7.3.0
         with:
           # Dependencies are already installed at monorepo root; skip action-level install
           # to avoid lockfile lookup in apps/web (pnpm lockfile is at repository root).
