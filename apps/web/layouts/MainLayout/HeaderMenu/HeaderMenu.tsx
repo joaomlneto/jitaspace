@@ -80,7 +80,7 @@ function DesktopNavGroup({ pathname }: { pathname: string | null }) {
 
 /**
  * Highlights the active section from usePathname. On dynamic routes (e.g.
- * /contract/[id]) usePathname is request-time data that Next 16 cacheComponents
+ * /contracts/[id]) usePathname is request-time data that Next 16 cacheComponents
  * only allows inside a <Suspense> boundary, so HeaderMenu wraps this and falls
  * back to an un-highlighted nav in the prerendered shell.
  */
