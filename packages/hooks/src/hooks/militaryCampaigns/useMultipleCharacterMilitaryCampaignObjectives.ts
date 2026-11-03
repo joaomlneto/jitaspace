@@ -24,6 +24,13 @@ import { EAGER_WALK_STALE_TIME_MS } from "../utils/useEagerlyFetchAllPages";
 export type CharacterMilitaryCampaignObjective =
   CharactersMilitaryCampaignsObjectivesParticipationCharacterobjective;
 
+/**
+ * ESI's newer scope naming (`esi.<area>.<subject>:<verb>`). Deliberately not in
+ * the login modal's default set: it would be the first such scope there, and
+ * if JitaSpace's EVE application is not registered for it, SSO rejects the
+ * whole request, so every login would fail. The military campaigns page asks
+ * for it per character instead, where a refusal costs only that button.
+ */
 export const MILITARY_CAMPAIGN_ACTIVITY_SCOPE = "esi.activity.char:read";
 
 /**

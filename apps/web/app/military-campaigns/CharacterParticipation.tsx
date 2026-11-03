@@ -32,6 +32,7 @@ import { CharacterAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 import { formatDateTime, formatInteger } from "~/lib/format";
+import { grantedScopesOf } from "~/lib/grantedScopes";
 import {
   campaignAnchorId,
   campaignTitle,
@@ -49,7 +50,10 @@ interface ParticipationRow extends Participation {
   objectiveTarget: number | null;
 }
 
-function GrantAccessButton({ characterId }: Readonly<{ characterId: number }>) {
+function GrantAccessButton({
+  characterId,
+  children,
+}: Readonly<{ characterId: number; children: string }>) {
   const grantedScopes = useAuthStore(
     (state) => state.characters[characterId]?.accessTokenPayload.scp,
   );
@@ -63,7 +67,7 @@ function GrantAccessButton({ characterId }: Readonly<{ characterId: number }>) {
         loginWithEveOnline(
           [
             ...new Set([
-              ...(grantedScopes ?? []),
+              ...grantedScopesOf(grantedScopes),
               MILITARY_CAMPAIGN_ACTIVITY_SCOPE,
             ]),
           ],
@@ -71,7 +75,7 @@ function GrantAccessButton({ characterId }: Readonly<{ characterId: number }>) {
         );
       }}
     >
-      Grant access
+      {children}
     </Button>
   );
 }
@@ -89,6 +93,12 @@ function CharacterSummaryCard({
   isLoading: boolean;
   error: EsiSubjectError | undefined;
 }>) {
+  // A character drops out of the readable ones when its session expires, as
+  // well as when it never granted the scope; the two need different words.
+  const sessionExpired = useAuthStore(
+    (state) => state.characters[characterId]?.sessionExpired ?? false,
+  );
+
   const totals = useMemo(
     () => ({
       campaigns: new Set(rows.map((row) => row.campaign_id)).size,
@@ -105,9 +115,13 @@ function CharacterSummaryCard({
     body = (
       <Stack gap="xs" align="flex-start">
         <Text size="sm" c="dimmed">
-          This character has not granted access to its campaign activity.
+          {sessionExpired
+            ? "This character's session has expired."
+            : "This character has not granted access to its campaign activity."}
         </Text>
-        <GrantAccessButton characterId={characterId} />
+        <GrantAccessButton characterId={characterId}>
+          {sessionExpired ? "Sign in again" : "Grant access"}
+        </GrantAccessButton>
       </Stack>
     );
   } else if (error) {

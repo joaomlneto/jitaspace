@@ -665,10 +665,6 @@ export const extraJitaFeatures: AppScopeSet[] = [
     scopes: ["esi-assets.read_assets.v1"],
   },
   {
-    reason: "Read military campaign participation",
-    scopes: ["esi.activity.char:read"],
-  },
-  {
     // Here rather than as an optional scope of Mercenary Operations, which
     // would hide that app from a character without it (getEnabledApps). Being
     // in the login modal's default set also keeps a later login from dropping

@@ -63,17 +63,8 @@ const toObjective = (
   lastModified: objective.last_modified,
 });
 
-/**
- * Every military campaign ESI lists, each with all of its objectives.
- *
- * ESI caches the listing for 60 seconds and the objectives not at all, so a
- * minute is as fresh as this can usefully be. Throws on any failure — the
- * page catches outside this scope, so an ESI blip is never what gets cached.
- */
-export async function readMilitaryCampaigns(): Promise<MilitaryCampaignsSnapshot> {
-  "use cache";
-  cacheLife("minutes");
-
+/** Every campaign ESI lists, each with all of its objectives. Throws. */
+async function fetchMilitaryCampaigns(): Promise<MilitaryCampaignsSnapshot> {
   const { data } = await getMilitaryCampaignsListing();
   const campaigns = await Promise.all(
     data.campaigns.map(async (campaign): Promise<MilitaryCampaign> => {
@@ -104,4 +95,39 @@ export async function readMilitaryCampaigns(): Promise<MilitaryCampaignsSnapshot
   );
 
   return { readAt: new Date().toISOString(), campaigns };
+}
+
+/**
+ * Every military campaign ESI lists, or null when ESI could not be read.
+ *
+ * ESI caches the listing for 60 seconds and the objectives not at all, so a
+ * minute is as fresh as this can usefully be.
+ *
+ * The failure is caught inside the `"use cache"` scope, on purpose and against
+ * the usual rule (CLAUDE.md: never catch a database error there). This is the
+ * first static route whose build reads ESI, and a read that throws during the
+ * build prerender is not contained by a catch outside the scope: the export
+ * dies, so a deploy during ESI's daily downtime, or any 1 of these 1 + N
+ * requests failing, would fail the whole build. Caught here, the failure
+ * switches this entry to `cacheLife("seconds")` (the shorter call wins), which
+ * keeps it out of prerenders. Measured on Next 16.2.11 with `next build` and
+ * `next start`:
+ *
+ * - ESI down at build: the build succeeds and stores the loading shell, not
+ *   "unavailable"; the list renders per request.
+ * - ESI up at build: the route stays static (`○`, revalidated every minute).
+ * - ESI down at a revalidation: the stale page is served once, then
+ *   "Campaigns unavailable" per request, nothing stored; within seconds of ESI
+ *   answering again the list is back and cached for its minute.
+ */
+export async function readMilitaryCampaigns(): Promise<MilitaryCampaignsSnapshot | null> {
+  "use cache";
+  cacheLife("minutes");
+  try {
+    return await fetchMilitaryCampaigns();
+  } catch (error) {
+    cacheLife("seconds");
+    console.warn("Military campaigns: ESI read failed", error);
+    return null;
+  }
 }

@@ -15,20 +15,22 @@ const characterIds = jest.fn<() => number[]>();
 const participation = jest.fn();
 const login = jest.fn();
 
+interface StubSession {
+  accessTokenPayload: { scp: string[] | string };
+  sessionExpired?: boolean;
+}
+const defaultSessions = (): Record<number, StubSession> => ({
+  2: { accessTokenPayload: { scp: ["esi-mail.read_mail.v1"] } },
+});
+let sessions = defaultSessions();
+
 jest.mock("@jitaspace/hooks", () => ({
   MILITARY_CAMPAIGN_ACTIVITY_SCOPE: "esi.activity.char:read",
   useAuthenticatedCharacterIds: () => characterIds(),
   useMultipleCharacterMilitaryCampaignObjectives: () => participation(),
   useAuthStore: (
-    select: (state: {
-      characters: Record<number, { accessTokenPayload: { scp: string[] } }>;
-    }) => unknown,
-  ) =>
-    select({
-      characters: {
-        2: { accessTokenPayload: { scp: ["esi-mail.read_mail.v1"] } },
-      },
-    }),
+    select: (state: { characters: Record<number, StubSession> }) => unknown,
+  ) => select({ characters: sessions }),
 }));
 jest.mock("~/lib/eveOnlineLogin", () => ({
   loginWithEveOnline: (...args: unknown[]) => login(...args),
@@ -156,6 +158,7 @@ describe("Military campaigns page", () => {
     characterIds.mockReset();
     participation.mockReset();
     login.mockReset();
+    sessions = defaultSessions();
     characterIds.mockReturnValue([]);
     participation.mockReturnValue(envelope([], []));
   });
@@ -278,6 +281,41 @@ describe("Military campaigns page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Grant access" }));
     expect(login).toHaveBeenCalledWith(
       ["esi-mail.read_mail.v1", "esi.activity.char:read"],
+      "/military-campaigns",
+    );
+  });
+
+  it("re-requests a lone scope EVE wrote as a string, not its letters", () => {
+    sessions = { 2: { accessTokenPayload: { scp: "publicData" } } };
+    characterIds.mockReturnValue([2]);
+    participation.mockReturnValue(envelope([], []));
+
+    renderPage();
+
+    fireEvent.click(screen.getByRole("button", { name: "Grant access" }));
+    expect(login).toHaveBeenCalledWith(
+      ["publicData", "esi.activity.char:read"],
+      "/military-campaigns",
+    );
+  });
+
+  it("says a character's session expired rather than that it never granted access", () => {
+    sessions = {
+      2: {
+        accessTokenPayload: { scp: ["esi.activity.char:read"] },
+        sessionExpired: true,
+      },
+    };
+    characterIds.mockReturnValue([2]);
+    participation.mockReturnValue(envelope([], []));
+
+    renderPage();
+
+    expect(screen.getByText(/session has expired/)).toBeVisible();
+    expect(screen.queryByText(/has not granted/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sign in again" }));
+    expect(login).toHaveBeenCalledWith(
+      ["esi.activity.char:read"],
       "/military-campaigns",
     );
   });
