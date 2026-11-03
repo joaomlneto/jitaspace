@@ -226,6 +226,63 @@ export const seedRegionHistories = (
   return { ...state, regions };
 };
 
+/** The plan's working state while observations are applied, in place. */
+interface Working {
+  regions: TimelineState["regions"];
+  missing: TimelineState["missing"];
+  seen: Map<number, number>;
+  ended: EndedContract[];
+  unchangedRegions: number[];
+  incompleteRegions: number[];
+}
+
+/** Apply one region's observation to the working state. */
+const applyObservation = (
+  w: Working,
+  obs: RegionObservation,
+  inRegion: readonly OutstandingContract[],
+) => {
+  const previous = w.regions[obs.regionId];
+  // The same listing again (a retry, an overlapping run), or an older copy
+  // from another cache node: nothing new to learn from it.
+  if (previous && obs.observedAt <= previous.lastModified) {
+    w.unchangedRegions.push(obs.regionId);
+    return;
+  }
+  const history = previous?.history ?? [];
+  const count = obs.contractIds.size;
+  const complete = isRegionComplete(history, count);
+  if (!complete) w.incompleteRegions.push(obs.regionId);
+  w.regions[obs.regionId] = {
+    lastModified: obs.observedAt,
+    history:
+      count > 0 || history.length
+        ? [...history.slice(-(REGION_HISTORY_LENGTH - 1)), count]
+        : history,
+  };
+  for (const id of obs.contractIds) w.seen.set(id, obs.observedAt);
+
+  for (const c of inRegion) {
+    if (obs.contractIds.has(c.contractId)) {
+      delete w.missing[c.contractId];
+      continue;
+    }
+    const outcome = applyAbsence(
+      c,
+      w.missing[c.contractId],
+      previous?.lastModified,
+      obs,
+      complete,
+    );
+    if ("missing" in outcome) {
+      w.missing[c.contractId] = outcome.missing;
+    } else {
+      delete w.missing[c.contractId];
+      w.ended.push(outcome.ended);
+    }
+  }
+};
+
 export const planContractTimeline = ({
   state,
   outstanding,
@@ -238,12 +295,16 @@ export const planContractTimeline = ({
   /** Epoch ms; decides whether a checkpoint is due. */
   now: number;
 }): TimelinePlan => {
-  const regions = { ...state.regions };
-  const missing = { ...state.missing };
-  const seen = new Map<number, number>();
-  const ended: EndedContract[] = [];
-  const unchangedRegions: number[] = [];
-  const incompleteRegions: number[] = [];
+  const w: Working = {
+    regions: { ...state.regions },
+    missing: { ...state.missing },
+    seen: new Map(),
+    ended: [],
+    unchangedRegions: [],
+    incompleteRegions: [],
+  };
+  const { regions, missing, seen, ended, unchangedRegions, incompleteRegions } =
+    w;
 
   const byRegion = new Map<number, OutstandingContract[]>();
   for (const c of outstanding) {
@@ -251,45 +312,8 @@ export const planContractTimeline = ({
     if (list) list.push(c);
     else byRegion.set(c.regionId, [c]);
   }
-
   for (const obs of observations) {
-    const previous = regions[obs.regionId];
-    // The same listing again (a retry, an overlapping run), or an older copy
-    // from another cache node: nothing new to learn from it.
-    if (previous && obs.observedAt <= previous.lastModified) {
-      unchangedRegions.push(obs.regionId);
-      continue;
-    }
-    const history = previous?.history ?? [];
-    const count = obs.contractIds.size;
-    const complete = isRegionComplete(history, count);
-    if (!complete) incompleteRegions.push(obs.regionId);
-    regions[obs.regionId] = {
-      lastModified: obs.observedAt,
-      history:
-        count > 0 || history.length
-          ? [...history.slice(-(REGION_HISTORY_LENGTH - 1)), count]
-          : history,
-    };
-    for (const id of obs.contractIds) seen.set(id, obs.observedAt);
-
-    for (const c of byRegion.get(obs.regionId) ?? []) {
-      const outcome = obs.contractIds.has(c.contractId)
-        ? null
-        : applyAbsence(
-            c,
-            missing[c.contractId],
-            previous?.lastModified,
-            obs,
-            complete,
-          );
-      if (outcome && "missing" in outcome) {
-        missing[c.contractId] = outcome.missing;
-      } else {
-        delete missing[c.contractId];
-        if (outcome) ended.push(outcome.ended);
-      }
-    }
+    applyObservation(w, obs, byRegion.get(obs.regionId) ?? []);
   }
 
   // Missing entries for contracts no longer outstanding (ended here or
