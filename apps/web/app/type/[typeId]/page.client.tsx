@@ -20,25 +20,26 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconArrowsDiff,
-  IconExternalLink,
-  IconFileText,
-  IconHistory,
-  IconListCheck,
-  IconListDetails,
-  IconSwords,
-  IconVersions,
-} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeName } from "@jitaspace/eve-components";
 import {
+  CategoryCombatIcon,
   CategoryIskIcon,
+  CategoryPowerIcon,
+  SystemArrowRotateLeftIcon,
+  SystemBlockBanIcon,
+  SystemDetailsViewIcon,
+  SystemNumberIcon,
+  SystemOpenWindowIcon,
+  SystemTuneIcon,
+  SystemVariationIcon,
+  WindowCompareToolIcon,
   WindowInfoIcon,
   WindowInsuranceIcon,
+  WindowNoteIcon,
 } from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
@@ -594,7 +595,7 @@ export default function TypePage({
                 href={`/compare?types=${typeId}`}
                 size="xs"
                 variant="light"
-                leftSection={<IconArrowsDiff size={14} />}
+                leftSection={<WindowCompareToolIcon size={14} alt="" />}
               >
                 Compare
               </Button>
@@ -605,7 +606,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Ref
             </Button>
@@ -615,7 +618,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Tycoon
             </Button>
@@ -626,7 +631,9 @@ export default function TypePage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 EVE Workbench
               </Button>
@@ -650,14 +657,21 @@ export default function TypePage({
               Overview
             </Tabs.Tab>
             {npcStats && (
-              <Tabs.Tab value="combat" leftSection={<IconSwords size={16} />}>
+              <Tabs.Tab
+                value="combat"
+                leftSection={
+                  <CategoryCombatIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Combat
               </Tabs.Tab>
             )}
             {hasAttributes && (
               <Tabs.Tab
                 value="attributes"
-                leftSection={<IconListDetails size={16} />}
+                leftSection={
+                  <SystemTuneIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Attributes
               </Tabs.Tab>
@@ -665,7 +679,9 @@ export default function TypePage({
             {hasVariations && (
               <Tabs.Tab
                 value="variations"
-                leftSection={<IconVersions size={16} />}
+                leftSection={
+                  <SystemVariationIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Variations
               </Tabs.Tab>
@@ -691,7 +707,7 @@ export default function TypePage({
             {description && (
               <Tabs.Tab
                 value="description"
-                leftSection={<IconFileText size={16} />}
+                leftSection={<WindowNoteIcon size={16} alt="" />}
               >
                 Description
               </Tabs.Tab>
@@ -699,12 +715,27 @@ export default function TypePage({
             {typeLists.length > 0 && (
               <Tabs.Tab
                 value="type-lists"
-                leftSection={<IconListCheck size={16} />}
+                leftSection={
+                  <SystemDetailsViewIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Type Lists
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>
@@ -770,7 +801,11 @@ export default function TypePage({
 
               {propertyItems.length > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconListDetails size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <SystemNumberIcon size={18} color="currentColor" alt="" />
+                    }
+                  >
                     Properties
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
@@ -792,7 +827,15 @@ export default function TypePage({
             <Tabs.Panel value="combat" pt="lg">
               <Stack gap="lg">
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSwords size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryCombatIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Offense &amp; Defense
                   </SectionHeading>
                   <DamageTypeLegend />
@@ -807,7 +850,15 @@ export default function TypePage({
                 </Stack>
                 {npcStats.ewar.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconSwords size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <CategoryCombatIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Abilities
                     </SectionHeading>
                     <NpcEwarTable ewar={npcStats.ewar} />
@@ -823,7 +874,11 @@ export default function TypePage({
               <Stack gap="lg">
                 {sortedDogmaAttributes.length > 0 && (
                   <Stack gap="md">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemTuneIcon size={18} color="currentColor" alt="" />
+                      }
+                    >
                       Attributes
                     </SectionHeading>
                     {categorizedDogmaAttributes.map((category) => (
@@ -892,7 +947,15 @@ export default function TypePage({
 
                 {sortedDogmaEffects.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <CategoryPowerIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Effects
                     </SectionHeading>
                     {groupedDogmaEffects.map((group) => (
@@ -1059,7 +1122,15 @@ export default function TypePage({
                 </Text>
                 {memberTypeLists.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListCheck size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemDetailsViewIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Member of {memberTypeLists.length}{" "}
                       {memberTypeLists.length === 1 ? "list" : "lists"}
                     </SectionHeading>
@@ -1068,7 +1139,15 @@ export default function TypePage({
                 )}
                 {excludedTypeLists.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemBlockBanIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Excluded from {excludedTypeLists.length}{" "}
                       {excludedTypeLists.length === 1 ? "list" : "lists"}
                     </SectionHeading>

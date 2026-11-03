@@ -21,6 +21,7 @@ import {
   LPStoreIcon,
   MapIcon,
   MarketIcon,
+  PlanetsIcon,
   ShipsIcon,
   SkillsIcon,
   SystemFreelanceProjectsIcon,
@@ -246,6 +247,21 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  planetaryInteraction: {
+    name: "Planetary Interaction",
+    description:
+      "Track your colonies: extractor programs, factories, storage and daily production.",
+    url: "/planetary-interaction",
+    Icon: (props) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "View your planetary colonies",
+          scopes: ["esi-planets.manage_planets.v1"],
+        },
+      ],
+    },
+  },
   freelance: {
     name: "Freelance Jobs",
     description:
@@ -303,6 +319,27 @@ export const corporationApps: Record<string, JitaApp> = {
         {
           reason: "Read Corporation Contacts",
           scopes: ["esi-corporations.read_contacts.v1"],
+        },
+      ],
+    },
+  },
+  customsOffices: {
+    name: "Customs Offices",
+    description: "Review your corporation's customs office taxes and access.",
+    url: "/planetary-interaction/customs-offices",
+    subjectUrl: (id) =>
+      `/planetary-interaction/customs-offices?corporations=${id}`,
+    Icon: (props: EveIconProps) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      optional: [
+        {
+          reason: "Read Corporation Customs Offices",
+          description:
+            "Only a corporation's Directors can read them, so your roles are read too.",
+          scopes: [
+            "esi-planets.read_customs_offices.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
         },
       ],
     },

@@ -20,6 +20,7 @@ export * from "./mail";
 export * from "./market";
 export * from "./militaryCampaigns";
 export * from "./multi";
+export * from "./planetary";
 export * from "./skills";
 export * from "./sovereignty";
 export * from "./universe";

@@ -2,16 +2,16 @@
 
 import type { ReactNode } from "react";
 import { Group, Paper, SimpleGrid, Stack, Table, Text } from "@mantine/core";
-import {
-  IconArrowsExchange,
-  IconBuildingBank,
-  IconChartPie,
-  IconPackage,
-  IconSitemap,
-} from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { CharacterName, TypeAvatar } from "@jitaspace/eve-components";
+import {
+  CategoryTradeIcon,
+  ControlCargoInventoryIcon,
+  SystemContributionIcon,
+  SystemRatioIcon,
+  WindowCorporationHangarIcon,
+} from "@jitaspace/eve-icons";
 import { CorporationAvatar } from "@jitaspace/ui";
 
 import type {
@@ -160,7 +160,9 @@ export function EconomyTab({
     <Stack gap="lg">
       {npc.divisions.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconSitemap size={18} />}>
+          <SectionHeading
+            icon={<WindowCorporationHangarIcon size={18} alt="" />}
+          >
             Divisions
           </SectionHeading>
           <SimpleTable
@@ -193,7 +195,9 @@ export function EconomyTab({
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
           {npc.investors.length > 0 && (
             <Stack gap="sm">
-              <SectionHeading icon={<IconChartPie size={18} />}>
+              <SectionHeading
+                icon={<SystemRatioIcon size={18} color="currentColor" alt="" />}
+              >
                 Shareholders
               </SectionHeading>
               <Shareholdings holdings={npc.investors} />
@@ -201,7 +205,15 @@ export function EconomyTab({
           )}
           {npc.investedIn.length > 0 && (
             <Stack gap="sm">
-              <SectionHeading icon={<IconBuildingBank size={18} />}>
+              <SectionHeading
+                icon={
+                  <SystemContributionIcon
+                    size={18}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Holds shares in
               </SectionHeading>
               <Shareholdings holdings={npc.investedIn} />
@@ -212,7 +224,9 @@ export function EconomyTab({
 
       {npc.exchangeRates.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconArrowsExchange size={18} />}>
+          <SectionHeading
+            icon={<CategoryTradeIcon size={18} color="currentColor" alt="" />}
+          >
             Exchange rates
           </SectionHeading>
           <ExchangeRates rates={npc.exchangeRates} />
@@ -221,7 +235,15 @@ export function EconomyTab({
 
       {(tradesLoading || trades.length > 0) && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconPackage size={18} />}>
+          <SectionHeading
+            icon={
+              <ControlCargoInventoryIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Trade goods
           </SectionHeading>
           <DataTable

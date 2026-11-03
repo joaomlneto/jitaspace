@@ -9,8 +9,8 @@ import {
   Text,
   VisuallyHidden,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 
+import { SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import { ISKAmount } from "@jitaspace/ui";
 
@@ -171,7 +171,9 @@ export function WarHeader({
               rel="noopener noreferrer"
               size="compact-xs"
               variant="subtle"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               {link.label}
             </Button>

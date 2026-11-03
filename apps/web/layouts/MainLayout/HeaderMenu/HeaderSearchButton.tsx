@@ -3,7 +3,8 @@
 import { ActionIcon, Kbd, Text, UnstyledButton } from "@mantine/core";
 import { useOs } from "@mantine/hooks";
 import { openSpotlight } from "@mantine/spotlight";
-import { IconSearch } from "@tabler/icons-react";
+
+import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import classes from "./HeaderMenu.module.css";
 
@@ -27,7 +28,7 @@ export function HeaderSearchButton() {
         visibleFrom="lg"
         onClick={() => openSpotlight()}
       >
-        <IconSearch size={16} stroke={1.5} />
+        <SystemSearchIcon size={16} color="currentColor" alt="" />
         <Text className={classes.searchLabel} size="sm">
           Search New Eden…
         </Text>
@@ -42,7 +43,7 @@ export function HeaderSearchButton() {
         onClick={() => openSpotlight()}
         aria-label="Search New Eden"
       >
-        <IconSearch size={18} stroke={1.5} />
+        <SystemSearchIcon size={18} color="currentColor" alt="" />
       </ActionIcon>
     </>
   );

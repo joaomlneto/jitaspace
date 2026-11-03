@@ -18,21 +18,19 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconExternalLink,
-  IconHistory,
-  IconMapPin,
-  IconSchool,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   CategoryCorporationIcon,
+  SystemArrowRotateLeftIcon,
+  SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowDirectoryServicesIcon,
   WindowInfoIcon,
+  WindowLocationsIcon,
   WindowReprocessingIcon,
+  WindowTutorialIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 import { ISKAmount, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
@@ -263,7 +261,7 @@ function OverviewPanel({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconMapPin size={18} />}>
+        <SectionHeading icon={<WindowLocationsIcon size={18} alt="" />}>
           Location
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -464,7 +462,7 @@ function OverviewPanel({
 
       {station.schools.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconSchool size={18} />}>
+          <SectionHeading icon={<WindowTutorialIcon size={18} alt="" />}>
             Starting station
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -662,7 +660,9 @@ export default function StationPage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               DOTLAN EveMaps
             </Button>
@@ -700,7 +700,16 @@ export default function StationPage({
                 Agents ({formatInteger(station.agents.length)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>

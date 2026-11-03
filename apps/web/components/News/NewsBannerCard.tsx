@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { Badge, Box, Button, CloseButton, Stack, Text } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+
+import { SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 
 import type { NewsItem } from "~/config/news";
 import { formatNewsDate } from "./formatNewsDate";
@@ -153,7 +154,9 @@ export function NewsBannerCard({
               radius="md"
               mt={4}
               style={{ alignSelf: "flex-start", pointerEvents: "auto" }}
-              rightSection={<IconExternalLink size={14} />}
+              rightSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               {item.link.label}
             </Button>

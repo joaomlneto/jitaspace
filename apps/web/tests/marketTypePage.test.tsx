@@ -80,6 +80,8 @@ jest.mock("@jitaspace/eve-components", () => ({
 }));
 jest.mock("@jitaspace/eve-icons", () => ({
   MarketIcon: () => <span>market icon</span>,
+  SystemStarHollowIcon: () => null,
+  SystemStarIcon: () => null,
 }));
 jest.mock("posthog-js", () => ({
   __esModule: true,
