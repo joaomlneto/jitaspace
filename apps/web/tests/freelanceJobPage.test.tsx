@@ -30,8 +30,11 @@ jest.mock("@jitaspace/hooks", () => ({
     hooks.participation(...args),
   useCorporationFreelanceJobParticipants: (...args: unknown[]) =>
     hooks.participants(...args),
-  // Characters come from `characterIds` (those with a usable token);
-  // corporations from `subjects`.
+  // Every stored character, expired sessions included: the page must not
+  // take its viewers from here (see the expired-session test).
+  useAuthenticatedCharacterIds: () => hooks.characterIds(),
+  // Characters with a usable token come from `usable`; corporations from
+  // `subjects`.
   useEsiSubjects: ({ kind }: { kind: string }) =>
     kind === "character"
       ? (hooks.usable() as number[]).map((id) => ({
@@ -248,15 +251,40 @@ describe("Freelance job page", () => {
   it("keeps ?as= while the auth store rehydrates, and drops a character without a usable token after", () => {
     hooks.hydrated.mockReturnValue(false);
     const { unmount } = renderPage(`?as=${CHARACTER}`);
-    // Nothing is read before the session (and so `?as=`) is known.
+    // Kept: the hook itself waits for that character's token.
     expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
       characterId: CHARACTER,
-      enabled: false,
+      enabled: true,
     });
     unmount();
 
     hooks.hydrated.mockReturnValue(true);
     renderPage(`?as=${CHARACTER}`);
+    expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
+      characterId: undefined,
+      enabled: true,
+    });
+  });
+
+  it("reads nothing on its first render, before the URL is surely the job's", () => {
+    hooks.characterIds.mockReturnValue([CHARACTER]);
+    renderPage(`?as=${CHARACTER}`);
+    // On a client-side navigation the first render can still see the previous
+    // page's query string, so it must not start a read.
+    expect(hooks.job.mock.calls[0]?.[1]).toEqual({
+      characterId: CHARACTER,
+      enabled: false,
+    });
+    expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
+      characterId: CHARACTER,
+      enabled: true,
+    });
+  });
+
+  it("reads public jobs even if the saved session never loads", () => {
+    // A corrupt saved session leaves the auth store unhydrated for good.
+    hooks.hydrated.mockReturnValue(false);
+    renderPage();
     expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
       characterId: undefined,
       enabled: true,

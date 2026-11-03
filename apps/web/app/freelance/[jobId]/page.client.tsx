@@ -16,6 +16,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { useMounted } from "@mantine/hooks";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { parseAsInteger, useQueryState } from "nuqs";
 
@@ -525,6 +526,7 @@ export default function FreelanceJobPage({
   jobId,
 }: Readonly<{ jobId: string }>) {
   const hydrated = useAuthStoreHasHydrated();
+  const mounted = useMounted();
   // Characters with a usable token: one whose session expired can read
   // nothing, so `?as=` naming it would wait for a token that never comes.
   const usableCharacters = useEsiSubjects({ kind: "character" });
@@ -537,11 +539,14 @@ export default function FreelanceJobPage({
 
   const { data: job, error } = useFreelanceJob(jobId, {
     characterId: viewer,
-    // Not before the session has loaded. The React nuqs adapter reads the URL
-    // in that same re-render, so until then `?as=` reads as absent, and a
-    // private job would first be asked for anonymously: a 4xx that ESI counts
-    // against the error limit.
-    enabled: hydrated,
+    // Not before the page has mounted. Until then `?as=` can read as absent:
+    // while hydrating the React nuqs adapter sees no URL at all, and after a
+    // client-side navigation Next pushes the new URL only as it commits this
+    // page, which then first renders with the previous page's query string.
+    // Either way a private job would first be asked for anonymously, a 4xx
+    // that ESI counts against the error limit. By the first effect the URL is
+    // the job's, and the re-render after it reads `?as=` from there.
+    enabled: mounted,
   });
 
   const managedCorporations = useEsiSubjects({
