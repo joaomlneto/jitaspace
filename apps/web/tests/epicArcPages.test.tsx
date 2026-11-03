@@ -18,8 +18,14 @@ import { EpicArcStepsTable } from "~/components/Missions";
 // their stubs in __mocks__.
 
 jest.mock("~/app/history/EntityHistory", () => ({
-  EntityHistory: ({ entityId }: { entityId: number }) => (
-    <div data-testid="entity-history">{`history of ${entityId}`}</div>
+  EmbeddedEntityHistory: ({
+    history,
+  }: {
+    history: { entityId: number } | null;
+  }) => (
+    <div data-testid="entity-history">
+      {history ? `history of ${history.entityId}` : "no history"}
+    </div>
   ),
 }));
 jest.mock("next/link", () => ({
@@ -161,7 +167,7 @@ describe("EpicArcStepsTable", () => {
 
 describe("epic arc page", () => {
   it("shows the arc's figures and where it starts, branches and ends", () => {
-    renderUi(<EpicArcPage arc={ARC} />);
+    renderUi(<EpicArcPage arc={ARC} history={null} />);
 
     expect(
       screen.getByRole("heading", { name: "The Blood-Stained Stars" }),
@@ -179,7 +185,7 @@ describe("epic arc page", () => {
   });
 
   it("opens the agents tab from the URL", () => {
-    renderUi(<EpicArcPage arc={ARC} />, "?tab=agents");
+    renderUi(<EpicArcPage arc={ARC} history={null} />, "?tab=agents");
 
     const tevis = rowOf("Tevis Jak", 0);
     expect(tevis.getByText("1")).toBeInTheDocument();
@@ -192,7 +198,10 @@ describe("epic arc page", () => {
 
   it("says when an arc does not repeat on a timer", () => {
     renderUi(
-      <EpicArcPage arc={{ ...ARC, faction: null, arcRestartInterval: 1 }} />,
+      <EpicArcPage
+        arc={{ ...ARC, faction: null, arcRestartInterval: 1 }}
+        history={null}
+      />,
     );
     expect(screen.getByText("Not on a timer")).toBeInTheDocument();
   });

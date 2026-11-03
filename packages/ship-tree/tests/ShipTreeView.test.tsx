@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 
 import { SHIP_TREE_DATA_BASE_URL } from "../data";
 import { ShipTreeView } from "../ShipTreeView";
@@ -13,8 +13,10 @@ import { ALL_TABLE_FILES, byName, createFakeFetch, fileName } from "./helpers";
 // still render the real thing, so the same tests can also look at real output.
 const mockSeen = {
   skills: [] as unknown[],
+  training: [] as unknown[],
   dataProps: [] as { baseUrl: unknown; hasFetch: boolean }[],
-  shipTree: [] as { faction: unknown; isOmega: unknown }[],
+  shipTree: [] as Record<string, unknown>[],
+  treeDisplay: [] as Record<string, unknown>[],
   grid: [] as Record<string, unknown>[],
 };
 
@@ -33,9 +35,10 @@ jest.mock("@eve-online-tools/eve-ship-tree", () => {
 
   return {
     ...actual,
-    SkillsProvider: wrap(actual.SkillsProvider, (p) =>
-      mockSeen.skills.push(p.skills),
-    ),
+    SkillsProvider: wrap(actual.SkillsProvider, (p) => {
+      mockSeen.skills.push(p.skills);
+      mockSeen.training.push(p.training);
+    }),
     DataProvider: wrap(actual.DataProvider, (p) =>
       mockSeen.dataProps.push({
         baseUrl: p.baseUrl,
@@ -44,10 +47,11 @@ jest.mock("@eve-online-tools/eve-ship-tree", () => {
     ),
     ShipTree: wrap(
       actual.ShipTree,
-      (p) => mockSeen.shipTree.push({ faction: p.faction, isOmega: p.isOmega }),
+      (p) => mockSeen.shipTree.push(p),
       actual.ShipTree,
     ),
     Grid: wrap(actual.Grid, (p) => mockSeen.grid.push(p)),
+    TreeDisplay: wrap(actual.TreeDisplay, (p) => mockSeen.treeDisplay.push(p)),
   };
 });
 
@@ -60,9 +64,11 @@ const READY = { timeout: 15_000 };
 describe("ShipTreeView", () => {
   beforeEach(() => {
     mockSeen.skills.length = 0;
+    mockSeen.training.length = 0;
     mockSeen.dataProps.length = 0;
     mockSeen.shipTree.length = 0;
     mockSeen.grid.length = 0;
+    mockSeen.treeDisplay.length = 0;
   });
 
   it("draws the chosen faction's tree from the data tables", async () => {
@@ -115,7 +121,7 @@ describe("ShipTreeView", () => {
     );
     await screen.findByTestId("ship-tree-content", {}, READY);
 
-    expect(requested).toHaveLength(13);
+    expect(requested).toHaveLength(ALL_TABLE_FILES.length);
     for (const url of requested) {
       expect(url.startsWith("/elsewhere/tables/")).toBe(true);
     }
@@ -170,6 +176,143 @@ describe("ShipTreeView", () => {
     expect(mockSeen.shipTree.map((s) => s.isOmega)).toEqual([false, true]);
   });
 
+  it("passes the skill in training and the ship prices through", () => {
+    const { fetch } = createFakeFetch();
+    const prices = (typeId: number) => (typeId === 603 ? 512_345 : undefined);
+
+    renderView(
+      <ShipTreeView
+        faction={500001}
+        fetch={fetch}
+        training={{ skillId: 3330, level: 4 }}
+        prices={prices}
+      />,
+    );
+
+    expect(mockSeen.training.at(-1)).toEqual({ skillId: 3330, level: 4 });
+    expect(mockSeen.shipTree.at(-1)?.prices).toBe(prices);
+  });
+
+  it("passes neither by default", () => {
+    const { fetch } = createFakeFetch();
+
+    renderView(<ShipTreeView faction={500001} fetch={fetch} />);
+
+    expect(mockSeen.training.at(-1)).toBeUndefined();
+    expect(mockSeen.shipTree.at(-1)?.prices).toBeUndefined();
+  });
+
+  it("pins the summary of the faction it is given, with the tree's data", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { container } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} summaryFaction={500003} />,
+    );
+
+    // The description comes from the shipTreeFactions table: only there once
+    // the summary reads the tree's DataProvider.
+    expect(
+      await screen.findByText(
+        /Excel at engagements using Energy Turrets/,
+        {},
+        READY,
+      ),
+    ).toBeInTheDocument();
+    const summary = container.querySelector("section[data-faction]");
+    expect(summary).toHaveAttribute("data-faction", "500003");
+    expect(summary).toHaveAttribute("aria-label", "Amarr Empire");
+  });
+
+  it("pins corner controls above the summary, outside the tree", async () => {
+    const { fetch } = createFakeFetch();
+
+    renderView(
+      <ShipTreeView
+        faction={500001}
+        fetch={fetch}
+        summaryFaction={500001}
+        cornerControls={<button type="button">picker</button>}
+      />,
+    );
+
+    await screen.findByTestId("ship-tree-content", {}, READY);
+    const corner = screen.getByTestId("ship-tree-corner");
+    const picker = within(corner).getByRole("button", { name: "picker" });
+    const summary = corner.querySelector("section[data-faction]");
+    expect(summary).not.toBeNull();
+    // Picker first, summary below it, as in the game.
+    expect(
+      picker.compareDocumentPosition(summary!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // Not inside the pan-and-zoom content.
+    expect(
+      within(screen.getByTestId("ship-tree-content")).queryByRole("button", {
+        name: "picker",
+      }),
+    ).toBeNull();
+  });
+
+  it("shows no summary unless asked", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { container } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} />,
+    );
+
+    await screen.findByTestId("ship-tree-content", {}, READY);
+    expect(container.querySelector("section[data-faction]")).toBeNull();
+    expect(screen.queryByTestId("ship-tree-corner")).toBeNull();
+  });
+
+  it("passes the rendering options through, and leaves the library's defaults alone otherwise", async () => {
+    const { fetch } = createFakeFetch();
+
+    const { rerender } = renderView(
+      <ShipTreeView faction={500001} fetch={fetch} />,
+    );
+    // The tree, and with it TreeDisplay, mounts once the data has loaded.
+    await screen.findByTestId("ship-tree-content", {}, READY);
+    expect(mockSeen.shipTree.at(-1)).toMatchObject({
+      locale: undefined,
+      goldenCapsule: undefined,
+      strictMode: undefined,
+      panZoom: undefined,
+      backgroundColor: undefined,
+    });
+    expect(mockSeen.treeDisplay.at(-1)).toMatchObject({
+      groupTooltip: undefined,
+      shipTooltip: undefined,
+    });
+
+    rerender(
+      <MantineProvider>
+        <ShipTreeView
+          faction={500001}
+          fetch={fetch}
+          locale="de"
+          goldenCapsule
+          strictMode
+          panZoom={{ wheelZoom: false }}
+          backgroundColor="#102030"
+          groupTooltip={false}
+          shipTooltip={false}
+        />
+      </MantineProvider>,
+    );
+    expect(mockSeen.shipTree.at(-1)).toMatchObject({
+      locale: "de",
+      goldenCapsule: true,
+      strictMode: true,
+      panZoom: { wheelZoom: false },
+      backgroundColor: "#102030",
+    });
+    expect(mockSeen.treeDisplay.at(-1)).toMatchObject({
+      groupTooltip: false,
+      shipTooltip: false,
+    });
+  });
+
   it("keeps the loaded data when the faction changes", async () => {
     const { fetch, requested } = createFakeFetch();
 
@@ -193,8 +336,8 @@ describe("ShipTreeView", () => {
         ),
       READY,
     );
-    // Still the original thirteen requests: switching faction is not a reload.
-    expect(requested).toHaveLength(13);
+    // Still the original requests: switching faction is not a reload.
+    expect(requested).toHaveLength(ALL_TABLE_FILES.length);
     expect(screen.getByText("Minmatar Republic ships")).toBeInTheDocument();
   });
 

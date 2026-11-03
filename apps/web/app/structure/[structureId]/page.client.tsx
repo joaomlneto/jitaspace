@@ -5,15 +5,14 @@ import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
   EveEntityName,
-  SolarSystemAnchor,
   SolarSystemName,
   StructureName,
-  TypeAnchor,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useSelectedCharacter, useStructure } from "@jitaspace/hooks";
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
+import { SolarSystemAnchor, TypeAnchor } from "~/components/Anchor";
 import { StructureAvatar } from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { ScopeGuard } from "~/components/ScopeGuard";

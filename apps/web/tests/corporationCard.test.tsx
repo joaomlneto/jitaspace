@@ -13,12 +13,6 @@ jest.mock("@jitaspace/hooks", () => ({
 
 jest.mock("@jitaspace/ui", () => ({
   DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
-  AllianceAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
-  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
   AllianceAvatar: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance Avatar ${allianceId}`}</span>
   ),
@@ -37,9 +31,6 @@ jest.mock("@jitaspace/ui", () => ({
 
 // Components that moved to @jitaspace/eve-components are stubbed there.
 jest.mock("@jitaspace/eve-components", () => ({
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
   AllianceName: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
@@ -48,6 +39,21 @@ jest.mock("@jitaspace/eve-components", () => ({
   ),
   CorporationName: ({ corporationId }: { corporationId: number | string }) => (
     <span>{`Corporation ${corporationId}`}</span>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
+  AllianceAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
+  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
   ),
 }));
 

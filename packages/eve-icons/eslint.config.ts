@@ -5,9 +5,9 @@ import { reactConfig } from "@jitaspace/eslint-config/react";
 
 export default defineConfig(
   {
-    // `icons/**` holds machine-generated icon components (one per EVE icon,
-    // produced from SDE art). They are excluded from lint like other generated output.
-    ignores: ["dist/**", "icons/**"],
+    // `src/generated/**` is written by scripts/generate.ts (one component per
+    // icon, artwork inlined) and excluded like other generated output.
+    ignores: ["dist/**", "coverage/**", "src/generated/**"],
   },
   baseConfig,
   reactConfig,

@@ -41,6 +41,12 @@ jest.mock("@jitaspace/eve-components", () => ({
   TypeAvatar: ({ typeId }: { typeId: number }) => (
     <span>{`TypeAvatar ${typeId}`}</span>
   ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   TypeAnchor: ({ children }: { children?: ReactNode }) => (
     <a href="#">{children}</a>
   ),

@@ -4,63 +4,15 @@ import type { TextProps } from "@mantine/core";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Anchor, Text } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
-
-import { resolveTypeLabel } from "./actions";
 
 /**
- * Local stand-ins for the `@jitaspace/ui` name/anchor components that were
- * removed with the hooks refactor (commit f5e47407). The history UI resolves
- * most names itself and passes `name=`, so these mostly just render that text;
- * `TypeName` falls back to resolving the name from our database via a server
- * action when no `name` is supplied. The `*Anchor` components
- * link each resolved name to that entity's detail page (`/type/…`,
- * `/dogma/attribute/…`, …); the market group is the lone exception, with no
- * dedicated page yet, so it stays inline text.
+ * Local stand-ins for the `@jitaspace/ui` anchor and value components that were
+ * removed with the hooks refactor (commit f5e47407). Names come from the labels
+ * the server read with the timeline (`_labels.tsx`); the `*Anchor` components
+ * link each one to that entity's detail page (`/type/…`, `/dogma/attribute/…`,
+ * …). The market group is the lone exception, with no dedicated page yet, so
+ * it stays inline text.
  */
-
-// ── names (rendered from a resolved `name`, or a dimmed placeholder) ──────────
-type NameProps = { name?: string } & TextProps;
-function Name({ name, ...p }: NameProps) {
-  return name ? (
-    <Text {...p}>{name}</Text>
-  ) : (
-    <Text {...p} c="dimmed" fs="italic">
-      …
-    </Text>
-  );
-}
-export const CategoryName = Name;
-export const GroupName = Name;
-export const MarketGroupName = Name;
-export const RaceName = Name;
-export const DogmaAttributeName = Name;
-export const DogmaEffectName = Name;
-
-export function TypeName({
-  typeId,
-  name,
-  ...p
-}: { typeId?: number; name?: string } & TextProps) {
-  const q = useQuery({
-    queryKey: ["history", "sde", "type", typeId],
-    queryFn: () => resolveTypeLabel(typeId ?? 0),
-    staleTime: Infinity,
-    retry: false,
-    enabled: !name && !!typeId,
-  });
-  const label =
-    name ?? q.data?.name ?? (q.isPending && typeId ? "…" : `#${typeId ?? "?"}`);
-  return <Text {...p}>{label}</Text>;
-}
-
-export function FactionName({
-  factionId,
-  name,
-  ...p
-}: { factionId?: number; name?: string } & TextProps) {
-  return <Text {...p}>{name ?? `#${factionId ?? "?"}`}</Text>;
-}
 
 // ── anchors (link each resolved name to that entity's detail page) ───────────
 // Each caller passes the entity's id (categoryId, attributeId, …) plus the
@@ -79,7 +31,9 @@ function LinkAnchor({
   children,
 }: AnchorBaseProps & { href: string }) {
   return (
-    <Anchor component={Link} href={href} size={size} c={c}>
+    // No prefetch: a timeline holds hundreds of these, and prefetching every
+    // visible one would fire a request per label.
+    <Anchor component={Link} href={href} size={size} c={c} prefetch={false}>
       {children}
     </Anchor>
   );
@@ -125,6 +79,13 @@ export function DogmaEffectAnchor({
   ...rest
 }: AnchorBaseProps & { effectId: number }) {
   return <LinkAnchor href={`/dogma/effect/${effectId}`} {...rest} />;
+}
+
+export function CorporationAnchor({
+  corporationId,
+  ...rest
+}: AnchorBaseProps & { corporationId: number }) {
+  return <LinkAnchor href={`/corporation/${corporationId}`} {...rest} />;
 }
 
 export function TypeAnchor({

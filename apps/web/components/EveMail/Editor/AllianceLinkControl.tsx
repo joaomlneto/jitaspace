@@ -2,7 +2,7 @@ import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
 import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
-import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
+import { useDisclosure, useInputState } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { EsiSearchSelect } from "@jitaspace/eve-components";
@@ -11,6 +11,7 @@ import { AllianceAvatar } from "@jitaspace/ui";
 
 import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
+import { getLinkedEntityId } from "~/components/EveMail/Editor/linkedEntityId";
 import classes from "./LinkControl.module.css";
 
 export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
@@ -39,8 +40,7 @@ export const AllianceLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    const href = typeof linkData?.href === "string" ? linkData.href : "";
-    setAllianceId(href);
+    setAllianceId(getLinkedEntityId(linkData?.href, ["alliance"]));
   };
 
   const handleClose = () => {
@@ -71,15 +71,13 @@ export const AllianceLinkControl = forwardRef<
     }
   };
 
-  useWindowEvent("edit-link", handleOpen, false);
-
   return (
     <Popover
       trapFocus
       shadow="md"
       withinPortal
       opened={opened}
-      onClose={handleClose}
+      onDismiss={handleClose}
       offset={-44}
       zIndex={10000}
       unstyled={unstyled}

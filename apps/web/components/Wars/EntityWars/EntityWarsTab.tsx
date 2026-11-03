@@ -4,7 +4,7 @@ import { Badge, SimpleGrid, Stack, Text } from "@mantine/core";
 import { IconSwords } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { ISKAmount, WarAnchor } from "@jitaspace/ui";
+import { ISKAmount } from "@jitaspace/ui";
 
 import type {
   EntityWar,
@@ -12,6 +12,7 @@ import type {
   WarRole,
   WarSummary,
 } from "~/lib/warRecord";
+import { WarAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import { WarEntity } from "~/components/Wars/WarRoom/parts";

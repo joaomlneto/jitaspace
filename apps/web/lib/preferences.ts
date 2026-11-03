@@ -22,13 +22,19 @@ export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
 
 export const APP_THEME_OPTIONS = [
   { value: "default", label: "Default" },
+  { value: "minimal", label: "Minimal" },
   { value: "eve", label: "EVE" },
-  { value: "eve_v2", label: "EVE v2" },
+  { value: "eve_compact", label: "EVE (compact)" },
   { value: "amarr", label: "Amarr" },
   { value: "caldari", label: "Caldari" },
   { value: "gallente", label: "Gallente" },
   { value: "minmatar", label: "Minmatar" },
+  { value: "ore", label: "ORE" },
+  { value: "sisters_of_eve", label: "Sisters of EVE" },
+  { value: "carbon", label: "Carbon" },
+  { value: "photon", label: "Photon" },
   { value: "whpd", label: "WHPD" },
+  { value: "excel", label: "Excel" },
 ] as const;
 
 /** The engines every data table can render with (`~/components/DataTable`). */
@@ -47,9 +53,12 @@ interface PreferencesState {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
   dataTableEngine: DataTableEngine;
+  /** Experimental: show the ship tree's rendering options above the tree. */
+  shipTreeDebugMode: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
   setDataTableEngine: (value: DataTableEngine) => void;
+  setShipTreeDebugMode: (value: boolean) => void;
 }
 
 export const sanitizeAppTheme = (
@@ -91,9 +100,11 @@ export const usePreferencesStore = create<PreferencesState>()(
       esiAcceptLanguage: DEFAULT_ESI_ACCEPT_LANGUAGE,
       appTheme: DEFAULT_APP_THEME,
       dataTableEngine: DEFAULT_DATA_TABLE_ENGINE,
+      shipTreeDebugMode: false,
       setEsiAcceptLanguage: (value) => set({ esiAcceptLanguage: value }),
       setAppTheme: (value) => set({ appTheme: value }),
       setDataTableEngine: (value) => set({ dataTableEngine: value }),
+      setShipTreeDebugMode: (value) => set({ shipTreeDebugMode: value }),
     }),
     {
       name: PREFERENCES_STORAGE_KEY,
@@ -110,6 +121,7 @@ export const usePreferencesStore = create<PreferencesState>()(
           dataTableEngine:
             sanitizeDataTableEngine(persisted.dataTableEngine) ??
             DEFAULT_DATA_TABLE_ENGINE,
+          shipTreeDebugMode: persisted.shipTreeDebugMode === true,
         };
       },
     },

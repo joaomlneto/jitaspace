@@ -20,6 +20,21 @@ jobs:
     # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
     # Also see warning here https://github.com/cypress-io/github-action#parallel
     services:
+      # The main database. Production is PostgreSQL (PlanetScale), so CI pushes
+      # the schema to the same engine rather than to CockroachDB.
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jitaspace
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis:alpine
         ports:
@@ -43,7 +58,12 @@ jobs:
       # the header of smoke.cy.ts), so nothing re-checks this today: cy.request
       # never executes page JS, and these placeholders are currently unguarded.
       SKIP_ENV_VALIDATION: "1"
-      DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/jitaspace?sslmode=disable"
+      # The build-history database, which `/history` and `/history/compare` are
+      # prerendered from. An empty one is enough for the build: those pages
+      # render their empty state, and every other history route is ISR, read on
+      # first request (the smoke suite visits none of them).
+      EVE_BUILDS_DATABASE_URL: "postgresql://root@localhost:26257/eve_builds?sslmode=disable"
       REDIS_URL: "redis://localhost:6379"
       # Placeholders that satisfy the client schema so the built bundle is
       # loadable. DISCORD_INVITE_LINK must parse as a URL; GOOGLE_TAG_ID is
@@ -56,6 +76,8 @@ jobs:
       matrix:
         containers: [1, 2] # Uses 2 parallel instances
     steps:
+      # Only for the build-history database: its schema is owned upstream and
+      # still lives on CockroachDB. The main database is the postgres service.
       - name: Start CockroachDB
         run: |
           docker run -d \
@@ -65,7 +87,7 @@ jobs:
             cockroachdb/cockroach:v24.3.7 \
             start-single-node --insecure --store=type=mem,size=0.5
           timeout 120 bash -c 'until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done'
-          docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
+          docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS eve_builds;"
       - name: Checkout
         uses: actions/checkout@v6
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
@@ -98,8 +120,41 @@ jobs:
         run: pnpm exec cypress install
       - name: Push database schema
         run: cd packages/db && pnpm exec prisma db push
+      # jovespace owns the history schema and ships it in @jitaspace/db-builds
+      # (apps/web/CLAUDE.md), so it is created from that package's copy rather
+      # than pushed: `migrate diff` turns it into SQL without a datasource.
+      - name: Create history database schema
+        run: |
+          cd packages/db
+          pnpm exec prisma migrate diff --from-empty \
+            --to-schema ../../node_modules/@jitaspace/db-builds/schema.prisma \
+            --script \
+            | docker exec -i cockroachdb cockroach sql --insecure -d eve_builds
       - name: Build
         run: pnpm build
+      # Started and waited for here, not through the action's `start` and
+      # `wait-on`. The action launches the server and pings it at once, and
+      # retries only the error codes `got` knows. Since the runner image of
+      # 2026-10-25, the first refused ping (sent before `next start` listens)
+      # fails with Node's "Socket closed before the connection was
+      # established", which is not one of them, so every run ended there,
+      # whether it waited on localhost or 127.0.0.1. A process started in the
+      # background keeps running for the rest of the job.
+      - name: Start web server
+        working-directory: apps/web
+        run: |
+          pnpm start > "$RUNNER_TEMP/next-start.log" 2>&1 &
+          for _ in $(seq 1 60); do
+            # Any HTTP response means it is listening; the smoke suite
+            # judges the status codes.
+            if curl -s -o /dev/null --max-time 10 http://localhost:3000; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "next start did not answer within 60 seconds"
+          cat "$RUNNER_TEMP/next-start.log"
+          exit 1
       - name: Cypress run
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
         uses: cypress-io/github-action@v7.3.0
@@ -107,11 +162,8 @@ jobs:
           # Dependencies are already installed at monorepo root; skip action-level install
           # to avoid lockfile lookup in apps/web (pnpm lockfile is at repository root).
           install: false
-          # Run commands from the web app workspace so `pnpm start` resolves to `apps/web`
+          # Run from the web app workspace, where the Cypress config lives.
           working-directory: apps/web
-          # Starts web server for E2E tests - the web package exposes `start` which runs Next.js
-          start: pnpm start
-          wait-on: "http://localhost:3000" # Waits for above
           # Recording requires CYPRESS_RECORD_KEY, and --parallel requires
           # --record. Secrets are not exposed to pull_request runs from forks, so
           # hardcoding these fails the job before a single spec executes. Gate

@@ -11,9 +11,9 @@ import { buildAssetTree } from "~/components/Assets/assetTree";
 import { CharacterAssetsTree } from "~/components/Assets/AssetTreeView";
 
 /**
- * Render tests for the Character Assets browser UI. The @jitaspace/ui and
- * @jitaspace/eve-components imports resolve to the jest stubs, whose TypeAnchor
- * renders its children — so the resolved item names are assertable text. This
+ * Render tests for the Character Assets browser UI. The @jitaspace/ui,
+ * @jitaspace/eve-components and ~/components/Anchor imports resolve to the jest
+ * stubs, whose TypeAnchor renders its children — so the resolved item names are assertable text. This
  * exercises the collapsible location panels, the recursive item nodes, the
  * ship-fit section grouping and the search results, which the pure-logic tests
  * in assetTree.test.ts cannot reach.

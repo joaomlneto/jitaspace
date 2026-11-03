@@ -125,7 +125,7 @@ describe("db-builds schema ↔ history reader contract", () => {
     expect(field("BuildDiff", "toBuild")).toEqual(scalar("Int"));
   });
 
-  it("getEntityTimeline dependencies (the PR #627 crash site)", () => {
+  it("getCachedEntityTimeline dependencies (the PR #627 crash site)", () => {
     expect(field("Change", "diffId")).toEqual(scalar("Int"));
     expect(field("Change", "op")).toEqual(scalar("Op"));
     expect(field("Change", "data")).toEqual(scalar("Json"));

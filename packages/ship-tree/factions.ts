@@ -12,39 +12,39 @@ export interface ShipTreeFaction {
 }
 
 /**
- * Every faction the library can draw a ship tree for, in the order the
- * in-game picker lists them: the four empires first.
+ * Every faction the library can draw a ship tree for, alphabetically by name,
+ * which is the order pickers list them in.
  *
- * The library's README says only the four empires have layouts. That is stale
- * for the version we ship (0.0.2): all 17 render a full tree.
+ * All 17 render a full tree. A leading "The" is ignored when sorting, so "The
+ * Society of Conscious Thought" sits with the S factions.
  */
 export const SHIP_TREE_FACTIONS = [
-  { id: 500001, slug: "caldari", name: "Caldari State" },
-  { id: 500002, slug: "minmatar", name: "Minmatar Republic" },
   { id: 500003, slug: "amarr", name: "Amarr Empire" },
-  { id: 500004, slug: "gallente", name: "Gallente Federation" },
-  { id: 500006, slug: "concord", name: "CONCORD Assembly" },
-  { id: 500010, slug: "guristas", name: "Guristas Pirates" },
   { id: 500011, slug: "angel-cartel", name: "Angel Cartel" },
   { id: 500012, slug: "blood-raiders", name: "Blood Raider Covenant" },
+  { id: 500001, slug: "caldari", name: "Caldari State" },
+  { id: 500006, slug: "concord", name: "CONCORD Assembly" },
+  { id: 500029, slug: "deathless-circle", name: "Deathless Circle" },
+  { id: 500027, slug: "edencom", name: "EDENCOM" },
+  { id: 500004, slug: "gallente", name: "Gallente Federation" },
+  { id: 500010, slug: "guristas", name: "Guristas Pirates" },
+  { id: 500002, slug: "minmatar", name: "Minmatar Republic" },
+  { id: 500018, slug: "mordus-legion", name: "Mordu's Legion Command" },
   { id: 500014, slug: "ore", name: "ORE" },
+  { id: 500019, slug: "sanshas-nation", name: "Sansha's Nation" },
+  { id: 500020, slug: "serpentis", name: "Serpentis" },
   { id: 500016, slug: "sisters-of-eve", name: "Servant Sisters of EVE" },
   {
     id: 500017,
     slug: "society-of-conscious-thought",
     name: "The Society of Conscious Thought",
   },
-  { id: 500018, slug: "mordus-legion", name: "Mordu's Legion Command" },
-  { id: 500019, slug: "sanshas-nation", name: "Sansha's Nation" },
-  { id: 500020, slug: "serpentis", name: "Serpentis" },
   { id: 500026, slug: "triglavian", name: "Triglavian Collective" },
-  { id: 500027, slug: "edencom", name: "EDENCOM" },
-  { id: 500029, slug: "deathless-circle", name: "Deathless Circle" },
 ] as const satisfies readonly ShipTreeFaction[];
 
 export type ShipTreeFactionSlug = (typeof SHIP_TREE_FACTIONS)[number]["slug"];
 
-/** The slugs in picker order, ready for `nuqs`'s `parseAsStringLiteral`. */
+/** The slugs in alphabetical order, ready for `nuqs`'s `parseAsStringLiteral`. */
 export const SHIP_TREE_FACTION_SLUGS: readonly ShipTreeFactionSlug[] =
   SHIP_TREE_FACTIONS.map((faction) => faction.slug);
 

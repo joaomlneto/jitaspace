@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import type { CharactersDetailGenderEnum } from "@jitaspace/esi-client";
-import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
+import { isNpcCharacterId } from "@jitaspace/esi-metadata";
 
 import { useEsiCharacter } from "./useEsiCharacter";
 
@@ -84,10 +84,7 @@ export const useCharacter = (
 } => {
   const esiCharacter = useEsiCharacter(characterId);
 
-  const isNpc = useMemo(
-    () => isIdInRanges(characterId, npcCharacterIdRanges),
-    [characterId],
-  );
+  const isNpc = useMemo(() => isNpcCharacterId(characterId), [characterId]);
 
   const birthday = esiCharacter.data?.data.birthday;
   const characterBirthdayDate = useMemo(

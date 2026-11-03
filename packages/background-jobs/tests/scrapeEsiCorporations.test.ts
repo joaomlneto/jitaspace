@@ -21,21 +21,34 @@ jest.mock("p-limit", () => ({
 }));
 
 interface CorporationStub {
+  alliance_id?: number;
   ceo_id?: number;
   creator_id?: number;
+  enlisted_faction_id?: number;
+  home_station_id?: number;
 }
 
 let corporations: Map<number, CorporationStub>;
+/** The corporation each character is in now, per ESI; 98000001 by default. */
+let characterCorporations: Map<number, number>;
 
-const getCorporationsCorporationId = jest.fn((corporationId: number) => {
-  const { ceo_id, creator_id } = corporations.get(corporationId) ?? {};
+const corporationFromStub = (corporationId: number) => {
+  const {
+    alliance_id,
+    ceo_id,
+    creator_id,
+    enlisted_faction_id,
+    home_station_id = 60003760,
+  } = corporations.get(corporationId) ?? {};
   return Promise.resolve({
     data: {
+      alliance_id,
       ceo_id,
       creator_id,
       description: "",
+      enlisted_faction_id,
       friendly_fire: "illegal",
-      home_station_id: 60003760,
+      home_station_id,
       member_count: 1,
       name: `Corporation ${corporationId}`,
       shares: 1000,
@@ -46,14 +59,15 @@ const getCorporationsCorporationId = jest.fn((corporationId: number) => {
       war_eligible: true,
     },
   });
-});
+};
+const getCorporationsCorporationId = jest.fn(corporationFromStub);
 
 const getCharactersDetail = jest.fn((characterId: number) =>
   Promise.resolve({
     data: {
       birthday: "2020-01-01T00:00:00Z",
       bloodline_id: 1,
-      corporation_id: 98000001,
+      corporation_id: characterCorporations.get(characterId) ?? 98000001,
       gender: "male",
       name: `Character ${characterId}`,
       race_id: 1,
@@ -96,7 +110,9 @@ beforeAll(async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  getCorporationsCorporationId.mockImplementation(corporationFromStub);
   corporations = new Map();
+  characterCorporations = new Map();
 });
 
 const runBatch = (corporationIds: number[]) =>
@@ -104,6 +120,17 @@ const runBatch = (corporationIds: number[]) =>
     payload: { corporationIds },
     run: (_name: string, fn: () => unknown) => fn(),
   } as unknown as Parameters<typeof scrapeEsiCorporations.handler>[0]);
+
+/** The sets of IDs the job asked the reference helper to make sure exist. */
+const requestedReferences = () => {
+  expect(createCorpAndItsRefRecords).toHaveBeenCalledTimes(1);
+  const [args] = createCorpAndItsRefRecords.mock.calls[0] as unknown as [
+    Record<string, Set<number>>,
+  ];
+  return Object.fromEntries(
+    Object.entries(args).map(([key, ids]) => [key, [...ids].sort()]),
+  );
+};
 
 /** Every characterId handed to prisma.character.createMany, in call order. */
 const createdCharacterIds = () =>
@@ -145,5 +172,205 @@ describe("scrapeEsiCorporations", () => {
     await expect(runBatch([98000001])).resolves.toBeDefined();
 
     expect(getCharactersDetail).not.toHaveBeenCalled();
+  });
+
+  it("bootstraps the corporation an existing CEO has since moved to", async () => {
+    // The CEO is already stored, so the helper would not fetch them; ESI now
+    // puts them in 98000099, which we have never seen. Updating the character
+    // without it violated Character_corporationId_fkey.
+    corporations.set(98000001, { ceo_id: 90000001, creator_id: 90000002 });
+    characterCorporations.set(90000001, 98000099);
+    prisma.character.findMany.mockImplementationOnce(() =>
+      Promise.resolve([
+        {
+          characterId: 90000001,
+          birthday: new Date("2020-01-01T00:00:00Z"),
+          bloodlineId: 1,
+          corporationId: 98000001,
+          description: null,
+          factionId: null,
+          gender: "male",
+          name: "Character 90000001",
+          raceId: 1,
+          securityStatus: null,
+          title: null,
+          isDeleted: false,
+        },
+      ] as never),
+    );
+
+    await expect(runBatch([98000001])).resolves.toBeDefined();
+
+    expect(requestedReferences().missingCorporationIds).toEqual([
+      98000001, 98000099,
+    ]);
+    const updates = prisma.character.update.mock.calls.map(
+      (call) =>
+        (
+          call as unknown as [
+            {
+              where: { characterId: number };
+              data: { corporationId: number };
+            },
+          ]
+        )[0],
+    );
+    expect(updates).toEqual([
+      expect.objectContaining({
+        where: { characterId: 90000001 },
+        data: expect.objectContaining({ corporationId: 98000099 }),
+      }),
+    ]);
+    // The references exist before any row is written that points at them.
+    expect(createCorpAndItsRefRecords.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.character.update.mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it("bootstraps the alliance, home station and factions the update references", async () => {
+    corporations.set(98000001, {
+      alliance_id: 99000001,
+      ceo_id: 90000001,
+      enlisted_faction_id: 500001,
+      home_station_id: 60008494,
+    });
+
+    await expect(runBatch([98000001])).resolves.toBeDefined();
+
+    expect(requestedReferences()).toEqual({
+      missingAllianceIds: [99000001],
+      missingCharacterIds: [90000001],
+      missingCorporationIds: [98000001],
+      missingFactionIds: [500001],
+      missingStationIds: [60008494],
+    });
+  });
+
+  it("survives a deleted CEO and marks the stored character deleted", async () => {
+    // ESI answers 404 "Character has been deleted!" for a biomassed character,
+    // which used to fail the whole batch.
+    corporations.set(98000001, { ceo_id: 90000001, creator_id: 90000002 });
+    getCharactersDetail.mockImplementationOnce(() =>
+      Promise.reject(
+        Object.assign(new Error("Request failed with status code 404"), {
+          isAxiosError: true,
+          response: { status: 404 },
+        }),
+      ),
+    );
+    prisma.character.findMany.mockImplementationOnce(() =>
+      Promise.resolve([
+        {
+          characterId: 90000001,
+          birthday: new Date("2020-01-01T00:00:00Z"),
+          bloodlineId: 1,
+          corporationId: 98000001,
+          description: null,
+          factionId: null,
+          gender: "male",
+          name: "Character 90000001",
+          raceId: 1,
+          securityStatus: null,
+          title: null,
+          isDeleted: false,
+        },
+      ] as never),
+    );
+
+    await expect(runBatch([98000001])).resolves.toBeDefined();
+
+    expect(createdCharacterIds()).toEqual([90000002]);
+    const deletions = prisma.character.updateMany.mock.calls.map(
+      (call) =>
+        (
+          call as unknown as [
+            {
+              data: { isDeleted: boolean };
+              where: { characterId: { in: number[] } };
+            },
+          ]
+        )[0],
+    );
+    expect(deletions).toEqual([
+      {
+        data: { isDeleted: true },
+        where: { characterId: { in: [90000001] } },
+      },
+    ]);
+  });
+
+  it("still fails the batch on other ESI errors", async () => {
+    corporations.set(98000001, { ceo_id: 90000001 });
+    getCharactersDetail.mockImplementationOnce(() =>
+      Promise.reject(
+        Object.assign(new Error("Request failed with status code 502"), {
+          isAxiosError: true,
+          response: { status: 502 },
+        }),
+      ),
+    );
+
+    await expect(runBatch([98000001])).rejects.toThrow("502");
+  });
+
+  it("skips a corporation ESI does not know and marks the stored row deleted", async () => {
+    // A placeholder row stored for an ID that was never valid answers 404
+    // "Not Found", which used to fail the whole batch.
+    corporations.set(98000001, { ceo_id: 90000001 });
+    const knownCorporation =
+      getCorporationsCorporationId.getMockImplementation()!;
+    getCorporationsCorporationId.mockImplementation((corporationId: number) =>
+      corporationId === 102441019
+        ? Promise.reject(
+            Object.assign(new Error("Request failed with status code 404"), {
+              isAxiosError: true,
+              response: { status: 404 },
+            }),
+          )
+        : knownCorporation(corporationId),
+    );
+    prisma.corporation.findMany.mockImplementationOnce(() =>
+      Promise.resolve([
+        {
+          corporationId: 102441019,
+          allianceId: null,
+          ceoId: null,
+          creatorId: null,
+          dateFounded: null,
+          description: null,
+          enlistedFactionId: null,
+          homeStationId: null,
+          memberCount: -1,
+          name: "",
+          shares: null,
+          taxRate: 0,
+          ticker: "",
+          url: null,
+          warEligible: null,
+          isDeleted: false,
+        },
+      ] as never),
+    );
+
+    await expect(runBatch([102441019, 98000001])).resolves.toBeDefined();
+
+    expect(requestedReferences().missingCorporationIds).toEqual([98000001]);
+    const deletions = prisma.corporation.updateMany.mock.calls.map(
+      (call) =>
+        (
+          call as unknown as [
+            {
+              data: { isDeleted: boolean };
+              where: { corporationId: { in: number[] } };
+            },
+          ]
+        )[0],
+    );
+    expect(deletions).toEqual([
+      {
+        data: { isDeleted: true },
+        where: { corporationId: { in: [102441019] } },
+      },
+    ]);
   });
 });

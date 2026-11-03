@@ -2,10 +2,12 @@
  * Themed wallpapers, as `theme.other.appBackground` / `appBackgroundMobile`
  * (CSS `background` values).
  *
- * Each wallpaper ships twice: the full 3840x2160 JPEG, and a `-mobile.webp` that
- * is a centred 9:16 crop at 1080x1920 (~50-100 KB against ~500 KB). On a phone
- * `cover` only ever shows the middle sliver of the 16:9 original, so the crop
- * shows exactly what the original did, sharper and a fraction of the download.
+ * Each wallpaper ships twice: the full 16:9 image (a 3840x2160 JPEG where we
+ * have one), and a `-mobile.webp` that is a centred 9:16 crop of it, at
+ * 1080x1920 or the source's own height if smaller (~50-100 KB against
+ * ~400-500 KB). On a phone `cover` only ever shows the middle sliver of the
+ * 16:9 original, so the crop shows exactly what the original did, sharper and
+ * a fraction of the download.
  * MainLayout.module.css picks between them with a media query.
  *
  * Deliberately not a "use client" module: besides the Mantine themes, the
@@ -14,24 +16,57 @@
  */
 import { lightDark } from "./lightDark";
 
-const DIRECTORY = "/wallpapers/2026-cradle-of-war";
-
-// The veil over the art: 55% black on the dark scheme, and a pale wash on the
-// light one so light panels and dark text stand out from it.
-const veil = lightDark("rgba(242,247,251,0.86)", "rgba(0,0,0,0.55)");
+// The veil over the art: 68% black on the dark scheme, and a pale wash on the
+// light one so light panels and dark text stand out from it. Page text often
+// sits straight on the art (e.g. /about), so the veil is what keeps it
+// readable: at 55% the brightest parts of every wallpaper took body text below
+// WCAG AA (4.5:1); at 68% it stays above 5.5:1 on all of them.
+const veil = lightDark("rgba(242,247,251,0.86)", "rgba(0,0,0,0.68)");
 
 const layer = (url: string) =>
   `linear-gradient(${veil},${veil}),url(${url}) center/cover no-repeat`;
 
-const wallpaper = (file: string, extension: "jpg" | "jpeg") => ({
-  appBackground: layer(`${DIRECTORY}/${file}.${extension}`),
-  appBackgroundMobile: layer(`${DIRECTORY}/${file}-mobile.webp`),
+const wallpaper = (
+  directory: string,
+  file: string,
+  extension: "jpg" | "jpeg" | "webp",
+) => ({
+  appBackground: layer(`/wallpapers/${directory}/${file}.${extension}`),
+  appBackgroundMobile: layer(`/wallpapers/${directory}/${file}-mobile.webp`),
 });
 
+const CRADLE_OF_WAR = "2026-cradle-of-war";
+
+// Not a wallpaper but the Excel theme's background (themes/excel.ts), here
+// for the pre-paint script to read: Excel's gridlines (#e1e1e1 on white;
+// #3b3b3b on its dark mode's #1f1f1f), ruled into its default cells, columns
+// 64px wide and rows 20px tall. Kept out of WALLPAPERS, which are images.
+const gridline = lightDark("#e1e1e1", "#3b3b3b");
+const excelGrid = [
+  `linear-gradient(to right, ${gridline} 1px, transparent 1px) 0 0 / 64px 20px`,
+  `linear-gradient(to bottom, ${gridline} 1px, transparent 1px) 0 0 / 64px 20px`,
+  lightDark("#ffffff", "#1f1f1f"),
+].join(", ");
+
+export const EXCEL_GRID = {
+  appBackground: excelGrid,
+  appBackgroundMobile: excelGrid,
+};
+
 export const WALLPAPERS = {
-  cradleOfWar: wallpaper("cradle-of-war-nologo-compressed", "jpeg"),
-  amarr: wallpaper("amarr_wallpaper", "jpg"),
-  caldari: wallpaper("caldari_wallpaper", "jpg"),
-  gallente: wallpaper("gallente_wallpaper", "jpg"),
-  minmatar: wallpaper("minmatar_wallpaper", "jpg"),
+  cradleOfWar: wallpaper(
+    CRADLE_OF_WAR,
+    "cradle-of-war-nologo-compressed",
+    "jpeg",
+  ),
+  amarr: wallpaper(CRADLE_OF_WAR, "amarr_wallpaper", "jpg"),
+  caldari: wallpaper(CRADLE_OF_WAR, "caldari_wallpaper", "jpg"),
+  gallente: wallpaper(CRADLE_OF_WAR, "gallente_wallpaper", "jpg"),
+  minmatar: wallpaper(CRADLE_OF_WAR, "minmatar_wallpaper", "jpg"),
+  // The 2026 Crimson Harvest event key art, without its logo.
+  crimsonHarvest: wallpaper(
+    "2026-crimson-harvest",
+    "crimson-harvest-nologo",
+    "webp",
+  ),
 } as const;

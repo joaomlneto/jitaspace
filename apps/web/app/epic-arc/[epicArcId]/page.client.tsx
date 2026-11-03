@@ -20,23 +20,22 @@ import {
 import {
   IconGitBranch,
   IconHistory,
-  IconInfoCircle,
   IconListNumbers,
-  IconRoute,
-  IconUsers,
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import { FactionAnchor } from "@jitaspace/eve-components";
 import {
-  EveIconAvatar,
-  FactionAvatar,
-  ISKAmount,
-  MissionAnchor,
-} from "@jitaspace/ui";
+  CategoryAgentMissionIcon,
+  CategoryEpicArcIcon,
+  WindowAgentIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
+import { EveIconAvatar, FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type { EpicArc, EpicArcStep, EpicArcSummary } from "~/lib/epicArcs";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { MissionKind } from "~/lib/missions";
+import { FactionAnchor, MissionAnchor } from "~/components/Anchor";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
   AgentLabel,
@@ -46,7 +45,7 @@ import {
 } from "~/components/Missions";
 import { epicArcAgents, epicArcSummary, isRepeatable } from "~/lib/epicArcs";
 import { formatMinutes } from "~/lib/missions";
-import { EntityHistory } from "../../history/EntityHistory";
+import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import {
   DEFAULT_EPIC_ARC_PAGE_TAB,
   EPIC_ARC_PAGE_TABS,
@@ -101,7 +100,9 @@ function EpicArcHero({
         </HeroImage>
         <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
           <Group gap="sm" align="center">
-            <Title order={2}>{arc.name}</Title>
+            <Title order={1} size="h2">
+              {arc.name}
+            </Title>
             <Badge variant="light" color="grape" size="md">
               Epic Arc
             </Badge>
@@ -171,7 +172,7 @@ function EpicArcOverview({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Epic Arc
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -207,7 +208,9 @@ function EpicArcOverview({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconRoute size={18} />}>
+        <SectionHeading
+          icon={<CategoryEpicArcIcon size={18} color="currentColor" alt="" />}
+        >
           Where It Starts
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -295,7 +298,10 @@ function EpicArcAgentsTable({ arc }: Readonly<{ arc: EpicArc }>) {
   );
 }
 
-export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
+export default function EpicArcPage({
+  arc,
+  history,
+}: Readonly<{ arc: EpicArc; history: EntityHistoryData | null }>) {
   const summary = useMemo(() => epicArcSummary(arc), [arc]);
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
@@ -327,14 +333,26 @@ export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
-            <Tabs.Tab value="missions" leftSection={<IconRoute size={16} />}>
+            <Tabs.Tab
+              value="missions"
+              leftSection={
+                <CategoryAgentMissionIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               Missions ({arc.steps.length})
             </Tabs.Tab>
-            <Tabs.Tab value="agents" leftSection={<IconUsers size={16} />}>
+            <Tabs.Tab
+              value="agents"
+              leftSection={<WindowAgentIcon size={16} alt="" />}
+            >
               Agents
             </Tabs.Tab>
             <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
@@ -355,11 +373,7 @@ export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
           </Tabs.Panel>
 
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory
-              entityType="epicArc"
-              entityId={arc.epicArcId}
-              embedded
-            />
+            <EmbeddedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

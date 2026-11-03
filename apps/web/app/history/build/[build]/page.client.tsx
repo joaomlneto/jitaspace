@@ -21,7 +21,7 @@ import { hasResourceChanges, ResourceChanges } from "./_resource-sections";
 export default function BuildHistoryClient({
   data,
 }: Readonly<{ data: BuildPage }>) {
-  const { build, date, changes, typeNames, files, strings } = data;
+  const { build, date, changes, names, files, strings } = data;
   // Collections currently checked; null ⇒ all (until the user unchecks one).
   // No .withDefault(): an absent param is null, matching the "all" sentinel.
   const [selected, setSelected] = useQueryState(
@@ -103,7 +103,7 @@ export default function BuildHistoryClient({
             No changes match the selected collections.
           </Text>
         )}
-        <EntityChangeSections changes={visibleChanges} typeNames={typeNames} />
+        <EntityChangeSections changes={visibleChanges} names={names} />
       </Stack>
     </Container>
   );

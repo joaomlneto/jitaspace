@@ -22,7 +22,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@eve-online-tools/eve-ship-tree": "0.0.2",
+    "@eve-online-tools/eve-ship-tree": "0.3.0",
     "@mantine/core": "^9.3.0",
     "@mantine/hooks": "^9.3.0",
     "@use-gesture/react": "^10.3.1",

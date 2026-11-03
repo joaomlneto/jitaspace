@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 
 import { AllianceName, CorporationName } from "@jitaspace/eve-components";
-import { WarAnchor } from "@jitaspace/ui";
 
 import type { WarRoomAggressor, WarRoomWar } from "./types";
+import { WarAnchor } from "~/components/Anchor";
 import { cx, WarEntity } from "./parts";
 import { formatCompactNumber, formatIskCompact, warHasCombat } from "./utils";
 import classes from "./WarRoom.module.css";

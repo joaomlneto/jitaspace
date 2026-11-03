@@ -27,6 +27,11 @@ jest.mock("~/app/dungeon/[dungeonId]/page.client", () => ({
   __esModule: true,
   default: () => null,
 }));
+// The page reads the entity's change history on the server; stub that read
+// (it loads `next/server`, which jsdom cannot).
+jest.mock("~/lib/history-entity-page", () => ({
+  loadEntityHistory: () => Promise.resolve(null),
+}));
 jest.mock("~/components/PageSkeleton", () => ({ PageSkeleton: () => null }));
 jest.mock("nuqs/adapters/react", () => ({
   NuqsAdapter: ({ children }: { children: unknown }) => children,

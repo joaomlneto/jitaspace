@@ -1,4 +1,5 @@
 import { TextDecoder, TextEncoder } from "util";
+import { jest } from "@jest/globals";
 
 Object.assign(global, { TextEncoder, TextDecoder });
 
@@ -50,3 +51,15 @@ global.requestAnimationFrame = (cb) => {
   return setTimeout(() => cb(performance.now()), 0) as unknown as number;
 };
 global.cancelAnimationFrame = (id) => clearTimeout(id);
+
+// The entity anchors (~/components/Anchor) get a stub by default, as they did
+// when they lived in @jitaspace/ui and @jitaspace/eve-components, whose stubs
+// are mapped in jest.config.ts. A moduleNameMapper rule cannot do it here:
+// next/jest compiles the tsconfig `~/` alias into a relative path, so source
+// files never import the literal "~/components/Anchor". jest.mock resolves the
+// barrel to the same file those imports reach. A test can still override it
+// with its own jest.mock("~/components/Anchor", factory), and a test that
+// wants a real anchor imports its file (~/components/Anchor/TypeListAnchor).
+jest.mock("~/components/Anchor", () =>
+  jest.requireActual("./__mocks__/components/Anchor"),
+);

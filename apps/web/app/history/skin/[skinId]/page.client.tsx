@@ -2,32 +2,28 @@
 
 import { Text, Title } from "@mantine/core";
 
-import { latestFieldValue } from "~/lib/history";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
 import { EntityHistory } from "../../EntityHistory";
 
 export default function SkinHistoryClient({
-  skinId,
-}: Readonly<{ skinId: number }>) {
+  history,
+}: Readonly<{ history: EntityHistoryData }>) {
   return (
     <EntityHistory
-      entityType="skin"
-      entityId={skinId}
-      renderHeader={(timeline) => {
-        const name = latestFieldValue(timeline, "internalName");
-        return (
-          <div>
-            <Title order={2}>
-              {typeof name === "string" ? name : "Skin"}{" "}
-              <Text span c="dimmed">
-                #{skinId}
-              </Text>
-            </Title>
-            <Text size="sm" c="dimmed">
-              Ship SKIN (paint scheme)
+      history={history}
+      renderHeader={({ name, entityId }) => (
+        <div>
+          <Title order={2}>
+            {name ?? "Skin"}{" "}
+            <Text span c="dimmed">
+              #{entityId}
             </Text>
-          </div>
-        );
-      }}
+          </Title>
+          <Text size="sm" c="dimmed">
+            Ship SKIN (paint scheme)
+          </Text>
+        </div>
+      )}
     />
   );
 }

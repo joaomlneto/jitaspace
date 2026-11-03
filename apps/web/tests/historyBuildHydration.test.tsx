@@ -35,7 +35,7 @@ const DATA: BuildPage = {
     },
     { entityId: 12747, entityType: "skin", collection: "skins", kind: "added" },
   ],
-  typeNames: { 587: "Rifter" },
+  names: { type: { 587: "Rifter" } },
   files: { added: [], changed: [], removed: [] },
   strings: {},
 };

@@ -4,6 +4,8 @@ import { buildsDb } from "@jitaspace/db-builds";
 
 import type {
   BuildRangeChanges,
+  BuildServer,
+  EntityNames,
   EntityTimeline,
   HistoryIndex,
   LatestChangedBuild,
@@ -14,15 +16,15 @@ import {
   latestChangedBuild,
   netOp,
 } from "~/lib/history";
+import { readEntityNames } from "~/lib/history-entity-names";
 import { historyTable } from "~/lib/history-sql";
-import { readTypeNames } from "~/lib/history-type-names";
 
 /**
  * Day-cached reads of the change-history data.
  *
  * The underlying queries hit the standalone history database
- * (@jitaspace/db-builds) — all but {@link getCachedRangeTypeNames}, which names
- * a comparison's types from our main one — and the data only moves when a new
+ * (@jitaspace/db-builds) — {@link getCachedRangeNames} also names a
+ * comparison's entities from our main one — and the data only moves when a new
  * EVE client build is processed (rare, via the background jobs), so each result
  * is cached for a day (`cacheLife("days")`). The matching `"use server"`
  * actions in `history-actions.ts` delegate here, so every entry point (the
@@ -149,6 +151,53 @@ export async function getLatestChangedBuild(): Promise<LatestChangedBuild | null
 }
 
 /**
+ * Every diff, build and resource-file diff, compact: the axis each entity's
+ * timeline is placed on ({@link getCachedEntityTimeline}). The same for every
+ * entity, and three whole-table reads (a `FileChange` group-by among them), so
+ * it is read once and shared rather than once per timeline.
+ *
+ * A `"use cache: remote"` entry, like {@link getLatestChangedBuild}: the item
+ * page reads timelines at request time, where a plain entry would live in one
+ * instance's memory and seldom be hit again. A few thousand tuples, well under
+ * the Runtime Cache's 2 MB entry cap. Dates travel as ISO strings.
+ */
+export async function getCachedBuildAxis(): Promise<{
+  /** `[diffId, fromBuild, toBuild]` */
+  diffs: [number, number | null, number][];
+  /** `[buildNumber, releasedAt (ISO), server]` */
+  builds: [number, string | null, BuildServer][];
+  /**
+   * Diffs that carry resource-file changes: they came from the resource server
+   * (CDN); diffs with none are SDE-backfill diffs (the SDE produces no res
+   * files). This presence/absence is the only provenance signal — there is no
+   * explicit source field.
+   */
+  resfileDiffIds: number[];
+}> {
+  "use cache: remote";
+  cacheLife("days");
+
+  const [diffs, builds, resfileDiffs] = await Promise.all([
+    buildsDb.buildDiff.findMany({
+      select: { id: true, fromBuild: true, toBuild: true },
+    }),
+    buildsDb.build.findMany({
+      select: { buildNumber: true, releasedAt: true, server: true },
+    }),
+    buildsDb.fileChange.groupBy({ by: ["diffId"], _count: true }),
+  ]);
+  return {
+    diffs: diffs.map((d) => [d.id, d.fromBuild, d.toBuild]),
+    builds: builds.map((b) => [
+      b.buildNumber,
+      b.releasedAt?.toISOString() ?? null,
+      b.server ?? null,
+    ]),
+    resfileDiffIds: resfileDiffs.map((g) => g.diffId),
+  };
+}
+
+/**
  * Cached per-entity {@link EntityTimeline} for any kind ("type", "skin", …).
  *
  * Cached per `(entityType, entityId)` — `"use cache"` keys on the arguments — so
@@ -161,14 +210,10 @@ export async function getCachedEntityTimeline(
   entityId: number,
 ): Promise<EntityTimeline | null> {
   "use cache";
-  // Load-bearing beyond freshness: `getEntityTimeline` is the one history reader
-  // left WITHOUT a `checkBotId()` guard, so that `/type/*` can stay out of the
-  // BotID protect list (see instrumentation-client.ts — a protect entry gates
-  // every Server Action on those pages, including the app-wide token refresh).
-  // What makes leaving it open acceptable is that entries here EXPIRE, so an
-  // automated caller's cache footprint has a bounded ceiling. Moving this to
-  // `cacheLife("max")` would remove that ceiling and invalidate the trade —
-  // guard the action, or accept unbounded growth from unauthenticated callers.
+  // Read only while a history page or tab renders on the server
+  // (`~/lib/history-entity-page`), never by a client-invoked action; the
+  // entries still expire, so a crawler walking every entity's page leaves a
+  // bounded cache footprint.
   cacheLife("days");
 
   if (!Number.isInteger(entityId)) return null;
@@ -191,26 +236,19 @@ export async function getCachedEntityTimeline(
   // Build row), and traversing a null relation crashed the timeline. A change
   // whose diff is gone can't be placed on the axis (skip it); a missing Build
   // row yields a null date.
-  const [diffs, builds, resfileDiffs] = await Promise.all([
-    buildsDb.buildDiff.findMany({
-      select: { id: true, fromBuild: true, toBuild: true },
-    }),
-    buildsDb.build.findMany({
-      select: { buildNumber: true, releasedAt: true, server: true },
-    }),
-    // Which diffs carry resource-file changes → they came from the resource
-    // server (CDN); diffs with none are SDE-backfill diffs (the SDE produces no
-    // res files). This presence/absence is the only provenance signal — there is
-    // no explicit source field.
-    buildsDb.fileChange.groupBy({ by: ["diffId"], _count: true }),
-  ]);
-  const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
-  const fromBuildOf = new Map(diffs.map((d) => [d.id, d.fromBuild]));
+  const axis = await getCachedBuildAxis();
+  const toBuildOf = new Map(axis.diffs.map(([id, , to]) => [id, to]));
+  const fromBuildOf = new Map(axis.diffs.map(([id, from]) => [id, from]));
   const releasedAtOf = new Map(
-    builds.map((b) => [b.buildNumber, b.releasedAt]),
+    axis.builds.map(([build, releasedAt]) => [
+      build,
+      releasedAt === null ? null : new Date(releasedAt),
+    ]),
   );
-  const serverOf = new Map(builds.map((b) => [b.buildNumber, b.server]));
-  const resfileDiffIds = new Set(resfileDiffs.map((g) => g.diffId));
+  const serverOf = new Map(
+    axis.builds.map(([build, , server]) => [build, server]),
+  );
+  const resfileDiffIds = new Set(axis.resfileDiffIds);
 
   const events = rows.flatMap((r) => {
     const build = toBuildOf.get(r.diffId);
@@ -344,8 +382,9 @@ export async function getCachedBuildRangeChanges(
 }
 
 /**
- * Names of the types in the {@link getCachedBuildRangeChanges} comparison of
- * `(from, to)`, by typeId ({@link readTypeNames}).
+ * Names of the entities in the {@link getCachedBuildRangeChanges} comparison
+ * of `(from, to)` ({@link readEntityNames}); one newer than the ingested SDE is
+ * named as of `to`.
  *
  * An entry of their own: the range's is `cacheLife("max")`, and names change
  * when the SDE is re-ingested, so a name baked in there would be frozen for
@@ -358,13 +397,13 @@ export async function getCachedBuildRangeChanges(
  * Throws on failure, like the range read; the caller degrades, so nothing wrong
  * is cached.
  */
-export async function getCachedRangeTypeNames(
+export async function getCachedRangeNames(
   from: number,
   to: number,
-): Promise<Record<number, string>> {
+): Promise<EntityNames> {
   "use cache";
   cacheLife("days");
 
   const range = await getCachedBuildRangeChanges(from, to);
-  return range ? readTypeNames(range.changes) : {};
+  return range ? readEntityNames(range.changes, to) : {};
 }

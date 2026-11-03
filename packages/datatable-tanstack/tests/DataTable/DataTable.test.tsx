@@ -318,6 +318,18 @@ describe("DataTable — pagination", () => {
     expect(screen.getByText("Rows per page:")).toBeInTheDocument();
   });
 
+  it("names its arrow buttons, so a screen reader can tell them apart", () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withPagination />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next page" }),
+    ).toBeInTheDocument();
+  });
+
   it("shows the total filtered row count", () => {
     renderWithMantine(
       <DataTable columns={columns} data={data} withPagination />,

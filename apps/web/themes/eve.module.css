@@ -1,0 +1,50 @@
+/* EVE (themes/eve.ts): the launcher's overlays and form labels. Theme `styles`
+   become inline styles, which cannot express a colour scheme, a hover or a
+   Mantine CSS variable on the right element, so these live here as theme
+   `classNames`.
+
+   On the dark scheme the dropdowns already sit on the launcher's #202020
+   (`dark.6`); what the launcher adds is dropping their border, and letting the
+   wallpaper show through the hover cards and popovers. */
+
+.menuDropdown,
+.comboboxDropdown {
+  --popover-border-color: light-dark(var(--mantine-color-gray-2), transparent);
+}
+
+.menuDropdown {
+  min-width: 192px;
+}
+
+.overlayDropdown {
+  --popover-border-color: light-dark(var(--mantine-color-gray-2), transparent);
+
+  background-color: light-dark(rgba(255, 255, 255, 0.9), rgba(32, 32, 32, 0.7));
+  backdrop-filter: blur(12px);
+}
+
+/* Bold labels in the launcher's secondary text colour (#B0B0B0, dark.2). */
+.label {
+  margin-bottom: 6px;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  font-weight: 700;
+}
+
+/* The launcher's scrollbar thumb is its border colour. Mantine still lightens
+   it while the scrollbar is hovered. */
+:where([data-mantine-color-scheme="dark"]) .thumb {
+  background-color: var(--mantine-color-dark-4);
+}
+
+/* Links in running text: underlined, since colour alone does not set them
+   apart from the text around them (WCAG 1.4.1). The teal is about 1.1:1
+   against the light-grey body text, where 3:1 would do without an underline.
+   An Anchor that inherits its text's styles, or sits in a paragraph, is in
+   running text; one on its own (a nav item, a table cell) keeps the hover
+   underline. */
+:where(p) > .anchor,
+.anchor[data-inherit] {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 0.15em;
+}

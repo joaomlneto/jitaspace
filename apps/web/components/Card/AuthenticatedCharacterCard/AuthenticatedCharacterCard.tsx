@@ -28,14 +28,13 @@ import {
   useCharacterWalletBalance,
 } from "@jitaspace/hooks";
 import {
-  AllianceAnchor,
   AllianceAvatar,
   CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
   ISKAmount,
 } from "@jitaspace/ui";
 
+import { AllianceAnchor, CorporationAnchor } from "~/components/Anchor";
 import {
   CharacterLocationCard,
   CharacterSkillTrainingCard,

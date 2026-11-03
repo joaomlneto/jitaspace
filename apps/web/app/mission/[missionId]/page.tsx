@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
+import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { MISSION_KIND_LABELS, missionPlainText } from "~/lib/missions";
 import { parsePositiveEntityId } from "~/lib/routeParams";
@@ -70,11 +71,12 @@ async function PageContent({
   // rather than store a 404. `null` is a mission that genuinely does not exist.
   const mission = await getMission(missionId);
   if (mission === null) notFound();
+  const history = await loadEntityHistory("mission", missionId);
   // nuqs's React adapter keeps the cached ISR page complete; see
   // apps/web/CLAUDE.md → "URL-synced filter state".
   return (
     <NuqsAdapter>
-      <MissionPage mission={mission} />
+      <MissionPage mission={mission} history={history} />
     </NuqsAdapter>
   );
 }

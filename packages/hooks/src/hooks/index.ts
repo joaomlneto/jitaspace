@@ -2,6 +2,7 @@ export * from "./auth";
 
 export * from "./corporations";
 
+export * from "./accessLists";
 export * from "./alliance";
 export * from "./assets";
 export * from "./calendar";
@@ -10,6 +11,7 @@ export * from "./character";
 export * from "./contacts";
 export * from "./dogma";
 export * from "./fittings";
+export * from "./freelance";
 export * from "./industry";
 export * from "./killmails";
 export * from "./location";
@@ -24,6 +26,8 @@ export * from "./universe";
 export * from "./wallet";
 export * from "./wars";
 
+export * from "./utils/esiCursorQueryOptions";
+
 export * from "./useCorporation";
 export * from "./useEsiAcceptLanguage";
 export * from "./universeNamesLimits";
@@ -32,4 +36,5 @@ export * from "./useEsiSearch";
 export * from "./useMarketPrices";
 export * from "./useServerStatus";
 export * from "./marketHubRegions";
+export * from "./useTradesOnGlobalMarket";
 export * from "./useTypeMarketOrders";

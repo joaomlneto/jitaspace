@@ -3,11 +3,10 @@
 import * as Sentry from "@sentry/nextjs";
 import { checkBotId } from "botid/server";
 
-import type { BuildRangeChanges, EntityTimeline } from "~/lib/history";
+import type { BuildRangeChanges, EntityNames } from "~/lib/history";
 import {
   getCachedBuildRangeChanges,
-  getCachedEntityTimeline,
-  getCachedRangeTypeNames,
+  getCachedRangeNames,
 } from "~/lib/history-cache";
 
 /**
@@ -30,8 +29,9 @@ import {
  *
  * Pages whose data does not depend on client state read it on the server
  * instead, with no action at all: the `/history` index
- * ({@link getCachedHistoryIndex}) and the per-build pages
- * (`app/history/build/[build]/data.ts`).
+ * ({@link getCachedHistoryIndex}), the per-build pages
+ * (`app/history/build/[build]/data.ts`) and every entity's history
+ * (`~/lib/history-entity-page`). The comparison is the one reader left here.
  */
 
 /**
@@ -60,7 +60,7 @@ const isBot = async (): Promise<boolean> => {
  * Delegates to the immutable, cached {@link getCachedBuildRangeChanges} (keyed on
  * the pair, `cacheLife("max")`) so the expensive range aggregation runs once per
  * `(from, to)` and is served from cache afterwards. The changed types' names are
- * added from an entry of their own — see {@link readRangeTypeNames}.
+ * added from an entry of their own — see {@link readRangeNames}.
  */
 export async function getBuildRangeChanges(
   from: number,
@@ -69,60 +69,39 @@ export async function getBuildRangeChanges(
   if (await isBot()) return null;
   const range = await getCachedBuildRangeChanges(from, to);
   if (!range) return null;
-  return { ...range, typeNames: await readRangeTypeNames(from, to) };
+  return { ...range, names: await readRangeNames(from, to) };
 }
 
-/** How long a comparison waits for its type names before going without. */
-const TYPE_NAMES_TIMEOUT_MS = 10_000;
+/** How long a comparison waits for its names before going without. */
+const NAMES_TIMEOUT_MS = 10_000;
 
 /**
- * Names of the types in a comparison ({@link getCachedRangeTypeNames}).
+ * Names of the entities in a comparison ({@link getCachedRangeNames}).
  *
  * Names are decorative, so a failed read degrades to `undefined` — rows labelled
  * by kind and id — rather than failing the comparison. So does a slow one, cut
- * off after {@link TYPE_NAMES_TIMEOUT_MS}: the names come from our main
+ * off after {@link NAMES_TIMEOUT_MS}: the names come mostly from our main
  * database, the comparison from the history one, and a stalled main database
  * must not hold up a comparison it has no part in. Either is reported first:
- * silent, a lasting failure would look exactly like types our tables lack.
+ * silent, a lasting failure would look exactly like entities nothing names.
  */
-async function readRangeTypeNames(
+async function readRangeNames(
   from: number,
   to: number,
-): Promise<Record<number, string> | undefined> {
+): Promise<EntityNames | undefined> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(
-      () =>
-        reject(new Error(`Type names took over ${TYPE_NAMES_TIMEOUT_MS} ms`)),
-      TYPE_NAMES_TIMEOUT_MS,
+      () => reject(new Error(`Names took over ${NAMES_TIMEOUT_MS} ms`)),
+      NAMES_TIMEOUT_MS,
     );
   });
   try {
-    return await Promise.race([getCachedRangeTypeNames(from, to), timeout]);
+    return await Promise.race([getCachedRangeNames(from, to), timeout]);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: "history-compare" } });
     return undefined;
   } finally {
     clearTimeout(timer);
   }
-}
-
-/**
- * Timeline for any entity kind ("type", "skin", "skinMaterial", …).
- *
- * Delegates to the day-cached {@link getCachedEntityTimeline} (keyed per
- * entityType+entityId) so the standalone history pages and the embedded History
- * tabs share one cache entry per entity rather than re-querying on every view.
- */
-// Deliberately NOT behind `isBot()`. <EntityHistory> is embedded in the type
-// page's History tab, so guarding this would force `/type/*` into the BotID
-// protect list — which intercepts every Server Action on the app's busiest route
-// family, including the root layout's EVE token refresh (see
-// `instrumentation-client.ts`). It is also the cheaper of the two readers and
-// only `cacheLife("days")`, so it expires rather than accumulating.
-export async function getEntityTimeline(
-  entityType: string,
-  entityId: number,
-): Promise<EntityTimeline | null> {
-  return getCachedEntityTimeline(entityType, entityId);
 }

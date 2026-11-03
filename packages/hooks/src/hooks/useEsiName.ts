@@ -17,8 +17,8 @@ import {
   characterIdRanges,
   corporationIdRanges,
   isIdInRanges,
+  isStationId,
   stargateRanges,
-  stationRanges,
 } from "@jitaspace/esi-metadata";
 
 import { UNIVERSE_NAMES_MAX_ID } from "./universeNamesLimits";
@@ -54,7 +54,7 @@ const inferCategoryFromId = (
     return "stargate";
   }
 
-  if (isIdInRanges(id, stationRanges)) {
+  if (isStationId(id)) {
     return "station";
   }
 };

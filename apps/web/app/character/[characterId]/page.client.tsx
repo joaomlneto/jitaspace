@@ -17,12 +17,9 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconBriefcase,
   IconExternalLink,
   IconId,
-  IconInfoCircle,
   IconMapPin,
-  IconSkull,
   IconUserCircle,
   IconUsers,
 } from "@tabler/icons-react";
@@ -30,17 +27,18 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CharactersDetail } from "@jitaspace/esi-client";
 import { useGetCharactersCharacterIdCorporationhistory } from "@jitaspace/esi-client";
-import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
+import { isNpcCharacterId } from "@jitaspace/esi-metadata";
 import {
   AllianceName,
   CharacterOnlineIndicator,
   CorporationName,
-  RegionAnchor,
-  SolarSystemAnchor,
-  StationAnchor,
-  TypeAnchor,
   TypeAvatar,
 } from "@jitaspace/eve-components";
+import {
+  CategorySkullIcon,
+  WindowEmploymentHistoryIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
   useCharacterSkills,
@@ -50,13 +48,8 @@ import {
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAnchor,
-  BloodlineAnchor,
   CharacterAvatar,
-  CorporationAnchor,
-  DungeonAnchor,
   ISKAmount,
-  RaceAnchor,
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
@@ -69,6 +62,18 @@ import type {
   NamedRef,
 } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import {
+  AllianceAnchor,
+  BloodlineAnchor,
+  CorporationAnchor,
+  DungeonAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StationAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
+import { CsmCandidateBadge } from "~/components/Badge";
 import {
   CharacterLocationCard,
   CharacterSkillTrainingCard,
@@ -430,7 +435,7 @@ export default function CharacterPage({
     zkill.data?.iskLost,
   );
 
-  const isNpc = isIdInRanges(characterId, npcCharacterIdRanges);
+  const isNpc = isNpcCharacterId(characterId);
   const badge = npcBadgeLabel(record, isNpc);
   const agent = record?.agent ?? null;
   const ceoOf = record?.ceoOf ?? [];
@@ -497,10 +502,11 @@ export default function CharacterPage({
             </Text>
           )}
           <Group gap="sm" align="center">
-            <Title order={2}>
+            <Title order={1} size="h2">
               {identity.name ?? `Character ${characterId}`}
             </Title>
             {badge && <Badge variant="light">{badge}</Badge>}
+            <CsmCandidateBadge characterId={characterId} />
             {identity.securityStatus !== null && (
               <Badge
                 variant="light"
@@ -578,7 +584,7 @@ export default function CharacterPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -593,7 +599,7 @@ export default function CharacterPage({
             {visibleTabs.history && (
               <Tabs.Tab
                 value="history"
-                leftSection={<IconBriefcase size={16} />}
+                leftSection={<WindowEmploymentHistoryIcon size={16} alt="" />}
               >
                 Employment History
                 {employment.stints > 0 &&
@@ -606,7 +612,12 @@ export default function CharacterPage({
               </Tabs.Tab>
             )}
             {visibleTabs.killboard && (
-              <Tabs.Tab value="killboard" leftSection={<IconSkull size={16} />}>
+              <Tabs.Tab
+                value="killboard"
+                leftSection={
+                  <CategorySkullIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Killboard
               </Tabs.Tab>
             )}
@@ -774,7 +785,15 @@ export default function CharacterPage({
 
               {!isNpc && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSkull size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategorySkullIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Killboard
                   </SectionHeading>
                   {zkill.isError ? (
@@ -844,7 +863,7 @@ function EmploymentSummary({
 }: Readonly<{ summary: EmploymentSummaryData }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconBriefcase size={18} />}>
+      <SectionHeading icon={<WindowEmploymentHistoryIcon size={18} alt="" />}>
         Employment
       </SectionHeading>
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">

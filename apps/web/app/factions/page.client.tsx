@@ -4,18 +4,15 @@ import { useMemo } from "react";
 import { Badge, Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { FactionalWarfareIcon } from "@jitaspace/eve-icons";
+import { FactionAvatar, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
+
 import {
+  CorporationAnchor,
   FactionAnchor,
   RegionAnchor,
   SolarSystemAnchor,
-} from "@jitaspace/eve-components";
-import { FactionalWarfareIcon } from "@jitaspace/eve-icons";
-import {
-  CorporationAnchor,
-  FactionAvatar,
-  SolarSystemSecurityStatusBadge,
-} from "@jitaspace/ui";
-
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 
 export interface FactionRow {

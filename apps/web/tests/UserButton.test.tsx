@@ -98,7 +98,7 @@ jest.mock("@mantine/core", () => {
 function loadUserButton() {
   return (
     require("~/layouts/MainLayout/UserButton") as {
-      default: () => React.ReactElement;
+      default: (props: { compact?: boolean }) => React.ReactElement;
     }
   ).default;
 }
@@ -165,5 +165,27 @@ describe("UserButton session-expired marking", () => {
     expect(mockOpenContextModal).toHaveBeenCalledWith(
       expect.objectContaining({ modal: "login" }),
     );
+  });
+
+  it("compact variant names the character in the menu and keeps every action", () => {
+    const active = makeCharacter(1, "Pilot One", false);
+    const other = makeCharacter(2, "Pilot Two", false);
+    selectedCharacter = active;
+    charactersMap = { 1: active, 2: other };
+
+    const UserButton = loadUserButton();
+    render(<UserButton compact />);
+
+    // The avatar-only trigger has no visible name, so the dropdown carries it.
+    expect(screen.getByText("Pilot One")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Pilot Two"));
+    expect(mockSelectCharacter).toHaveBeenCalledWith(2);
+
+    fireEvent.click(screen.getByText("Settings"));
+    expect(mockOpenContextModal).toHaveBeenCalledWith(
+      expect.objectContaining({ modal: "settings" }),
+    );
+    expect(screen.getByText("Logout")).toBeInTheDocument();
   });
 });

@@ -22,7 +22,7 @@ describe("SettingsCard", () => {
     mockSetAcceptLanguage.mockReset();
     usePreferencesStore.setState({
       esiAcceptLanguage: "en",
-      appTheme: "default",
+      appTheme: "minimal",
     });
   });
 
@@ -30,7 +30,7 @@ describe("SettingsCard", () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({
-        state: { esiAcceptLanguage: "de", appTheme: "default" },
+        state: { esiAcceptLanguage: "de", appTheme: "minimal" },
         version: 0,
       }),
     );
@@ -68,7 +68,7 @@ describe("SettingsCard", () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({
-        state: { esiAcceptLanguage: "invalid", appTheme: "default" },
+        state: { esiAcceptLanguage: "invalid", appTheme: "minimal" },
         version: 0,
       }),
     );
@@ -139,7 +139,7 @@ describe("SettingsCard", () => {
     await screen.findByText("Gallente");
   });
 
-  it("falls back to default when stored theme is invalid", async () => {
+  it("falls back to Default when stored theme is invalid", async () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({
@@ -204,7 +204,8 @@ describe("SettingsCard", () => {
     expect(screen.queryByText("New data tables")).not.toBeInTheDocument();
   });
 
-  it("shows that there are no experimental features right now", () => {
+  it("turns the Ship Tree debug mode on and off from the Experimental tab", () => {
+    usePreferencesStore.setState({ shipTreeDebugMode: false });
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
@@ -214,10 +215,17 @@ describe("SettingsCard", () => {
     );
 
     fireEvent.click(screen.getByRole("tab", { name: "Experimental" }));
+    const toggle = screen.getByRole("switch", { name: "Ship Tree debug mode" });
+    expect(toggle).not.toBeChecked();
 
-    expect(
-      screen.getByText("No experimental features right now — stay tuned!"),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(usePreferencesStore.getState().shipTreeDebugMode).toBe(true);
+    const stored = JSON.parse(
+      window.localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "{}",
+    );
+    expect(stored.state?.shipTreeDebugMode).toBe(true);
+
+    fireEvent.click(toggle);
+    expect(usePreferencesStore.getState().shipTreeDebugMode).toBe(false);
   });
 });

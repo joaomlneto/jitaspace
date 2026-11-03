@@ -20,29 +20,22 @@ import {
   IconCalendarStats,
   IconChartBar,
   IconClock,
-  IconMapPin,
-  IconRocket,
   IconSkull,
-  IconTrophy,
 } from "@tabler/icons-react";
 
 import {
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  SolarSystemAnchor,
   SolarSystemName,
-  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import {
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-  GroupAnchor,
-  ISKAmount,
-} from "@jitaspace/ui";
+  CategorySpaceshipCommandIcon,
+  CategoryTrophyIcon,
+  WindowMapIcon,
+} from "@jitaspace/eve-icons";
+import { CharacterAvatar, CorporationAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type {
   ZkbEntity,
@@ -50,6 +43,13 @@ import type {
   ZkbStats,
   ZkbTopEntry,
 } from "./zkillboard";
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  GroupAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import { GroupName } from "~/components/Text";
 import { formatDecimal, formatInteger, formatPercent } from "~/lib/format";
@@ -449,7 +449,7 @@ export function KillboardTab({
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         {locations.length > 0 && (
           <Stack gap="sm">
-            <SectionHeading icon={<IconMapPin size={18} />}>
+            <SectionHeading icon={<WindowMapIcon size={18} alt="" />}>
               Where they fight
             </SectionHeading>
             <Paper withBorder radius="md" p="sm">
@@ -488,7 +488,15 @@ export function KillboardTab({
 
       {groups.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconRocket size={18} />}>
+          <SectionHeading
+            icon={
+              <CategorySpaceshipCommandIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Ship classes
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -530,7 +538,9 @@ export function KillboardTab({
 
       {stats?.topAllTime && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconTrophy size={18} />}>
+          <SectionHeading
+            icon={<CategoryTrophyIcon size={18} color="currentColor" alt="" />}
+          >
             All-time top killers
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">

@@ -36,7 +36,7 @@ jest.mock("@jitaspace/esi-metadata", () => ({
   characterIdRanges: [],
   corporationIdRanges: [],
   stargateRanges: [],
-  stationRanges: [],
+  isStationId: () => false,
 }));
 
 jest.mock("../src/hooks/useEsiAcceptLanguage", () => ({

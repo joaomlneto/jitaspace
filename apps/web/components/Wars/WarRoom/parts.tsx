@@ -4,14 +4,10 @@ import type { CSSProperties } from "react";
 import { useId } from "react";
 
 import { AllianceName, CorporationName } from "@jitaspace/eve-components";
-import {
-  AllianceAnchor,
-  AllianceAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-} from "@jitaspace/ui";
+import { AllianceAvatar, CorporationAvatar } from "@jitaspace/ui";
 
 import type { WarRoomWar, WarStatus } from "./types";
+import { AllianceAnchor, CorporationAnchor } from "~/components/Anchor";
 import { formatIskCompact, leadingSide, STATUS_LABEL } from "./utils";
 import classes from "./WarRoom.module.css";
 

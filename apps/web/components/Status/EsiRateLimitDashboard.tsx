@@ -291,7 +291,9 @@ export function EsiRateLimitDashboard() {
   if (buckets.length === 0) {
     return (
       <Stack gap="sm">
-        <Title order={3}>ESI Rate Limits</Title>
+        <Title order={2} size="h3">
+          ESI Rate Limits
+        </Title>
         <Alert
           icon={<IconAlertCircle size="1rem" />}
           color="gray"
@@ -308,7 +310,9 @@ export function EsiRateLimitDashboard() {
     <Stack gap="md">
       <Group justify="space-between" align="flex-end">
         <Stack gap={0}>
-          <Title order={3}>ESI Rate Limits</Title>
+          <Title order={2} size="h3">
+            ESI Rate Limits
+          </Title>
           <Text size="xs" c="dimmed">
             Compatibility date: {buildDate || "-"}
           </Text>
@@ -360,7 +364,13 @@ export function EsiRateLimitDashboard() {
         </Paper>
       </SimpleGrid>
 
-      <ScrollArea>
+      <ScrollArea
+        viewportProps={{
+          tabIndex: 0,
+          role: "region",
+          "aria-label": "ESI rate-limit buckets",
+        }}
+      >
         <Table
           withTableBorder
           striped
@@ -401,7 +411,6 @@ export function EsiRateLimitDashboard() {
                           <Group gap={4} wrap="nowrap">
                             <CharacterAvatar
                               characterId={bucket.characterId}
-                              radius="xl"
                               size={18}
                             />
                             <Text size="xs" fw={500}>
@@ -432,6 +441,7 @@ export function EsiRateLimitDashboard() {
                   <Table.Td miw={170}>
                     <Group gap="xs" wrap="nowrap" align="center">
                       <Progress
+                        aria-label={`${bucket.group} utilization`}
                         value={bucket.utilizationPercent}
                         color={status.color}
                         size="sm"

@@ -65,7 +65,7 @@ export function RequestPermissionsBanner({
           onClick={() => {
             openContextModal({
               modal: "login",
-              title: <Title order={3}>Login</Title>,
+              title: "Login",
               size: "xl",
               centered: false,
               innerProps: {
@@ -77,7 +77,7 @@ export function RequestPermissionsBanner({
           Customize
         </Button>
       </Group>
-      <Title order={4} ta="center" mt="xl">
+      <Title order={2} size="h4" ta="center" mt="xl">
         Missing Scopes
       </Title>
       <ScopesTable scopes={missingScopes} />

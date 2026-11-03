@@ -21,16 +21,12 @@ import {
   Title,
 } from "@mantine/core";
 import {
-  IconBuildingSkyscraper,
   IconBuildingStore,
   IconDna,
   IconFileText,
   IconHierarchy3,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
-  IconPackage,
-  IconRocket,
   IconSchool,
   IconUsersGroup,
   IconUserStar,
@@ -39,22 +35,20 @@ import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
-  CharacterAnchor,
-  FactionAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  StationAnchor,
-  TypeAnchor,
-} from "@jitaspace/eve-components";
+  CategoryCorporationIcon,
+  CategorySpaceshipCommandIcon,
+  ControlCargoInventoryIcon,
+  SystemShipTreeIcon,
+  WindowInfoIcon,
+  WindowSkillsIcon,
+  WindowStationIcon,
+} from "@jitaspace/eve-icons";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  BloodlineAnchor,
-  CategoryAnchor,
   CharacterAvatar,
   EveIconAvatar,
   FactionAvatar,
-  GroupAnchor,
   SkillBar,
   SolarSystemSecurityStatusBadge,
   TypeAvatar,
@@ -75,6 +69,18 @@ import type {
   RaceTableName,
   RaceTables,
 } from "./types";
+import type { EntityHistoryData } from "~/lib/history-entity-page";
+import {
+  BloodlineAnchor,
+  CategoryAnchor,
+  CharacterAnchor,
+  FactionAnchor,
+  GroupAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StationAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import {
   CorporationLink,
@@ -88,13 +94,19 @@ import {
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { SHIP_TREE_OMEGA_PARAM } from "~/components/ShipTree/constants";
-import { LazyShipTreeTab } from "~/components/ShipTree/LazyShipTreeTab";
+import {
+  LazyShipTreeTab,
+  preloadShipTreeTab,
+} from "~/components/ShipTree/LazyShipTreeTab";
 import { formatInteger as formatCount, formatCountOf } from "~/lib/format";
-import { EntityHistory } from "../../history/EntityHistory";
+import { EmbeddedEntityHistory } from "../../history/EntityHistory";
 import { CHARACTER_ATTRIBUTES } from "./constants";
 import { DEFAULT_RACE_PAGE_TAB, isRacePageTab, RACE_PAGE_TABS } from "./tabs";
 
-export type PageProps = RacePageData;
+export type PageProps = RacePageData & {
+  /** The race's change history, read with the page; null if that failed. */
+  history: EntityHistoryData | null;
+};
 
 /** A stable empty table, so a loading tab does not hand DataTable a new array per render. */
 const NO_ROWS: never[] = [];
@@ -649,7 +661,15 @@ function SkillsPanel({
 
       {counts.racialSkills > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconRocket size={18} />}>
+          <SectionHeading
+            icon={
+              <CategorySpaceshipCommandIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Racial skills
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1083,7 +1103,7 @@ function StationsPanel({
 
       {hasStations && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconBuildingSkyscraper size={18} />}>
+          <SectionHeading icon={<WindowStationIcon size={18} alt="" />}>
             Stations
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1227,7 +1247,7 @@ function OverviewPanel({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Identity
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -1363,7 +1383,15 @@ function OverviewPanel({
 
       {race.itemCategories.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconPackage size={18} />}>
+          <SectionHeading
+            icon={
+              <ControlCargoInventoryIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Items by category
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -1492,7 +1520,7 @@ function HeroImage({
 }
 
 export default function RacePage(race: Readonly<PageProps>) {
-  const { raceId, counts } = race;
+  const { counts, history } = race;
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
     parseAsStringLiteral(RACE_PAGE_TABS)
@@ -1554,10 +1582,19 @@ export default function RacePage(race: Readonly<PageProps>) {
   // Only the open tab's tables: a failure elsewhere is that tab's to show.
   const failedTable = [...fetched].some((table) => tables[table].isError);
 
-  const tab = (value: string, icon: ReactNode, label: string, count?: number) =>
+  const tab = (
+    value: string,
+    icon: ReactNode,
+    label: string,
+    count?: number,
+    /** Runs when the tab is about to be opened: on hover or focus. */
+    onIntent?: () => void,
+  ) =>
     visibleTabs.has(value) && (
       <Tabs.Tab
         value={value}
+        onPointerEnter={onIntent}
+        onFocus={onIntent}
         leftSection={icon}
         rightSection={
           count === undefined ? undefined : (
@@ -1579,7 +1616,9 @@ export default function RacePage(race: Readonly<PageProps>) {
             Race
           </Text>
           <Group gap="sm" align="center">
-            <Title order={2}>{race.name}</Title>
+            <Title order={1} size="h2">
+              {race.name}
+            </Title>
             {isPlayable && (
               <Badge color="teal" variant="light">
                 Playable
@@ -1658,7 +1697,7 @@ export default function RacePage(race: Readonly<PageProps>) {
           keepMounted={false}
         >
           <Tabs.List>
-            {tab("overview", <IconInfoCircle size={16} />, "Overview")}
+            {tab("overview", <WindowInfoIcon size={16} alt="" />, "Overview")}
             {tab("description", <IconFileText size={16} />, "Description")}
             {tab(
               "bloodlines",
@@ -1672,19 +1711,43 @@ export default function RacePage(race: Readonly<PageProps>) {
               "Schools",
               race.schools.length,
             )}
-            {tab("skills", <IconListCheck size={16} />, "Skills")}
-            {tab("ships", <IconRocket size={16} />, "Ships", publishedShips)}
-            {tab("ship-tree", <IconHierarchy3 size={16} />, "Ship Tree")}
-            {tab("items", <IconPackage size={16} />, "Items", counts.items)}
+            {tab("skills", <WindowSkillsIcon size={16} alt="" />, "Skills")}
+            {tab(
+              "ships",
+              <CategorySpaceshipCommandIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Ships",
+              publishedShips,
+            )}
+            {tab(
+              "ship-tree",
+              <SystemShipTreeIcon size={16} color="currentColor" alt="" />,
+              "Ship Tree",
+              undefined,
+              preloadShipTreeTab,
+            )}
+            {tab(
+              "items",
+              <ControlCargoInventoryIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "Items",
+              counts.items,
+            )}
             {tab(
               "corporations",
-              <IconBuildingSkyscraper size={16} />,
+              <CategoryCorporationIcon size={16} color="currentColor" alt="" />,
               "Corporations",
               counts.corporations,
             )}
             {tab(
               "stations",
-              <IconBuildingStore size={16} />,
+              <WindowStationIcon size={16} alt="" />,
               "Stations",
               counts.stations > 0 ? counts.stations : undefined,
             )}
@@ -1809,7 +1872,7 @@ export default function RacePage(race: Readonly<PageProps>) {
 
           {/* History — per-build change timeline (loaded on demand) */}
           <Tabs.Panel value="history" pt="lg">
-            <EntityHistory entityType="race" entityId={raceId} embedded />
+            <EmbeddedEntityHistory history={history} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

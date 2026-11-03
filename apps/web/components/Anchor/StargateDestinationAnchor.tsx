@@ -4,8 +4,9 @@ import type { AnchorProps } from "@mantine/core";
 import type { PropsWithChildren } from "react";
 import { memo } from "react";
 
-import { StargateDestinationAnchor as UIStargateDestinationAnchor } from "@jitaspace/eve-components";
 import { useStargate } from "@jitaspace/hooks";
+
+import { StargateDestinationAnchorDisplay } from "./StargateDestinationAnchorDisplay";
 
 export type StargateDestinationAnchorProps = PropsWithChildren<
   AnchorProps & {
@@ -22,7 +23,7 @@ export const StargateDestinationAnchor = memo(
       | { system_id: number }
       | undefined;
     return (
-      <UIStargateDestinationAnchor
+      <StargateDestinationAnchorDisplay
         destinationSystemId={destination?.system_id}
         {...otherProps}
       />

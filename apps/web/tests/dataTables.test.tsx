@@ -13,9 +13,6 @@ jest.mock("@jitaspace/ui", () => ({
   CharacterAvatar: ({ characterId }: { characterId?: number }) => (
     <span data-testid="char-avatar">{`char-avatar-${characterId ?? "?"}`}</span>
   ),
-  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="corp-anchor">{children}</span>
-  ),
   CorporationAvatar: ({ corporationId }: { corporationId?: number }) => (
     <span data-testid="corp-avatar">{`corp-avatar-${corporationId ?? "?"}`}</span>
   ),
@@ -29,32 +26,41 @@ jest.mock("@jitaspace/eve-components", () => ({
   TypeAvatar: ({ typeId }: { typeId?: number }) => (
     <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
   ),
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="char-anchor">{children}</span>
-  ),
   CharacterName: ({ characterId }: { characterId?: number }) => (
     <span data-testid="char-name">{`char-${characterId ?? "?"}`}</span>
   ),
   CorporationName: ({ corporationId }: { corporationId?: number }) => (
     <span data-testid="corp-name">{`corp-${corporationId ?? "?"}`}</span>
   ),
-  StationAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="station-anchor">{children}</span>
-  ),
   StationName: ({ stationId }: { stationId?: number }) => (
     <span data-testid="station-name">{`station-${stationId ?? "?"}`}</span>
-  ),
-  EveEntityAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="entity-anchor">{children}</span>
   ),
   EveEntityName: ({ entityId }: { entityId?: number }) => (
     <span data-testid="entity-name">{`entity-${entityId ?? "?"}`}</span>
   ),
-  TypeAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="type-anchor">{children}</span>
-  ),
   TypeName: ({ typeId }: { typeId?: number }) => (
     <span data-testid="type-name">{`type-${typeId ?? "?"}`}</span>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
+  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="corp-anchor">{children}</span>
+  ),
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="char-anchor">{children}</span>
+  ),
+  StationAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="station-anchor">{children}</span>
+  ),
+  EveEntityAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="entity-anchor">{children}</span>
+  ),
+  TypeAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="type-anchor">{children}</span>
   ),
 }));
 

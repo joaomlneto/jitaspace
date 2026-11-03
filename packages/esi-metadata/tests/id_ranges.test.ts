@@ -4,7 +4,11 @@ import {
   constellationIdRanges,
   corporationIdRanges,
   isIdInRanges,
+  isNpcCharacterId,
+  isNpcCorporationId,
+  isStationId,
   npcCharacterIdRanges,
+  npcCorporationIdRanges,
   regionIdRanges,
   solarSystemRanges,
   stargateRanges,
@@ -340,5 +344,73 @@ describe("stationRanges", () => {
 
   it("rejects 70000001 (one above station range max)", () => {
     expect(isIdInRanges(70000001, stationRanges)).toBe(false);
+  });
+});
+
+describe("isStationId", () => {
+  it.each([
+    ["an NPC station", 60003760],
+    ["a station built from an outpost", 61000001],
+    ["the lowest station id", 60000000],
+    ["the highest station id", 70000000],
+  ])("is true for %s", (_name, id) => {
+    expect(isStationId(id)).toBe(true);
+  });
+
+  it.each([
+    ["an Upwell structure", 1035466617946],
+    ["a stargate", 50000001],
+    ["a solar system", 30000142],
+    ["the id just below the range", 59999999],
+    ["the id just above the range", 70000001],
+  ])("is false for %s", (_name, id) => {
+    expect(isStationId(id)).toBe(false);
+  });
+});
+
+describe("npcCorporationIdRanges", () => {
+  it("is the NPC block of corporationIdRanges", () => {
+    expect(corporationIdRanges).toEqual(
+      expect.arrayContaining(npcCorporationIdRanges),
+    );
+  });
+});
+
+describe("isNpcCharacterId", () => {
+  it.each([
+    ["an agent", 3008416],
+    ["the lowest NPC character id", 3000000],
+    ["the highest NPC character id", 4000000],
+  ])("is true for %s", (_name, id) => {
+    expect(isNpcCharacterId(id)).toBe(true);
+  });
+
+  it.each([
+    ["a player character", 2112625428],
+    ["an older player character", 95465499],
+    ["an NPC corporation", 1000035],
+    ["the id just below the range", 2999999],
+    ["the id just above the range", 4000001],
+  ])("is false for %s", (_name, id) => {
+    expect(isNpcCharacterId(id)).toBe(false);
+  });
+});
+
+describe("isNpcCorporationId", () => {
+  it.each([
+    ["an NPC corporation", 1000035],
+    ["the lowest NPC corporation id", 1000000],
+    ["the highest NPC corporation id", 2000000],
+  ])("is true for %s", (_name, id) => {
+    expect(isNpcCorporationId(id)).toBe(true);
+  });
+
+  it.each([
+    ["a player corporation", 98000001],
+    ["an NPC character", 3008416],
+    ["the id just below the range", 999999],
+    ["the id just above the range", 2000001],
+  ])("is false for %s", (_name, id) => {
+    expect(isNpcCorporationId(id)).toBe(false);
   });
 });

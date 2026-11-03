@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
+import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, resolveTypeImage, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { readRaceData, readRaceMetadata } from "./data";
@@ -66,12 +67,13 @@ async function PageContent({
   // rather than store a 404. `null` is a race that genuinely does not exist.
   const race = await readRaceData(id);
   if (!race) notFound();
+  const history = await loadEntityHistory("race", id);
   // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
   // `useSearchParams()`, which drops this subtree out of the cached render. The
   // React adapter reads `?tab=` after hydration instead.
   return (
     <NuqsAdapter>
-      <PageClient {...race} />
+      <PageClient {...race} history={history} />
     </NuqsAdapter>
   );
 }

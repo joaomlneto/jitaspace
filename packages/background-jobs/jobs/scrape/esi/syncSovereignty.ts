@@ -1,4 +1,4 @@
-import { getSovereigntySystems } from "@jitaspace/esi-client";
+import type { SovereigntySystemsSolarsystem } from "@jitaspace/esi-client";
 
 import type { JobLogger } from "../../../core";
 import { prisma } from "../../../db";
@@ -6,38 +6,68 @@ import {
   planSovereigntyUpdates,
   toSovereigntyRow,
 } from "../../../helpers/planSovereigntyUpdates.ts";
+import { MIN_LISTED_SHARE } from "../../../helpers/sovereigntyHistory.ts";
 
 /**
- * Brings SolarSystemSovereignty in line with ESI's GET /sovereignty/systems
- * (one request; the sovereignty rate-limit group allows 600 per 15 minutes),
- * writing only what changed. Run by `esi-update-alliances` once the Alliance
- * table holds every open alliance, since alliance claims reference it.
+ * Brings SolarSystemSovereignty in line with one response of ESI's GET
+ * /sovereignty/systems, writing only what changed. Run by
+ * `esi-track-sovereignty` every 5 minutes.
+ *
+ * An alliance claim is only written once `esi-update-alliances` (hourly) has
+ * added the alliance to the Alliance table, which it references; until then
+ * it is skipped and logged.
  *
  * Returns the alliances that gained or lost a system, for cache eviction.
  */
 export async function syncSovereignty({
-  knownAllianceIds,
+  solarSystems,
   logger,
 }: {
-  knownAllianceIds: Set<number>;
+  solarSystems: SovereigntySystemsSolarsystem[];
   logger: JobLogger;
 }) {
-  const esiSystems = (await getSovereigntySystems()).data.solar_systems.map(
-    toSovereigntyRow,
-  );
+  const esiSystems = solarSystems.map(toSovereigntyRow);
+  const claimingAllianceIds = [
+    ...new Set(esiSystems.flatMap((row) => row.allianceId ?? [])),
+  ];
 
-  const [dbSystems, knownSolarSystems, knownFactions] = await Promise.all([
-    prisma.solarSystemSovereignty.findMany({
-      omit: { createdAt: true, updatedAt: true },
-    }),
-    prisma.solarSystem.findMany({
-      select: { solarSystemId: true },
-      where: {
-        solarSystemId: { in: esiSystems.map((row) => row.solarSystemId) },
+  const [dbSystems, knownSolarSystems, knownFactions, knownAlliances] =
+    await Promise.all([
+      prisma.solarSystemSovereignty.findMany({
+        omit: { createdAt: true, updatedAt: true },
+      }),
+      prisma.solarSystem.findMany({
+        select: { solarSystemId: true },
+        where: {
+          solarSystemId: { in: esiSystems.map((row) => row.solarSystemId) },
+        },
+      }),
+      prisma.faction.findMany({ select: { factionId: true } }),
+      prisma.alliance.findMany({
+        select: { allianceId: true },
+        where: { allianceId: { in: claimingAllianceIds } },
+      }),
+    ]);
+
+  // A partial response would delete every system it missed, and evict their
+  // holders' pages, until the next poll put them back.
+  if (esiSystems.length < dbSystems.length * MIN_LISTED_SHARE) {
+    logger.warn("ESI listed too few systems; ignored it as a failed response", {
+      systems: esiSystems.length,
+      stored: dbSystems.length,
+    });
+    return {
+      affectedAllianceIds: [],
+      stats: {
+        systems: esiSystems.length,
+        allianceHeld: 0,
+        added: 0,
+        updated: 0,
+        removed: 0,
+        skipped: esiSystems.length,
       },
-    }),
-    prisma.faction.findMany({ select: { factionId: true } }),
-  ]);
+    };
+  }
 
   const plan = planSovereigntyUpdates({
     esiSystems,
@@ -45,7 +75,7 @@ export async function syncSovereignty({
     knownSolarSystemIds: new Set(
       knownSolarSystems.map((system) => system.solarSystemId),
     ),
-    knownAllianceIds,
+    knownAllianceIds: new Set(knownAlliances.map((a) => a.allianceId)),
     knownFactionIds: new Set(knownFactions.map((f) => f.factionId)),
   });
 

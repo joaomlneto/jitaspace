@@ -124,6 +124,14 @@ export interface EntityChangeRow {
 }
 
 /**
+ * Display names of the entities in a change list, by entity kind and id: our
+ * SDE tables' names, and for an entity they do not have (newer than the last
+ * ingest), the one its own history records. Every changed entity has a name,
+ * so one missing here is a lookup that failed to find it.
+ */
+export type EntityNames = Record<string, Record<number, string>>;
+
+/**
  * Everything `/history/build/[build]` renders, read on the server in one pass so
  * the page arrives complete and the browser makes no further requests for it.
  */
@@ -132,11 +140,8 @@ export interface BuildPage {
   date: string | null;
   /** Decoded-SDE changes (localization strings excluded — see `strings`). */
   changes: EntityChangeRow[];
-  /**
-   * Names of the `type` entities in `changes`, by typeId. A type missing here is
-   * newer than the ingested SDE (history is decoded from the game client).
-   */
-  typeNames: Record<number, string>;
+  /** Names of the entities in `changes` ({@link EntityNames}). */
+  names: EntityNames;
   /** Raw resource-file paths the build added / changed / removed. */
   files: FileDiff;
   /** Localization-string changes per language; only languages that changed. */
@@ -156,10 +161,12 @@ export const BuildRangeChanges = z.object({
   toDate: z.string().nullable(),
   changes: BuildChanges.shape.changes,
   /**
-   * Names of the `type` entities in `changes`, by typeId (missing ⇒ unknown to
-   * our SDE tables). Absent when the names could not be read at all.
+   * Names of the entities in `changes` ({@link EntityNames}), as of `to`.
+   * Absent when the names could not be read at all.
    */
-  typeNames: z.record(z.coerce.number(), z.string()).optional(),
+  names: z
+    .record(z.string(), z.record(z.coerce.number(), z.string()))
+    .optional(),
 });
 export type BuildRangeChanges = z.infer<typeof BuildRangeChanges>;
 
@@ -438,6 +445,70 @@ export const ENTITY_TYPE_META: Record<
   landmark: { label: "Landmark", plural: "Landmarks" },
   cloneGrade: { label: "Clone state", plural: "Clone states" },
 };
+
+// The "primary" collection per entity kind — its add/remove there means the
+// entity itself was born/retired (vs. a secondary collection like typeDogma,
+// which only ever decorates an existing entity).
+export const PRIMARY_COLLECTION: Record<string, string> = {
+  type: "types",
+  skin: "skins",
+  skinMaterial: "skinMaterials",
+  category: "categories",
+  group: "groups",
+  marketGroup: "marketGroups",
+  metaGroup: "metaGroups",
+  typeList: "typeLists",
+  dogmaAttribute: "dogmaAttributes",
+  dogmaAttributeCategory: "dogmaAttributeCategories",
+  dogmaUnit: "dogmaUnits",
+  dogmaEffect: "dogmaEffects",
+  dbuffCollection: "dbuffCollections",
+  graphic: "graphicIDs",
+  graphicMaterialSet: "graphicMaterialSets",
+  icon: "iconIDs",
+  faction: "factions",
+  race: "races",
+  bloodline: "bloodlines",
+  ancestry: "ancestries",
+  corporationActivity: "corporationActivities",
+  npcCorporation: "npcCorporations",
+  npcCorporationDivision: "npcCorporationDivisions",
+  npcCharacter: "npcCharacters",
+  agentInSpace: "agentsInSpace",
+  mission: "missions",
+  epicArc: "epicArcs",
+  dungeon: "dungeons",
+  archetype: "archetypes",
+  schematic: "schematics",
+  stationOperation: "stationOperations",
+  stationService: "stationServices",
+  region: "regions",
+  constellation: "constellations",
+  solarSystem: "solarSystems",
+  planet: "planets",
+  moon: "moons",
+  asteroidBelt: "asteroidBelts",
+  npcStation: "npcStations",
+  star: "stars",
+  secondarySun: "secondarySuns",
+  stargate: "stargates",
+  landmark: "landmarks",
+  cloneGrade: "cloneGrades",
+  accountingEntryType: "accountingEntryTypes",
+  agentType: "agentTypes",
+  certificate: "certificates",
+  corporationRole: "corporationRoles",
+  corporationRoleGroup: "corporationRoleGroups",
+  fighterAbility: "fighterAbilities",
+  industryActivity: "industryActivities",
+  industryAssemblyLine: "industryAssemblyLines",
+  industryTargetFilter: "industryTargetFilters",
+  school: "schools",
+  skillPlan: "skillPlans",
+  stationStandingsRestriction: "stationStandingsRestrictions",
+};
+export const primaryCollectionOf = (entityType: string) =>
+  PRIMARY_COLLECTION[entityType] ?? "types";
 
 /**
  * Where an entity's change history is shown. An item's is the History tab of

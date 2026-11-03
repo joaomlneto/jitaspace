@@ -40,7 +40,9 @@ const CHARACTER_ATTRIBUTE_BY_DOGMA_ID = new Map<number, CharacterAttribute>([
 ]);
 
 /**
- * NPC corporation ids (`corporationIdRanges` in `@jitaspace/esi-metadata`).
+ * NPC corporation ids (`npcCorporationIdRanges` in `@jitaspace/esi-metadata`)
+ * as a Prisma filter. That constant includes 2,000,000 and this stops below
+ * it; no corporation has that id.
  * Only NPC corporations carry a race, and bounding the query to their range
  * keeps it off the player corporations, which are almost all of the table.
  */
