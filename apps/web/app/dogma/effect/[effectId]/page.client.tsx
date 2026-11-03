@@ -14,6 +14,7 @@ import {
   Table,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -32,6 +33,7 @@ import type {
   DogmaAttributeLabel as EffectAttribute,
   NamedDogmaModifier as EffectModifier,
 } from "~/components/Dogma";
+import type { EffectCategory } from "~/lib/dogmaEffectCategory";
 import type { DogmaModifierLine } from "~/lib/dogmaModifiers";
 import {
   DogmaEffectAnchor,
@@ -112,7 +114,7 @@ export interface PageProps {
   iconId: number | null;
   guid: string | null;
   distribution: number | null;
-  category: { effectCategoryId: number; name: string | null } | null;
+  category: EffectCategory | null;
   flags: Record<keyof typeof FLAG_LABELS, boolean | null>;
   /** The attribute each of the effect's own pointers names, if any. */
   stats: Record<keyof typeof STAT_LABELS, number | null>;
@@ -130,8 +132,9 @@ export interface PageProps {
   types: EffectType[];
 }
 
-/** `dgmEffTarget` → `Target`. */
+/** Our name for the category, else CCP's with the prefix dropped: `dgmEffTarget` → `Target`. */
 function categoryLabel(category: NonNullable<PageProps["category"]>): string {
+  if (category.customName) return category.customName;
   if (!category.name) return `Category ${category.effectCategoryId}`;
   return category.name.replace(/^dgmEff/, "");
 }
@@ -474,9 +477,17 @@ function EffectHero({
           </Badge>
         )}
         {category && (
-          <Badge variant="light" color="eve_accent">
-            {categoryLabel(category)}
-          </Badge>
+          <Tooltip
+            label={category.customDescription}
+            disabled={!category.customDescription}
+            multiline
+            w={320}
+            withArrow
+          >
+            <Badge variant="light" color="eve_accent">
+              {categoryLabel(category)}
+            </Badge>
+          </Tooltip>
         )}
         {flagEntries
           .filter(({ value }) => value)
@@ -704,7 +715,7 @@ function TypesSection({
 function effectDetails(
   props: Readonly<PageProps>,
   flagEntries: FlagEntry[],
-): { label: string; value: ReactNode }[] {
+): { label: string; value: ReactNode; sub?: ReactNode }[] {
   const { effectId, name, displayName, category, guid } = props;
   const optional = (label: string, value: number | null) =>
     value === null ? [] : [{ label, value }];
@@ -720,10 +731,15 @@ function effectDetails(
               <>
                 {categoryLabel(category)}{" "}
                 <Text component="span" c="dimmed" size="sm">
-                  ({category.effectCategoryId})
+                  ({category.effectCategoryId}
+                  {category.customName && category.name
+                    ? `, ${category.name}`
+                    : ""}
+                  )
                 </Text>
               </>
             ),
+            sub: category.customDescription ?? undefined,
           },
         ]
       : []),
@@ -791,6 +807,7 @@ export default function DogmaEffectPage(props: Readonly<PageProps>) {
                 key={detail.label}
                 label={detail.label}
                 value={detail.value}
+                sub={detail.sub}
               />
             ))}
           </SimpleGrid>
