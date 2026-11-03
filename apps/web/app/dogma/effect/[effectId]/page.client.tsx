@@ -33,6 +33,7 @@ import type {
   DogmaAttributeLabel as EffectAttribute,
   NamedDogmaModifier as EffectModifier,
 } from "~/components/Dogma";
+import type { EffectCategory } from "~/lib/dogmaEffectCategory";
 import type { DogmaModifierLine } from "~/lib/dogmaModifiers";
 import {
   DogmaEffectAnchor,
@@ -113,14 +114,7 @@ export interface PageProps {
   iconId: number | null;
   guid: string | null;
   distribution: number | null;
-  category: {
-    effectCategoryId: number;
-    /** CCP's internal name, e.g. `dgmEffPassive`. */
-    name: string | null;
-    /** Ours: a player-facing name and description, written by hand. */
-    customName: string | null;
-    customDescription: string | null;
-  } | null;
+  category: EffectCategory | null;
   flags: Record<keyof typeof FLAG_LABELS, boolean | null>;
   /** The attribute each of the effect's own pointers names, if any. */
   stats: Record<keyof typeof STAT_LABELS, number | null>;

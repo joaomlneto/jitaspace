@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { toEffectCategory } from "~/lib/dogmaEffectCategory";
 import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
@@ -209,19 +210,7 @@ async function getEffectData(effectId: number): Promise<PageProps | null> {
     iconId: effect.iconId,
     guid: effect.guid?.length ? effect.guid : null,
     distribution: effect.distribution,
-    category:
-      effect.effectCategoryId === null
-        ? null
-        : {
-            effectCategoryId: effect.effectCategoryId,
-            name: effect.effectCategory?.name ?? null,
-            customName: effect.effectCategory?.customName?.trim()
-              ? effect.effectCategory.customName
-              : null,
-            customDescription: effect.effectCategory?.customDescription?.trim()
-              ? effect.effectCategory.customDescription
-              : null,
-          },
+    category: toEffectCategory(effect.effectCategoryId, effect.effectCategory),
     flags: {
       isOffensive: effect.isOffensive,
       isAssistance: effect.isAssistance,
