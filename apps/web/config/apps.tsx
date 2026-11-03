@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   CharacterSheetIcon,
   ContactsIcon,
+  ContractsIcon,
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
@@ -375,6 +376,27 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => React.createElement(LPStoreIcon, props),
     hotKey: ["⌘", "P"],
     scopes: {},
+  },
+  contracts: {
+    name: "Contracts",
+    description:
+      "Browse public item exchanges, auctions and courier contracts, and your own.",
+    url: "/contracts",
+    Icon: (props) => <ContractsIcon {...props} />,
+    scopes: {
+      optional: [
+        {
+          reason: "See your contracts",
+          description: "List the contracts your characters have issued",
+          scopes: ["esi-contracts.read_character_contracts.v1"],
+        },
+        {
+          reason: "See your corporation's contracts",
+          description: "List the contracts issued for your corporations",
+          scopes: ["esi-contracts.read_corporation_contracts.v1"],
+        },
+      ],
+    },
   },
   wars: {
     name: "Active Wars",
