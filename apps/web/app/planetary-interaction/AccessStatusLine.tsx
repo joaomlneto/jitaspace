@@ -19,7 +19,7 @@ import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 export function AccessStatusLine({
   isPending,
   hasAccess,
-  scope,
+  scopes,
   signedOut,
   summary,
   children,
@@ -27,7 +27,7 @@ export function AccessStatusLine({
   isPending: boolean;
   hasAccess: boolean;
   /** Asked for on top of the scopes already granted. */
-  scope: ESIScope;
+  scopes: readonly ESIScope[];
   signedOut: string;
   summary: string;
   /** Shown after the text, e.g. filters, once there is access. */
@@ -58,7 +58,7 @@ export function AccessStatusLine({
         <Button
           size="compact-sm"
           onClick={() => {
-            loginWithEveOnline([...new Set([...granted, scope])]);
+            loginWithEveOnline([...new Set([...granted, ...scopes])]);
           }}
         >
           Sign in with EVE Online

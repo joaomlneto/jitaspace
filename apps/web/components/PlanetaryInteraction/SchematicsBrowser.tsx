@@ -129,7 +129,16 @@ export const SchematicsBrowser = memo(
     // The box filters as you type; the URL follows once typing pauses, so a
     // keystroke never waits on a history update.
     const [text, setText] = useState(query);
+    // The URL value the box last agreed with. When the URL changes on its own
+    // (it is only read after hydration, and back/forward change it too), the
+    // box follows; when the change is our own write, there is nothing to do.
+    const [syncedQuery, setSyncedQuery] = useState(query);
+    if (query !== syncedQuery) {
+      setSyncedQuery(query);
+      setText(query);
+    }
     const writeQuery = useDebouncedCallback((value: string) => {
+      setSyncedQuery(value);
       void setQuery(value || null);
     }, 300);
     const [tiers, setTiers] = useQueryState(
@@ -138,7 +147,13 @@ export const SchematicsBrowser = memo(
     );
 
     const entries = useMemo(() => schematicEntries(catalog), [catalog]);
-    const activeTiers = useMemo(() => new Set(tiers ?? TIERS), [tiers]);
+    // Tiers a hand-edited URL names that do not exist are dropped, and a list
+    // of nothing but those means no filter. An empty list stays empty: that is
+    // what deselecting every chip writes.
+    const activeTiers = useMemo(() => {
+      const known = (tiers ?? TIERS).filter((tier) => TIERS.includes(tier));
+      return new Set(tiers?.length && known.length === 0 ? TIERS : known);
+    }, [tiers]);
     const shown = useMemo(
       () =>
         entries.filter(

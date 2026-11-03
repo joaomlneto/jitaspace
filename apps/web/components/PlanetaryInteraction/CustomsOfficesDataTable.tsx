@@ -71,10 +71,15 @@ export const CustomsOfficesDataTable = memo(
         {
           id: "corporationTax",
           header: "Corporation tax",
-          accessor: "corporation_tax_rate",
+          // In percent, as the cells show it, so the range filter reads the
+          // same numbers the table does.
+          accessor: (row) =>
+            row.corporation_tax_rate === undefined
+              ? undefined
+              : row.corporation_tax_rate * 100,
           sortable: true,
           align: "right",
-          filter: { type: "range", min: 0, max: 1, step: 0.01 },
+          filter: { type: "range", min: 0, max: 100, step: 1 },
           cell: (row) => formatPercent(row.corporation_tax_rate),
         },
         {

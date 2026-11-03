@@ -55,6 +55,8 @@ import {
 import { StatsGrid } from "~/components/UI";
 import { AccessStatusLine } from "./AccessStatusLine";
 
+const COLONY_SCOPES = [PLANETS_SCOPE];
+
 const VIEWS = ["colonies", "extractors", "production", "storage"] as const;
 type View = (typeof VIEWS)[number];
 
@@ -90,15 +92,19 @@ export default function PlanetaryInteractionPageClient({
   const characterIds = colonies.subjectIds;
   // With a single character there are no chips to undo a selection with, so
   // one arriving in a shared link is ignored rather than leaving an empty page.
-  const activeCharacters = useMemo(
-    () =>
-      new Set(
-        characterIds.length > 1
-          ? (selectedCharacters ?? characterIds)
-          : characterIds,
-      ),
-    [selectedCharacters, characterIds],
-  );
+  // Ids in the URL that are not logged-in characters are dropped, and a list
+  // of nothing but those (a link from someone else) means every character.
+  const activeCharacters = useMemo(() => {
+    if (characterIds.length <= 1 || selectedCharacters === null) {
+      return new Set(characterIds);
+    }
+    const known = selectedCharacters.filter((id) => characterIds.includes(id));
+    return new Set(
+      selectedCharacters.length > 0 && known.length === 0
+        ? characterIds
+        : known,
+    );
+  }, [selectedCharacters, characterIds]);
 
   const shownColonies = useMemo(
     () =>
@@ -151,11 +157,15 @@ export default function PlanetaryInteractionPageClient({
   const totals = useMemo(() => colonyTotals(rows), [rows]);
 
   // The last colony opened stays in the modal while it animates closed, so its
-  // content does not flip to "not available" on the way out.
+  // content does not flip to "not available" on the way out. Followed from the
+  // URL rather than set on click, so a colony opened by a shared link (read
+  // only after hydration) or by back/forward is kept as well.
   const [lastColony, setLastColony] = useState(colonyParam);
+  if (colonyParam !== null && colonyParam !== lastColony) {
+    setLastColony(colonyParam);
+  }
   const showDetails = useCallback(
     (row: ColonyRow) => {
-      setLastColony(row.key);
       void setColonyParam(row.key);
     },
     [setColonyParam],
@@ -171,36 +181,48 @@ export default function PlanetaryInteractionPageClient({
 
   const isPending = colonies.isPending;
   const layoutsPending = layouts.pendingKeys.length > 0;
+  // Whether the extractor and production numbers are still on their way: the
+  // colony list, then each colony's layout, and a clock to judge expiry by.
+  // Before the list arrives there are no layouts to wait for, so counting only
+  // those would show zeroes first.
+  const summariesPending = isPending || layoutsPending || now === null;
   const showCharacter = characterIds.length > 1;
+  const pendingOr = (pending: boolean, value: string) =>
+    pending ? "…" : value;
 
   const stats = [
-    { title: "Colonies", value: isPending ? "…" : String(totals.colonies) },
+    { title: "Colonies", value: pendingOr(isPending, String(totals.colonies)) },
     {
       title: "Extractors running",
-      value: layoutsPending
-        ? "…"
-        : String(totals.byStatus.running + totals.byStatus.expiring),
+      value: pendingOr(
+        summariesPending,
+        String(totals.byStatus.running + totals.byStatus.expiring),
+      ),
     },
     {
       title: "Expiring within 24 h",
-      value: layoutsPending ? "…" : String(totals.byStatus.expiring),
+      value: pendingOr(summariesPending, String(totals.byStatus.expiring)),
     },
     {
       title: "Expired",
-      value: layoutsPending ? "…" : String(totals.byStatus.expired),
+      value: pendingOr(summariesPending, String(totals.byStatus.expired)),
     },
     {
       title: "Next expiry",
-      value:
+      value: pendingOr(
+        summariesPending,
         totals.nextExpiry === undefined || now === null
           ? "—"
           : formatRelative(totals.nextExpiry, now),
+      ),
     },
   ];
 
   const colonyErrors = colonies.errors;
   let emptyText = "No colonies. Set one up in the planetary view in game.";
-  if (showCharacter && activeCharacters.size === 0) {
+  if (characterIds.length === 0) {
+    emptyText = "Sign in to see your colonies.";
+  } else if (showCharacter && activeCharacters.size === 0) {
     emptyText = "No characters selected. Pick one above to see their colonies.";
   } else if (statuses !== null && allRows.length > 0) {
     emptyText = "No colony matches the selected statuses.";
@@ -218,7 +240,7 @@ export default function PlanetaryInteractionPageClient({
         <AccessStatusLine
           isPending={isPending}
           hasAccess={characterIds.length > 0}
-          scope={PLANETS_SCOPE}
+          scopes={COLONY_SCOPES}
           signedOut="Sign in with a character that shares its planets to see your colonies."
           summary={`${colonies.data.length} ${colonies.data.length === 1 ? "colony" : "colonies"} across ${characterIds.length} ${characterIds.length === 1 ? "character" : "characters"}`}
         />
@@ -291,9 +313,14 @@ export default function PlanetaryInteractionPageClient({
         <StatsGrid data={stats} cols={{ base: 2, sm: 3, lg: 5 }} />
 
         <SimpleGrid cols={{ base: 1, md: 3 }}>
-          <ExtractorStatusChart totals={totals} />
-          <ColoniesByTypeChart rows={rows} />
-          <ProductionChart rows={productionRows} catalog={catalog} limit={6} />
+          <ExtractorStatusChart totals={totals} isLoading={summariesPending} />
+          <ColoniesByTypeChart rows={rows} isLoading={isPending} />
+          <ProductionChart
+            rows={productionRows}
+            catalog={catalog}
+            limit={6}
+            isLoading={summariesPending}
+          />
         </SimpleGrid>
 
         {colonyErrors.length > 0 && (
@@ -342,7 +369,12 @@ export default function PlanetaryInteractionPageClient({
               rows={rows}
               showCharacter={showCharacter}
               now={now}
-              isLoading={isPending && rows.length === 0}
+              // With a status filter, a colony whose layout is still loading
+              // has no status yet, so the table waits for the layouts too.
+              isLoading={
+                (isPending || (statuses !== null && summariesPending)) &&
+                rows.length === 0
+              }
               emptyText={emptyText}
               onShowDetails={showDetails}
             />
@@ -353,9 +385,7 @@ export default function PlanetaryInteractionPageClient({
               catalog={catalog}
               showCharacter={showCharacter}
               now={now}
-              isLoading={
-                (isPending || layoutsPending) && extractorRows.length === 0
-              }
+              isLoading={summariesPending && extractorRows.length === 0}
             />
           </Tabs.Panel>
           <Tabs.Panel value="production" pt="md">
@@ -368,9 +398,7 @@ export default function PlanetaryInteractionPageClient({
               <ProductionDataTable
                 rows={productionRows}
                 catalog={catalog}
-                isLoading={
-                  (isPending || layoutsPending) && productionRows.length === 0
-                }
+                isLoading={summariesPending && productionRows.length === 0}
               />
             </Stack>
           </Tabs.Panel>
@@ -379,9 +407,7 @@ export default function PlanetaryInteractionPageClient({
               rows={storageRows}
               catalog={catalog}
               showCharacter={showCharacter}
-              isLoading={
-                (isPending || layoutsPending) && storageRows.length === 0
-              }
+              isLoading={summariesPending && storageRows.length === 0}
             />
           </Tabs.Panel>
         </Tabs>

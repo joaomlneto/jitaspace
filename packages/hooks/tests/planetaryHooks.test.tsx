@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
@@ -24,6 +28,15 @@ const mockUseLayout = jest.fn();
 const mockFetchLayout = jest.fn();
 const mockFetchCustomsOffices = jest.fn();
 const mockFetchSchematic = jest.fn();
+const schematicQueryOptions = (schematicId: number) => ({
+  queryKey: [
+    {
+      url: "/universe/schematics/:schematic_id",
+      params: { schematic_id: schematicId },
+    },
+  ],
+  queryFn: () => mockFetchSchematic(schematicId),
+});
 
 jest.mock("@jitaspace/auth-utils", () => ({
   __esModule: true,
@@ -61,14 +74,15 @@ jest.mock("@jitaspace/esi-client", () => ({
   ],
   getCorporationsCorporationIdCustomsOffices: (...args: unknown[]) =>
     mockFetchCustomsOffices(...args),
-  getUniverseSchematicsSchematicIdQueryKey: (schematicId: number) => [
-    {
-      url: "/universe/schematics/:schematic_id",
-      params: { schematic_id: schematicId },
-    },
-  ],
-  getUniverseSchematicsSchematicId: (...args: unknown[]) =>
-    mockFetchSchematic(...args),
+  // Shaped like the generated pair: options under the generated key, and a
+  // hook that runs them with the caller's query overrides on top.
+  getUniverseSchematicsSchematicIdQueryOptions: (schematicId: number) =>
+    schematicQueryOptions(schematicId),
+  useGetUniverseSchematicsSchematicId: (
+    schematicId: number,
+    _headers: unknown,
+    options: { query?: Record<string, unknown> } = {},
+  ) => useQuery({ ...schematicQueryOptions(schematicId), ...options.query }),
 }));
 
 const { useAuthStore } =
@@ -421,51 +435,50 @@ describe("useCorporationCustomsOffices", () => {
     expect(mockFetchCustomsOffices).not.toHaveBeenCalled();
   });
 
-  it("shares its cache entry with the multi-subject hook's key", () => {
-    // The generated useMultipleCorporationCustomsOffices builds the same
-    // all-pages key from the same generated key, so the two share an entry.
+  it("keys every page under the generated key plus the all-pages marker", () => {
+    // The key the generated useMultipleCorporationCustomsOffices builds too,
+    // through the same esiPagedQueryOptions, so the two share one entry.
+    // Distinct from the generated single-page key, whose data is one page.
     const { queryKey } = corporationCustomsOfficesQueryOptions(1, {});
-    expect(queryKey[0]).toEqual({
-      url: "/corporations/:corporation_id/customs_offices",
-      params: { corporation_id: 1 },
-    });
-    expect(queryKey).toHaveLength(2);
+    expect(queryKey).toEqual([
+      {
+        url: "/corporations/:corporation_id/customs_offices",
+        params: { corporation_id: 1 },
+      },
+      "all-pages",
+    ]);
   });
 });
 
 describe("usePlanetSchematic", () => {
-  it("adds the id ESI's response leaves out", async () => {
+  const schematic = (name: string) =>
+    response({ cycle_time: 3600, schematic_name: name });
+
+  it("keeps the response exactly as ESI sends it", async () => {
     mockFetchSchematic.mockImplementation(() =>
-      Promise.resolve(
-        response({ cycle_time: 3600, schematic_name: "Superconductors" }),
-      ),
+      Promise.resolve(schematic("Superconductors")),
     );
 
     const { result } = renderHook(() => usePlanetSchematic(65), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.data).toEqual({
-      schematic_id: 65,
       cycle_time: 3600,
       schematic_name: "Superconductors",
     });
-    expect(mockFetchSchematic).toHaveBeenCalledWith(65, {}, expect.anything());
+    expect(mockFetchSchematic).toHaveBeenCalledWith(65);
   });
 
   it("does not query without an id", () => {
     renderHook(() => usePlanetSchematic(undefined), { wrapper });
+    renderHook(() => usePlanetSchematic(0), { wrapper });
 
     expect(mockFetchSchematic).not.toHaveBeenCalled();
   });
 
-  it("fetches several, keyed by id, skipping invalid ids", async () => {
+  it("fetches several, keyed by the id each was requested by", async () => {
     mockFetchSchematic.mockImplementation((schematicId) =>
-      Promise.resolve(
-        response({
-          cycle_time: 1800,
-          schematic_name: `Schematic ${schematicId as number}`,
-        }),
-      ),
+      Promise.resolve(schematic(`Schematic ${schematicId as number}`)),
     );
 
     const { result } = renderHook(() => usePlanetSchematics([65, 0, 66]), {
@@ -475,7 +488,29 @@ describe("usePlanetSchematic", () => {
     await waitFor(() =>
       expect(Object.keys(result.current.data)).toHaveLength(2),
     );
+    expect(result.current.data[65]?.schematic_name).toBe("Schematic 65");
     expect(result.current.data[66]?.schematic_name).toBe("Schematic 66");
     expect(mockFetchSchematic).toHaveBeenCalledTimes(2);
+  });
+
+  it("shares one cache entry with the single hook without either reshaping it", async () => {
+    mockFetchSchematic.mockImplementation((schematicId) =>
+      Promise.resolve(schematic(`Schematic ${schematicId as number}`)),
+    );
+
+    // Both mounted on the same client, as a page using both would be. The
+    // entry is written once and read by both; it must suit them both.
+    const { result } = renderHook(
+      () => ({
+        one: usePlanetSchematic(65),
+        many: usePlanetSchematics([65]),
+      }),
+      { wrapper },
+    );
+
+    await waitFor(() => expect(result.current.many.data[65]).toBeDefined());
+    expect(result.current.one.data?.data.schematic_name).toBe("Schematic 65");
+    expect(Object.keys(result.current.many.data)).toEqual(["65"]);
+    expect(mockFetchSchematic).toHaveBeenCalledTimes(1);
   });
 });

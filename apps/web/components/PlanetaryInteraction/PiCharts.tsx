@@ -32,22 +32,35 @@ const DonutChart = dynamic(
 function ChartFigure({
   title,
   summary,
+  isLoading,
   children,
-}: Readonly<{ title: string; summary: string; children: ReactNode }>) {
+}: Readonly<{
+  title: string;
+  summary: string;
+  /** Holds the chart's place while its data loads, rather than drawing zeroes. */
+  isLoading: boolean;
+  children: ReactNode;
+}>) {
   return (
     <Paper withBorder p="md" radius="md" component="figure" m={0}>
       <Text component="figcaption" fw={600} size="sm" mb="sm">
         {title}
       </Text>
-      <div role="img" aria-label={`${title}: ${summary}`}>
-        {children}
+      <div
+        role="img"
+        aria-label={`${title}: ${isLoading ? "loading" : summary}`}
+      >
+        {isLoading ? chartLoading() : children}
       </div>
     </Paper>
   );
 }
 
 export const ExtractorStatusChart = memo(
-  ({ totals }: Readonly<{ totals: ColonyTotals }>) => {
+  ({
+    totals,
+    isLoading = false,
+  }: Readonly<{ totals: ColonyTotals; isLoading?: boolean }>) => {
     const data = useMemo(
       () =>
         (["running", "expiring", "expired", "idle"] as const)
@@ -64,7 +77,11 @@ export const ExtractorStatusChart = memo(
         ? "no extractors"
         : data.map((slice) => `${slice.value} ${slice.name}`).join(", ");
     return (
-      <ChartFigure title="Extractor programs" summary={summary}>
+      <ChartFigure
+        title="Extractor programs"
+        summary={summary}
+        isLoading={isLoading}
+      >
         {data.length === 0 ? (
           <Text c="dimmed" size="sm" h={CHART_HEIGHT}>
             No extractors.
@@ -87,7 +104,10 @@ export const ExtractorStatusChart = memo(
 ExtractorStatusChart.displayName = "ExtractorStatusChart";
 
 export const ColoniesByTypeChart = memo(
-  ({ rows }: Readonly<{ rows: readonly ColonyRow[] }>) => {
+  ({
+    rows,
+    isLoading = false,
+  }: Readonly<{ rows: readonly ColonyRow[]; isLoading?: boolean }>) => {
     const data = useMemo(
       () =>
         PLANET_TYPES.map((type) => ({
@@ -101,7 +121,11 @@ export const ColoniesByTypeChart = memo(
         ? "no colonies"
         : data.map((entry) => `${entry.Colonies} ${entry.type}`).join(", ");
     return (
-      <ChartFigure title="Colonies by planet type" summary={summary}>
+      <ChartFigure
+        title="Colonies by planet type"
+        summary={summary}
+        isLoading={isLoading}
+      >
         <BarChart
           h={CHART_HEIGHT}
           data={data}
@@ -131,10 +155,12 @@ export const ProductionChart = memo(
     rows,
     catalog,
     limit = 10,
+    isLoading = false,
   }: Readonly<{
     rows: readonly ProductionRow[];
     catalog: PiCatalog;
     limit?: number;
+    isLoading?: boolean;
   }>) => {
     const data = useMemo(
       () =>
@@ -160,6 +186,7 @@ export const ProductionChart = memo(
       <ChartFigure
         title="Daily surplus, processed commodities"
         summary={summary}
+        isLoading={isLoading}
       >
         {data.length === 0 ? (
           <Text c="dimmed" size="sm" h={CHART_HEIGHT}>

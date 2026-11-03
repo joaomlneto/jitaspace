@@ -1,12 +1,20 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Button, Group, Skeleton, Text, Tooltip } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Skeleton,
+  Text,
+  Tooltip,
+  VisuallyHidden,
+} from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 
 import type { ColonyRow } from "./colonies";
 import { DataTable } from "~/components/DataTable";
+import { PlanetName } from "~/components/Text";
 import {
   CharacterCell,
   DimmedText,
@@ -45,7 +53,10 @@ function LayoutPending({ row }: Readonly<{ row: ColonyRow }>) {
   return row.layoutState === "error" ? (
     <DimmedText>Unavailable</DimmedText>
   ) : (
-    <Skeleton h={18} w={70} aria-label="Loading" />
+    <>
+      <Skeleton h={18} w={70} aria-hidden />
+      <VisuallyHidden>Loading</VisuallyHidden>
+    </>
   );
 }
 
@@ -192,6 +203,10 @@ export const ColoniesDataTable = memo(
                 }}
               >
                 View
+                <VisuallyHidden>
+                  {" colony on "}
+                  <PlanetName span inherit planetId={row.planet_id} />
+                </VisuallyHidden>
               </Button>
             </Group>
           ),

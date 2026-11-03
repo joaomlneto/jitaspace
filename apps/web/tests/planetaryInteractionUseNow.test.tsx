@@ -39,6 +39,18 @@ describe("useNow", () => {
     expect(jest.getTimerCount()).toBe(0);
   });
 
+  it("reads the clock afresh when it is used again after a quiet spell", () => {
+    const first = renderHook(() => useNow());
+    const before = first.result.current ?? 0;
+    first.unmount();
+
+    // Two hours elsewhere, with nothing listening and so nothing ticking.
+    jest.setSystemTime(before + 2 * 60 * 60 * 1000);
+    const again = renderHook(() => useNow());
+
+    expect(again.result.current).toBe(before + 2 * 60 * 60 * 1000);
+  });
+
   it("is null while prerendering, so a static page stays static", () => {
     function Clock() {
       const now = useNow();

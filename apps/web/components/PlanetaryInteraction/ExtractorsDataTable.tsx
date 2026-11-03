@@ -50,7 +50,16 @@ export function ExtractorProgress({
     return <DimmedText>—</DimmedText>;
   }
   const remaining = formatRelative(row.expiryTime, now);
-  const percent = Math.round((row.progress ?? 1) * 100);
+  // Without an install time there is no telling how far along it is, so the
+  // bar is left out rather than drawn full.
+  if (row.progress === undefined) {
+    return (
+      <Tooltip label={formatEveTime(row.expiryTime)}>
+        <Text size="sm">{remaining}</Text>
+      </Tooltip>
+    );
+  }
+  const percent = Math.round(row.progress * 100);
   return (
     <Tooltip label={formatEveTime(row.expiryTime)}>
       <Group gap="xs" wrap="nowrap" miw={160}>

@@ -153,6 +153,18 @@ describe("Customs offices page", () => {
     expect(bodyRows()).toHaveLength(1);
   });
 
+  it("shows every corporation when the URL names only unknown ones", () => {
+    mockOffices.mockReturnValue(
+      envelope([office(CORP_A, 1), office(CORP_B, 2)], [CORP_A, CORP_B]),
+    );
+    renderPage("?corporations=1");
+
+    expect(bodyRows()).toHaveLength(2);
+    expect(
+      screen.getByRole("checkbox", { name: `entity-${CORP_A}` }),
+    ).toBeChecked();
+  });
+
   it("says so when no corporation is selected", () => {
     mockOffices.mockReturnValue(
       envelope([office(CORP_A, 1), office(CORP_B, 2)], [CORP_A, CORP_B]),
@@ -169,8 +181,10 @@ describe("Customs offices page", () => {
     await userEvent.click(
       screen.getByRole("button", { name: "Sign in with EVE Online" }),
     );
+    // The roles scope too: without it a Director cannot be recognised as one.
     expect(mockLogin).toHaveBeenCalledWith([
       "esi-planets.read_customs_offices.v1",
+      "esi-characters.read_corporation_roles.v1",
     ]);
   });
 

@@ -10,10 +10,16 @@ let timer: ReturnType<typeof setInterval> | undefined;
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  timer ??= setInterval(() => {
+  if (timer === undefined) {
+    // The first listener after a quiet spell (the page left and came back)
+    // must not see the reading taken before it: React re-reads the snapshot
+    // right after subscribing, so this lands before anything is judged by it.
     now = Date.now();
-    listeners.forEach((notify) => notify());
-  }, TICK_MS);
+    timer = setInterval(() => {
+      now = Date.now();
+      listeners.forEach((notify) => notify());
+    }, TICK_MS);
+  }
   return () => {
     listeners.delete(listener);
     if (listeners.size === 0 && timer !== undefined) {

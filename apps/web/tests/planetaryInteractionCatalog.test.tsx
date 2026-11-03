@@ -228,3 +228,48 @@ describe("ColonyDetails", () => {
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
   });
 });
+
+describe("ExtractorProgress", () => {
+  const { ExtractorProgress } =
+    require("~/components/PlanetaryInteraction/ExtractorsDataTable") as typeof import("~/components/PlanetaryInteraction/ExtractorsDataTable");
+  const row = (progress: number | undefined) => ({
+    pinId: 1,
+    typeId: 3060,
+    headCount: 0,
+    perHour: 0,
+    status: "running" as const,
+    expiryTime: NOW + 3 * 60 * 60 * 1000,
+    progress,
+    key: "1:2:1",
+    colonyKey: "1:2",
+    characterId: 1,
+    planetId: 2,
+    planetType: "barren" as const,
+    solarSystemId: 30000142,
+  });
+
+  it("draws how far along a program is", () => {
+    render(
+      <MantineProvider>
+        <ExtractorProgress row={row(0.25)} now={NOW} />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("progressbar", {
+        name: "Program 25% complete, ends in 3h 0m",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves the bar out when the start of the program is unknown", () => {
+    render(
+      <MantineProvider>
+        <ExtractorProgress row={row(undefined)} now={NOW} />
+      </MantineProvider>,
+    );
+
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    expect(screen.getByText("in 3h 0m")).toBeInTheDocument();
+  });
+});

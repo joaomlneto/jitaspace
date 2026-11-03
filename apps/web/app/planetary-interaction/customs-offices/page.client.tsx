@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Alert, Chip, Container, Group, Stack, Text } from "@mantine/core";
 import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
 
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import {
   CUSTOMS_OFFICES_SCOPE,
@@ -19,6 +20,13 @@ import {
 import { StatsGrid } from "~/components/UI";
 import { AccessStatusLine } from "../AccessStatusLine";
 
+// The roles scope too: only a Director's token can read the offices, and the
+// app knows a character is a Director only once it can read their roles.
+const CUSTOMS_SCOPES: ESIScope[] = [
+  CUSTOMS_OFFICES_SCOPE,
+  "esi-characters.read_corporation_roles.v1",
+];
+
 export default function CustomsOfficesPageClient() {
   const offices = useMultipleCorporationCustomsOffices();
 
@@ -29,16 +37,21 @@ export default function CustomsOfficesPageClient() {
 
   const corporationIds = offices.subjectIds;
   // With a single corporation there are no chips to undo a selection with,
-  // so one arriving in a shared link is ignored.
-  const active = useMemo(
-    () =>
-      new Set(
-        corporationIds.length > 1
-          ? (selectedCorporations ?? corporationIds)
-          : corporationIds,
-      ),
-    [selectedCorporations, corporationIds],
-  );
+  // so one arriving in a shared link is ignored. Ids that are not reachable
+  // corporations are dropped, and a list of nothing but those means all.
+  const active = useMemo(() => {
+    if (corporationIds.length <= 1 || selectedCorporations === null) {
+      return new Set(corporationIds);
+    }
+    const known = selectedCorporations.filter((id) =>
+      corporationIds.includes(id),
+    );
+    return new Set(
+      selectedCorporations.length > 0 && known.length === 0
+        ? corporationIds
+        : known,
+    );
+  }, [selectedCorporations, corporationIds]);
   const rows = useMemo(
     () => offices.data.filter((office) => active.has(office.subjectId)),
     [offices.data, active],
@@ -64,7 +77,7 @@ export default function CustomsOfficesPageClient() {
         <AccessStatusLine
           isPending={offices.isPending}
           hasAccess={corporationIds.length > 0}
-          scope={CUSTOMS_OFFICES_SCOPE}
+          scopes={CUSTOMS_SCOPES}
           signedOut="Sign in with a Director to see your corporation's customs offices."
           summary={`${offices.data.length} customs ${offices.data.length === 1 ? "office" : "offices"} across ${corporationIds.length} ${corporationIds.length === 1 ? "corporation" : "corporations"}`}
         >

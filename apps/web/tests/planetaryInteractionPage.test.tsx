@@ -288,6 +288,71 @@ describe("Planetary Interaction page", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows no numbers before the colonies are known, rather than zeroes", () => {
+    // What the prerender and a first visit see: the characters are still
+    // loading, so there are no layouts yet to be waiting on.
+    mockColonies.mockReturnValue(envelope([], [], { isPending: true }));
+    renderPage();
+
+    const stat = (title: string) =>
+      screen.getByText(title, { selector: "p" }).closest(".mantine-Paper-root");
+    for (const title of [
+      "Colonies",
+      "Extractors running",
+      "Expiring within 24 h",
+      "Expired",
+      "Next expiry",
+    ]) {
+      expect(stat(title)).toHaveTextContent("…");
+    }
+    expect(
+      screen.getByRole("img", { name: "Extractor programs: loading" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No extractors.")).not.toBeInTheDocument();
+  });
+
+  it("tells a signed-out visitor to sign in, not to set up a colony", () => {
+    renderPage();
+
+    expect(
+      screen.getByText("Sign in to see your colonies."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Set one up/)).not.toBeInTheDocument();
+  });
+
+  it("waits for the layouts before saying no colony matches a status", () => {
+    withTwoCharacters();
+    mockLayouts.mockReturnValue(
+      layouts({}, { pendingKeys: [`${ALICE}:40000001`, `${BOB}:40000002`] }),
+    );
+    const { container } = renderPage("?status=expired");
+
+    expect(
+      container.querySelectorAll("tr[data-skeleton]").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryByText("No colony matches the selected statuses."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows everyone when the URL names only characters you do not have", () => {
+    withTwoCharacters();
+    renderPage("?characters=12345");
+
+    expect(bodyRows()).toHaveLength(2);
+    expect(
+      screen.getByRole("checkbox", { name: `entity-${ALICE}` }),
+    ).toBeChecked();
+  });
+
+  it("drops unknown characters from a selection that names a real one", () => {
+    withTwoCharacters();
+    renderPage(`?characters=12345,${BOB}`);
+
+    expect(bodyRows()).toHaveLength(1);
+    expect(bodyRows()[0]).toHaveTextContent("Planet 40000002");
+  });
+
   it("reports characters and layouts that failed", () => {
     withTwoCharacters();
     mockColonies.mockReturnValue(
@@ -327,7 +392,9 @@ describe("Planetary Interaction page", () => {
     renderPage();
 
     expect(bodyRows()[0]).not.toHaveTextContent("Expiring soon");
-    expect(screen.getAllByRole("button", { name: "View" })[0]).toBeDisabled();
+    expect(
+      screen.getAllByRole("button", { name: /^View colony on/ })[0],
+    ).toBeDisabled();
   });
 
   it("switches views through the URL", () => {
@@ -372,7 +439,11 @@ describe("Planetary Interaction page", () => {
     withTwoCharacters();
     renderPage();
 
-    const [firstView] = screen.getAllByRole("button", { name: "View" });
+    // Named after its colony, so a screen reader's list of buttons tells them
+    // apart.
+    const [firstView] = screen.getAllByRole("button", {
+      name: "View colony on Planet 40000001",
+    });
     if (!firstView) throw new Error("no View button");
     await userEvent.click(firstView);
 
