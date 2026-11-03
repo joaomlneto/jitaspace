@@ -17,6 +17,7 @@ export * from "./killmails";
 export * from "./location";
 export * from "./loyalty";
 export * from "./mail";
+export * from "./mercenary";
 export * from "./market";
 export * from "./militaryCampaigns";
 export * from "./multi";
