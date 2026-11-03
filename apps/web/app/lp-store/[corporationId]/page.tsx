@@ -69,10 +69,13 @@ async function getLPStoreCorporationData(
           quantity: true,
           typeId: true,
         },
+        where: { isDeleted: false },
       },
     },
+    // Rows stay when CCP withdraws an offer, marked deleted by the scrape.
     where: {
       corporationId: corporation.corporationId,
+      isDeleted: false,
     },
   });
 
@@ -118,7 +121,7 @@ export async function generateMetadata({
     const id = corporation.corporationId;
 
     const offerCount = await prisma.loyaltyStoreOffer.count({
-      where: { corporationId: id },
+      where: { corporationId: id, isDeleted: false },
     });
 
     return pageMetadata({

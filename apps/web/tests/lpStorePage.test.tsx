@@ -276,3 +276,34 @@ describe("LP Store corporation metadata", () => {
     expect(await metadataFor("1000035")).toEqual({});
   });
 });
+
+// CCP withdrawing an offer leaves its row in place, marked deleted by the
+// scrape, so every read of a store has to skip those rows: the State
+// Protectorate's Caldari Navy Antimatter charges stayed on its page for months.
+describe("LP Store corporation offers", () => {
+  beforeEach(() => {
+    corporationFindFirst.mockReset().mockResolvedValue(CORPORATION);
+    loyaltyStoreOfferFindMany.mockReset().mockResolvedValue([]);
+    loyaltyStoreOfferCount.mockReset().mockResolvedValue(12);
+    typeFindMany.mockReset().mockResolvedValue([]);
+  });
+
+  it("reads only the offers and required items still on sale", async () => {
+    await resolvePageContent("1000035");
+
+    const arg = loyaltyStoreOfferFindMany.mock.calls[0]?.[0] as {
+      where: unknown;
+      select: { requiredItems: { where: unknown } };
+    };
+    expect(arg.where).toEqual({ corporationId: 1000035, isDeleted: false });
+    expect(arg.select.requiredItems.where).toEqual({ isDeleted: false });
+  });
+
+  it("counts only the offers still on sale in the metadata", async () => {
+    await metadataFor("1000035");
+
+    expect(loyaltyStoreOfferCount).toHaveBeenCalledWith({
+      where: { corporationId: 1000035, isDeleted: false },
+    });
+  });
+});
