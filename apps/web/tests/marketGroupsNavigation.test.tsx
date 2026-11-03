@@ -96,7 +96,13 @@ describe("MarketGroupsNavigation", () => {
     for (const tab of screen.getAllByRole("tab")) {
       const panelId = tab.getAttribute("aria-controls");
       expect(panelId).toBeTruthy();
-      expect(container.querySelector(`[id="${panelId}"]`)).not.toBeNull();
+      const panel = container.querySelector(`[id="${panelId}"]`);
+      expect(panel).not.toBeNull();
+      // Only the open view renders: the closed panel is an empty element, so
+      // a search does not also rebuild the hidden view.
+      if (tab.getAttribute("aria-selected") !== "true") {
+        expect(panel?.childElementCount).toBe(0);
+      }
     }
   });
 

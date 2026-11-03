@@ -125,8 +125,11 @@ export function MarketGroupsNavigation() {
   // One <Tabs> around the bar and the content, so each tab's aria-controls
   // points at a panel that exists. The sticky bar still spans the whole list:
   // the Tabs root is its containing block, and it holds everything below.
+  // keepMounted={false}: only the open view renders (the inactive panel is an
+  // empty element), so typing a search does not also rebuild the hidden one.
   return (
     <Tabs
+      keepMounted={false}
       value={view}
       onChange={(value) => {
         if (value === "groups" || value === "quickbar") {
