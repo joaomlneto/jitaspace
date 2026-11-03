@@ -1,14 +1,13 @@
 /**
  * The timeline of public contracts (firstSeenAt, lastSeenAt, endReason,
- * isDeleted), worked out from successive observations of ESI's per-region
- * listings. Pure: the `esi-sync-public-contracts` job feeds it the stored
- * state, the contracts the database holds as outstanding and this run's
- * listings, and writes what it returns. Kept free of ESI/Prisma runtime imports
- * so it can be unit-tested directly.
+ * isDeleted), worked out from observations of each region's public listing.
+ * Pure: `contractTimelineStore.ts` loads what an observation can affect, calls
+ * {@link applyRegionObservation} and writes what it returns. Kept free of
+ * ESI/Prisma runtime imports so it can be unit-tested directly.
  *
- * The rules are the ones the EVE Ref snapshot ingest applied (contracts leave
- * the listing when accepted, completed, deleted or expired, and the public data
- * cannot tell the first three apart):
+ * The rules are the EVE Ref snapshot ingest's (contracts leave the listing when
+ * accepted, completed, deleted or expired, and the public data cannot tell the
+ * first three apart):
  *   - a region counts as complete in an observation only if its contract count
  *     is near its recent median; absences only count in complete regions;
  *   - a contract ends after MISSES_TO_END consecutive complete observations
@@ -17,105 +16,97 @@
  *     missed, unless those observations were more than GAP_MS apart (then NULL:
  *     it may have been accepted first);
  *   - a contract that reappears is reopened.
- * lastSeenAt is written when a contract ends, plus a daily checkpoint, not on
- * every run (about 50k outstanding contracts x 48 runs a day would be ~2.4M
- * updates a day).
  *
- * An observation is identified by its region listing's Last-Modified, which is
- * also the time it records: ESI regenerates each listing every 30 minutes, so a
- * retried or overlapping run that sees the same listing again changes nothing.
- * That is what keeps a retry from counting one absence twice.
+ * **Any order, same result.** Two writers feed it: the ESI sync job, and the
+ * EVE Ref snapshot ingest, which may lag behind, catch up on a gap, or run at
+ * the same time. So the timeline is a function of the *set* of observations,
+ * not of the order they arrive in:
+ *   - an observation is keyed by (region, the listing's Last-Modified), which
+ *     both sources know, so one listing read twice is one observation; the
+ *     contracts it lists are the union of what each copy listed;
+ *   - a contract's lastSeen is the latest observation listing it (a max), and
+ *     firstSeen the earliest (a min);
+ *   - every rule above is then read off the region's observation log after
+ *     lastSeen: the misses are the complete observations after it (none of them
+ *     lists it, or lastSeen would be later), firstMissed is the first
+ *     observation after it, and completeness is judged against the observations
+ *     before each one in time order.
+ * Applying an observation twice changes nothing, and applying an older one
+ * after newer ones gives what applying them in time order would have.
+ *
+ * Writes stay cheap: for a contract listed in its region's latest observation,
+ * lastSeen is that observation, so it is not written per run (a daily
+ * checkpoint copies it into Contract.lastSeenAt). Only contracts missing from
+ * the latest observation carry an exact lastSeen, in ContractAbsence.
  */
 
 export const MISSES_TO_END = 2;
 export const GAP_MS = 2 * 60 * 60 * 1000;
-/** lastSeenAt is rewritten for every outstanding contract this often. */
-export const CHECKPOINT_MS = 24 * 60 * 60 * 1000;
 /** A region is complete if its count is at least 70% of its recent median. */
 export const COMPLETE_FRACTION = 0.7;
 /** Regions typically listing fewer contracts than this: complete when present. */
 export const TINY_REGION = 20;
-/** Observations of each region's count kept for the median. */
+/** Observations of each region's count the median looks back over. */
 export const REGION_HISTORY_LENGTH = 20;
 
 export type ContractEndReason = "Expired" | "RemovedBeforeExpiry";
 
-/** A contract absent from its region's listing that has not ended yet. */
-export interface MissingContract {
-  /** Epoch ms of the last observation that listed it. */
-  lastSeen: number;
-  /** Epoch ms of the first observation that did not. */
-  firstMissed: number;
-  /** Consecutive complete observations without it. */
-  missed: number;
+/** One row of a region's observation log. Times are epoch ms. */
+export interface LoggedObservation {
+  observedAt: number;
+  contractCount: number;
+  /** A count from before the log existed: history for the median only. */
+  isSeed: boolean;
 }
 
-export interface RegionState {
-  /** Epoch ms Last-Modified of the last observation applied. */
-  lastModified: number;
-  /** Contract counts of the last observations, oldest first. */
-  history: number[];
-}
-
-/**
- * What the job keeps between runs (in Redis). Everything else comes from the
- * database: the outstanding set is `Contract` where isDeleted = false.
- */
-export interface TimelineState {
-  regions: Record<string, RegionState>;
-  missing: Record<string, MissingContract>;
-  /** Epoch ms of the last lastSeenAt checkpoint; 0 if none was written. */
-  lastCheckpointAt: number;
-}
-
-export const emptyTimelineState = (): TimelineState => ({
-  regions: {},
-  missing: {},
-  lastCheckpointAt: 0,
-});
-
-/** An outstanding contract, as the database holds it. */
-export interface OutstandingContract {
-  contractId: number;
-  regionId: number;
-  /** Epoch ms. */
-  dateExpired: number;
-  /**
-   * Epoch ms of the latest sighting the database records (lastSeenAt, which
-   * is checkpointed daily, or firstSeenAt). Used when no observation of the
-   * region is on record, e.g. on the first run after the snapshot ingest.
-   */
-  lastSeenAt: number;
-}
-
-/** One region's full listing (every page, one Last-Modified) from this run. */
+/** A region's listing as one source read it. */
 export interface RegionObservation {
-  regionId: number;
   /** Epoch ms Last-Modified of the listing. */
   observedAt: number;
   contractIds: ReadonlySet<number>;
-}
-
-export interface EndedContract {
-  contractId: number;
-  lastSeen: number;
-  reason: ContractEndReason | null;
-}
-
-export interface TimelinePlan {
-  state: TimelineState;
   /**
-   * Contracts listed in an observation applied this run, with its time. Those
-   * not outstanding are new (insert) or reappeared (reopen).
+   * Each listed contract's expiry, as this listing gives it (epoch ms). ESI
+   * recomputes an auction's from the listing's time and the whole days left,
+   * so it drifts by 30 minutes per listing; the earliest listing's is kept.
    */
-  seen: Map<number, number>;
-  ended: EndedContract[];
-  /** lastSeenAt for every contract still outstanding, when one is due. */
-  checkpoint: { contractId: number; lastSeen: number }[] | null;
-  /** Regions whose listing had not changed since the last observation. */
-  unchangedRegions: number[];
-  /** Regions applied as incomplete: absences were not counted. */
-  incompleteRegions: number[];
+  dateExpired?: ReadonlyMap<number, number>;
+}
+
+/** Where a contract stands on its timeline. Times are epoch ms. */
+export interface ContractTimelineState {
+  firstSeenAt: number | null;
+  /** Exact if ended or absent; otherwise a checkpoint at most the truth. */
+  lastSeenAt: number;
+  isDeleted: boolean;
+  endReason: ContractEndReason | null;
+  /** Missing from the region's latest observation since lastSeen. */
+  absence: { lastSeenAt: number; ended: boolean } | null;
+}
+
+/** A stored contract the observation may affect. */
+export interface StoredContract extends ContractTimelineState {
+  contractId: number;
+  /** Epoch ms. */
+  dateExpired: number;
+}
+
+export interface ContractTimelineUpdate {
+  contractId: number;
+  state: ContractTimelineState;
+}
+
+export interface AppliedObservation {
+  /** The log row to upsert (the count is the larger of the copies). */
+  log: { observedAt: number; contractCount: number };
+  /**
+   * Stored contracts this observation is now the earliest listing of: their
+   * row (expiry and all) becomes this listing's, as if it had come first.
+   */
+  restated: number[];
+  /** Contracts first stored by this observation, with their timeline. */
+  inserts: ContractTimelineUpdate[];
+  /** Stored contracts whose timeline changes. */
+  updates: ContractTimelineUpdate[];
 }
 
 const median = (xs: number[]) => {
@@ -145,199 +136,303 @@ export const isRegionComplete = (history: number[], count: number) => {
  */
 export const endReasonOf = (
   dateExpired: number,
-  { lastSeen, firstMissed }: Pick<MissingContract, "lastSeen" | "firstMissed">,
+  lastSeen: number,
+  firstMissed: number,
 ): ContractEndReason | null => {
   if (dateExpired > firstMissed) return "RemovedBeforeExpiry";
   return firstMissed - lastSeen <= GAP_MS ? "Expired" : null;
 };
 
+/** Seeds first (they predate the log), then observations in time order. */
+const byTime = (a: LoggedObservation, b: LoggedObservation) =>
+  Number(b.isSeed) - Number(a.isSeed) || a.observedAt - b.observedAt;
+
 /**
- * One outstanding contract absent from a new observation of its region:
- * still missing (with one more miss if the listing was complete), or ended.
+ * Whether each observation in the log was complete, judged against the counts
+ * before it in time order (seeds included). Keyed by observedAt.
  */
-const applyAbsence = (
-  c: OutstandingContract,
-  current: MissingContract | undefined,
-  previousObservedAt: number | undefined,
-  obs: RegionObservation,
-  complete: boolean,
-): { missing: MissingContract } | { ended: EndedContract } => {
-  // Not listed: it was listed in the region's previous observation (or it
-  // would be missing already), or, with none on record, when the database
-  // last saw it.
-  const m = current ?? {
-    lastSeen: Math.max(previousObservedAt ?? 0, c.lastSeenAt),
-    // When it went missing, even if this listing was partial.
-    firstMissed: obs.observedAt,
-    missed: 0,
-  };
-  // Partial listing: don't count toward ending.
-  if (!complete) return { missing: m };
-  const missed = m.missed + 1;
-  if (missed < MISSES_TO_END) return { missing: { ...m, missed } };
+export const completenessOf = (log: readonly LoggedObservation[]) => {
+  const complete = new Map<number, boolean>();
+  const history: number[] = [];
+  for (const o of [...log].sort(byTime)) {
+    if (!o.isSeed) {
+      // The ingest never judged a region it had yet to see listing anything.
+      const judged = o.contractCount > 0 || history.length > 0;
+      complete.set(
+        o.observedAt,
+        judged &&
+          isRegionComplete(
+            history.slice(-REGION_HISTORY_LENGTH),
+            o.contractCount,
+          ),
+      );
+    }
+    // The ingest only started a region's history once it listed something.
+    if (o.contractCount > 0 || history.length) history.push(o.contractCount);
+  }
+  return complete;
+};
+
+/** The log with this observation in it; a second copy keeps the larger count. */
+const withObservation = (
+  log: readonly LoggedObservation[],
+  observedAt: number,
+  count: number,
+) => {
+  const existing = log.find((o) => !o.isSeed && o.observedAt === observedAt);
+  const contractCount = Math.max(existing?.contractCount ?? 0, count);
   return {
-    ended: {
-      contractId: c.contractId,
-      lastSeen: m.lastSeen,
-      reason: endReasonOf(c.dateExpired, m),
+    contractCount,
+    log: [
+      ...log.filter((o) => o !== existing),
+      { observedAt, contractCount, isSeed: false },
+    ],
+  };
+};
+
+/** The latest observation (not seed) before `before`, if any. */
+const latestObservationOf = (
+  log: readonly LoggedObservation[],
+  before = Number.POSITIVE_INFINITY,
+) => {
+  let latest: number | undefined;
+  for (const o of log) {
+    if (
+      !o.isSeed &&
+      o.observedAt < before &&
+      (latest === undefined || o.observedAt > latest)
+    ) {
+      latest = o.observedAt;
+    }
+  }
+  return latest;
+};
+
+/**
+ * What an observation needs loaded besides the region's outstanding contracts
+ * and the ended contracts it lists: the ended contracts it can correct. One
+ * last seen before the latest observation preceding it already has a first
+ * miss earlier than it, so it can't change, unless the observation changes
+ * whether some later observation was complete; then every absence of the
+ * region must be read.
+ */
+export const observationReach = (
+  log: readonly LoggedObservation[],
+  observation: RegionObservation,
+) => {
+  const before = completenessOf(log);
+  const after = completenessOf(
+    withObservation(log, observation.observedAt, observation.contractIds.size)
+      .log,
+  );
+  return {
+    /** Read every absence of the region, not just the recent ones. */
+    completenessChanged: [...before].some(
+      ([t, complete]) => after.get(t) !== complete,
+    ),
+    /** Otherwise, ended absences last seen at or after this suffice. */
+    endedSince:
+      latestObservationOf(log, observation.observedAt) ??
+      Number.NEGATIVE_INFINITY,
+  };
+};
+
+/**
+ * The observations of a log in time order, with a running count of the
+ * complete ones, so "after lastSeen" questions take a binary search.
+ */
+const indexOf = (log: readonly LoggedObservation[]) => {
+  const complete = completenessOf(log);
+  const times = log
+    .filter((o) => !o.isSeed)
+    .map((o) => o.observedAt)
+    .sort((a, b) => a - b);
+  /** completeBefore[i]: complete observations among times[0..i-1]. */
+  const completeBefore = [0];
+  for (const t of times) {
+    completeBefore.push(
+      (completeBefore.at(-1) ?? 0) + (complete.get(t) ? 1 : 0),
+    );
+  }
+  return {
+    /** First observation after `lastSeen`, and complete ones after it. */
+    after: (lastSeen: number) => {
+      let lo = 0;
+      let hi = times.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if ((times[mid] ?? 0) <= lastSeen) lo = mid + 1;
+        else hi = mid;
+      }
+      return {
+        firstMissed: times[lo],
+        misses: (completeBefore.at(-1) ?? 0) - (completeBefore[lo] ?? 0),
+      };
     },
   };
 };
 
-/** lastSeen for every contract still outstanding after this run. */
-const checkpointOf = (
-  outstanding: readonly OutstandingContract[],
-  ended: readonly EndedContract[],
-  missing: TimelineState["missing"],
-  regions: TimelineState["regions"],
-) => {
-  const endedIds = new Set(ended.map((e) => e.contractId));
-  return outstanding
-    .filter((c) => !endedIds.has(c.contractId))
-    .map((c) => ({
-      contractId: c.contractId,
-      lastSeen: Math.max(
-        c.lastSeenAt,
-        missing[c.contractId]?.lastSeen ??
-          regions[c.regionId]?.lastModified ??
-          0,
-      ),
-    }));
-};
+type LogIndex = ReturnType<typeof indexOf>;
 
 /**
- * Seed region histories from the outstanding set, for regions with no history
- * on record (the first run). Without it, a region ESI listed as empty would
- * count as complete, and every contract in it as missing.
+ * Where a contract last seen at `lastSeen` stands: ended after MISSES_TO_END
+ * complete observations after lastSeen, missing after any, listed in the
+ * region's latest observation otherwise.
  */
-export const seedRegionHistories = (
-  state: TimelineState,
-  outstanding: readonly OutstandingContract[],
-): TimelineState => {
-  const counts = new Map<number, number>();
-  for (const c of outstanding)
-    counts.set(c.regionId, (counts.get(c.regionId) ?? 0) + 1);
-  const regions = { ...state.regions };
-  for (const [regionId, count] of counts) {
-    if (!Object.hasOwn(regions, regionId)) {
-      regions[regionId] = { lastModified: 0, history: [count] };
-    }
+const resolve = (
+  lastSeen: number,
+  dateExpired: number,
+  firstSeenAt: number | null,
+  index: LogIndex,
+): ContractTimelineState => {
+  const { firstMissed, misses } = index.after(lastSeen);
+  if (firstMissed === undefined) {
+    return {
+      firstSeenAt,
+      lastSeenAt: lastSeen,
+      isDeleted: false,
+      endReason: null,
+      absence: null,
+    };
   }
-  return { ...state, regions };
+  const ended = misses >= MISSES_TO_END;
+  return {
+    firstSeenAt,
+    lastSeenAt: lastSeen,
+    isDeleted: ended,
+    endReason: ended ? endReasonOf(dateExpired, lastSeen, firstMissed) : null,
+    absence: { lastSeenAt: lastSeen, ended },
+  };
 };
 
-/** The plan's working state while observations are applied, in place. */
-interface Working {
-  regions: TimelineState["regions"];
-  missing: TimelineState["missing"];
-  seen: Map<number, number>;
-  ended: EndedContract[];
-  unchangedRegions: number[];
-  incompleteRegions: number[];
+const sameState = (a: ContractTimelineState, b: ContractTimelineState) =>
+  a.firstSeenAt === b.firstSeenAt &&
+  a.lastSeenAt === b.lastSeenAt &&
+  a.isDeleted === b.isDeleted &&
+  a.endReason === b.endReason &&
+  a.absence?.lastSeenAt === b.absence?.lastSeenAt &&
+  a.absence?.ended === b.absence?.ended;
+
+const earliest = (a: number | null, b: number) =>
+  a === null ? b : Math.min(a, b);
+
+/** How the observation relates to one stored contract. */
+interface Context {
+  observedAt: number;
+  dateExpired: ReadonlyMap<number, number> | undefined;
+  /** The region's latest observation before this one. */
+  latestBefore: number | undefined;
+  completenessChanged: boolean;
+  index: LogIndex;
 }
 
-/** Apply one region's observation to the working state. */
-const applyObservation = (
-  w: Working,
-  obs: RegionObservation,
-  inRegion: readonly OutstandingContract[],
-) => {
-  const previous = w.regions[obs.regionId];
-  // The same listing again (a retry, an overlapping run), or an older copy
-  // from another cache node: nothing new to learn from it.
-  if (previous && obs.observedAt <= previous.lastModified) {
-    w.unchangedRegions.push(obs.regionId);
-    return;
-  }
-  const history = previous?.history ?? [];
-  const count = obs.contractIds.size;
-  const complete = isRegionComplete(history, count);
-  if (!complete) w.incompleteRegions.push(obs.regionId);
-  w.regions[obs.regionId] = {
-    lastModified: obs.observedAt,
-    history:
-      count > 0 || history.length
-        ? [...history.slice(-(REGION_HISTORY_LENGTH - 1)), count]
-        : history,
-  };
-  for (const id of obs.contractIds) w.seen.set(id, obs.observedAt);
-
-  for (const c of inRegion) {
-    if (obs.contractIds.has(c.contractId)) {
-      delete w.missing[c.contractId];
-      continue;
+/**
+ * Where one stored contract stands after the observation, or null if the
+ * observation cannot change it.
+ */
+const nextStateOf = (
+  stored: StoredContract,
+  listed: boolean,
+  {
+    observedAt,
+    dateExpired,
+    latestBefore,
+    completenessChanged,
+    index,
+  }: Context,
+): ContractTimelineState | null => {
+  const firstSeenAt = listed
+    ? earliest(stored.firstSeenAt, observedAt)
+    : stored.firstSeenAt;
+  // The earliest listing's row is the one kept, expiry included.
+  const c =
+    firstSeenAt === stored.firstSeenAt
+      ? stored
+      : {
+          ...stored,
+          dateExpired:
+            dateExpired?.get(stored.contractId) ?? stored.dateExpired,
+        };
+  const exactLastSeen =
+    c.absence?.lastSeenAt ?? (c.isDeleted ? c.lastSeenAt : undefined);
+  if (exactLastSeen === undefined) {
+    // Outstanding and listed in the region's latest observation (or, with no
+    // observation on record, last seen when the database says). Only a newer
+    // observation that leaves it out moves it.
+    const isNewest = latestBefore === undefined || observedAt > latestBefore;
+    if (listed || !isNewest) {
+      return firstSeenAt === c.firstSeenAt ? null : { ...c, firstSeenAt };
     }
-    const outcome = applyAbsence(
-      c,
-      w.missing[c.contractId],
-      previous?.lastModified,
-      obs,
-      complete,
-    );
-    if ("missing" in outcome) {
-      w.missing[c.contractId] = outcome.missing;
-    } else {
-      delete w.missing[c.contractId];
-      w.ended.push(outcome.ended);
-    }
+    const lastSeen = Math.max(latestBefore ?? 0, c.lastSeenAt);
+    return resolve(lastSeen, c.dateExpired, firstSeenAt, index);
   }
+  if (listed) {
+    const lastSeen = Math.max(exactLastSeen, observedAt);
+    return resolve(lastSeen, c.dateExpired, firstSeenAt, index);
+  }
+  // Ended before the log existed: what came after is unknown, so leave it.
+  if (!c.absence) return null;
+  if (exactLastSeen >= observedAt && !completenessChanged) return null;
+  return resolve(exactLastSeen, c.dateExpired, firstSeenAt, index);
 };
 
-export const planContractTimeline = ({
-  state,
-  outstanding,
-  observations,
-  now,
+/**
+ * Apply one observation of a region. `stored` must hold every outstanding
+ * contract of the region, the stored contracts the observation lists, and the
+ * region's ended absences within {@link observationReach}; `fresh` the
+ * contracts it lists that are not stored at all.
+ */
+export const applyRegionObservation = ({
+  log,
+  observation,
+  stored,
+  fresh,
 }: {
-  state: TimelineState;
-  outstanding: readonly OutstandingContract[];
-  observations: readonly RegionObservation[];
-  /** Epoch ms; decides whether a checkpoint is due. */
-  now: number;
-}): TimelinePlan => {
-  const w: Working = {
-    regions: { ...state.regions },
-    missing: { ...state.missing },
-    seen: new Map(),
-    ended: [],
-    unchangedRegions: [],
-    incompleteRegions: [],
+  log: readonly LoggedObservation[];
+  observation: RegionObservation;
+  stored: readonly StoredContract[];
+  fresh: readonly { contractId: number; dateExpired: number }[];
+}): AppliedObservation => {
+  const { observedAt, contractIds } = observation;
+  const next = withObservation(log, observedAt, contractIds.size);
+  const context: Context = {
+    observedAt,
+    dateExpired: observation.dateExpired,
+    latestBefore: latestObservationOf(log),
+    completenessChanged: observationReach(log, observation).completenessChanged,
+    index: indexOf(next.log),
   };
-  const { regions, missing, seen, ended, unchangedRegions, incompleteRegions } =
-    w;
 
-  const byRegion = new Map<number, OutstandingContract[]>();
-  for (const c of outstanding) {
-    const list = byRegion.get(c.regionId);
-    if (list) list.push(c);
-    else byRegion.set(c.regionId, [c]);
+  const updates: ContractTimelineUpdate[] = [];
+  const restated: number[] = [];
+  for (const c of stored) {
+    const listed = contractIds.has(c.contractId);
+    if (listed && (c.firstSeenAt === null || observedAt < c.firstSeenAt)) {
+      restated.push(c.contractId);
+    }
+    const state = nextStateOf(c, listed, context);
+    if (state && !sameState(state, c)) {
+      updates.push({ contractId: c.contractId, state });
+    }
   }
-  for (const obs of observations) {
-    applyObservation(w, obs, byRegion.get(obs.regionId) ?? []);
-  }
-
-  // Missing entries for contracts no longer outstanding (ended here or
-  // elsewhere) are done with.
-  const outstandingIds = new Set(outstanding.map((c) => c.contractId));
-  for (const id of Object.keys(missing)) {
-    if (!outstandingIds.has(Number(id))) delete missing[id];
-  }
-
-  const due = now - state.lastCheckpointAt >= CHECKPOINT_MS;
-  const checkpoint = due
-    ? checkpointOf(outstanding, ended, missing, regions)
-    : null;
-
+  const inserts = fresh.map((c) => ({
+    contractId: c.contractId,
+    state: resolve(observedAt, c.dateExpired, observedAt, context.index),
+  }));
   return {
-    state: {
-      regions,
-      missing,
-      lastCheckpointAt: due ? now : state.lastCheckpointAt,
-    },
-    seen,
-    ended,
-    checkpoint,
-    unchangedRegions,
-    incompleteRegions,
+    log: { observedAt, contractCount: next.contractCount },
+    restated,
+    inserts,
+    updates,
   };
 };
+
+/**
+ * The seed for a region's empty log: the number of contracts the database
+ * holds as outstanding there, so a first observation listing none can't count
+ * as complete and end them all.
+ */
+export const seedLogOf = (outstandingCount: number): LoggedObservation[] =>
+  outstandingCount > 0
+    ? [{ observedAt: 0, contractCount: outstandingCount, isSeed: true }]
+    : [];

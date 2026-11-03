@@ -23,8 +23,11 @@ const CONTRACT_TYPES: Record<EsiPublicContract["type"], ContractTypeName> = {
   loan: "Loan",
 };
 
-export const contractTypeOf = (contract: EsiPublicContract) =>
-  CONTRACT_TYPES[contract.type];
+/** A type ESI adds later is stored as Unknown, as the snapshot ingest did. */
+export const contractTypeOf = (contract: Pick<EsiPublicContract, "type">) =>
+  (CONTRACT_TYPES as Partial<Record<string, ContractTypeName>>)[
+    contract.type
+  ] ?? "Unknown";
 
 /** Only these list items (ESI answers 400 for the others) ... */
 export const TYPES_WITH_ITEMS: ReadonlySet<ContractTypeName> = new Set([
@@ -70,19 +73,16 @@ export interface ContractRow {
   reward: number | null;
   collateral: number | null;
   buyout: number | null;
-  /** First (and last) seen: the listing's Last-Modified. */
-  seenAt: Date;
 }
 
 /**
- * A `Contract` row from ESI's listing, stored as ESI reports it. `stationSystems`
- * maps NPC station IDs to their solar system; contracts in player structures
- * have neither.
+ * A `Contract` row from ESI's listing, stored as ESI reports it (its timeline
+ * is the timeline engine's). `stationSystems` maps NPC station IDs to their
+ * solar system; contracts in player structures have neither.
  */
 export const contractRowFromEsi = (
   contract: EsiPublicContract,
   regionId: number,
-  seenAt: number,
   stationSystems: ReadonlyMap<number, number | null>,
 ): ContractRow => {
   const stationId = npcStationOf(contract);
@@ -114,7 +114,6 @@ export const contractRowFromEsi = (
     collateral: contract.collateral ?? null,
     // ESI reports 0 for an auction without one.
     buyout: contract.buyout === 0 ? null : (contract.buyout ?? null),
-    seenAt: new Date(seenAt),
   };
 };
 

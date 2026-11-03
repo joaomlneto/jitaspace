@@ -4,6 +4,7 @@ import type { EsiPublicContract } from "../helpers/publicContracts";
 import {
   BIDS_HOT_WINDOW_MS,
   contractRowFromEsi,
+  contractTypeOf,
   RUN_INTERVAL_MS,
   selectAuctionsForBids,
 } from "../helpers/publicContracts";
@@ -43,13 +44,10 @@ const auctionInStructure: EsiPublicContract = {
 };
 
 describe("contractRowFromEsi", () => {
-  const seenAt = Date.UTC(2026, 10, 3, 21, 8, 12);
-
   it("stores a contract in an NPC station with its solar system", () => {
     const row = contractRowFromEsi(
       courier,
       10000002,
-      seenAt,
       new Map([[60003760, 30000142]]),
     );
     expect(row).toEqual({
@@ -72,17 +70,11 @@ describe("contractRowFromEsi", () => {
       reward: 1000000,
       collateral: 30000000,
       buyout: null,
-      seenAt: new Date(seenAt),
     });
   });
 
   it("leaves station and system null for a contract in a player structure", () => {
-    const row = contractRowFromEsi(
-      auctionInStructure,
-      10000002,
-      seenAt,
-      new Map(),
-    );
+    const row = contractRowFromEsi(auctionInStructure, 10000002, new Map());
     expect(row).toMatchObject({
       type: "Auction",
       forCorporation: true,
@@ -94,6 +86,15 @@ describe("contractRowFromEsi", () => {
       // ESI's 0 means "no buyout".
       buyout: null,
     });
+  });
+});
+
+describe("contractTypeOf", () => {
+  it("stores a type ESI adds later as Unknown", () => {
+    expect(contractTypeOf({ type: "loan" })).toBe("Loan");
+    expect(
+      contractTypeOf({ type: "barter" as EsiPublicContract["type"] }),
+    ).toBe("Unknown");
   });
 });
 

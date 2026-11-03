@@ -8,6 +8,7 @@ import {
 } from "@jest/globals";
 
 import type { JobLogger } from "../core";
+import type { RegionListing } from "../helpers/contractTimelineStore";
 import type { syncPublicContracts as SyncPublicContracts } from "../jobs/scrape/esi/syncPublicContracts";
 
 // @swc/jest doesn't hoist jest.mock, so the mock fns are declared first and the
@@ -31,20 +32,21 @@ const getRegion = jest.fn((regionId: number, params: { page: number }) =>
 );
 const getItems = jest.fn((contractId: number) => items[contractId]!());
 const getBids = jest.fn((contractId: number) => bids[contractId]!());
-const getDynamic = jest.fn((itemId: number, typeId: number) =>
-  Promise.resolve<Res>({
-    status: 200,
-    headers: {},
-    data: {
-      created_by: 2113147205,
-      source_type_id: 10,
-      mutator_type_id: 11,
-      dogma_attributes: [{ attribute_id: 64, value: 1.09 }],
-      dogma_effects: [{ effect_id: 11, is_default: false }],
-      itemId,
-      typeId,
-    },
-  }),
+let dynamicFails = false;
+const getDynamic = jest.fn((_itemId: number, _typeId: number) =>
+  dynamicFails
+    ? Promise.reject(httpError(503))
+    : Promise.resolve<Res>({
+        status: 200,
+        headers: {},
+        data: {
+          created_by: 2113147205,
+          source_type_id: 10,
+          mutator_type_id: 11,
+          dogma_attributes: [{ attribute_id: 64, value: 1.09 }],
+          dogma_effects: [{ effect_id: 11, is_default: false }],
+        },
+      }),
 );
 const setUserAgent = jest.fn();
 jest.mock("@jitaspace/esi-client", () => ({
@@ -70,58 +72,94 @@ jest.mock("../kv", () => ({
     }),
 }));
 
-const ensureRefs = jest.fn((_refs: unknown) => Promise.resolve());
-jest.mock("../helpers/createCorpAndItsRefs.ts", () => ({
-  createCorpAndItsRefRecords: (refs: unknown) => ensureRefs(refs),
+/** Every call, in order, across the store and the write helpers. */
+const calls: string[] = [];
+let storedIds: Set<number>;
+let withItems: Set<number>;
+const applyListing = jest.fn((listing: RegionListing) => {
+  calls.push(`apply ${listing.regionId}`);
+  const inserted = listing.contracts
+    .map((c) => c.contractId)
+    .filter((id) => !storedIds.has(id));
+  for (const id of inserted) storedIds.add(id);
+  return Promise.resolve({
+    regionId: listing.regionId,
+    refused: false,
+    inserted,
+    reopened: [],
+    ended: [],
+    corrected: [],
+    missing: 0,
+  });
+});
+jest.mock("../helpers/contractTimelineStore.ts", () => ({
+  applyRegionListing: (l: RegionListing) => applyListing(l),
+  checkpointContractTimeline: () => {
+    calls.push("checkpoint");
+    return Promise.resolve(0);
+  },
+  pruneContractTimeline: () => {
+    calls.push("prune");
+    return Promise.resolve({ absences: 0, observations: 0 });
+  },
+}));
+const ensureReferences = jest.fn((_refs: unknown) => {
+  calls.push("references");
+  return Promise.resolve(0);
+});
+const writeItems = jest.fn((args: { contracts: { contractId: number }[] }) => {
+  calls.push("items");
+  return Promise.resolve({
+    written: args.contracts.map((c) => c.contractId),
+    blocked: [] as number[],
+  });
+});
+const writeBids = jest.fn((_bids: unknown[]) => {
+  calls.push("bids");
+  return Promise.resolve();
+});
+jest.mock("../helpers/publicContractsDb.ts", () => ({
+  ensureReferences: (refs: unknown) => ensureReferences(refs),
+  stationSystemsOf: () => Promise.resolve(new Map([[60003760, 30000142]])),
+  storedContractIdsOf: (ids: number[]) =>
+    Promise.resolve(new Set(ids.filter((id) => storedIds.has(id)))),
+  contractsWithItemsOf: (ids: number[]) =>
+    Promise.resolve(new Set(ids.filter((id) => withItems.has(id)))),
+  mutatedItemsOf: (
+    contracts: {
+      contractId: number;
+      items: { item_id?: number; type_id: number }[];
+    }[],
+  ) =>
+    Promise.resolve({
+      mutated: contracts.flatMap((c) =>
+        c.items
+          .filter((i) => i.type_id === 47702)
+          .map((i) => ({
+            contractId: c.contractId,
+            itemId: i.item_id!,
+            typeId: i.type_id,
+          })),
+      ),
+      known: new Set<number>(),
+    }),
+  writeContractItems: (args: { contracts: { contractId: number }[] }) =>
+    writeItems(args),
+  writeContractBids: (b: unknown[]) => writeBids(b),
 }));
 
-/** Raw statements run, by their first line. */
-const executed: { sql: string; values: unknown[] }[] = [];
-const sqlOf = (strings: TemplateStringsArray) =>
-  strings.join("?").replace(/\s+/g, " ").trim();
-let outstanding: unknown[];
-const findMany = (rows: () => unknown[]) =>
-  jest.fn((_args?: unknown) => Promise.resolve(rows()));
 const prisma = {
-  region: { findMany: findMany(() => [{ regionId: 10000002 }]) },
+  region: {
+    findMany: () =>
+      Promise.resolve([{ regionId: 10000001 }, { regionId: 10000002 }]),
+  },
   contract: {
-    findMany: jest.fn((args: { where: { isDeleted?: boolean } }) =>
-      Promise.resolve(args.where.isDeleted === false ? outstanding : []),
-    ),
+    findMany: (args: { where: { contractId?: { in: number[] } } }) =>
+      Promise.resolve(
+        (args.where.contractId?.in ?? []).map((contractId) => ({ contractId })),
+      ),
   },
-  character: { findMany: findMany(() => []) },
-  corporation: { findMany: findMany(() => []) },
-  station: {
-    findMany: findMany(() => [
-      { stationId: 60003760, solarSystemId: 30000142 },
-    ]),
-  },
-  type: {
-    findMany: jest.fn(
-      (args: {
-        where: { isDynamicType?: boolean; typeId?: { in: number[] } };
-      }) =>
-        Promise.resolve(
-          args.where.isDynamicType
-            ? [{ typeId: 47702 }]
-            : (args.where.typeId?.in ?? []).map((typeId) => ({ typeId })),
-        ),
-    ),
-  },
-  dynamicItemAttributeMapping: { findMany: findMany(() => []) },
-  dynamicItem: { findMany: findMany(() => []) },
-  dogmaAttribute: { findMany: findMany(() => [{ attributeId: 64 }]) },
-  dogmaEffect: { findMany: findMany(() => [{ effectId: 11 }]) },
-  $queryRaw: jest.fn((_s: TemplateStringsArray, ..._v: unknown[]) =>
-    Promise.resolve([]),
-  ),
-  $executeRaw: jest.fn(
-    (strings: TemplateStringsArray, ...values: unknown[]) => {
-      executed.push({ sql: sqlOf(strings), values });
-      return Promise.resolve(1);
-    },
-  ),
-  $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+  $queryRaw: () => Promise.resolve([]),
 };
 jest.mock("../db", () => ({ prisma }));
 
@@ -183,12 +221,20 @@ const AUCTION = {
   start_location_id: 1035466617946,
   buyout: 0,
 };
+const state = () =>
+  JSON.parse(store.get(STATE_KEY)!) as {
+    itemsPending: Record<string, number>;
+    lastCheckpointAt: number;
+  };
 
 beforeEach(() => {
+  dynamicFails = false;
   store.clear();
-  executed.length = 0;
-  outstanding = [];
+  calls.length = 0;
+  storedIds = new Set();
+  withItems = new Set();
   regionPages = {
+    10000001: () => Promise.resolve(listing([])),
     10000002: () => Promise.resolve(listing([ITEM_EXCHANGE, COURIER, AUCTION])),
   };
   items = {
@@ -226,77 +272,104 @@ beforeEach(() => {
 });
 
 describe("esi-sync-public-contracts", () => {
-  it("stores new contracts, their items and mutated items, and bids", async () => {
+  it("stores references, then applies each region's listing, then items and bids", async () => {
     const { stats } = await run();
-    expect(stats).toMatchObject({ observed: 1, inserted: 3, ended: 0 });
+    expect(stats).toMatchObject({ observed: 2, inserted: 3 });
     expect(setUserAgent).toHaveBeenCalledWith(
       expect.stringContaining("JitaSpace"),
     );
+    // References first; regions one at a time; the daily checkpoint on a
+    // first run; then items and bids.
+    expect(calls).toEqual([
+      "references",
+      "apply 10000001",
+      "apply 10000002",
+      "checkpoint",
+      "prune",
+      "items",
+      "bids",
+    ]);
+    expect(ensureReferences).toHaveBeenCalledWith({
+      characterIds: [90000001, 90000001, 90000001],
+      corporationIds: [98000001, 98000001, 98000001],
+      stationIds: [60003760, 60003760],
+    });
 
-    const insert = executed.find((e) =>
-      e.sql.startsWith('INSERT INTO "Contract"'),
-    )!;
-    expect(insert.values[0]).toEqual([101, 102, 103]);
-    // Station and system only for the NPC station; the structure has neither.
-    expect(insert.values[13]).toEqual([30000142, 30000142, null]);
-    expect(insert.values[14]).toEqual([60003760, 60003760, null]);
-    expect(ensureRefs).toHaveBeenCalledWith(
-      expect.objectContaining({ missingCharacterIds: new Set([90000001]) }),
-    );
-
-    // Items only for the item exchange and the auction; never the courier.
-    expect(getItems.mock.calls.map(([id]) => id).sort()).toEqual([101, 103]);
-    // Dynamic dogma by (item, type), the generated client's argument order.
-    expect(getDynamic).toHaveBeenCalledWith(1055232337272, 47702);
-    const tables = executed.map((e) => e.sql.split(" ")[2]);
-    expect(tables).toEqual(
-      expect.arrayContaining([
-        '"ContractItem"',
-        '"DynamicItem"',
-        '"DynamicItemDogmaAttribute"',
-        '"DynamicItemDogmaEffect"',
-        '"ContractDynamicItem"',
-        '"ContractBid"',
-      ]),
-    );
-    expect(getBids.mock.calls.map(([id]) => id)).toEqual([103]);
-
-    // The auction's items answered 403: not asked again for six hours.
-    const state = JSON.parse(store.get(STATE_KEY)!) as {
-      itemsPending: Record<string, number>;
-    };
-    expect(Object.keys(state.itemsPending)).toEqual(["103"]);
-    expect(state.itemsPending[103]).toBeGreaterThan(Date.now() + 5 * 3600_000);
+    const forge = applyListing.mock.calls.find(
+      ([l]) => l.regionId === 10000002,
+    )![0];
+    expect(forge.observedAt).toBe(Date.parse(LM));
+    expect(
+      forge.contracts.map((c) => [c.contractId, c.stationId, c.solarSystemId]),
+    ).toEqual([
+      [101, 60003760, 30000142],
+      [102, 60003760, 30000142],
+      // In a player structure: neither.
+      [103, null, null],
+    ]);
   });
 
-  it("asks ESI for nothing more when the listing has not changed", async () => {
+  it("fetches items only for item exchanges and auctions, and mutated items by (item, type)", async () => {
     await run();
-    getItems.mockClear();
-    executed.length = 0;
-    outstanding = [101, 102, 103].map((contractId) => ({
-      contractId,
-      regionId: 10000002,
-      type:
-        contractId === 102
-          ? "Courier"
-          : contractId === 103
-            ? "Auction"
-            : "ItemExchange",
-      dateIssued: new Date(base.date_issued),
-      dateExpired: new Date(base.date_expired),
-      firstSeenAt: new Date(LM),
-      lastSeenAt: new Date(LM),
-    }));
-    const { stats } = await run();
-    expect(stats).toMatchObject({ inserted: 0, ended: 0, unchangedRegions: 1 });
-    expect(getItems).not.toHaveBeenCalled();
-    expect(executed.filter((e) => !e.sql.includes('"ContractBid"'))).toEqual(
-      [],
+    expect(getItems.mock.calls.map(([id]) => id).sort()).toEqual([101, 103]);
+    expect(getDynamic).toHaveBeenCalledWith(1055232337272, 47702);
+    expect(
+      writeItems.mock.calls[0]![0].contracts.map((c) => c.contractId),
+    ).toEqual([101]);
+    expect(getBids.mock.calls.map(([id]) => id)).toEqual([103]);
+    expect(writeBids).toHaveBeenCalledWith([
+      {
+        contractId: 103,
+        bidId: 7,
+        amount: 5e6,
+        dateBid: "2026-10-30T17:59:23Z",
+      },
+    ]);
+  });
+
+  it("does not ask again for six hours when ESI answers 403", async () => {
+    await run();
+    expect(Object.keys(state().itemsPending)).toEqual(["103"]);
+    expect(state().itemsPending[103]).toBeGreaterThan(
+      Date.now() + 5 * 3600_000,
     );
+    getItems.mockClear();
+    await run();
+    expect(getItems).not.toHaveBeenCalled();
+  });
+
+  it("skips contracts whose items another source already stored", async () => {
+    withItems = new Set([101]);
+    await run();
+    expect(getItems.mock.calls.map(([id]) => id)).toEqual([103]);
+  });
+
+  it("keeps a contract queued when its mutated item fails transiently", async () => {
+    jest.useFakeTimers();
+    try {
+      dynamicFails = true;
+      const pending = run();
+      await jest.advanceTimersByTimeAsync(60_000);
+      await pending;
+    } finally {
+      jest.useRealTimers();
+    }
+    expect(writeItems.mock.calls[0]?.[0].contracts ?? []).toEqual([]);
+    expect(state().itemsPending[101]).toBe(0);
+  });
+
+  it("checkpoints at most once a day", async () => {
+    await run();
+    calls.length = 0;
+    await run();
+    expect(calls).not.toContain("checkpoint");
   });
 
   it("changes nothing when ESI is down", async () => {
-    regionPages = { 10000002: () => Promise.reject(httpError(503)) };
+    regionPages = {
+      10000001: () => Promise.reject(httpError(503)),
+      10000002: () => Promise.reject(httpError(503)),
+    };
     // The gate backs off between retries; skip the waiting.
     jest.useFakeTimers();
     try {
@@ -307,14 +380,15 @@ describe("esi-sync-public-contracts", () => {
     } finally {
       jest.useRealTimers();
     }
-    expect(getRegion).toHaveBeenCalledTimes(4);
-    expect(executed).toEqual([]);
+    expect(getRegion).toHaveBeenCalledTimes(8);
+    expect(calls).toEqual([]);
     expect(store.size).toBe(0);
   });
 
   it("gives up on a region whose pages keep changing while it paginates", async () => {
     let call = 0;
     regionPages = {
+      10000001: () => Promise.resolve(listing([])),
       10000002: (page) =>
         Promise.resolve({
           ...listing(page === 1 ? [ITEM_EXCHANGE] : [COURIER]),
@@ -325,8 +399,9 @@ describe("esi-sync-public-contracts", () => {
         }),
     };
     const { stats } = await run();
-    expect(stats).toMatchObject({ observed: 0 });
-    expect(getRegion).toHaveBeenCalledTimes(4);
-    expect(executed).toEqual([]);
+    expect(stats).toMatchObject({ observed: 1, failedRegions: [10000002] });
+    expect(applyListing.mock.calls.map(([l]) => l.regionId)).toEqual([
+      10000001,
+    ]);
   });
 });
