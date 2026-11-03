@@ -207,4 +207,32 @@ describe("defineMultiEsiValueQuery", () => {
 
     await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(4));
   });
+
+  it("queries only the subjects in subjectIds", async () => {
+    login(
+      character({ characterId: 100, scopes: [SCOPE] }),
+      character({ characterId: 101, scopes: [SCOPE] }),
+    );
+
+    const useMultiple = defineMultiEsiValueQuery<Location>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["location-by-id", subjectId],
+        queryFn: () =>
+          Promise.resolve(response({ solar_system_id: subjectId })),
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple({ subjectIds: [101] }), {
+      wrapper,
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.data).toHaveLength(1));
+
+    expect(result.current.subjectIds).toEqual([101]);
+    expect(result.current.data).toEqual([
+      { subjectId: 101, data: { solar_system_id: 101 } },
+    ]);
+  });
 });

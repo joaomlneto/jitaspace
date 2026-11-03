@@ -61,12 +61,14 @@ export interface EsiQueriesById<TItem> {
  * newer one. Here each id is its own query — sharing its cache entry with the
  * single-id hook for the same endpoint — so failures stay per id.
  *
- * `idOf` should be a module-level function: it keys the memoised combine.
+ * `idOf` should be a module-level function: it keys the memoised combine. It
+ * also receives the id the resource was requested by, for endpoints whose
+ * response does not repeat it (a schematic's, say).
  */
 export function useEsiQueriesById<TItem>(
   ids: readonly number[],
   queryOptions: (id: number) => EsiQueryByIdSource<TItem>,
-  idOf: (item: TItem) => number,
+  idOf: (item: TItem, requestedId: number) => number,
 ): EsiQueriesById<TItem> {
   // Keyed by content, so a caller passing a fresh array each render keeps one
   // combine, and so one stable result for its memos.
@@ -86,12 +88,18 @@ export function useEsiQueriesById<TItem>(
       const errors: ResponseErrorConfig<Error>[] = [];
       const failedIds: number[] = [];
       for (const [index, result] of results.entries()) {
-        if (result.data) data[idOf(result.data.data)] = result.data.data;
+        const requestedId = stableIds[index];
+        if (result.data && requestedId !== undefined) {
+          data[idOf(result.data.data, requestedId)] = result.data.data;
+        }
         if (result.error) errors.push(result.error);
         // A refetch clears `error` while it runs; the count survives it.
-        const id = stableIds[index];
-        if (!result.data && result.errorUpdateCount > 0 && id !== undefined) {
-          failedIds.push(id);
+        if (
+          !result.data &&
+          result.errorUpdateCount > 0 &&
+          requestedId !== undefined
+        ) {
+          failedIds.push(requestedId);
         }
       }
       return {

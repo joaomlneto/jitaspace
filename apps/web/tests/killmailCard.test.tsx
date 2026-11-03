@@ -49,7 +49,11 @@ jest.mock("@jitaspace/ui", () => ({
   ),
 }));
 
-jest.mock("@jitaspace/eve-icons", () => ({ FittingIcon: () => null }));
+jest.mock("@jitaspace/eve-icons", () => ({
+  ControlTargetIcon: () => null,
+  SystemOpenWindowIcon: () => null,
+  FittingIcon: () => null,
+}));
 
 const mockOpenContextModal = jest.fn();
 jest.mock("@mantine/modals", () => ({

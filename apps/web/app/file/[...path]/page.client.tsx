@@ -19,7 +19,8 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+
+import { SystemCheckmarkIcon, SystemCopyIcon } from "@jitaspace/eve-icons";
 
 import type { FileEvent, FileHistory } from "~/lib/resource-pages";
 import { formatBytes } from "~/lib/resource-pages";
@@ -124,7 +125,11 @@ function Copyable({
               onClick={copy}
               aria-label={copied ? "Copied" : `Copy ${value}`}
             >
-              {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+              {copied ? (
+                <SystemCheckmarkIcon size={14} color="currentColor" alt="" />
+              ) : (
+                <SystemCopyIcon size={14} color="currentColor" alt="" />
+              )}
             </ActionIcon>
           </Tooltip>
         )}

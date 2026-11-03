@@ -44,6 +44,7 @@ jest.mock("next/link", () => ({
 
 jest.mock("@jitaspace/eve-icons", () => ({
   LPStoreIcon: () => <span data-testid="lp-store-icon" />,
+  SystemSearchIcon: () => null,
 }));
 
 jest.mock(
