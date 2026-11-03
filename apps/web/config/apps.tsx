@@ -280,6 +280,20 @@ export const characterApps: Record<string, JitaApp> = {
           scopes: ["esi-planets.manage_planets.v1"],
         },
       ],
+      // Also here, not only on the corporation app: the login screen asks for
+      // the character apps' scopes, so a scope listed only under
+      // corporationApps is never requested.
+      optional: [
+        {
+          reason: "Read your corporation's customs offices",
+          description:
+            "Only a corporation's Directors can read them, so your roles are read too.",
+          scopes: [
+            "esi-planets.read_customs_offices.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
+        },
+      ],
     },
   },
   freelance: {
