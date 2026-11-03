@@ -42,3 +42,21 @@ export function parsePositiveEntityId(
   const id = parseEntityId(raw);
   return id === null || id <= 0 ? null : id;
 }
+
+/**
+ * A freelance job id from a route segment, or `null` unless it is a UUID in
+ * the lower-case spelling ESI hands out. Upper case is rejected rather than
+ * folded, for the same reason {@link parseEntityId} rejects `"0587"`: each job
+ * keeps exactly one URL.
+ */
+export function parseFreelanceJobId(
+  raw: string | undefined | null,
+): string | null {
+  if (
+    typeof raw !== "string" ||
+    !/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/.test(raw)
+  ) {
+    return null;
+  }
+  return raw;
+}

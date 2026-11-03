@@ -23,10 +23,12 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
  * The nav group that owns the current route, chosen by the longest matching app
  * URL. Falls back to the first path segment for apps whose configured URL is a
  * deeper default, so e.g. Travel's "/travel/jita/amarr" still matches any
- * /travel/* page.
+ * /travel/* page. A match on the app's own URL outranks a first-segment match
+ * of the same length, so /freelance belongs to the Universe board rather than
+ * to the Character app at /freelance/mine, whose first segment it also is.
  * Returns null on routes no group owns (e.g. the home page).
  */
-function activeGroupName(pathname: string): string | null {
+export function activeGroupName(pathname: string): string | null {
   let bestLen = 0;
   let bestName: string | null = null;
   for (const group of Object.values(jitaApps)) {
@@ -40,7 +42,7 @@ function activeGroupName(pathname: string): string | null {
         segment.length > 1 &&
         (pathname === segment || pathname.startsWith(`${segment}/`))
       ) {
-        len = segment.length;
+        len = segment.length - 0.5;
       }
       if (len > bestLen) {
         bestLen = len;

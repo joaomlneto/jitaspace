@@ -23,10 +23,25 @@ import {
   MarketIcon,
   ShipsIcon,
   SkillsIcon,
+  SystemFreelanceProjectsIcon,
   VotesIcon,
   WalletIcon,
   WarsIcon,
 } from "@jitaspace/eve-icons";
+
+/**
+ * Everything "Your freelance jobs" can use. Corporation jobs are gated on the
+ * Project_Manager role, which is only known once the roles scope is granted.
+ */
+export const FREELANCE_SCOPES: ESIScope[] = [
+  "esi-characters.read_freelance_jobs.v1",
+  "esi-corporations.read_freelance_jobs.v1",
+  "esi-characters.read_corporation_roles.v1",
+];
+
+const FreelanceIcon = (props: EveIconProps) => (
+  <SystemFreelanceProjectsIcon color="currentColor" {...props} />
+);
 
 export interface AppScopeSet {
   reason: string;
@@ -230,6 +245,31 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  freelance: {
+    name: "Freelance Jobs",
+    description:
+      "Track the freelance jobs your characters have joined and the ones your corporations have posted.",
+    url: "/freelance/mine",
+    Icon: FreelanceIcon,
+    scopes: {
+      optional: [
+        {
+          reason: "Read your freelance jobs",
+          description: "The jobs your characters are participating in.",
+          scopes: ["esi-characters.read_freelance_jobs.v1"],
+        },
+        {
+          reason: "Read your corporation's freelance jobs",
+          description:
+            "Every job your corporation has posted, and who joined it. Needs the Project Manager role.",
+          scopes: [
+            "esi-corporations.read_freelance_jobs.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
+        },
+      ],
+    },
+  },
   /*
   notifications: {
     name: "Notifications",
@@ -262,6 +302,26 @@ export const corporationApps: Record<string, JitaApp> = {
         {
           reason: "Read Corporation Contacts",
           scopes: ["esi-corporations.read_contacts.v1"],
+        },
+      ],
+    },
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description: "Every freelance job your corporation has posted.",
+    url: "/freelance/mine",
+    subjectUrl: (id) => `/freelance/mine?sources=corporation:${id}`,
+    Icon: FreelanceIcon,
+    scopes: {
+      // The link opens the list filtered to this corporation, so it needs that
+      // corporation's jobs to be readable.
+      optional: [
+        {
+          reason: "Read your corporation's freelance jobs",
+          scopes: [
+            "esi-corporations.read_freelance_jobs.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
         },
       ],
     },
@@ -337,6 +397,14 @@ export const universeApps: Record<string, JitaApp> = {
       "Meet the candidates for the Council of Stellar Management, with their pitches, campaign threads and interviews.",
     url: "/csm",
     Icon: (props) => <VotesIcon {...props} />,
+    scopes: {},
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description:
+      "Browse the public freelance jobs: hauling, mining, combat and more, with their rewards and progress.",
+    url: "/freelance",
+    Icon: FreelanceIcon,
     scopes: {},
   },
   alliances: {
