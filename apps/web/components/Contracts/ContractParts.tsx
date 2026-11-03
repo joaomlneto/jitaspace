@@ -77,7 +77,10 @@ export function ContractArtwork({
   size,
 }: Readonly<{
   type: ContractKind;
-  item: { typeId: number; imageVariation?: string } | null | undefined;
+  item:
+    | { typeId: number; name?: string | null; imageVariation?: string }
+    | null
+    | undefined;
   size: number;
 }>) {
   const icon = <ContractTypeIcon type={type} size={size} />;
@@ -103,6 +106,12 @@ export function ContractArtwork({
       variation={item.imageVariation}
       size={size}
       radius="sm"
+      // Named after the item, not the debug-ish "types <id> icon" default,
+      // which Mantine also shows as the fallback's tooltip.
+      alt={item.name ?? undefined}
+      // Without its own tile the fallback icon looks the same as for a
+      // contract with no item at all.
+      variant="transparent"
       fallback={icon}
     />
   );

@@ -19,7 +19,7 @@ export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
   variation?: string;
   /**
    * What to show when the type has no image to load (a SKIN, say). Defaults
-   * to the unknown-item glyph.
+   * to the unknown-item glyph; `null` shows nothing.
    */
   fallback?: ReactNode;
 };
@@ -46,7 +46,7 @@ export const TypeAvatar = memo(
         {...otherProps}
       >
         {/* FIXME: size should depend on props */}
-        {fallback ?? <UnknownIcon width={32} />}
+        {fallback === undefined ? <UnknownIcon width={32} /> : fallback}
       </EveImageServerAvatar>
     );
   },
