@@ -29,6 +29,7 @@ import {
   VotesIcon,
   WalletIcon,
   WarsIcon,
+  WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
 
 /**
@@ -245,6 +246,26 @@ export const characterApps: Record<string, JitaApp> = {
           scopes: ["esi-wallet.read_corporation_wallets.v1"],
         },
       ],
+    },
+  },
+  mercenaryTacticalOperations: {
+    name: "Mercenary Operations",
+    description:
+      "See the Mercenary Tactical Operations your Mercenary Dens are offering.",
+    url: "/mercenary-tactical-operations",
+    Icon: (props) => React.createElement(WindowMercenaryIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Mercenary Tactical Operations",
+          scopes: ["esi-activities.read_character.v1"],
+        },
+      ],
+      // The den locations (esi-structures.read_character.v1) are not listed
+      // as optional: getEnabledApps treats an app with optional sets as
+      // needing one of them, which would hide this app from a character that
+      // granted only the activities scope. They are in extraJitaFeatures, so
+      // the login modal asks for them, and the page asks for them itself.
     },
   },
   planetaryInteraction: {
@@ -655,6 +676,14 @@ export const extraJitaFeatures: AppScopeSet[] = [
   {
     reason: "View your character assets (and active ship fitting)",
     scopes: ["esi-assets.read_assets.v1"],
+  },
+  {
+    // Here rather than as an optional scope of Mercenary Operations, which
+    // would hide that app from a character without it (getEnabledApps). Being
+    // in the login modal's default set also keeps a later login from dropping
+    // it.
+    reason: "Read where your Mercenary Dens are",
+    scopes: ["esi-structures.read_character.v1"],
   },
 ];
 
