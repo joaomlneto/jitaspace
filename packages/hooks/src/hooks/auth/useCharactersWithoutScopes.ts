@@ -21,8 +21,10 @@ export interface CharacterWithoutScopes {
  * The scopes a token carries. Typed as a list, but EVE's JWT writes a lone
  * scope as a plain string, and spreading that would split it into letters.
  */
-const grantedScopesOf = (scp: ESIScope[] | ESIScope | undefined): ESIScope[] =>
-  Array.isArray(scp) ? scp : scp ? [scp] : [];
+function grantedScopesOf(scp: ESIScope[] | ESIScope | undefined): ESIScope[] {
+  if (Array.isArray(scp)) return scp;
+  return scp ? [scp] : [];
+}
 
 /**
  * The logged-in characters that have not granted every one of `scopes`, or
