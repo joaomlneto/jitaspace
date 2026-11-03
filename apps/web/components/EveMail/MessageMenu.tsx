@@ -1,13 +1,17 @@
 import { ActionIcon, Group, Menu, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { IconMail, IconMailOpened, IconMenu2 } from "@tabler/icons-react";
+import { IconMail, IconMailOpened } from "@tabler/icons-react";
 
 import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
-import { SystemCheckmarkIcon, SystemTrashcanIcon } from "@jitaspace/eve-icons";
+import {
+  SystemCheckmarkIcon,
+  SystemListViewIcon,
+  SystemTrashcanIcon,
+} from "@jitaspace/eve-icons";
 import { useAccessToken, useCharacterMailLabels } from "@jitaspace/hooks";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
@@ -149,7 +153,7 @@ export function MessageMenu({
     <Menu>
       <Menu.Target>
         <ActionIcon size="sm" variant="subtle">
-          <IconMenu2 />
+          <SystemListViewIcon size={16} color="currentColor" alt="" />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>

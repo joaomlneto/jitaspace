@@ -8,9 +8,9 @@ import { CharacterName, TypeAvatar } from "@jitaspace/eve-components";
 import {
   CategoryTradeIcon,
   ControlCargoInventoryIcon,
+  SystemContributionIcon,
   SystemRatioIcon,
   WindowCorporationHangarIcon,
-  WindowWalletIcon,
 } from "@jitaspace/eve-icons";
 import { CorporationAvatar } from "@jitaspace/ui";
 
@@ -205,7 +205,15 @@ export function EconomyTab({
           )}
           {npc.investedIn.length > 0 && (
             <Stack gap="sm">
-              <SectionHeading icon={<WindowWalletIcon size={18} alt="" />}>
+              <SectionHeading
+                icon={
+                  <SystemContributionIcon
+                    size={18}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Holds shares in
               </SectionHeading>
               <Shareholdings holdings={npc.investedIn} />

@@ -16,7 +16,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import posthog from "posthog-js";
 import useSWR from "swr";
 
@@ -30,7 +29,11 @@ import {
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
-import { CategoryAttackIcon, CategoryLoseShipIcon } from "@jitaspace/eve-icons";
+import {
+  CategoryAttackIcon,
+  CategoryLoseShipIcon,
+  SystemOpenWindowIcon,
+} from "@jitaspace/eve-icons";
 import { useKillmail } from "@jitaspace/hooks";
 import {
   AllianceAvatar,
@@ -153,7 +156,9 @@ export default function Page() {
             <Button
               size="xs"
               variant="outline"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               View on zKillboard
             </Button>
@@ -218,7 +223,9 @@ export default function Page() {
               <Button
                 size="xs"
                 variant="outline"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 zKillboard
               </Button>
@@ -231,7 +238,9 @@ export default function Page() {
               <Button
                 size="xs"
                 variant="outline"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 EVE-Kill
               </Button>

@@ -19,7 +19,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconTarget } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -28,12 +27,13 @@ import {
   CategoryEpicArcIcon,
   CategoryIskIcon,
   ControlStartConversationIcon,
+  SystemArrowRotateLeftIcon,
   SystemPersonIcon,
   SystemVariationIcon,
+  WindowAgentIcon,
   WindowEvemailIcon,
   WindowInfoIcon,
   WindowJournalIcon,
-  WindowLogIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import {
@@ -396,7 +396,7 @@ function MissionHeroImage({ mission }: Readonly<{ mission: MissionDetail }>) {
       />
     );
   }
-  return <IconTarget size={56} stroke={1.2} />;
+  return <WindowAgentIcon size={56} alt="" />;
 }
 
 /** Faction · corporation · agent type, with separators only between parts. */
@@ -956,7 +956,13 @@ export default function MissionPage({
             )}
             <Tabs.Tab
               value="history"
-              leftSection={<WindowLogIcon size={16} alt="" />}
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
             >
               History
             </Tabs.Tab>

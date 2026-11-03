@@ -18,17 +18,17 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   CategoryCorporationIcon,
+  SystemArrowRotateLeftIcon,
+  SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowDirectoryServicesIcon,
   WindowInfoIcon,
   WindowLocationsIcon,
-  WindowLogIcon,
   WindowReprocessingIcon,
   WindowTutorialIcon,
 } from "@jitaspace/eve-icons";
@@ -660,7 +660,9 @@ export default function StationPage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               DOTLAN EveMaps
             </Button>
@@ -700,7 +702,13 @@ export default function StationPage({
             )}
             <Tabs.Tab
               value="history"
-              leftSection={<WindowLogIcon size={16} alt="" />}
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
             >
               History
             </Tabs.Tab>

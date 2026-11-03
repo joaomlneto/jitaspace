@@ -17,7 +17,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CorporationsDetail } from "@jitaspace/esi-client";
@@ -33,12 +32,12 @@ import {
   CategoryLpIcon,
   CategoryOngoingConflictsIcon,
   CategorySkullIcon,
+  SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowEmploymentHistoryIcon,
   WindowInfoIcon,
   WindowNoteIcon,
   WindowStationIcon,
-  WindowWarsIcon,
 } from "@jitaspace/eve-icons";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -564,7 +563,9 @@ export default function CorporationPage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>
@@ -812,7 +813,15 @@ export default function CorporationPage({
 
               {warSummary && warSummary.total > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<WindowWarsIcon size={18} alt="" />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryOngoingConflictsIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     War record
                   </SectionHeading>
                   <WarSummaryCards summary={warSummary} />

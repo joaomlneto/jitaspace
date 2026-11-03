@@ -45,6 +45,7 @@ jest.mock("@jitaspace/eve-icons", () => ({
   WindowInfoIcon: () => null,
   CategorySkullIcon: () => null,
   SystemClockIcon: () => null,
+  SystemOpenWindowIcon: () => null,
   WindowRepairShopIcon: () => null,
 }));
 

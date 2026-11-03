@@ -3,7 +3,7 @@
 import { Badge, SimpleGrid, Stack, Text } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { WindowWarsIcon } from "@jitaspace/eve-icons";
+import { CategoryOngoingConflictsIcon } from "@jitaspace/eve-icons";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type {
@@ -296,7 +296,15 @@ export function WarsTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<WindowWarsIcon size={18} alt="" />}>
+        <SectionHeading
+          icon={
+            <CategoryOngoingConflictsIcon
+              size={18}
+              color="currentColor"
+              alt=""
+            />
+          }
+        >
           War record
         </SectionHeading>
         <WarSummaryCards summary={summary} />
@@ -306,7 +314,15 @@ export function WarsTab({
         </Text>
       </Stack>
       <Stack gap="sm">
-        <SectionHeading icon={<WindowWarsIcon size={18} alt="" />}>
+        <SectionHeading
+          icon={
+            <CategoryOngoingConflictsIcon
+              size={18}
+              color="currentColor"
+              alt=""
+            />
+          }
+        >
           Wars
         </SectionHeading>
         <DataTable

@@ -18,12 +18,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconChevronRight,
-  IconExternalLink,
-  IconMeteor,
-  IconMoon,
-} from "@tabler/icons-react";
+import { IconChevronRight, IconMeteor, IconMoon } from "@tabler/icons-react";
 
 import { useGetFwSystems, useGetIncursions } from "@jitaspace/esi-client";
 import {
@@ -41,6 +36,7 @@ import {
   CategoryNpcActivityIcon,
   CategorySovereigntyIcon,
   ControlJumpToIcon,
+  SystemOpenWindowIcon,
   WindowIncursionsIcon,
 } from "@jitaspace/eve-icons";
 import {
@@ -656,7 +652,13 @@ export default function Page({
                     href={tool.href(systemId)}
                     target="_blank"
                     size="xs"
-                    leftSection={<IconExternalLink size={13} />}
+                    leftSection={
+                      <SystemOpenWindowIcon
+                        size={13}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
                   >
                     {tool.label}
                   </Button>

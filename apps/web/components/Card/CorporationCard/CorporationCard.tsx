@@ -3,13 +3,13 @@
 import type { ReactNode } from "react";
 import { memo } from "react";
 import { Anchor, Card, Group, Skeleton, Stack, Text } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 
 import {
   AllianceName,
   CharacterName,
   CorporationName,
 } from "@jitaspace/eve-components";
+import { SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 import { useCorporation } from "@jitaspace/hooks";
 import {
   AllianceAvatar,
@@ -267,7 +267,11 @@ export const CorporationCard = memo(
               {homepageUrl && (
                 <Anchor href={homepageUrl} target="_blank" size="xs">
                   <Group gap={4} wrap="nowrap">
-                    <IconExternalLink size={14} />
+                    <SystemOpenWindowIcon
+                      size={14}
+                      color="currentColor"
+                      alt=""
+                    />
                     <Text size="xs" truncate>
                       {homepageUrl}
                     </Text>

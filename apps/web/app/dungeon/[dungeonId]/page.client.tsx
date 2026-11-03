@@ -23,12 +23,12 @@ import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   AgencyIcon,
   CategoryAgentMissionIcon,
+  CategoryMercenaryDenIcon,
+  SystemArrowRotateLeftIcon,
+  SystemTagIcon,
   WindowAgentIcon,
-  WindowGroupListIcon,
   WindowInfoIcon,
   WindowLocationsIcon,
-  WindowLogIcon,
-  WindowMercenaryIcon,
   WindowNoteIcon,
   WindowRestrictionIcon,
 } from "@jitaspace/eve-icons";
@@ -595,7 +595,9 @@ function DungeonOverview({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
 
       {archetype?.description && (
         <Stack gap="sm">
-          <SectionHeading icon={<WindowGroupListIcon size={18} alt="" />}>
+          <SectionHeading
+            icon={<SystemTagIcon size={18} color="currentColor" alt="" />}
+          >
             {archetype.title ?? "Archetype"}
           </SectionHeading>
           <Paper withBorder radius="md" p="md">
@@ -720,7 +722,13 @@ export default function DungeonPage({
             {available.operations && (
               <Tabs.Tab
                 value="operations"
-                leftSection={<WindowMercenaryIcon size={16} alt="" />}
+                leftSection={
+                  <CategoryMercenaryDenIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Tactical Operations
               </Tabs.Tab>
@@ -728,14 +736,22 @@ export default function DungeonPage({
             {available.related && (
               <Tabs.Tab
                 value="related"
-                leftSection={<WindowGroupListIcon size={16} alt="" />}
+                leftSection={
+                  <SystemTagIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Same Archetype ({dungeon.related.length})
               </Tabs.Tab>
             )}
             <Tabs.Tab
               value="history"
-              leftSection={<WindowLogIcon size={16} alt="" />}
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
             >
               History
             </Tabs.Tab>

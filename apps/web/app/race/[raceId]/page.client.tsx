@@ -28,11 +28,11 @@ import {
   CategorySpaceshipCommandIcon,
   ControlCargoInventoryIcon,
   ServiceAlphaIcon,
+  SystemArrowRotateLeftIcon,
   SystemShipTreeIcon,
   WindowAgentIcon,
-  WindowCharacterCustomizationIcon,
+  WindowAttributesIcon,
   WindowInfoIcon,
-  WindowLogIcon,
   WindowNoteIcon,
   WindowPoliticsIcon,
   WindowSkillsIcon,
@@ -1701,7 +1701,7 @@ export default function RacePage(race: Readonly<PageProps>) {
             )}
             {tab(
               "bloodlines",
-              <WindowCharacterCustomizationIcon size={16} alt="" />,
+              <WindowAttributesIcon size={16} alt="" />,
               "Bloodlines",
               race.bloodlines.length,
             )}
@@ -1751,7 +1751,15 @@ export default function RacePage(race: Readonly<PageProps>) {
               "Stations",
               counts.stations > 0 ? counts.stations : undefined,
             )}
-            {tab("history", <WindowLogIcon size={16} alt="" />, "History")}
+            {tab(
+              "history",
+              <SystemArrowRotateLeftIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "History",
+            )}
           </Tabs.List>
 
           {/* Overview */}

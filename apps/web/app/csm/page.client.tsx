@@ -16,10 +16,11 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconBrandTwitch, IconExternalLink } from "@tabler/icons-react";
+import { IconBrandTwitch } from "@tabler/icons-react";
 
 import {
   ControlStartConversationIcon,
+  SystemOpenWindowIcon,
   SystemSearchIcon,
 } from "@jitaspace/eve-icons";
 
@@ -103,7 +104,9 @@ function Hero({ election }: Readonly<CsmPageProps>) {
               target="_blank"
               rel="noopener noreferrer"
               color={CSM_21_RED}
-              rightSection={<IconExternalLink size={14} />}
+              rightSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               Vote now
             </Button>
@@ -115,7 +118,9 @@ function Hero({ election }: Readonly<CsmPageProps>) {
             rel="noopener noreferrer"
             color={CSM_21_RED}
             variant={election.voteUrl ? "white" : "filled"}
-            rightSection={<IconExternalLink size={14} />}
+            rightSection={
+              <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+            }
           >
             Official announcement
           </Button>
@@ -226,7 +231,9 @@ function CandidateCard({
               alt=""
             />
           }
-          rightSection={<IconExternalLink size={12} />}
+          rightSection={
+            <SystemOpenWindowIcon size={12} color="currentColor" alt="" />
+          }
           style={{ alignSelf: "flex-start" }}
         >
           Campaign thread

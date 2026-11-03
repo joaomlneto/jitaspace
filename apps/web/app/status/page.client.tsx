@@ -25,8 +25,8 @@ import {
   useGetMetaStatus,
 } from "@jitaspace/esi-client";
 import {
+  CategoryBattlefieldIcon,
   SystemCircleCheckmarkIcon,
-  SystemCloseIcon,
   SystemSignalStrengthIcon,
 } from "@jitaspace/eve-icons";
 import { useServerStatus } from "@jitaspace/hooks";
@@ -179,7 +179,11 @@ export default function StatusPage({
                         <Tooltip
                           label={`ESI compatibility date is outdated! Latest: ${latestCompatibilityDate}`}
                         >
-                          <SystemCloseIcon size={14} color="red" alt="" />
+                          <CategoryBattlefieldIcon
+                            size={14}
+                            color="red"
+                            alt=""
+                          />
                         </Tooltip>
                       ))}
                   </Group>
@@ -214,7 +218,11 @@ export default function StatusPage({
                         <Tooltip
                           label={`Our SDE data is outdated (build ${ourSdeBuild}, latest ${latestSdeBuild})`}
                         >
-                          <SystemCloseIcon size={14} color="red" alt="" />
+                          <CategoryBattlefieldIcon
+                            size={14}
+                            color="red"
+                            alt=""
+                          />
                         </Tooltip>
                       ))}
                   </Group>

@@ -15,7 +15,7 @@ import { IconChevronRight } from "@tabler/icons-react";
 
 import type { CharacterAsset } from "@jitaspace/hooks";
 import { EveEntityName, TypeAvatar } from "@jitaspace/eve-components";
-import { SystemLocationIcon } from "@jitaspace/eve-icons";
+import { WindowLocationsIcon } from "@jitaspace/eve-icons";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type { AssetLocationSummary, AssetTree } from "./assetTree";
@@ -226,7 +226,7 @@ export const AssetLocationPanel = memo(function AssetLocationPanel({
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
           <ExpandChevron open={open} />
           <ThemeIcon variant="light" size="lg" radius="md">
-            <SystemLocationIcon size={18} color="currentColor" alt="" />
+            <WindowLocationsIcon size={18} alt="" />
           </ThemeIcon>
           <Box style={{ minWidth: 0 }}>
             <EveEntityName

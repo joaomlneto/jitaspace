@@ -23,10 +23,10 @@ import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
   CategoryFlagIcon,
-  CategorySequencingIcon,
+  SystemArrowRotateLeftIcon,
+  SystemExpandStructureIcon,
   WindowAgentIcon,
   WindowInfoIcon,
-  WindowLogIcon,
 } from "@jitaspace/eve-icons";
 import { EveIconAvatar, FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
@@ -222,7 +222,11 @@ function EpicArcOverview({
         <Stack gap="sm">
           <SectionHeading
             icon={
-              <CategorySequencingIcon size={18} color="currentColor" alt="" />
+              <SystemExpandStructureIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
             }
           >
             Where It Branches
@@ -361,7 +365,13 @@ export default function EpicArcPage({
             </Tabs.Tab>
             <Tabs.Tab
               value="history"
-              leftSection={<WindowLogIcon size={16} alt="" />}
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
             >
               History
             </Tabs.Tab>

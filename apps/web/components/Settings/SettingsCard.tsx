@@ -16,9 +16,9 @@ import ReactCountryFlag from "react-country-flag";
 
 import { setAcceptLanguage } from "@jitaspace/esi-client";
 import {
-  CategoryScienceIcon,
+  CategoryResearchIcon,
   SettingsResetIcon,
-  WindowSettingsIcon,
+  SystemSettingsIcon,
 } from "@jitaspace/eve-icons";
 
 import { useDismissedNews } from "~/components/News";
@@ -144,14 +144,16 @@ export function SettingsCard() {
       <Tabs.List mb="md">
         <Tabs.Tab
           value="general"
-          leftSection={<WindowSettingsIcon size={16} alt="" />}
+          leftSection={
+            <SystemSettingsIcon size={16} color="currentColor" alt="" />
+          }
         >
           General
         </Tabs.Tab>
         <Tabs.Tab
           value="experimental"
           leftSection={
-            <CategoryScienceIcon size={16} color="currentColor" alt="" />
+            <CategoryResearchIcon size={16} color="currentColor" alt="" />
           }
         >
           Experimental

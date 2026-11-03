@@ -20,7 +20,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -42,11 +41,12 @@ import {
   CategoryStructureManagementIcon,
   ControlCargoInventoryIcon,
   ControlRegionLayoutIcon,
+  SystemArrowRotateLeftIcon,
+  SystemOpenWindowIcon,
   SystemShipTreeIcon,
   SystemSkillPlanIcon,
   WindowDirectoryServicesIcon,
   WindowInfoIcon,
-  WindowLogIcon,
   WindowNoteIcon,
   WindowRestrictionIcon,
   WindowStandingsIcon,
@@ -1274,7 +1274,9 @@ export default function FactionPage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               zKillboard
             </Button>
@@ -1366,7 +1368,15 @@ export default function FactionPage({
               "Standings",
               counts.standingRestrictions,
             )}
-            {tab("history", <WindowLogIcon size={16} alt="" />, "History")}
+            {tab(
+              "history",
+              <SystemArrowRotateLeftIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "History",
+            )}
           </Tabs.List>
 
           {/* Overview */}

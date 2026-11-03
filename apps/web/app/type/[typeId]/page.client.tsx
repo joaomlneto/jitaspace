@@ -20,7 +20,6 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
@@ -29,16 +28,17 @@ import { TypeName } from "@jitaspace/eve-components";
 import {
   CategoryCombatIcon,
   CategoryIskIcon,
+  CategoryPowerIcon,
+  SystemArrowRotateLeftIcon,
   SystemBlockBanIcon,
   SystemDetailsViewIcon,
-  SystemListViewIcon,
-  SystemModuleIcon,
+  SystemNumberIcon,
+  SystemOpenWindowIcon,
+  SystemTuneIcon,
   SystemVariationIcon,
-  WindowAttributesIcon,
   WindowCompareToolIcon,
   WindowInfoIcon,
   WindowInsuranceIcon,
-  WindowLogIcon,
   WindowNoteIcon,
 } from "@jitaspace/eve-icons";
 import {
@@ -606,7 +606,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Ref
             </Button>
@@ -616,7 +618,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Tycoon
             </Button>
@@ -627,7 +631,9 @@ export default function TypePage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 EVE Workbench
               </Button>
@@ -663,7 +669,9 @@ export default function TypePage({
             {hasAttributes && (
               <Tabs.Tab
                 value="attributes"
-                leftSection={<WindowAttributesIcon size={16} alt="" />}
+                leftSection={
+                  <SystemTuneIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Attributes
               </Tabs.Tab>
@@ -708,7 +716,11 @@ export default function TypePage({
               <Tabs.Tab
                 value="type-lists"
                 leftSection={
-                  <SystemListViewIcon size={16} color="currentColor" alt="" />
+                  <SystemDetailsViewIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
                 }
               >
                 Type Lists
@@ -716,7 +728,13 @@ export default function TypePage({
             )}
             <Tabs.Tab
               value="history"
-              leftSection={<WindowLogIcon size={16} alt="" />}
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
             >
               History
             </Tabs.Tab>
@@ -785,11 +803,7 @@ export default function TypePage({
                 <Stack gap="sm">
                   <SectionHeading
                     icon={
-                      <SystemDetailsViewIcon
-                        size={18}
-                        color="currentColor"
-                        alt=""
-                      />
+                      <SystemNumberIcon size={18} color="currentColor" alt="" />
                     }
                   >
                     Properties
@@ -861,7 +875,9 @@ export default function TypePage({
                 {sortedDogmaAttributes.length > 0 && (
                   <Stack gap="md">
                     <SectionHeading
-                      icon={<WindowAttributesIcon size={18} alt="" />}
+                      icon={
+                        <SystemTuneIcon size={18} color="currentColor" alt="" />
+                      }
                     >
                       Attributes
                     </SectionHeading>
@@ -933,7 +949,7 @@ export default function TypePage({
                   <Stack gap="sm">
                     <SectionHeading
                       icon={
-                        <SystemModuleIcon
+                        <CategoryPowerIcon
                           size={18}
                           color="currentColor"
                           alt=""
@@ -1108,7 +1124,7 @@ export default function TypePage({
                   <Stack gap="sm">
                     <SectionHeading
                       icon={
-                        <SystemListViewIcon
+                        <SystemDetailsViewIcon
                           size={18}
                           color="currentColor"
                           alt=""

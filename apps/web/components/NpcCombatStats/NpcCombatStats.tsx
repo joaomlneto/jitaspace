@@ -188,7 +188,7 @@ function AbilityIcon({
 }: Readonly<{ ability: NpcEwar; size: number }>) {
   return ability.iconTypeId === undefined ? (
     <ThemeIcon size={size} radius="sm" variant="light" color="gray">
-      <MiscUnknownIcon size={size * 0.7} color="currentColor" alt="" />
+      <MiscUnknownIcon size={size * 0.7} alt="" />
     </ThemeIcon>
   ) : (
     <TypeAvatar typeId={ability.iconTypeId} size={size} radius="sm" />

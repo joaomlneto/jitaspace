@@ -16,7 +16,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CharactersDetail } from "@jitaspace/esi-client";
@@ -32,6 +31,7 @@ import {
   CategoryCorporationIcon,
   CategoryResearchIcon,
   CategorySkullIcon,
+  SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowBiographyIcon,
   WindowCharacterSheetIcon,
@@ -569,7 +569,9 @@ export default function CharacterPage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>

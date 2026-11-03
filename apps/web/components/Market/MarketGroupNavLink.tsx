@@ -4,11 +4,11 @@ import { memo, useMemo } from "react";
 import Link from "next/link";
 import { Menu, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconExternalLink } from "@tabler/icons-react";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   SystemLinkIcon,
+  SystemOpenWindowIcon,
   SystemStarHollowIcon,
   SystemStarIcon,
 } from "@jitaspace/eve-icons";
@@ -68,7 +68,9 @@ const MarketTypeNavLink = memo(
             href={`/market/${typeId}`}
             target="_blank"
             rel="noopener"
-            leftSection={<IconExternalLink size={16} />}
+            leftSection={
+              <SystemOpenWindowIcon size={16} color="currentColor" alt="" />
+            }
           >
             Open in new tab
           </Menu.Item>

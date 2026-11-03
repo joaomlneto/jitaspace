@@ -51,6 +51,7 @@ jest.mock("@jitaspace/ui", () => ({
 
 jest.mock("@jitaspace/eve-icons", () => ({
   ControlTargetIcon: () => null,
+  SystemOpenWindowIcon: () => null,
   FittingIcon: () => null,
 }));
 
