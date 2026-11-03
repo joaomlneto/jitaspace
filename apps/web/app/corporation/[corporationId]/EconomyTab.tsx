@@ -11,13 +11,8 @@ import {
 } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import {
-  CharacterAnchor,
-  CharacterName,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
-import { CorporationAnchor, CorporationAvatar } from "@jitaspace/ui";
+import { CharacterName, TypeAvatar } from "@jitaspace/eve-components";
+import { CorporationAvatar } from "@jitaspace/ui";
 
 import type {
   CorporationTrade,
@@ -25,6 +20,11 @@ import type {
   NpcCorporationDetails,
   Shareholding,
 } from "./types";
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading } from "~/components/EntityPage";
 import { formatDecimal, formatInteger } from "~/lib/format";

@@ -7,21 +7,23 @@ import { IconExternalLink } from "@tabler/icons-react";
 
 import {
   AllianceName,
-  CharacterAnchor,
   CharacterName,
   CorporationName,
 } from "@jitaspace/eve-components";
 import { useCorporation } from "@jitaspace/hooks";
 import {
-  AllianceAnchor,
   AllianceAvatar,
   CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
   DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
 
+import {
+  AllianceAnchor,
+  CharacterAnchor,
+  CorporationAnchor,
+} from "~/components/Anchor";
 import {
   corporationPaletteClasses,
   CorporationPaletteStripe,

@@ -19,34 +19,22 @@ import {
 import {
   IconFileText,
   IconHistory,
-  IconInfoCircle,
   IconListCheck,
   IconMapPin,
   IconSitemap,
   IconSwords,
-  IconTarget,
-  IconUsers,
 } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import {
-  FactionAnchor,
-  SolarSystemAnchor,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
-import { AgencyIcon } from "@jitaspace/eve-icons";
-import {
-  CorporationAnchor,
-  DungeonAnchor,
-  EpicArcAnchor,
-  FactionAvatar,
-  GroupAnchor,
-  ISKAmount,
-  MissionAnchor,
-  TypeListAnchor,
-} from "@jitaspace/ui";
+  AgencyIcon,
+  CategoryAgentMissionIcon,
+  WindowAgentIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
+import { FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type {
   DungeonAgentInSpace,
@@ -57,6 +45,17 @@ import type {
 } from "./data";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { FactionRef } from "~/lib/missionRefs";
+import {
+  CorporationAnchor,
+  DungeonAnchor,
+  EpicArcAnchor,
+  FactionAnchor,
+  GroupAnchor,
+  MissionAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+  TypeListAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
@@ -456,7 +455,9 @@ function DungeonHero({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
         </HeroImage>
         <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
           <Group gap="sm" align="center">
-            <Title order={2}>{dungeonDisplayName(dungeon)}</Title>
+            <Title order={1} size="h2">
+              {dungeonDisplayName(dungeon)}
+            </Title>
             {archetypeTitle && (
               <Badge variant="light" size="md">
                 {archetypeTitle}
@@ -516,7 +517,11 @@ function DungeonReferencesAlert({
     operations.length > 0 && "a tactical operation runs here",
   ].filter(Boolean);
   return (
-    <Alert variant="light" color="gray" icon={<IconInfoCircle />}>
+    <Alert
+      variant="light"
+      color="gray"
+      icon={<WindowInfoIcon size={20} alt="" />}
+    >
       The Static Data Export does not describe this dungeon — it is known only
       because {reasons.join(", and ")}. Its name, layout and description live
       only in the game client.
@@ -548,7 +553,7 @@ function DungeonOverview({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Dungeon
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -672,7 +677,7 @@ export default function DungeonPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
@@ -693,12 +698,24 @@ export default function DungeonPage({
               </Tabs.Tab>
             )}
             {available.missions && (
-              <Tabs.Tab value="missions" leftSection={<IconTarget size={16} />}>
+              <Tabs.Tab
+                value="missions"
+                leftSection={
+                  <CategoryAgentMissionIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Missions ({dungeon.missions.length})
               </Tabs.Tab>
             )}
             {available.agents && (
-              <Tabs.Tab value="agents" leftSection={<IconUsers size={16} />}>
+              <Tabs.Tab
+                value="agents"
+                leftSection={<WindowAgentIcon size={16} alt="" />}
+              >
                 Agents ({dungeon.agents.length})
               </Tabs.Tab>
             )}
@@ -831,7 +848,9 @@ export default function DungeonPage({
                   >
                     <Stack gap="sm">
                       <Group gap="sm">
-                        <Title order={4}>{operation.name}</Title>
+                        <Title order={2} size="h4">
+                          {operation.name}
+                        </Title>
                         <Badge variant="light" color="gray">
                           ID {operation.mercenaryTacticalOperationId}
                         </Badge>

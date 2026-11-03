@@ -35,10 +35,11 @@ import {
   useTable,
 } from "@tanstack/react-table";
 
-import { DogmaAttributeAnchor, EveIconAvatar } from "@jitaspace/ui";
+import { EveIconAvatar } from "@jitaspace/ui";
 
 import type { IndexedCompareCatalog } from "./catalog";
 import type { CompareRow, CompareSection, Comparison } from "./comparison";
+import { DogmaAttributeAnchor } from "~/components/Anchor";
 import { draggedTypeId, isColumnDrag } from "./columnDrag";
 import classes from "./Compare.module.css";
 import { CompareItemHeader } from "./CompareItemHeader";

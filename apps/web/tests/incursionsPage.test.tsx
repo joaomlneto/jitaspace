@@ -22,6 +22,7 @@ import {
 
 import type {
   IncursionHistory,
+  IncursionLayouts,
   IncursionRatGroup,
   IncursionRow,
   IncursionsData,
@@ -39,7 +40,10 @@ jest.mock("next/dynamic", () => ({
   default: () => () => <span data-testid="influence-chart" />,
 }));
 
-jest.mock("@jitaspace/eve-icons", () => ({ IncursionsIcon: () => null }));
+jest.mock("@jitaspace/eve-icons", () => ({
+  IncursionsIcon: () => null,
+  WindowInfoIcon: () => null,
+}));
 
 // The shared stub, plus what this page needs from the real package.
 jest.mock("@jitaspace/ui", () => ({
@@ -58,7 +62,7 @@ const HOUR = 60 * 60 * 1000;
 const hoursAgo = (hours: number) =>
   new Date(Date.parse(READ_AT) - hours * HOUR).toISOString();
 
-// 30000001 is a staging system here; 30000003 is a mapped Vanguard system.
+// 30000001 is a staging system here; 30000003 a Vanguard system.
 const CLAYSSON = 30000001;
 const ADIERE = 30000003;
 const ZD4 = 30005000;
@@ -143,6 +147,7 @@ const LOOKUPS = {
       securityStatus: 0.8,
       longestWarpAu: 58,
       stations: [],
+      siteRole: "vanguard" as const,
     },
     [ZD4]: { name: "ZD4-G9", securityStatus: -0.3, longestWarpAu: 25 },
     [IBE]: { name: "2IBE-N", securityStatus: -0.2 },
@@ -165,6 +170,31 @@ const HISTORY: IncursionHistory = {
     [11, 1, hoursAgo(14), "state_changed", "mobilizing"],
     [10, 3, hoursAgo(30), "ended", "withdrawing"],
     [9, 77, hoursAgo(40), "appeared", "established"],
+  ],
+};
+
+const LAYOUTS: IncursionLayouts = {
+  ...LOOKUPS,
+  readAt: READ_AT,
+  layouts: [
+    {
+      constellationId: 20000001,
+      stagingSolarSystemId: CLAYSSON,
+      vanguard: [ADIERE],
+      assault: [],
+      headquarters: [ZD4],
+      incursionCount: 12,
+      latestIncursionAt: hoursAgo(72),
+    },
+    {
+      constellationId: 20000002,
+      stagingSolarSystemId: null,
+      vanguard: [],
+      assault: [],
+      headquarters: [],
+      incursionCount: 1,
+      latestIncursionAt: "2020-01-01T00:00:00.000Z",
+    },
   ],
 };
 
@@ -202,11 +232,12 @@ function renderPage(
   incursions: IncursionRow[],
   { historyOk = true }: { historyOk?: boolean } = {},
 ) {
-  globalThis.fetch = jest.fn(() =>
+  globalThis.fetch = jest.fn((url: string) =>
     Promise.resolve({
       ok: historyOk,
       status: historyOk ? 200 : 500,
-      json: () => Promise.resolve(HISTORY),
+      json: () =>
+        Promise.resolve(url === "/api/incursions/layouts" ? LAYOUTS : HISTORY),
     }),
   ) as unknown as typeof fetch;
   const IncursionsPage = (
@@ -301,18 +332,41 @@ describe("Incursions page", () => {
     });
 
     it.each([
-      [2, "No high-sec incursion can spawn for another"],
-      [20, "A new high-sec incursion should spawn within"],
-      [40, "A new high-sec incursion should spawn any minute now."],
+      [2, "can spawn in 10:00:00", 2],
+      [20, "due within 16:00:00", 20],
+      [40, "overdue", 36],
     ])(
-      "counts down to the next high-sec spawn, %ih after the last ended",
-      (hours, message) => {
+      "shows the next high-sec spawn %ih after the last ended",
+      (hours, status, hoursAlong) => {
         // The countdown runs on the clock: hold it at the data's read time.
         jest.useFakeTimers({ now: Date.parse(READ_AT) });
         renderPage([NULL_SEC, endedHighSec(hours)]);
-        expect(screen.getByText(message, { exact: false })).toBeVisible();
+        expect(screen.getByText("Next high-sec incursion")).toBeVisible();
+        expect(screen.getByText(status)).toBeVisible();
+        // The marker sits that far along the 36 hours after the last ended
+        // (and stops at the end once overdue).
+        expect(
+          screen.getByRole("img", { name: /^Timeline: / }),
+        ).toHaveAccessibleName(
+          `Timeline: ${hoursAlong} of 36 hours since the last ended`,
+        );
       },
     );
+
+    it("explains the spawn window on a tap, not on the page", () => {
+      jest.useFakeTimers({ now: Date.parse(READ_AT) });
+      renderPage([NULL_SEC, endedHighSec(2)]);
+      expect(screen.queryByText(/None can spawn within 12 hours/)).toBeNull();
+      fireEvent.click(
+        screen.getByRole("button", { name: "How this is worked out" }),
+      );
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(
+        screen.getByText(/None can spawn within 12 hours/),
+      ).toHaveTextContent("The last ended 2026-10-08 10:00");
+    });
 
     it("refreshes its data every five minutes while visible", () => {
       jest.useFakeTimers();
@@ -398,6 +452,40 @@ describe("Incursions page", () => {
       expect(
         await screen.findByText(
           "The history could not be loaded. Try again in a moment.",
+        ),
+      ).toBeVisible();
+    });
+  });
+
+  describe("Layouts tab", () => {
+    it("lists each constellation's sites by type, and the unmapped ones", async () => {
+      renderPage([HIGH_SEC]);
+      openTab("Layouts");
+      expect(window.location.hash).toBe("#layouts");
+      expect(await screen.findByRole("link", { name: "Adiere" })).toBeVisible();
+      expect(globalThis.fetch).toHaveBeenCalledWith("/api/incursions/layouts");
+      const rows = screen.getByRole("table").querySelectorAll("tbody tr");
+      // The most incursions first.
+      expect(rows).toHaveLength(2);
+      const mapped = within(rows[0] as HTMLElement);
+      expect(mapped.getByRole("link", { name: "Agiesseson" })).toBeVisible();
+      expect(mapped.getByRole("link", { name: "Claysson" })).toBeVisible();
+      expect(mapped.getByRole("link", { name: "ZD4-G9" })).toHaveAttribute(
+        "href",
+        `/system/${ZD4}`,
+      );
+      expect(mapped.getByText("High-Sec")).toBeVisible();
+      expect(
+        within(rows[1] as HTMLElement).getByText("Not mapped"),
+      ).toBeVisible();
+    });
+
+    it("says so when the layouts cannot be loaded", async () => {
+      renderPage([HIGH_SEC], { historyOk: false });
+      openTab("Layouts");
+      expect(
+        await screen.findByText(
+          "The layouts could not be loaded. Try again in a moment.",
         ),
       ).toBeVisible();
     });

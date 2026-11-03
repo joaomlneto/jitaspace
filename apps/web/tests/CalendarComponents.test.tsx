@@ -41,32 +41,40 @@ jest.mock("@jitaspace/ui", () => ({
   ),
 }));
 
-// Components that moved to @jitaspace/eve-components are stubbed there.
 jest.mock("@jitaspace/eve-components", () => ({
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
   CharacterName: ({ characterId }: { characterId?: number }) => (
     <span>{`Char ${characterId}`}</span>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
   ),
   EveEntityNameAnchor: ({ entityId }: { entityId?: number }) => (
     <a href="#">{`EntityAnchor ${entityId}`}</a>
   ),
-  // Used by the Timeline component under test.
-  CorporationAllianceHistoryTimeline: ({
-    history,
-  }: {
-    history?: { record_id: number; alliance_id?: number }[];
-  }) => (
-    <div data-testid="ui-timeline">
-      {(history ?? []).map((h) => (
-        <div key={h.record_id} data-testid="timeline-record">
-          {`record ${h.record_id} alliance ${h.alliance_id ?? "none"}`}
-        </div>
-      ))}
-    </div>
-  ),
 }));
+
+// The presentational half of the Timeline wrapper under test.
+jest.mock(
+  "~/components/Timeline/CorporationAllianceHistoryTimelineDisplay",
+  () => ({
+    CorporationAllianceHistoryTimelineDisplay: ({
+      history,
+    }: {
+      history?: { record_id: number; alliance_id?: number }[];
+    }) => (
+      <div data-testid="ui-timeline">
+        {(history ?? []).map((h) => (
+          <div key={h.record_id} data-testid="timeline-record">
+            {`record ${h.record_id} alliance ${h.alliance_id ?? "none"}`}
+          </div>
+        ))}
+      </div>
+    ),
+  }),
+);
 
 jest.mock("@jitaspace/eve-icons", () => ({
   WarningIcon: () => <span data-testid="warning-icon">!</span>,

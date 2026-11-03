@@ -77,7 +77,7 @@ export function AppCheckboxCard({
         }}
         {...otherProps}
       >
-        <app.Icon width={40} />
+        <app.Icon width={40} alt="" />
 
         <div className={classes.body}>
           <Text fw={500} size="sm" style={{ lineHeight: 1 }} mb={5}>

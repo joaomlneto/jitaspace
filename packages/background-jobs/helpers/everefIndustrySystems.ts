@@ -16,16 +16,13 @@ import type { ReadableStream as NodeWebReadableStream } from "node:stream/web";
 import bz2 from "unbzip2-stream";
 
 import type { IndustrySystemsResponse } from "./industryCostIndices.ts";
+import { EVEREF_USER_AGENT } from "../utils/downloadFile.ts";
 import {
   asIndustrySystemsResponse,
   parseEveRefSnapshotTime,
 } from "./industryCostIndices.ts";
 
 export const EVEREF_BASE_URL = "https://data.everef.net";
-
-/** EVE Ref asks to be told who is downloading. */
-export const EVEREF_USER_AGENT =
-  "JitaSpace (https://www.jita.space; joao@jita.space)";
 
 /** The day the hourly archive begins. */
 export const EVEREF_DAILY_ARCHIVE_START = new Date("2022-12-16T00:00:00Z");

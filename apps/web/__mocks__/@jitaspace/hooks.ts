@@ -50,5 +50,13 @@ export interface FuzzworkTypeMarketAggregate {
 
 // The real list, not a copy: its module imports nothing, so loading it costs
 // none of what the rest of the package would.
-export { MARKET_HUB_REGION_IDS } from "../../../../packages/hooks/src/hooks/marketHubRegions";
+export {
+  GLOBAL_MARKET_REGION_ID,
+  MARKET_HUB_REGION_IDS,
+  marketHubRegionIds,
+} from "../../../../packages/hooks/src/hooks/marketHubRegions";
+/** No type trades on the global PLEX market unless a test says so. */
+export const useTradesOnGlobalMarket = jestFn(
+  (_typeId?: number): boolean | null | undefined => false,
+);
 export { UNIVERSE_NAMES_MAX_ID } from "../../../../packages/hooks/src/hooks/universeNamesLimits";

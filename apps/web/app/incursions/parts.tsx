@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Anchor, Badge, Group, Text, Tooltip } from "@mantine/core";
 import { IconExternalLink, IconSkull } from "@tabler/icons-react";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import {
   AllianceAvatar,
   DateHoverCard,
@@ -118,7 +119,13 @@ export function SystemLink({
           miw="max-content"
         />
       )}
-      <Anchor component={Link} href={`/system/${solarSystemId}`} size={size}>
+      {/* Names like 8-KZXQ would otherwise break at the hyphen. */}
+      <Anchor
+        component={Link}
+        href={`/system/${solarSystemId}`}
+        size={size}
+        style={{ whiteSpace: "nowrap" }}
+      >
         {system?.name ?? solarSystemId}
       </Anchor>
     </Group>
@@ -147,6 +154,44 @@ export function ConstellationLink({
     </Anchor>
   );
 }
+
+/** A table row listed under its constellation and region. */
+interface ConstellationRow {
+  constellationId: number;
+  constellationName: string;
+  regionName: string | null;
+}
+
+/** The Constellation and Region columns the incursion tables open with. */
+export const constellationColumnsFor = <T extends ConstellationRow>(
+  names: Names,
+): DataTableColumn<T>[] => [
+  {
+    id: "constellation",
+    header: "Constellation",
+    accessor: "constellationName",
+    sortable: true,
+    filter: { type: "text" },
+    cell: (row) => (
+      <ConstellationLink constellationId={row.constellationId} names={names} />
+    ),
+  },
+  {
+    id: "region",
+    header: "Region",
+    accessor: "regionName",
+    sortable: true,
+    cell: (row) => {
+      const region = names.region(row.constellationId);
+      return region ? (
+        <Anchor component={Link} href={`/region/${region.regionId}`} size="sm">
+          {region.name}
+        </Anchor>
+      ) : null;
+    },
+    filter: { type: "multi-select" },
+  },
+];
 
 /** A link to the constellation's map on DOTLAN EveMaps. */
 export function DotlanLink({

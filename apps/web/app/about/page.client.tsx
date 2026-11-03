@@ -1,5 +1,6 @@
 "use client";
 
+import type { Components } from "react-markdown";
 import {
   ActionIcon,
   Anchor,
@@ -18,20 +19,22 @@ import { IconBrandDiscordFilled } from "@tabler/icons-react";
 import Markdown from "react-markdown";
 import { Email } from "react-obfuscate-email";
 
-import { CharacterAnchor, CharacterName } from "@jitaspace/eve-components";
-import { CharacterAvatar } from "@jitaspace/ui";
+import { CharacterName, CorporationName } from "@jitaspace/eve-components";
+import { CharacterAvatar, CorporationAvatar } from "@jitaspace/ui";
 
+import { CharacterAnchor, CorporationAnchor } from "~/components/Anchor";
 import { env } from "~/env";
 import acknowledgements from "./acknowledgements.json";
 
 const MY_CHARACTER_ID = 401563624;
 
 /**
- * Someone to thank: an EVE character (named and pictured from ESI) or anyone
- * else by name, and why, in Markdown.
+ * Someone to thank: an EVE character or corporation (named and pictured from
+ * ESI) or anyone else by name, and why, in Markdown.
  */
 type Acknowledgement = { reason: string } & (
   | { characterId: number }
+  | { corporationId: number }
   | { name: string }
 );
 
@@ -39,42 +42,88 @@ const ACKNOWLEDGEMENTS: readonly Acknowledgement[] = acknowledgements;
 
 const PORTRAIT_SIZE = 44;
 
+/** A stable React key: the EVE id, or the plain name. */
+function acknowledgementKey(acknowledgement: Acknowledgement) {
+  if ("characterId" in acknowledgement) return acknowledgement.characterId;
+  if ("corporationId" in acknowledgement) return acknowledgement.corporationId;
+  return acknowledgement.name;
+}
+
+/** Their portrait or logo from ESI, or initials for a plain name. */
+function AcknowledgementAvatar({
+  acknowledgement,
+}: Readonly<{ acknowledgement: Acknowledgement }>) {
+  if ("characterId" in acknowledgement) {
+    return (
+      <CharacterAvatar
+        characterId={acknowledgement.characterId}
+        size={PORTRAIT_SIZE}
+      />
+    );
+  }
+  if ("corporationId" in acknowledgement) {
+    return (
+      <CorporationAvatar
+        corporationId={acknowledgement.corporationId}
+        size={PORTRAIT_SIZE}
+      />
+    );
+  }
+  return (
+    <Avatar name={acknowledgement.name} color="initials" size={PORTRAIT_SIZE} />
+  );
+}
+
+/** Their name from ESI, linked to their page, or the plain name. */
+function AcknowledgementName({
+  acknowledgement,
+}: Readonly<{ acknowledgement: Acknowledgement }>) {
+  if ("characterId" in acknowledgement) {
+    const { characterId } = acknowledgement;
+    return (
+      <CharacterAnchor
+        size="sm"
+        fw={600}
+        characterId={characterId}
+        target="_blank"
+      >
+        <CharacterName span inherit characterId={characterId} />
+      </CharacterAnchor>
+    );
+  }
+  if ("corporationId" in acknowledgement) {
+    const { corporationId } = acknowledgement;
+    return (
+      <CorporationAnchor
+        size="sm"
+        fw={600}
+        corporationId={corporationId}
+        target="_blank"
+      >
+        <CorporationName span inherit corporationId={corporationId} />
+      </CorporationAnchor>
+    );
+  }
+  return (
+    <Text size="sm" fw={600}>
+      {acknowledgement.name}
+    </Text>
+  );
+}
+
 /**
- * One person to thank: their portrait and name from ESI (or initials and the
- * plain name), and why underneath.
+ * One person or corporation to thank: their portrait or logo and name from
+ * ESI (or initials and the plain name), and why underneath.
  */
 function AcknowledgementCard({
   acknowledgement,
 }: Readonly<{ acknowledgement: Acknowledgement }>) {
-  const characterId =
-    "characterId" in acknowledgement ? acknowledgement.characterId : undefined;
   return (
     <Paper component="li" withBorder radius="md" p="sm">
       <Group align="flex-start" gap="sm" wrap="nowrap">
-        {characterId === undefined ? (
-          <Avatar
-            name={"name" in acknowledgement ? acknowledgement.name : undefined}
-            color="initials"
-            size={PORTRAIT_SIZE}
-          />
-        ) : (
-          <CharacterAvatar characterId={characterId} size={PORTRAIT_SIZE} />
-        )}
+        <AcknowledgementAvatar acknowledgement={acknowledgement} />
         <Stack gap={2} style={{ minWidth: 0 }}>
-          {characterId === undefined ? (
-            <Text size="sm" fw={600}>
-              {"name" in acknowledgement && acknowledgement.name}
-            </Text>
-          ) : (
-            <CharacterAnchor
-              size="sm"
-              fw={600}
-              characterId={characterId}
-              target="_blank"
-            >
-              <CharacterName span inherit characterId={characterId} />
-            </CharacterAnchor>
-          )}
+          <AcknowledgementName acknowledgement={acknowledgement} />
           <Text size="sm" c="dimmed">
             <Reason markdown={acknowledgement.reason} />
           </Text>
@@ -84,22 +133,19 @@ function AcknowledgementCard({
   );
 }
 
-/** Why: Markdown, its links opening in a new tab, inline in the list item. */
+/** Reasons render inline in their card, their links opening in a new tab. */
+const REASON_COMPONENTS: Components = {
+  p: ({ children }) => children,
+  a: ({ href, children }) => (
+    <Anchor inherit href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </Anchor>
+  ),
+};
+
+/** Why: the acknowledgement's reason, in Markdown. */
 function Reason({ markdown }: Readonly<{ markdown: string }>) {
-  return (
-    <Markdown
-      components={{
-        p: ({ children }) => children,
-        a: ({ href, children }) => (
-          <Anchor inherit href={href} target="_blank" rel="noopener noreferrer">
-            {children}
-          </Anchor>
-        ),
-      }}
-    >
-      {markdown}
-    </Markdown>
-  );
+  return <Markdown components={REASON_COMPONENTS}>{markdown}</Markdown>;
 }
 
 export default function PageClient() {
@@ -172,6 +218,7 @@ export default function PageClient() {
                   target="_blank"
                   size="sm"
                   variant="light"
+                  aria-label="Join the JitaSpace Discord"
                 >
                   <IconBrandDiscordFilled />
                 </ActionIcon>
@@ -187,7 +234,9 @@ export default function PageClient() {
             </Table.Tr>
           </Table.Tbody>
         </Table>
-        <Title order={3}>Privacy Policy</Title>
+        <Title order={2} size="h3">
+          Privacy Policy
+        </Title>
         <Text size="sm">
           We do not collect any of your EVE Online data, nor any personally
           identifiable information. All data collected is anonymized — users
@@ -218,7 +267,9 @@ export default function PageClient() {
             .
           </List.Item>
         </List>
-        <Title order={3}>Acknowledgements</Title>
+        <Title order={2} size="h3">
+          Acknowledgements
+        </Title>
         <Text size="sm">
           Extremely grateful to all the folks who helped me out with this, both
           people that were willing to test my buggy code in the early stages, to
@@ -246,11 +297,7 @@ export default function PageClient() {
         >
           {ACKNOWLEDGEMENTS.map((acknowledgement) => (
             <AcknowledgementCard
-              key={
-                "characterId" in acknowledgement
-                  ? acknowledgement.characterId
-                  : acknowledgement.name
-              }
+              key={acknowledgementKey(acknowledgement)}
               acknowledgement={acknowledgement}
             />
           ))}
@@ -336,7 +383,9 @@ export default function PageClient() {
           </Anchor>
           .
         </Text>
-        <Title order={3}>Copyright Notice</Title>
+        <Title order={2} size="h3">
+          Copyright Notice
+        </Title>
         <Text size="sm">
           EVE Online, the EVE logo, EVE and all associated logos and designs are
           the intellectual property of Fenris Creations. All artwork,

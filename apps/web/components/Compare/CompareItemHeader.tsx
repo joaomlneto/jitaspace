@@ -21,9 +21,10 @@ import {
   IconX,
 } from "@tabler/icons-react";
 
-import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
 
 import type { IndexedCompareCatalog } from "./catalog";
+import { TypeAnchor } from "~/components/Anchor";
 import { GroupName } from "~/components/Text";
 import { SHIP_CATEGORY_ID } from "./catalog";
 import { startColumnDrag } from "./columnDrag";

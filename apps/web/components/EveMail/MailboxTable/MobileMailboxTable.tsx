@@ -3,7 +3,6 @@ import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
 import {
-  EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
 } from "@jitaspace/eve-components";
@@ -14,6 +13,7 @@ import {
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { MailboxTableProps } from "~/components/EveMail";
+import { EveMailSenderAnchor } from "~/components/Anchor";
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 
 export const MobileMailboxTable = ({
@@ -97,7 +97,11 @@ export const MobileMailboxTable = ({
                     }
                     openContextModal({
                       modal: "viewMailMessage",
-                      title: <Text fw={700}>{message.subject}</Text>,
+                      title: (
+                        <Text component="span" fw={700}>
+                          {message.subject}
+                        </Text>
+                      ),
                       size: "xl",
                       innerProps: {
                         characterId,

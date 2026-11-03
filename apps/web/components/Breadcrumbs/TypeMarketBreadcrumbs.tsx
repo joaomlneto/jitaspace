@@ -3,8 +3,9 @@
 import type { BreadcrumbsProps } from "@mantine/core";
 import { memo, useMemo } from "react";
 
-import { TypeMarketBreadcrumbs as UITypeMarketBreadcrumbs } from "@jitaspace/eve-components";
 import { useMarketGroup, useType } from "@jitaspace/hooks";
+
+import { TypeMarketBreadcrumbsDisplay } from "./TypeMarketBreadcrumbsDisplay";
 
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;
@@ -59,7 +60,7 @@ export const TypeMarketBreadcrumbs = memo(
     ]);
 
     return (
-      <UITypeMarketBreadcrumbs
+      <TypeMarketBreadcrumbsDisplay
         typeId={typeId}
         marketGroups={marketGroups}
         showType={showType}

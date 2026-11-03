@@ -1,8 +1,9 @@
 import type { LinkProps } from "next/link";
-import Link from "next/link";
+
+import { HoverPrefetchLink } from "./HoverPrefetchLink";
 
 export type CharacterPageLinkProps = Omit<LinkProps, "href"> & {
-  characterId: number | string | null;
+  characterId: number | string;
 };
 
 export const CharacterPageLink = ({
@@ -10,9 +11,6 @@ export const CharacterPageLink = ({
   ...otherProps
 }: CharacterPageLinkProps) => {
   return (
-    <Link
-      href={characterId ? `/character/${characterId}` : "#"}
-      {...otherProps}
-    />
+    <HoverPrefetchLink href={`/character/${characterId}`} {...otherProps} />
   );
 };

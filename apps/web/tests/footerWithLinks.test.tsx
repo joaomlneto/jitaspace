@@ -34,7 +34,7 @@ jest.mock("~/components/Badge", () => ({
 }));
 
 describe("FooterWithLinks", () => {
-  it("renders the footer links with prefetching disabled", () => {
+  it("does not prefetch the footer links on sight", () => {
     const { FooterWithLinks } = require("~/layouts/MainLayout/FooterWithLinks");
 
     render(
@@ -43,7 +43,7 @@ describe("FooterWithLinks", () => {
       </MantineProvider>,
     );
 
-    // The footer is on every page, so prefetching these would fetch /about,
+    // The footer is on every page, so prefetching these on sight would fetch /about,
     // /support and /status on every single page view — four PPR segment
     // requests each, ~400k requests/day in production. Almost nobody
     // navigates here, so the prefetch must stay off.
@@ -56,5 +56,19 @@ describe("FooterWithLinks", () => {
       expect(link).toHaveAttribute("href", href);
       expect(link).toHaveAttribute("data-prefetch", "false");
     }
+  });
+
+  it("names the icon-only Discord link", () => {
+    const { FooterWithLinks } = require("~/layouts/MainLayout/FooterWithLinks");
+
+    render(
+      <MantineProvider>
+        <FooterWithLinks />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "JitaSpace on Discord" }),
+    ).toHaveAttribute("href", "https://discord.gg/jitaspace");
   });
 });

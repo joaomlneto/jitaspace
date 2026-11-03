@@ -5,6 +5,7 @@ export const TYPE_PAGE_TABS = [
   "attributes",
   "variations",
   "market",
+  "insurance",
   "description",
   "type-lists",
   "history",

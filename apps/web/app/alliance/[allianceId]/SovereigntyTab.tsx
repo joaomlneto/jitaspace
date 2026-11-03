@@ -11,25 +11,27 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import { IconFlag, IconMap2, IconSwords } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { useGetSovereigntyCampaigns } from "@jitaspace/esi-client";
+import { AllianceName, SolarSystemName } from "@jitaspace/eve-components";
 import {
-  AllianceName,
-  ConstellationAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  SolarSystemName,
-} from "@jitaspace/eve-components";
-import {
-  AllianceAnchor,
-  CorporationAnchor,
-  SolarSystemSecurityStatusBadge,
-} from "@jitaspace/ui";
+  CategoryOngoingConflictsIcon,
+  CategorySolarSystemIcon,
+  ControlRegionLayoutIcon,
+  WindowSovereigntyIcon,
+} from "@jitaspace/eve-icons";
+import { SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
 
 import type { SovereigntySummary } from "./sovereignty";
 import type { AllianceSovereigntySystem } from "./types";
+import {
+  AllianceAnchor,
+  ConstellationAnchor,
+  CorporationAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import {
@@ -236,7 +238,11 @@ function Campaigns({
 
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconSwords size={18} />}>
+      <SectionHeading
+        icon={
+          <CategoryOngoingConflictsIcon size={18} color="currentColor" alt="" />
+        }
+      >
         Active campaigns
       </SectionHeading>
       <Paper withBorder radius="md" p="sm">
@@ -275,10 +281,12 @@ function Campaigns({
                       <Stack gap={2}>
                         <Progress.Root size="md">
                           <Progress.Section
+                            aria-label="Defender"
                             value={defender * 100}
                             color="teal"
                           />
                           <Progress.Section
+                            aria-label="Attackers"
                             value={attackers * 100}
                             color="red"
                           />
@@ -344,7 +352,9 @@ export function SovereigntyTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconFlag size={18} />}>Holdings</SectionHeading>
+        <SectionHeading icon={<WindowSovereigntyIcon size={18} alt="" />}>
+          Holdings
+        </SectionHeading>
         <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
           <StatCard label="Systems" value={formatInteger(summary.systems)} />
           <StatCard
@@ -405,7 +415,13 @@ export function SovereigntyTab({
       <Campaigns allianceId={allianceId} systemNames={systemNames} />
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconMap2 size={18} />}>By region</SectionHeading>
+        <SectionHeading
+          icon={
+            <ControlRegionLayoutIcon size={18} color="currentColor" alt="" />
+          }
+        >
+          By region
+        </SectionHeading>
         <Paper withBorder radius="md" p="sm">
           <Table highlightOnHover verticalSpacing="xs">
             <Table.Thead>
@@ -443,6 +459,7 @@ export function SovereigntyTab({
                   </Table.Td>
                   <Table.Td>
                     <Progress
+                      aria-label="Share of held systems"
                       value={(region.systems / summary.systems) * 100}
                       size="sm"
                     />
@@ -455,7 +472,13 @@ export function SovereigntyTab({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconFlag size={18} />}>Systems</SectionHeading>
+        <SectionHeading
+          icon={
+            <CategorySolarSystemIcon size={18} color="currentColor" alt="" />
+          }
+        >
+          Systems
+        </SectionHeading>
         <DataTable
           data={systems}
           columns={columns}

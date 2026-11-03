@@ -4,11 +4,7 @@ import type {
   CalendarEventAttendee,
   CalendarEventAttendeeResponse,
 } from "@jitaspace/hooks";
-import {
-  CharacterAnchor,
-  CharacterName,
-  EveEntityNameAnchor,
-} from "@jitaspace/eve-components";
+import { CharacterName } from "@jitaspace/eve-components";
 import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
@@ -16,6 +12,7 @@ import {
   FormattedDateText,
 } from "@jitaspace/ui";
 
+import { CharacterAnchor, EveEntityNameAnchor } from "~/components/Anchor";
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
 import { CalendarEventResponseBadge } from "~/components/Badge";
 import { CalendarEventHumanDurationText } from "~/components/DurationText";

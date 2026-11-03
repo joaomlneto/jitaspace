@@ -15,11 +15,7 @@ import type {
   CalendarEventAttendee,
   CalendarEventAttendeeResponse,
 } from "@jitaspace/hooks";
-import {
-  CharacterAnchor,
-  CharacterName,
-  EveEntityNameAnchor,
-} from "@jitaspace/eve-components";
+import { CharacterName } from "@jitaspace/eve-components";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
   useCalendarEvent,
@@ -32,6 +28,7 @@ import {
   FormattedDateText,
 } from "@jitaspace/ui";
 
+import { CharacterAnchor, EveEntityNameAnchor } from "~/components/Anchor";
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
 import { CalendarEventResponseBadge } from "~/components/Badge";
 import { CalendarEventHumanDurationText } from "~/components/DurationText";
@@ -141,7 +138,6 @@ export default function Page({
                 <CharacterAvatar
                   characterId={attendee.character_id}
                   size="sm"
-                  radius="xl"
                 />
                 <CharacterAnchor characterId={attendee.character_id}>
                   <CharacterName span characterId={attendee.character_id} />

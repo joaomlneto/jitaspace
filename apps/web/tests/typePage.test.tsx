@@ -52,17 +52,9 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
 }));
 
 // Stub every @jitaspace/ui export to render nothing. The Proxy factory has no
-// external closure so it is hoist-safe.
-jest.mock(
-  "@jitaspace/ui",
-  () =>
-    new Proxy(
-      {},
-      {
-        get: () => () => null,
-      },
-    ),
-);
+// external closure so it is hoist-safe. The page's internal links (Compare,
+// type lists) render through ~/components/Link, which stays real.
+jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
 
 jest.mock("~/components/Compare/ItemVariations", () => ({
   ItemVariations: ({ typeId }: { typeId: number }) => (
@@ -133,6 +125,23 @@ interface DogmaMetaStub {
   attributes: Record<number, { categoryId?: number; unitId?: number }>;
   unitSymbols: Record<number, string>;
   categoryNames: Record<number, string>;
+  effects: Record<
+    number,
+    {
+      name?: string;
+      description?: { text: string; source: "ccp" | "ai" };
+      categoryId?: number;
+    }
+  >;
+  effectCategories?: Record<
+    number,
+    {
+      effectCategoryId: number;
+      name: string | null;
+      customName: string | null;
+      customDescription: string | null;
+    }
+  >;
 }
 
 interface TypePageProps {
@@ -149,11 +158,43 @@ interface TypePageProps {
   npcStats?: unknown;
 }
 
-/** Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized. */
+/**
+ * Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized.
+ * Effect 11 is Passive (effect category 0), effect 12 Online (4).
+ */
 const DEFAULT_DOGMA_META: DogmaMetaStub = {
   attributes: { 4: { categoryId: 7 }, 161: { categoryId: 7 }, 999: {} },
   unitSymbols: {},
   categoryNames: { 7: "Armor" },
+  effects: {
+    11: {
+      name: "Low power",
+      description: { text: "Requires a low power slot", source: "ccp" },
+      categoryId: 0,
+    },
+    12: {
+      name: "trackingSpeedBonusEffectLasers",
+      description: {
+        text: "Increases the Turret Tracking of lasers.",
+        source: "ai",
+      },
+      categoryId: 4,
+    },
+  },
+  effectCategories: {
+    0: {
+      effectCategoryId: 0,
+      name: "dgmEffPassive",
+      customName: "Passive",
+      customDescription: "Always applies.",
+    },
+    4: {
+      effectCategoryId: 4,
+      name: "dgmEffOnline",
+      customName: "Online",
+      customDescription: null,
+    },
+  },
 };
 
 // Require the page lazily so the jest.mock(...) factories above are active
@@ -411,6 +452,56 @@ describe("Type page (client)", () => {
     expect(screen.getByText("Effects")).toBeInTheDocument();
   });
 
+  it("groups effects by effect category, in category-id order", () => {
+    renderPage();
+    clickTab(/Attributes/);
+
+    const passive = screen.getByText("Passive");
+    const online = screen.getByText("Online");
+    expect(
+      passive.compareDocumentPosition(online) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // Each effect sits under its own category's heading.
+    const lowPower = screen.getByText("Low power");
+    const tracking = screen.getByText("trackingSpeedBonusEffectLasers");
+    expect(
+      passive.compareDocumentPosition(lowPower) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      lowPower.compareDocumentPosition(online) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      online.compareDocumentPosition(tracking) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("names no effect group when there is no category data at all", () => {
+    renderPage({
+      dogmaMeta: { ...DEFAULT_DOGMA_META, effects: {}, effectCategories: {} },
+    });
+    clickTab(/Attributes/);
+    // Only the attributes' uncategorized bucket is called "Other".
+    expect(screen.getAllByText("Other")).toHaveLength(1);
+  });
+
+  it("describes each effect under its name, labelling ours as AI", () => {
+    renderPage();
+    clickTab(/Attributes/);
+
+    // Names live in DogmaEffectAnchor, which this suite stubs out; the
+    // server-side test covers them. The descriptions sit outside the link.
+    expect(screen.getByText("Requires a low power slot")).toBeInTheDocument();
+    expect(
+      screen.getByText("Increases the Turret Tracking of lasers."),
+    ).toBeInTheDocument();
+    // Only our own text carries the badge; CCP's does not.
+    expect(screen.getAllByText("AI")).toHaveLength(1);
+  });
+
   it("sorts categories numerically and places the uncategorized bucket last", () => {
     mockUseType.mockReturnValue({
       data: {
@@ -433,6 +524,7 @@ describe("Type page (client)", () => {
         },
         unitSymbols: {},
         categoryNames: { 3: "Fitting", 9: "Required Skills" },
+        effects: {},
       },
     });
     clickTab(/Attributes/);
@@ -458,6 +550,7 @@ describe("Type page (client)", () => {
         unitSymbols: {},
         // No name for category 7 -> the page generates "Category 7".
         categoryNames: {},
+        effects: {},
       },
     });
     clickTab(/Attributes/);

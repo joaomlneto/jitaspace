@@ -4,17 +4,17 @@ import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { Badge, Box, Group, Stack, Text } from "@mantine/core";
 
+import { TypeAvatar } from "@jitaspace/eve-components";
+import { CharacterAvatar, ISKAmount } from "@jitaspace/ui";
+
+import type { AgentRef, TypeRef } from "~/lib/missionRefs";
+import type { MissionKind, MissionTextValues } from "~/lib/missions";
 import {
   CharacterAnchor,
   SolarSystemAnchor,
   StationAnchor,
   TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
-import { CharacterAvatar, ISKAmount } from "@jitaspace/ui";
-
-import type { AgentRef, TypeRef } from "~/lib/missionRefs";
-import type { MissionKind, MissionTextValues } from "~/lib/missions";
+} from "~/components/Anchor";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
   ISK_TYPE_ID,
@@ -110,7 +110,7 @@ export function AgentLabel({
 }: Readonly<{ agent: AgentRef; withLocation?: boolean }>) {
   return (
     <Group gap="xs" wrap="nowrap" align="flex-start">
-      <CharacterAvatar characterId={agent.characterId} size="md" radius="xl" />
+      <CharacterAvatar characterId={agent.characterId} size="md" />
       <Stack gap={0}>
         <Group gap={6} wrap="nowrap">
           <CharacterAnchor characterId={agent.characterId} fw={600}>

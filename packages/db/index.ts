@@ -3,10 +3,16 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./prisma/generated/client";
 
 export interface CreatePrismaClientOptions {
-  /** PostgreSQL/CockroachDB connection string. */
+  /** PostgreSQL connection string. */
   connectionString: string;
   /** Log every query (handy in development). Defaults to `false`. */
   logQueries?: boolean;
+  /**
+   * Most connections this client's pool opens. Defaults to 5, not `pg`'s 10:
+   * every serverless instance gets its own pool, and production connects
+   * through PlanetScale's PgBouncer, which admits 100 clients in total.
+   */
+  maxConnections?: number;
 }
 
 /**
@@ -20,8 +26,9 @@ export interface CreatePrismaClientOptions {
 export function createPrismaClient({
   connectionString,
   logQueries = false,
+  maxConnections = 5,
 }: CreatePrismaClientOptions) {
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({ connectionString, max: maxConnections });
   return new PrismaClient({
     adapter,
     log: logQueries ? ["query", "info", "error", "warn"] : ["error"],

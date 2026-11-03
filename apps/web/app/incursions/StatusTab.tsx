@@ -4,37 +4,47 @@ import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ActionIcon,
-  Alert,
   Anchor,
+  Box,
   Grid,
   Group,
   Paper,
+  Popover,
   Progress,
   Stack,
   Table,
   Text,
   Tooltip,
+  VisuallyHidden,
 } from "@mantine/core";
 import {
   IconChevronDown,
   IconChevronRight,
   IconClockHour4,
-  IconInfoCircle,
   IconTool,
 } from "@tabler/icons-react";
 import { formatDistanceStrict } from "date-fns";
 
+import { WindowInfoIcon } from "@jitaspace/eve-icons";
 import { DateHoverCard, securityStatusBand } from "@jitaspace/ui";
 
+import type { HighSecSpawnOutlook } from "./math";
 import type { Names } from "./parts";
 import type { IncursionSiteRole } from "./siteRoles";
 import type {
   IncursionRow,
   IncursionsData,
+  IncursionSolarSystem,
   TrackedIncursionRow,
 } from "./types";
 import { InfluenceChart } from "./InfluenceChart";
-import { formatCountdown, highSecSpawnOutlook, latestEnd } from "./math";
+import {
+  formatCountdown,
+  HIGH_SEC_SPAWN_BLOCKED_MS,
+  HIGH_SEC_SPAWN_EXPECTED_MS,
+  highSecSpawnOutlook,
+  latestEnd,
+} from "./math";
 import {
   BossBadge,
   ConstellationLink,
@@ -47,7 +57,6 @@ import {
   SystemLink,
   useLiveNow,
 } from "./parts";
-import { incursionSiteRole } from "./siteRoles";
 import { isTrackedIncursion } from "./types";
 
 type SystemRole = "staging" | IncursionSiteRole | "unknown";
@@ -69,10 +78,11 @@ const ROLE_LABEL: Record<SystemRole, string> = {
 const roleOf = (
   solarSystemId: number,
   stagingSolarSystemId: number,
+  system: IncursionSolarSystem | undefined,
 ): SystemRole =>
   solarSystemId === stagingSolarSystemId
     ? "staging"
-    : (incursionSiteRole(solarSystemId) ?? "unknown");
+    : (system?.siteRole ?? "unknown");
 
 const isHighSec = (securityStatus: number | undefined) =>
   securityStatus !== undefined &&
@@ -102,25 +112,136 @@ function HighSecSpawnBanner({
     now,
   });
   if (outlook.kind === "none" || lastHighSecEndedAt === undefined) return null;
-
-  let message: string;
-  if (outlook.kind === "blocked") {
-    message = `No high-sec incursion can spawn for another ${formatCountdown(outlook.until - now)}.`;
-  } else if (outlook.kind === "expected") {
-    message = `A new high-sec incursion should spawn within ${formatCountdown(outlook.until - now)}.`;
-  } else {
-    message = "A new high-sec incursion should spawn any minute now.";
-  }
   return (
-    <Alert
-      variant="light"
-      color="cyan"
-      icon={<IconClockHour4 size={18} />}
-      title="No high-sec incursion is up"
-    >
-      {message} The last one ended {eveTime(lastHighSecEndedAt)}; a new one
-      never spawns within 12 hours of that, and usually does within 36.
-    </Alert>
+    <SpawnOutlook outlook={outlook} endedAt={lastHighSecEndedAt} now={now} />
+  );
+}
+
+/** Where now sits on the 36 hours after the last high-sec incursion ended. */
+const spawnPosition = (endedAt: number, now: number) =>
+  Math.min(1, Math.max(0, (now - endedAt) / HIGH_SEC_SPAWN_EXPECTED_MS));
+
+const BLOCKED_SHARE = HIGH_SEC_SPAWN_BLOCKED_MS / HIGH_SEC_SPAWN_EXPECTED_MS;
+const HOUR_MS = 60 * 60 * 1000;
+/** The window's bounds in hours (12 and 36), for its labels. */
+const BLOCKED_HOURS = HIGH_SEC_SPAWN_BLOCKED_MS / HOUR_MS;
+const EXPECTED_HOURS = HIGH_SEC_SPAWN_EXPECTED_MS / HOUR_MS;
+
+/**
+ * When the next high-sec incursion is due, in one line, over a timeline of the
+ * 36 hours after the last one ended: 12 in which none can spawn, then the
+ * window in which one usually does. The details open from the info button.
+ */
+function SpawnOutlook({
+  outlook,
+  endedAt,
+  now,
+}: Readonly<{
+  outlook: Exclude<HighSecSpawnOutlook, { kind: "none" }>;
+  endedAt: number;
+  now: number;
+}>) {
+  let status: string;
+  if (outlook.kind === "blocked") {
+    status = `can spawn in ${formatCountdown(outlook.until - now)}`;
+  } else if (outlook.kind === "expected") {
+    status = `due within ${formatCountdown(outlook.until - now)}`;
+  } else {
+    status = "overdue";
+  }
+  const position = spawnPosition(endedAt, now);
+  return (
+    <Paper withBorder radius="md" p="sm">
+      <Stack gap={6}>
+        <Group justify="space-between" gap={4} wrap="wrap">
+          <Group gap={6} wrap="nowrap">
+            <IconClockHour4 size={16} aria-hidden style={{ flexShrink: 0 }} />
+            <Text size="sm" fw={600} style={{ whiteSpace: "nowrap" }}>
+              Next high-sec incursion
+            </Text>
+            {/* A button, so a tap or the keyboard opens it, not only hover. */}
+            <Popover width={280} withArrow shadow="md" position="bottom-start">
+              <Popover.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="xs"
+                  aria-label="How this is worked out"
+                >
+                  <WindowInfoIcon size={14} alt="" />
+                </ActionIcon>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <Text size="xs">
+                  None can spawn within {BLOCKED_HOURS} hours of the last
+                  high-sec incursion ending, and one usually does within{" "}
+                  {EXPECTED_HOURS}. The last ended {eveTime(endedAt)}.
+                </Text>
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
+          <Text
+            size="sm"
+            fw={600}
+            ff="monospace"
+            c={outlook.kind === "blocked" ? "dimmed" : "cyan"}
+            style={{ whiteSpace: "nowrap" }}
+          >
+            {status}
+          </Text>
+        </Group>
+        <Box
+          pos="relative"
+          h={8}
+          role="img"
+          aria-label={`Timeline: ${Math.round(position * EXPECTED_HOURS)} of ${EXPECTED_HOURS} hours since the last ended`}
+        >
+          <Group gap={2} h="100%" wrap="nowrap">
+            <Box
+              h="100%"
+              w={`${BLOCKED_SHARE * 100}%`}
+              bg="var(--mantine-color-gray-light)"
+              style={{ borderRadius: "4px 0 0 4px" }}
+            />
+            <Box
+              h="100%"
+              style={{ flex: 1, borderRadius: "0 4px 4px 0", opacity: 0.6 }}
+              bg="var(--mantine-color-cyan-filled)"
+            />
+          </Group>
+          <Box
+            pos="absolute"
+            top={-3}
+            h={14}
+            w={3}
+            bg="var(--mantine-color-bright)"
+            style={{
+              left: `calc(${position * 100}% - 1.5px)`,
+              borderRadius: 2,
+            }}
+          />
+        </Box>
+        <Box pos="relative" h={18} aria-hidden>
+          <Text size="xs" c="dimmed" pos="absolute" left={0}>
+            Last ended
+          </Text>
+          <Text
+            size="xs"
+            c="dimmed"
+            pos="absolute"
+            style={{
+              left: `${BLOCKED_SHARE * 100}%`,
+              transform: "translateX(-50%)",
+            }}
+          >
+            +{BLOCKED_HOURS}h
+          </Text>
+          <Text size="xs" c="dimmed" pos="absolute" right={0}>
+            +{EXPECTED_HOURS}h
+          </Text>
+        </Box>
+      </Stack>
+    </Paper>
   );
 }
 
@@ -185,11 +306,14 @@ function SystemsTable({
       ]),
     ];
     return ids
-      .map((solarSystemId) => ({
-        solarSystemId,
-        role: roleOf(solarSystemId, incursion.stagingSolarSystemId),
-        system: names.system(solarSystemId),
-      }))
+      .map((solarSystemId) => {
+        const system = names.system(solarSystemId);
+        return {
+          solarSystemId,
+          role: roleOf(solarSystemId, incursion.stagingSolarSystemId, system),
+          system,
+        };
+      })
       .sort(
         (a, b) =>
           ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) ||
@@ -209,7 +333,9 @@ function SystemsTable({
     <Table verticalSpacing={4} horizontalSpacing="xs" fz="sm">
       <Table.Thead>
         <Table.Tr>
-          <Table.Th w={28} />
+          <Table.Th w={28}>
+            <VisuallyHidden>Stations</VisuallyHidden>
+          </Table.Th>
           <Table.Th>System</Table.Th>
           <Table.Th ta="right">
             <Tooltip
@@ -224,7 +350,7 @@ function SystemsTable({
                 style={{ cursor: "help" }}
               >
                 Size
-                <IconInfoCircle size={14} aria-hidden />
+                <WindowInfoIcon size={14} alt="" />
               </Group>
             </Tooltip>
           </Table.Th>
@@ -500,7 +626,8 @@ export function StatusTab({
         ))
       )}
       <Text size="xs" c="dimmed">
-        Vanguard, Assault and Headquarters systems come from the community map{" "}
+        Vanguard, Assault and Headquarters systems come from the community maps
+        of{" "}
         <Anchor
           href="https://github.com/Shadowlauch/eve-incursions-node"
           target="_blank"
@@ -509,8 +636,25 @@ export function StatusTab({
         >
           eve-incursions.de
         </Anchor>{" "}
-        kept; null-sec constellations were never mapped. ESI names only the
-        staging system.
+        and the{" "}
+        <Anchor
+          href="https://wiki.eveuniversity.org/Constellation_layouts_for_Incursions"
+          target="_blank"
+          rel="noopener noreferrer"
+          inherit
+        >
+          EVE University wiki
+        </Anchor>{" "}
+        (
+        <Anchor
+          href="https://creativecommons.org/licenses/by-sa/4.0/"
+          target="_blank"
+          rel="noopener noreferrer"
+          inherit
+        >
+          CC BY-SA 4.0
+        </Anchor>
+        ). ESI names only the staging system.
       </Text>
     </Stack>
   );

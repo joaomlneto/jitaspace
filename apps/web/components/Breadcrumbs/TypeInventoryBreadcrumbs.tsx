@@ -3,8 +3,9 @@
 import type { BreadcrumbsProps } from "@mantine/core";
 import { memo } from "react";
 
-import { TypeInventoryBreadcrumbs as UITypeInventoryBreadcrumbs } from "@jitaspace/eve-components";
 import { useCategory, useGroup, useType } from "@jitaspace/hooks";
+
+import { TypeInventoryBreadcrumbsDisplay } from "./TypeInventoryBreadcrumbsDisplay";
 
 export type TypeInventoryBreadcrumbsProps = Omit<
   BreadcrumbsProps,
@@ -25,7 +26,7 @@ export const TypeInventoryBreadcrumbs = memo(
     const { data: category } = useCategory(categoryId);
 
     return (
-      <UITypeInventoryBreadcrumbs
+      <TypeInventoryBreadcrumbsDisplay
         typeId={typeId}
         groupId={groupId}
         groupName={group?.data.name}

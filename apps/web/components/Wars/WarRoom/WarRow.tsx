@@ -2,9 +2,8 @@
 
 import { Fragment } from "react";
 
-import { WarAnchor } from "@jitaspace/ui";
-
 import type { WarRoomWar } from "./types";
+import { WarAnchor } from "~/components/Anchor";
 import { BalanceBar, IskFigure, StatusPill, WarEntity } from "./parts";
 import { allyCount, formatDuration } from "./utils";
 import classes from "./WarRoom.module.css";

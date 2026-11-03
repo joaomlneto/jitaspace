@@ -444,6 +444,28 @@ describe("DataTable — pagination", () => {
     score: i,
   }));
 
+  it("names the previous/next arrows", () => {
+    const manyRows = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      name: `Row ${i}`,
+      score: i,
+    }));
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={manyRows}
+        withPagination
+        defaultPageSize={10}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next page" }),
+    ).toBeInTheDocument();
+  });
+
   it("limits the number of rendered data rows to defaultPageSize", () => {
     renderWithMantine(
       <DataTable

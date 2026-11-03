@@ -1,4 +1,5 @@
 import type { IncursionState } from "./math";
+import type { IncursionSiteRole } from "./siteRoles";
 import type { NpcStats } from "~/lib/npcStats";
 
 export type { IncursionState } from "./math";
@@ -58,6 +59,8 @@ export interface IncursionSolarSystem {
   longestWarpAu?: number;
   /** Only for the systems of active incursions. */
   stations?: IncursionStation[];
+  /** Only for the systems of active incursions, and only if it is mapped. */
+  siteRole?: IncursionSiteRole;
 }
 
 /** Who holds a system: an alliance, or a faction. */
@@ -102,6 +105,26 @@ export interface IncursionHistory extends IncursionLookups {
   incursions: IncursionRow[];
   /** Every appearance, state change and end, most recent first. */
   stateEvents: IncursionStateEventTuple[];
+}
+
+/** Where each site type spawns in a constellation, and its incursions. */
+export interface IncursionLayout {
+  constellationId: number;
+  /** The latest incursion's; null if none recorded one. */
+  stagingSolarSystemId: number | null;
+  /** Empty where the constellation's layout is not mapped. */
+  vanguard: number[];
+  assault: number[];
+  headquarters: number[];
+  incursionCount: number;
+  /** When the latest incursion was first seen; null if none was. */
+  latestIncursionAt: string | null;
+}
+
+/** The Layouts tab's data, from `/api/incursions/layouts`. */
+export interface IncursionLayouts extends IncursionLookups {
+  readAt: string;
+  layouts: IncursionLayout[];
 }
 
 export interface IncursionRat {

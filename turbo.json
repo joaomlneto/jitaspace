@@ -92,6 +92,8 @@
         "!.next/cache/**",
         "next-env.d.ts",
         "dist/**",
+        // apps/eve-icons-gallery is a static export, written to `out/`.
+        "out/**",
         ".output/**",
         ".vercel/output/**"
       ]
@@ -142,6 +144,20 @@
         "src/scopes/scopes.generated.ts",
         "src/scopes/endpoints.generated.ts"
       ]
+    },
+    // Also not kubb: `tsx scripts/generate.ts` turns the checked-in icon PNGs
+    // into components. Offline, so it needs no upstream build; the inputs are
+    // what it reads, so a sync that changes the art invalidates the cache.
+    "@jitaspace/eve-icons#kubb:generate": {
+      "inputs": [
+        "scripts/generate.ts",
+        "scripts/sets.ts",
+        "scripts/manifest.ts",
+        "scripts/png.ts",
+        "manifest.json",
+        "assets/**"
+      ],
+      "outputs": ["src/generated/**"]
     },
     "@jitaspace/hooks#kubb:generate": {
       "dependsOn": ["^build"],

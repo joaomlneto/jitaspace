@@ -2,15 +2,15 @@
 
 import { Suspense, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Box, Burger, Container, Group, Title } from "@mantine/core";
+import { Box, Burger, Container, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import { ServerStatusIndicator } from "~/components/ServerStatus/ServerStatusIndicator";
 import { jitaApps } from "~/config/apps";
 import UserButton from "~/layouts/MainLayout/UserButton";
@@ -21,12 +21,14 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
 
 /**
  * The nav group that owns the current route, chosen by the longest matching app
- * URL (so /contacts/corporation lights up Corporation, not Character). Falls back
- * to the first path segment for apps whose configured URL is a deeper default,
- * so e.g. Travel's "/travel/jita/amarr" still matches any /travel/* page.
+ * URL. Falls back to the first path segment for apps whose configured URL is a
+ * deeper default, so e.g. Travel's "/travel/jita/amarr" still matches any
+ * /travel/* page. A match on the app's own URL outranks a first-segment match
+ * of the same length, so /freelance belongs to the Universe board rather than
+ * to the Character app at /freelance/mine, whose first segment it also is.
  * Returns null on routes no group owns (e.g. the home page).
  */
-function activeGroupName(pathname: string): string | null {
+export function activeGroupName(pathname: string): string | null {
   let bestLen = 0;
   let bestName: string | null = null;
   for (const group of Object.values(jitaApps)) {
@@ -40,7 +42,7 @@ function activeGroupName(pathname: string): string | null {
         segment.length > 1 &&
         (pathname === segment || pathname.startsWith(`${segment}/`))
       ) {
-        len = segment.length;
+        len = segment.length - 0.5;
       }
       if (len > bestLen) {
         bestLen = len;
@@ -89,10 +91,11 @@ function ActiveDesktopNavGroup() {
 
 /**
  * Top navigation header for the MainLayout. Labelled "mega menu"-style
- * dropdowns (Character / Corporation / Alliance / Universe) replace the older
+ * dropdowns (Character / Universe) replace the older
  * icon-only triggers, alongside a Spotlight-backed search box and the character
  * menu. Responsive: trigger labels and the full search box appear on wider
- * screens, and it collapses to a burger + full-screen drawer below `sm`.
+ * screens, and it collapses to the character avatar (opening the same character
+ * menu) plus a burger + full-screen drawer below `sm`.
  */
 export function HeaderMenu() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
@@ -106,14 +109,16 @@ export function HeaderMenu() {
           <Group justify="space-between" h="100%" gap="xs" wrap="nowrap">
             <Group h="100%" gap="lg" wrap="nowrap">
               <Group h="100%" gap="sm" wrap="nowrap">
-                <Link href="/" className={classes.logo}>
+                {/* In every page's header, so it prefetches on intent rather
+                    than on sight (see HoverPrefetchLink). */}
+                <HoverPrefetchLink href="/" className={classes.logo}>
                   <Image
                     src="/logo.png"
                     alt="Jita logo"
                     width={32}
                     height={32}
                   />
-                </Link>
+                </HoverPrefetchLink>
                 <ServerStatusIndicator />
               </Group>
 
@@ -131,7 +136,7 @@ export function HeaderMenu() {
                   onClick={() => {
                     openContextModal({
                       modal: "login",
-                      title: <Title order={3}>Login</Title>,
+                      title: "Login",
                       size: "xl",
                       centered: false,
                       innerProps: {},
@@ -141,11 +146,15 @@ export function HeaderMenu() {
               )}
             </Group>
 
-            <Burger
-              opened={drawerOpened}
-              onClick={toggleDrawer}
-              hiddenFrom="sm"
-            />
+            <Group gap="xs" hiddenFrom="sm" wrap="nowrap">
+              {characterIds.length > 0 && <UserButton compact />}
+              <Burger
+                className={classes.burger}
+                opened={drawerOpened}
+                onClick={toggleDrawer}
+                aria-label="Toggle navigation"
+              />
+            </Group>
           </Group>
         </Container>
       </div>

@@ -5,8 +5,8 @@ import { Container, Group, Stack, Title } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { AttributesIcon } from "@jitaspace/eve-icons";
-import { DogmaAttributeAnchor } from "@jitaspace/ui";
 
+import { DogmaAttributeAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 
 interface DogmaAttributeRow {

@@ -1,12 +1,10 @@
 "use client";
 
 import type { AnchorProps } from "@mantine/core";
-import type { LinkProps } from "next/link";
 import { memo } from "react";
 import { Anchor } from "@mantine/core";
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
-  Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     onOpen?: () => void;
     disabled?: boolean;
