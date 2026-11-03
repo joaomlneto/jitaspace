@@ -75,6 +75,7 @@ import {
 } from "~/components/Breadcrumbs";
 import { COMPARABLE_CATEGORY_IDS } from "~/components/Compare/catalog";
 import { ItemVariations } from "~/components/Compare/ItemVariations";
+import { EffectCategoryHeading } from "~/components/Dogma";
 import {
   HeroCard,
   HeroStat,
@@ -96,6 +97,7 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
+import { groupByEffectCategory } from "~/lib/dogmaEffectCategory";
 import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
@@ -466,6 +468,18 @@ export default function TypePage({
         (a, b) => a.effect_id - b.effect_id,
       ),
     [typeData?.dogma_effects],
+  );
+
+  // By when they apply (Passive, Activated, Online, …), as the attributes are
+  // grouped by attribute category; effects we have no row for come last.
+  const groupedDogmaEffects = useMemo(
+    () =>
+      groupByEffectCategory(
+        sortedDogmaEffects,
+        (effect) => dogmaMeta.effects[effect.effect_id]?.categoryId,
+        dogmaMeta.effectCategories,
+      ),
+    [sortedDogmaEffects, dogmaMeta.effects, dogmaMeta.effectCategories],
   );
 
   // Physical properties — only render the ones this type actually defines.
@@ -926,31 +940,45 @@ export default function TypePage({
                     >
                       Effects
                     </SectionHeading>
-                    <Paper withBorder radius="md" p="sm">
-                      <Table highlightOnHover verticalSpacing="xs">
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th>Effect</Table.Th>
-                            <Table.Th ta="right">Default</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                          {sortedDogmaEffects.map((effect) => (
-                            <Table.Tr key={effect.effect_id}>
-                              <Table.Td>
-                                <TypeEffectCell
-                                  effectId={effect.effect_id}
-                                  meta={dogmaMeta.effects[effect.effect_id]}
-                                />
-                              </Table.Td>
-                              <Table.Td ta="right">
-                                {booleanBadge(effect.is_default)}
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    </Paper>
+                    {groupedDogmaEffects.map((group) => (
+                      <Paper
+                        key={group.category?.effectCategoryId ?? "other"}
+                        withBorder
+                        radius="md"
+                        p="sm"
+                      >
+                        <Stack gap="xs">
+                          {/* One uncategorized group means no category data, not a group worth naming. */}
+                          {(group.category !== null ||
+                            groupedDogmaEffects.length > 1) && (
+                            <EffectCategoryHeading category={group.category} />
+                          )}
+                          <Table highlightOnHover verticalSpacing="xs">
+                            <Table.Thead>
+                              <Table.Tr>
+                                <Table.Th>Effect</Table.Th>
+                                <Table.Th ta="right">Default</Table.Th>
+                              </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                              {group.items.map((effect) => (
+                                <Table.Tr key={effect.effect_id}>
+                                  <Table.Td>
+                                    <TypeEffectCell
+                                      effectId={effect.effect_id}
+                                      meta={dogmaMeta.effects[effect.effect_id]}
+                                    />
+                                  </Table.Td>
+                                  <Table.Td ta="right">
+                                    {booleanBadge(effect.is_default)}
+                                  </Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </Table.Tbody>
+                          </Table>
+                        </Stack>
+                      </Paper>
+                    ))}
                   </Stack>
                 )}
               </Stack>

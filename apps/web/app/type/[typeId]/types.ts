@@ -1,3 +1,4 @@
+import type { EffectCategories } from "~/lib/dogmaEffectCategory";
 import type { ResolvedEffectDescription } from "~/lib/dogmaEffectDescription";
 
 /**
@@ -22,6 +23,8 @@ export interface TypeDogmaEffectMeta {
   name?: string;
   /** CCP's description, else our AI-generated one (resolveEffectDescription). */
   description?: ResolvedEffectDescription;
+  /** The effect's category id, a key of `TypeDogmaMeta.effectCategories`. */
+  categoryId?: number;
 }
 
 export interface TypeDogmaMeta {
@@ -33,6 +36,8 @@ export interface TypeDogmaMeta {
   categoryNames: Record<number, string>;
   /** Keyed by effect id. */
   effects: Record<number, TypeDogmaEffectMeta>;
+  /** Every effect category, keyed by id, for grouping the effects. */
+  effectCategories: EffectCategories;
 }
 
 export const emptyTypeDogmaMeta: TypeDogmaMeta = {
@@ -40,4 +45,5 @@ export const emptyTypeDogmaMeta: TypeDogmaMeta = {
   unitSymbols: {},
   categoryNames: {},
   effects: {},
+  effectCategories: {},
 };

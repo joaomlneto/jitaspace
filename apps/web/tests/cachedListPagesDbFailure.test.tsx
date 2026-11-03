@@ -51,6 +51,7 @@ const dogmaAttributeFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 const typeAttributeGroupBy = jest.fn<(a?: unknown) => Promise<Rows>>();
 const dogmaEffectFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 const typeEffectGroupBy = jest.fn<(a?: unknown) => Promise<Rows>>();
+const dogmaEffectCategoryFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -78,6 +79,9 @@ jest.mock("~/lib/db", () => ({
     typeAttribute: { groupBy: (a?: unknown) => typeAttributeGroupBy(a) },
     dogmaEffect: { findMany: (a?: unknown) => dogmaEffectFindMany(a) },
     typeEffect: { groupBy: (a?: unknown) => typeEffectGroupBy(a) },
+    dogmaEffectCategory: {
+      findMany: (a?: unknown) => dogmaEffectCategoryFindMany(a),
+    },
   },
 }));
 
@@ -200,6 +204,7 @@ beforeEach(() => {
   typeAttributeGroupBy.mockReset().mockResolvedValue([]);
   dogmaEffectFindMany.mockReset().mockResolvedValue([]);
   typeEffectGroupBy.mockReset().mockResolvedValue([]);
+  dogmaEffectCategoryFindMany.mockReset().mockResolvedValue([]);
 });
 
 // ---------------------------------------------------------------------------
@@ -305,6 +310,12 @@ describe("a database failure never becomes a cached 404", () => {
       read: "typeEffect.groupBy",
       fail: () => typeEffectGroupBy.mockRejectedValue(new Error(BLIP)),
     },
+    {
+      route: "/dogma/effects",
+      read: "dogmaEffectCategory.findMany",
+      fail: () =>
+        dogmaEffectCategoryFindMany.mockRejectedValue(new Error(BLIP)),
+    },
   ];
 
   const MODULES: Record<string, string> = {
@@ -322,7 +333,7 @@ describe("a database failure never becomes a cached 404", () => {
   it("enumerates every Prisma read on the nine routes", () => {
     // Guards the guard: if a route gains a read, this count fails and whoever
     // added it has to decide whether it needs a case here.
-    expect(cases).toHaveLength(18);
+    expect(cases).toHaveLength(19);
   });
 
   it.each(cases)(
@@ -606,7 +617,12 @@ describe("dogma list routes server data", () => {
 
   it("attaches each effect's type count", async () => {
     dogmaEffectFindMany.mockResolvedValue([
-      { effectId: 11, name: "loPower", displayName: "Low Power" },
+      {
+        effectId: 11,
+        name: "loPower",
+        displayName: "Low Power",
+        effectCategoryId: 0,
+      },
     ]);
     typeEffectGroupBy.mockResolvedValue([
       { effectId: 11, _count: { effectId: 5 } },
@@ -617,9 +633,37 @@ describe("dogma list routes server data", () => {
         effectId: 11,
         name: "loPower",
         displayName: "Low Power",
+        effectCategoryId: 0,
         numTypeIds: 5,
       },
     });
+  });
+
+  it("sends the effect categories once, keyed by id", async () => {
+    dogmaEffectCategoryFindMany.mockResolvedValue([
+      {
+        effectCategoryId: 0,
+        name: "dgmEffPassive",
+        customName: "Passive",
+        customDescription: "Always applies.",
+      },
+    ]);
+    const props = await propsOf("~/app/dogma/effects/page");
+    expect(props.categories).toEqual({
+      0: {
+        effectCategoryId: 0,
+        name: "dgmEffPassive",
+        customName: "Passive",
+        customDescription: "Always applies.",
+      },
+    });
+  });
+
+  it("refreshes daily, since the category names are ours, not the SDE's", async () => {
+    await propsOf("~/app/dogma/effects/page");
+    expect(mockCacheLife).toHaveBeenCalledWith("days");
+    expect(mockCacheLife).not.toHaveBeenCalledWith("max");
+    expect(mockCacheTag).toHaveBeenCalledWith("sde");
   });
 
   it("ignores a count for an effect that has no row", async () => {
@@ -627,6 +671,9 @@ describe("dogma list routes server data", () => {
     typeEffectGroupBy.mockResolvedValue([
       { effectId: 999, _count: { effectId: 3 } },
     ]);
-    expect(await propsOf("~/app/dogma/effects/page")).toEqual({ effects: {} });
+    expect(await propsOf("~/app/dogma/effects/page")).toEqual({
+      effects: {},
+      categories: {},
+    });
   });
 });
