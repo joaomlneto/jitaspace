@@ -3,6 +3,7 @@ import React from "react";
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
 import {
+  AccessGroupsIcon,
   AgencyIcon,
   AgentFinderIcon,
   AlliancesIcon,
@@ -161,6 +162,23 @@ export const characterApps: Record<string, JitaApp> = {
         {
           reason: "Update Character Fittings",
           scopes: ["esi-fittings.write_fittings.v1"],
+        },
+      ],
+    },
+  },
+  accessLists: {
+    name: "Access Lists",
+    description:
+      "Browse the access lists your characters manage, and who each one allows or blocks.",
+    url: "/access-lists",
+    Icon: (props) => React.createElement(AccessGroupsIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Access Lists",
+          description:
+            "Read the access lists your characters are a Manager or Admin of, with their members.",
+          scopes: ["esi-access.read_lists.v1"],
         },
       ],
     },

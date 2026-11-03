@@ -32,6 +32,7 @@ import {
   columnSortKey,
   compareSortKeys,
   DataTableToolbar,
+  getPaginationControlProps,
   matchesColumnFilter,
   matchesGlobalFilter,
   primitiveString,
@@ -416,6 +417,7 @@ export function DataTable<TData extends object>({
             value={pagination.pageIndex + 1}
             onChange={(page) => table.setPageIndex(page - 1)}
             size="sm"
+            getControlProps={getPaginationControlProps}
           />
           <Text size="sm" c="dimmed">
             {table.getFilteredRowModel().rows.length} rows
