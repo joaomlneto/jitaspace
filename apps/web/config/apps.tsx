@@ -23,6 +23,7 @@ import {
   ShipsIcon,
   SkillsIcon,
   WalletIcon,
+  WarReportIcon,
   WarsIcon,
 } from "@jitaspace/eve-icons";
 
@@ -301,6 +302,14 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => <WarsIcon {...props} />,
     scopes: {},
   },
+  militaryCampaigns: {
+    name: "Military Campaigns",
+    description:
+      "Follow every military campaign and its objectives, and what your characters contributed.",
+    url: "/military-campaigns",
+    Icon: (props) => <WarReportIcon {...props} />,
+    scopes: {},
+  },
   alliances: {
     name: "Alliances",
     description: "Browse every open alliance and its members.",
@@ -490,6 +499,10 @@ export const extraJitaFeatures: AppScopeSet[] = [
   {
     reason: "View your character assets (and active ship fitting)",
     scopes: ["esi-assets.read_assets.v1"],
+  },
+  {
+    reason: "Read military campaign participation",
+    scopes: ["esi.activity.char:read"],
   },
 ];
 
