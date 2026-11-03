@@ -11,16 +11,15 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
-import {
-  IconChevronDown,
-  IconFlask,
-  IconRefresh,
-  IconRestore,
-  IconSettings,
-} from "@tabler/icons-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import ReactCountryFlag from "react-country-flag";
 
 import { setAcceptLanguage } from "@jitaspace/esi-client";
+import {
+  CategoryResearchIcon,
+  SettingsResetIcon,
+  SystemSettingsIcon,
+} from "@jitaspace/eve-icons";
 
 import { useDismissedNews } from "~/components/News";
 import {
@@ -143,13 +142,28 @@ export function SettingsCard() {
   return (
     <Tabs defaultValue="general">
       <Tabs.List mb="md">
-        <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
+        <Tabs.Tab
+          value="general"
+          leftSection={
+            <SystemSettingsIcon size={16} color="currentColor" alt="" />
+          }
+        >
           General
         </Tabs.Tab>
-        <Tabs.Tab value="experimental" leftSection={<IconFlask size={16} />}>
+        <Tabs.Tab
+          value="experimental"
+          leftSection={
+            <CategoryResearchIcon size={16} color="currentColor" alt="" />
+          }
+        >
           Experimental
         </Tabs.Tab>
-        <Tabs.Tab value="reset" leftSection={<IconRefresh size={16} />}>
+        <Tabs.Tab
+          value="reset"
+          leftSection={
+            <SettingsResetIcon size={16} color="currentColor" alt="" />
+          }
+        >
           Reset
         </Tabs.Tab>
       </Tabs.List>
@@ -335,7 +349,9 @@ export function SettingsCard() {
 
           <Button
             variant="default"
-            leftSection={<IconRestore size={16} />}
+            leftSection={
+              <SettingsResetIcon size={16} color="currentColor" alt="" />
+            }
             disabled={!newsMounted || hiddenNewsCount === 0}
             onClick={handleResetHiddenNews}
           >

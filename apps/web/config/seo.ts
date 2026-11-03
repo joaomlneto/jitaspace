@@ -26,6 +26,8 @@ export const CRAWLER_DISALLOWED_PATHS = [
   "/mail",
   "/mercenary-tactical-operations",
   "/notifications",
+  // The PI landing page and schematics are public; the offices are a corporation's.
+  "/planetary-interaction/customs-offices",
   "/settings",
   "/skills",
   "/wallet",

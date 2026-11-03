@@ -15,10 +15,10 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
-import { IconSearch, IconX } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
 
 import { EveEntitySelect } from "@jitaspace/eve-components";
-import { AssetsIcon } from "@jitaspace/eve-icons";
+import { AssetsIcon, SystemSearchIcon } from "@jitaspace/eve-icons";
 import {
   useEsiNameLookup,
   useMarketPrices,
@@ -153,7 +153,9 @@ export default function Page() {
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
             placeholder="Search items…"
-            leftSection={<IconSearch size={16} />}
+            leftSection={
+              <SystemSearchIcon size={16} color="currentColor" alt="" />
+            }
             rightSection={
               query ? (
                 <ActionIcon

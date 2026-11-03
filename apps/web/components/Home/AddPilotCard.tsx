@@ -2,7 +2,8 @@
 
 import { Stack, Text, UnstyledButton } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
-import { IconPlus } from "@tabler/icons-react";
+
+import { CategoryPersonPlayerContactPlusAddIcon } from "@jitaspace/eve-icons";
 
 import classes from "./AddPilotCard.module.css";
 
@@ -21,7 +22,11 @@ export function AddPilotCard() {
     >
       <Stack align="center" justify="center" gap={10} h="100%">
         <div className={classes.plus}>
-          <IconPlus size={26} stroke={1.5} />
+          <CategoryPersonPlayerContactPlusAddIcon
+            size={26}
+            color="currentColor"
+            alt=""
+          />
         </div>
         <Text fw={600} tt="uppercase" className={classes.label}>
           Add pilot

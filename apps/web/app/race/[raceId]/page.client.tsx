@@ -20,17 +20,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconBuildingStore,
-  IconDna,
-  IconFileText,
-  IconHierarchy3,
-  IconHistory,
-  IconListCheck,
-  IconSchool,
-  IconUsersGroup,
-  IconUserStar,
-} from "@tabler/icons-react";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -38,10 +27,17 @@ import {
   CategoryCorporationIcon,
   CategorySpaceshipCommandIcon,
   ControlCargoInventoryIcon,
+  ServiceAlphaIcon,
+  SystemArrowRotateLeftIcon,
   SystemShipTreeIcon,
+  WindowAgentIcon,
+  WindowAttributesIcon,
   WindowInfoIcon,
+  WindowNoteIcon,
+  WindowPoliticsIcon,
   WindowSkillsIcon,
   WindowStationIcon,
+  WindowTutorialIcon,
 } from "@jitaspace/eve-icons";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -595,7 +591,7 @@ function SkillsPanel({
     <Stack gap="xl">
       {startingSkills.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconListCheck size={18} />}>
+          <SectionHeading icon={<WindowSkillsIcon size={18} alt="" />}>
             Starting skills
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -635,7 +631,7 @@ function SkillsPanel({
 
       {cloneGrade && counts.alphaSkills > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconDna size={18} />}>
+          <SectionHeading icon={<ServiceAlphaIcon size={18} alt="" />}>
             Alpha clone skills
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1064,7 +1060,7 @@ function StationsPanel({
     <Stack gap="lg">
       {stationTypes.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconBuildingStore size={18} />}>
+          <SectionHeading icon={<WindowStationIcon size={18} alt="" />}>
             Station architecture
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1296,7 +1292,7 @@ function OverviewPanel({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconUsersGroup size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           At a glance
         </SectionHeading>
         <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
@@ -1313,7 +1309,7 @@ function OverviewPanel({
 
       {race.factions.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconHierarchy3 size={18} />}>
+          <SectionHeading icon={<WindowPoliticsIcon size={18} alt="" />}>
             Factions
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1342,7 +1338,7 @@ function OverviewPanel({
 
       {agents.total > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconUserStar size={18} />}>
+          <SectionHeading icon={<WindowAgentIcon size={18} alt="" />}>
             Agents
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1698,16 +1694,20 @@ export default function RacePage(race: Readonly<PageProps>) {
         >
           <Tabs.List>
             {tab("overview", <WindowInfoIcon size={16} alt="" />, "Overview")}
-            {tab("description", <IconFileText size={16} />, "Description")}
+            {tab(
+              "description",
+              <WindowNoteIcon size={16} alt="" />,
+              "Description",
+            )}
             {tab(
               "bloodlines",
-              <IconDna size={16} />,
+              <WindowAttributesIcon size={16} alt="" />,
               "Bloodlines",
               race.bloodlines.length,
             )}
             {tab(
               "schools",
-              <IconSchool size={16} />,
+              <WindowTutorialIcon size={16} alt="" />,
               "Schools",
               race.schools.length,
             )}
@@ -1751,7 +1751,15 @@ export default function RacePage(race: Readonly<PageProps>) {
               "Stations",
               counts.stations > 0 ? counts.stations : undefined,
             )}
-            {tab("history", <IconHistory size={16} />, "History")}
+            {tab(
+              "history",
+              <SystemArrowRotateLeftIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "History",
+            )}
           </Tabs.List>
 
           {/* Overview */}

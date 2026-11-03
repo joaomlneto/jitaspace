@@ -11,7 +11,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
-import { IconExternalLink } from "@tabler/icons-react";
 
 import {
   AllianceName,
@@ -21,7 +20,7 @@ import {
   RegionName,
   SolarSystemName,
 } from "@jitaspace/eve-components";
-import { FittingIcon } from "@jitaspace/eve-icons";
+import { FittingIcon, SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 import { useConstellation, useSolarSystem } from "@jitaspace/hooks";
 import {
   AllianceAvatar,
@@ -373,7 +372,7 @@ export function KillmailActions({
               size="sm"
               aria-label="Open in…"
             >
-              <IconExternalLink size={16} />
+              <SystemOpenWindowIcon size={16} color="currentColor" alt="" />
             </ActionIcon>
           </Menu.Target>
         </Tooltip>
@@ -384,7 +383,9 @@ export function KillmailActions({
             href={zkillboardKillUrl(killmail.killmail_id)}
             target="_blank"
             rel="noopener noreferrer"
-            leftSection={<IconExternalLink size={14} />}
+            leftSection={
+              <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+            }
           >
             zKillboard
           </Menu.Item>
@@ -393,7 +394,9 @@ export function KillmailActions({
             href={eveKillKillUrl(killmail.killmail_id)}
             target="_blank"
             rel="noopener noreferrer"
-            leftSection={<IconExternalLink size={14} />}
+            leftSection={
+              <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+            }
           >
             EVE-Kill
           </Menu.Item>

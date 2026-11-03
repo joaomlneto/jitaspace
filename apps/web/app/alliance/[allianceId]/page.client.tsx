@@ -19,7 +19,6 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { GetAlliancesAllianceIdQueryResponse } from "@jitaspace/esi-client";
@@ -32,6 +31,7 @@ import {
   CategoryCorporationIcon,
   CategoryOngoingConflictsIcon,
   CategorySkullIcon,
+  SystemOpenWindowIcon,
   WindowInfoIcon,
   WindowSovereigntyIcon,
 } from "@jitaspace/eve-icons";
@@ -502,7 +502,9 @@ export default function AlliancePage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>

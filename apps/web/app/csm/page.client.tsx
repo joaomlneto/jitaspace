@@ -16,12 +16,13 @@ import {
   TextInput,
   Title,
 } from "@mantine/core";
+import { IconBrandTwitch } from "@tabler/icons-react";
+
 import {
-  IconBrandTwitch,
-  IconExternalLink,
-  IconMessages,
-  IconSearch,
-} from "@tabler/icons-react";
+  ControlStartConversationIcon,
+  SystemOpenWindowIcon,
+  SystemSearchIcon,
+} from "@jitaspace/eve-icons";
 
 import type { CsmCandidate, CsmElection } from "~/config/csm";
 import { CharacterCard } from "~/components/Card";
@@ -103,7 +104,9 @@ function Hero({ election }: Readonly<CsmPageProps>) {
               target="_blank"
               rel="noopener noreferrer"
               color={CSM_21_RED}
-              rightSection={<IconExternalLink size={14} />}
+              rightSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               Vote now
             </Button>
@@ -115,7 +118,9 @@ function Hero({ election }: Readonly<CsmPageProps>) {
             rel="noopener noreferrer"
             color={CSM_21_RED}
             variant={election.voteUrl ? "white" : "filled"}
-            rightSection={<IconExternalLink size={14} />}
+            rightSection={
+              <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+            }
           >
             Official announcement
           </Button>
@@ -126,7 +131,13 @@ function Hero({ election }: Readonly<CsmPageProps>) {
             rel="noopener noreferrer"
             variant="white"
             color="dark"
-            leftSection={<IconMessages size={16} />}
+            leftSection={
+              <ControlStartConversationIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />
+            }
           >
             Campaign threads
           </Button>
@@ -213,8 +224,16 @@ function CandidateCard({
           variant="light"
           color={CSM_21_RED}
           size="xs"
-          leftSection={<IconMessages size={14} />}
-          rightSection={<IconExternalLink size={12} />}
+          leftSection={
+            <ControlStartConversationIcon
+              size={14}
+              color="currentColor"
+              alt=""
+            />
+          }
+          rightSection={
+            <SystemOpenWindowIcon size={12} color="currentColor" alt="" />
+          }
           style={{ alignSelf: "flex-start" }}
         >
           Campaign thread
@@ -250,7 +269,9 @@ function Candidates({ election }: Readonly<CsmPageProps>) {
         <TextInput
           aria-label="Search candidates"
           placeholder="Search names and pitches"
-          leftSection={<IconSearch size={16} />}
+          leftSection={
+            <SystemSearchIcon size={16} color="currentColor" alt="" />
+          }
           value={query}
           onChange={(event) => setQuery(event.currentTarget.value)}
           w={{ base: "100%", sm: 280 }}

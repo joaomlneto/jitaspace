@@ -10,9 +10,9 @@ import {
   TextInput,
   useCombobox,
 } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
+import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import type { CatalogType, IndexedCompareCatalog } from "./catalog";
 import { MIN_SEARCH_LENGTH, searchCatalogTypes } from "./search";
@@ -117,7 +117,9 @@ export const CompareItemPicker = memo(
             autoFocus={autoFocus}
             placeholder={placeholder}
             size={size}
-            leftSection={<IconSearch size={16} />}
+            leftSection={
+              <SystemSearchIcon size={16} color="currentColor" alt="" />
+            }
             rightSection={
               isLoading && query.length > 0 ? <Loader size="xs" /> : null
             }
