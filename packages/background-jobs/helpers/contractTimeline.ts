@@ -146,12 +146,64 @@ export const isRegionComplete = (history: number[], count: number) => {
 export const endReasonOf = (
   dateExpired: number,
   { lastSeen, firstMissed }: Pick<MissingContract, "lastSeen" | "firstMissed">,
-): ContractEndReason | null =>
-  dateExpired > firstMissed
-    ? "RemovedBeforeExpiry"
-    : firstMissed - lastSeen <= GAP_MS
-      ? "Expired"
-      : null;
+): ContractEndReason | null => {
+  if (dateExpired > firstMissed) return "RemovedBeforeExpiry";
+  return firstMissed - lastSeen <= GAP_MS ? "Expired" : null;
+};
+
+/**
+ * One outstanding contract absent from a new observation of its region:
+ * still missing (with one more miss if the listing was complete), or ended.
+ */
+const applyAbsence = (
+  c: OutstandingContract,
+  current: MissingContract | undefined,
+  previousObservedAt: number | undefined,
+  obs: RegionObservation,
+  complete: boolean,
+): { missing: MissingContract } | { ended: EndedContract } => {
+  // Not listed: it was listed in the region's previous observation (or it
+  // would be missing already), or, with none on record, when the database
+  // last saw it.
+  const m = current ?? {
+    lastSeen: Math.max(previousObservedAt ?? 0, c.lastSeenAt),
+    // When it went missing, even if this listing was partial.
+    firstMissed: obs.observedAt,
+    missed: 0,
+  };
+  // Partial listing: don't count toward ending.
+  if (!complete) return { missing: m };
+  const missed = m.missed + 1;
+  if (missed < MISSES_TO_END) return { missing: { ...m, missed } };
+  return {
+    ended: {
+      contractId: c.contractId,
+      lastSeen: m.lastSeen,
+      reason: endReasonOf(c.dateExpired, m),
+    },
+  };
+};
+
+/** lastSeen for every contract still outstanding after this run. */
+const checkpointOf = (
+  outstanding: readonly OutstandingContract[],
+  ended: readonly EndedContract[],
+  missing: TimelineState["missing"],
+  regions: TimelineState["regions"],
+) => {
+  const endedIds = new Set(ended.map((e) => e.contractId));
+  return outstanding
+    .filter((c) => !endedIds.has(c.contractId))
+    .map((c) => ({
+      contractId: c.contractId,
+      lastSeen: Math.max(
+        c.lastSeenAt,
+        missing[c.contractId]?.lastSeen ??
+          regions[c.regionId]?.lastModified ??
+          0,
+      ),
+    }));
+};
 
 /**
  * Seed region histories from the outstanding set, for regions with no history
@@ -222,35 +274,21 @@ export const planContractTimeline = ({
     for (const id of obs.contractIds) seen.set(id, obs.observedAt);
 
     for (const c of byRegion.get(obs.regionId) ?? []) {
-      if (obs.contractIds.has(c.contractId)) {
+      const outcome = obs.contractIds.has(c.contractId)
+        ? null
+        : applyAbsence(
+            c,
+            missing[c.contractId],
+            previous?.lastModified,
+            obs,
+            complete,
+          );
+      if (outcome && "missing" in outcome) {
+        missing[c.contractId] = outcome.missing;
+      } else {
         delete missing[c.contractId];
-        continue;
+        if (outcome) ended.push(outcome.ended);
       }
-      // Not listed: it was listed in the region's previous observation (or
-      // it would be missing already), or, with none on record, when the
-      // database last saw it.
-      const m = missing[c.contractId] ?? {
-        lastSeen: Math.max(previous?.lastModified ?? 0, c.lastSeenAt),
-        // When it went missing, even if this listing was partial.
-        firstMissed: obs.observedAt,
-        missed: 0,
-      };
-      if (!complete) {
-        // Partial listing: don't count toward ending.
-        missing[c.contractId] = m;
-        continue;
-      }
-      const missed = m.missed + 1;
-      if (missed < MISSES_TO_END) {
-        missing[c.contractId] = { ...m, missed };
-        continue;
-      }
-      ended.push({
-        contractId: c.contractId,
-        lastSeen: m.lastSeen,
-        reason: endReasonOf(c.dateExpired, m),
-      });
-      delete missing[c.contractId];
     }
   }
 
@@ -261,26 +299,17 @@ export const planContractTimeline = ({
     if (!outstandingIds.has(Number(id))) delete missing[id];
   }
 
-  let checkpoint: TimelinePlan["checkpoint"] = null;
-  let lastCheckpointAt = state.lastCheckpointAt;
-  if (now - state.lastCheckpointAt >= CHECKPOINT_MS) {
-    const endedIds = new Set(ended.map((e) => e.contractId));
-    checkpoint = outstanding
-      .filter((c) => !endedIds.has(c.contractId))
-      .map((c) => ({
-        contractId: c.contractId,
-        lastSeen: Math.max(
-          c.lastSeenAt,
-          missing[c.contractId]?.lastSeen ??
-            regions[c.regionId]?.lastModified ??
-            0,
-        ),
-      }));
-    lastCheckpointAt = now;
-  }
+  const due = now - state.lastCheckpointAt >= CHECKPOINT_MS;
+  const checkpoint = due
+    ? checkpointOf(outstanding, ended, missing, regions)
+    : null;
 
   return {
-    state: { regions, missing, lastCheckpointAt },
+    state: {
+      regions,
+      missing,
+      lastCheckpointAt: due ? now : state.lastCheckpointAt,
+    },
     seen,
     ended,
     checkpoint,
