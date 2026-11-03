@@ -225,6 +225,15 @@ describe("isFreelanceJobId", () => {
   });
 });
 
+/**
+ * The request config every page fetch must get: ESI marks cursor pages
+ * immutable for a year, so without the header the browser replays old pages.
+ */
+const FRESH_REQUEST = {
+  signal: expect.any(AbortSignal),
+  headers: { "Cache-Control": "no-cache" },
+};
+
 describe("useFreelanceJobs", () => {
   it("walks the active jobs backwards from the start, anonymously", async () => {
     mockListing.mockImplementation(() =>
@@ -236,9 +245,10 @@ describe("useFreelanceJobs", () => {
 
     expect(result.current.data).toEqual([job(JOB_ID)]);
     expect(mockListing).toHaveBeenCalledTimes(1);
-    const [params, headers] = mockListing.mock.calls[0]!;
+    const [params, headers, request] = mockListing.mock.calls[0]!;
     expect(params).toEqual({ limit: 100, before: "0" });
     expect(headers).toBeUndefined();
+    expect(request).toEqual(FRESH_REQUEST);
   });
 
   it("walks forwards, filtered by corporation, to include finished jobs", async () => {
@@ -283,6 +293,8 @@ describe("useFreelanceJob", () => {
     expect(result.current.data).toEqual({ id: JOB_ID, name: "Haul" });
     // A logged-in character is not volunteered: a public job needs no token.
     expect(mockDetail.mock.calls[0]?.slice(0, 2)).toEqual([JOB_ID, undefined]);
+    // ESI's 60 s public cache ignores the token, so the browser's is skipped.
+    expect(mockDetail.mock.calls[0]?.[2]).toEqual(FRESH_REQUEST);
   });
 
   it("reads as the given character, under its own cache entry", async () => {
@@ -520,6 +532,10 @@ describe("useCorporationFreelanceJobs", () => {
       [500, { limit: 100, after: "0" }, { Authorization: "Bearer token-1" }],
       [500, { limit: 100, after: "a1" }, { Authorization: "Bearer token-1" }],
     ]);
+    expect(mockCorporationListing.mock.calls.map((call) => call[3])).toEqual([
+      FRESH_REQUEST,
+      FRESH_REQUEST,
+    ]);
   });
 
   it("needs the Project_Manager role as well as the scope", () => {
@@ -589,6 +605,7 @@ describe("useCorporationFreelanceJobParticipants", () => {
       { limit: 100, after: "0" },
       { Authorization: "Bearer token-1" },
     ]);
+    expect(mockParticipants.mock.calls[0]?.[4]).toEqual(FRESH_REQUEST);
   });
 
   it("stays idle without a manager in that corporation", () => {

@@ -14,6 +14,7 @@ import {
 
 import type { FreelanceJobDetails } from "./freelanceJobTypes";
 import { useAccessToken } from "../auth";
+import { ESI_NO_CACHE_HEADERS } from "../utils/esiCursorQueryOptions";
 import { isFreelanceJobId } from "./freelanceJobTypes";
 
 /**
@@ -61,7 +62,10 @@ export function useFreelanceJob(
       getFreelanceJobsDetail(
         jobId ?? "",
         authenticated ? authHeaders : undefined,
-        { signal },
+        // ESI answers `public, max-age=60` without `Vary: Authorization`, so
+        // the browser would hand an anonymous 404 to the authorised retry
+        // that "View as" makes, or a private job to a later anonymous read.
+        { signal, headers: ESI_NO_CACHE_HEADERS },
       ),
     enabled: validId && (!authenticated || accessToken !== null),
     select: (response) => response.data,

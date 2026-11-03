@@ -35,7 +35,7 @@ export function useCharacterFreelanceJobs(characterId?: number) {
 
   return useQuery({
     // The generated options as they are, so this shares a cache entry with
-    // the multi-character hooks below and useMultipleCharacterFreelanceJobs.
+    // useCharactersFreelanceJobs below.
     ...getCharactersFreelanceJobsListingQueryOptions(characterId, authHeaders),
     enabled: characterId !== undefined && accessToken !== null,
     select: selectJobs,

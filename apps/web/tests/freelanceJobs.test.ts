@@ -54,8 +54,12 @@ describe("freelanceJobProgressPercent", () => {
 describe("formatProgressPercent", () => {
   it.each([
     [0, "0"],
-    [0.04, "0.0"],
+    // Started, however slightly: never "0".
+    [0.01, "<0.1"],
+    [0.04, "<0.1"],
     [0.4, "0.4"],
+    // Rounded down like the whole numbers, so 0.99 does not read "1.0".
+    [0.99, "0.9"],
     [1, "1"],
     [37.9, "37"],
     // Still open, so it must not read as done.

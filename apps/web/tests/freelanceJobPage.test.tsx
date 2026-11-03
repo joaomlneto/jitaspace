@@ -21,14 +21,22 @@ jest.mock("@jitaspace/hooks", () => ({
   CORPORATION_FREELANCE_JOBS_SCOPE: "esi-corporations.read_freelance_jobs.v1",
   FREELANCE_JOB_MANAGER_ROLES: ["Project_Manager"],
   useAuthStoreHasHydrated: () => hooks.hydrated(),
-  useAuthenticatedCharacterIds: () => hooks.characterIds(),
   useFreelanceJob: (...args: unknown[]) => hooks.job(...args),
   useCharactersFreelanceJobs: () => hooks.listings(),
   useCharactersFreelanceJobParticipation: (...args: unknown[]) =>
     hooks.participation(...args),
   useCorporationFreelanceJobParticipants: (...args: unknown[]) =>
     hooks.participants(...args),
-  useEsiSubjects: () => hooks.subjects(),
+  // Characters come from `characterIds` (those with a usable token);
+  // corporations from `subjects`.
+  useEsiSubjects: ({ kind }: { kind: string }) =>
+    kind === "character"
+      ? (hooks.characterIds() as number[]).map((id) => ({
+          id,
+          characterId: id,
+          authHeaders: {},
+        }))
+      : hooks.subjects(),
   useGroup: (...args: unknown[]) => hooks.group(...args),
   // No character here can dock at the structure, so its name stays unread.
   useStructure: () => ({ data: undefined, isLoading: false }),
@@ -218,7 +226,7 @@ describe("Freelance job page", () => {
     });
   });
 
-  it("keeps ?as= while the auth store rehydrates, and drops a stranger after", () => {
+  it("keeps ?as= while the auth store rehydrates, and drops a character without a usable token after", () => {
     hooks.hydrated.mockReturnValue(false);
     const { unmount } = renderPage(`?as=${CHARACTER}`);
     expect(hooks.job).toHaveBeenLastCalledWith(JOB_ID, {
@@ -245,6 +253,7 @@ describe("Freelance job page", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Job not found");
     // Any well-formed id is a 200 shell, so a missing job asks not to be indexed.
     expect(robotsMeta()).toBe("noindex");
+    expect(document.head.querySelector('meta[name="robots"]')).not.toBeNull();
     await userEvent.click(
       screen.getByRole("button", { name: `entity-${OTHER_CHARACTER}` }),
     );
@@ -252,6 +261,18 @@ describe("Freelance job page", () => {
     expect(
       await screen.findByRole("heading", { name: "Private haul" }),
     ).toBeInTheDocument();
+    // Found after all, so the request not to index it goes with the error.
+    expect(robotsMeta()).toBeUndefined();
+  });
+
+  it("takes its noindex away when the page goes, so the next page is not marked", () => {
+    hooks.job.mockReturnValue({ data: undefined, error: axiosError(404) });
+    const { unmount } = renderPage();
+    expect(robotsMeta()).toBe("noindex");
+
+    // Next hides a page it keeps for back/forward the same way: effects clean up.
+    unmount();
+    expect(robotsMeta()).toBeUndefined();
   });
 
   it("does not blame access for an ESI outage", () => {

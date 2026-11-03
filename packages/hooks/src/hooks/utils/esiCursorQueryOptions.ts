@@ -64,15 +64,16 @@ export class EsiCursorCeilingError extends Error {
  * refetch from its own cache for a year, hard reloads included, and a walk
  * keeps returning the jobs as they were on the first visit. A request
  * `no-cache` makes it go back to ESI, whose CORS policy allows the header.
+ * Also used for reads whose cached answer depends on who asks.
  */
-export const ESI_CURSOR_NO_CACHE_HEADERS = {
+export const ESI_NO_CACHE_HEADERS = {
   "Cache-Control": "no-cache",
 } as const;
 
 /** The request config a cursor walk hands each page fetch. */
 export interface EsiCursorPageRequest {
   signal?: AbortSignal;
-  headers: typeof ESI_CURSOR_NO_CACHE_HEADERS;
+  headers: typeof ESI_NO_CACHE_HEADERS;
 }
 
 function dedupeKeepingLatest<TItem>(
@@ -145,7 +146,7 @@ export function esiCursorQueryOptions<
       const records: TItem[] = [];
       const request: EsiCursorPageRequest = {
         signal,
-        headers: ESI_CURSOR_NO_CACHE_HEADERS,
+        headers: ESI_NO_CACHE_HEADERS,
       };
       let cursor = "0";
       for (let page = 0; page < MAX_CURSOR_PAGES; page++) {

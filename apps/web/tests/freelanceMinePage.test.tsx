@@ -134,6 +134,10 @@ describe("Your freelance jobs", () => {
     expect(
       screen.getByRole("columnheader", { name: /Listed by/ }),
     ).toBeInTheDocument();
+    // The shared job names both characters that list it, not just avatars.
+    const shared = screen.getByRole("row", { name: /Shared job/ });
+    expect(shared).toHaveTextContent(`entity-${CHARACTER}`);
+    expect(shared).toHaveTextContent(`entity-${OTHER_CHARACTER}`);
   });
 
   it("opens each job as the character that can see it", () => {

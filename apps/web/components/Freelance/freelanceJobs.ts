@@ -44,11 +44,13 @@ export function freelanceJobProgressPercent(
 /**
  * A job's progress as a whole percentage, rounded down so a job 99.6% done
  * does not read "100%" while it is still open. Below 1% it keeps one decimal,
- * so a started job does not read "0%".
+ * and below 0.1% it reads "<0.1", so a started job never reads "0%".
  */
 export function formatProgressPercent(percent: number): string {
   if (percent >= 100) return "100";
-  if (percent > 0 && percent < 1) return percent.toFixed(1);
+  if (percent <= 0) return "0";
+  if (percent < 0.1) return "<0.1";
+  if (percent < 1) return (Math.floor(percent * 10) / 10).toFixed(1);
   return String(Math.floor(percent));
 }
 

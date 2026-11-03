@@ -1,11 +1,11 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { Anchor, Group } from "@mantine/core";
+import { Anchor, Group, Tooltip, VisuallyHidden } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { FreelanceJob } from "@jitaspace/hooks";
-import { EveEntityAvatar } from "@jitaspace/eve-components";
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { FormattedDateText } from "@jitaspace/ui";
 
 import type { FreelanceJobSource } from "./freelanceJobs";
@@ -47,13 +47,36 @@ export const freelanceJobHref = (job: Pick<FreelanceJob, "id">) =>
 function SourcesCell({ sources }: Readonly<{ sources: FreelanceJobSource[] }>) {
   return (
     <Group gap={4} wrap="nowrap">
+      {/* The avatars' alt text is only an id, so they are hidden from screen
+          readers, which read the names instead. */}
       {sources.map((source) => (
-        <EveEntityAvatar
+        <Tooltip
           key={freelanceJobSourceKey(source)}
-          entityId={source.subjectId}
-          category={source.kind}
-          size="sm"
-        />
+          label={
+            <EveEntityName
+              span
+              entityId={source.subjectId}
+              category={source.kind}
+            />
+          }
+          openDelay={300}
+        >
+          <span>
+            <EveEntityAvatar
+              entityId={source.subjectId}
+              category={source.kind}
+              size="sm"
+              aria-hidden
+            />
+            <VisuallyHidden>
+              <EveEntityName
+                span
+                entityId={source.subjectId}
+                category={source.kind}
+              />
+            </VisuallyHidden>
+          </span>
+        </Tooltip>
       ))}
     </Group>
   );

@@ -122,7 +122,7 @@ export const FreelanceJobProgress = memo(
           value={percent}
           size={size}
           color={percent >= 100 ? "blue" : "green"}
-          aria-label={`${job.name}: ${exact} (${formatProgressPercent(percent)}%)`}
+          aria-label={`${job.name || "Unnamed job"}: ${exact} (${formatProgressPercent(percent)}%)`}
         />
         <Tooltip label={exact} openDelay={300}>
           <Text size="xs" c="dimmed">

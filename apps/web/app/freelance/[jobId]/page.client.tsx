@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Alert,
   Anchor,
@@ -24,7 +24,6 @@ import { EveEntityName } from "@jitaspace/eve-components";
 import {
   CORPORATION_FREELANCE_JOBS_SCOPE,
   FREELANCE_JOB_MANAGER_ROLES,
-  useAuthenticatedCharacterIds,
   useAuthStoreHasHydrated,
   useCharactersFreelanceJobParticipation,
   useCharactersFreelanceJobs,
@@ -115,6 +114,27 @@ function JobSkeleton() {
 }
 
 /**
+ * Asks crawlers not to index this page while it is shown. The shell is a 200
+ * for any well-formed id, so otherwise every missing or private job would be
+ * indexed as a page of its own.
+ *
+ * Added in an effect rather than rendered as a hoisted `<meta>`: Next keeps
+ * recently visited pages mounted inside a hidden `<Activity>`, which leaves a
+ * hoisted tag in `<head>` and would mark the next page `noindex` too. Hiding
+ * an Activity does run effect cleanups, so this tag leaves with the page.
+ */
+function NoIndex() {
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex";
+    document.head.append(meta);
+    return () => meta.remove();
+  }, []);
+  return null;
+}
+
+/**
  * Why a job could not be read, and what to do about it. A job behind an ACL
  * fails for anyone outside it, so a failed anonymous read offers to try again
  * as each logged-in character.
@@ -141,10 +161,7 @@ function JobError({
   const others = characterIds.filter((id) => id !== viewer);
   return (
     <Alert color="yellow" title="Job not found" role="alert">
-      {/* The shell is a 200 for any well-formed id, so a crawler would
-          otherwise index every missing or private job as a page of its own.
-          React hoists this into <head>; robots take the strictest value. */}
-      <meta name="robots" content="noindex" />
+      <NoIndex />
       <Stack gap="xs" align="flex-start">
         <Text size="sm">
           {viewer === undefined
@@ -490,8 +507,9 @@ function JobDetails({
 /**
  * The character whose token reads the job, from `?as=`: how a private job
  * opens from "Your jobs". Until the auth store has rehydrated the id is kept
- * (the token appears shortly); after, a character not logged in here is
- * dropped and the job is read anonymously.
+ * (the token appears shortly); after, a character without a usable token here
+ * (not logged in, or its session expired) is dropped and the job is read
+ * anonymously.
  */
 function jobViewer(
   as: number | null,
@@ -507,7 +525,13 @@ export default function FreelanceJobPage({
   jobId,
 }: Readonly<{ jobId: string }>) {
   const hydrated = useAuthStoreHasHydrated();
-  const characterIds = useAuthenticatedCharacterIds();
+  // Characters with a usable token: one whose session expired can read
+  // nothing, so `?as=` naming it would wait for a token that never comes.
+  const usableCharacters = useEsiSubjects({ kind: "character" });
+  const characterIds = useMemo(
+    () => usableCharacters.map((subject) => subject.id),
+    [usableCharacters],
+  );
   const [as, setAs] = useQueryState("as", parseAsInteger);
   const viewer = jobViewer(as, hydrated, characterIds);
 
