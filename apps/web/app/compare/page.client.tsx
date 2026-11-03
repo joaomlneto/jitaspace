@@ -3,11 +3,14 @@
 import { useCallback, useMemo } from "react";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
-import { IconCheck, IconLink } from "@tabler/icons-react";
 import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
 import posthog from "posthog-js";
 
-import { CompareToolIcon } from "@jitaspace/eve-icons";
+import {
+  CompareToolIcon,
+  SystemCheckmarkIcon,
+  SystemLinkIcon,
+} from "@jitaspace/eve-icons";
 
 import type { CompareItemsAddedEvent } from "~/components/Compare";
 import {
@@ -66,9 +69,9 @@ export default function PageClient() {
               size="xs"
               leftSection={
                 clipboard.copied ? (
-                  <IconCheck size={14} />
+                  <SystemCheckmarkIcon size={14} color="currentColor" alt="" />
                 ) : (
-                  <IconLink size={14} />
+                  <SystemLinkIcon size={14} color="currentColor" alt="" />
                 )
               }
               onClick={() => clipboard.copy(window.location.href)}

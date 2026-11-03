@@ -17,16 +17,14 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconGitBranch,
-  IconHistory,
-  IconListNumbers,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
+  CategoryFlagIcon,
+  SystemArrowRotateLeftIcon,
+  SystemExpandStructureIcon,
   WindowAgentIcon,
   WindowInfoIcon,
 } from "@jitaspace/eve-icons";
@@ -222,7 +220,15 @@ function EpicArcOverview({
 
       {summary.branchPoints.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconGitBranch size={18} />}>
+          <SectionHeading
+            icon={
+              <SystemExpandStructureIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Where It Branches
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -250,7 +256,9 @@ function EpicArcOverview({
       )}
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconListNumbers size={18} />}>
+        <SectionHeading
+          icon={<CategoryFlagIcon size={18} color="currentColor" alt="" />}
+        >
           Where It Ends
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -355,7 +363,16 @@ export default function EpicArcPage({
             >
               Agents
             </Tabs.Tab>
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>

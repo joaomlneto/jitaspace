@@ -1,9 +1,9 @@
 "use client";
 
 import { Skeleton, Text, Tooltip } from "@mantine/core";
-import { IconCrosshair } from "@tabler/icons-react";
 
 import { TypeName } from "@jitaspace/eve-components";
+import { ControlTargetIcon } from "@jitaspace/eve-icons";
 import { TypeAvatar } from "@jitaspace/ui";
 
 import type { KillmailCardProps } from "./parts";
@@ -84,7 +84,12 @@ export function KillmailTileCard({
 
       <Tooltip label="Final blow" position="top-start">
         <div className={classes.killer}>
-          <IconCrosshair size={14} className={classes.glyph} />
+          <ControlTargetIcon
+            size={14}
+            color="currentColor"
+            alt=""
+            className={classes.glyph}
+          />
           {finalBlow && <PartyAvatar party={finalBlow} size={18} />}
           <span className={parts.truncate}>
             {finalBlow ? (

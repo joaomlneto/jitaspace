@@ -13,11 +13,11 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { openSpotlight } from "@mantine/spotlight";
-import { IconSearch } from "@tabler/icons-react";
 
 import {
   RecruitmentIcon,
   SettingsIcon,
+  SystemSearchIcon,
   TerminateIcon,
 } from "@jitaspace/eve-icons";
 import { CharacterAvatar, LoginWithEveOnlineButton } from "@jitaspace/ui";
@@ -203,7 +203,7 @@ export const MobileNavDrawer = memo(
             }}
             aria-label="Search New Eden"
           >
-            <IconSearch size={16} stroke={1.5} />
+            <SystemSearchIcon size={16} color="currentColor" alt="" />
             <Text className={classes.searchLabel} size="sm" c="dimmed">
               Search New Eden…
             </Text>

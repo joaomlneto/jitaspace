@@ -4,7 +4,8 @@ import type { MouseEvent, PropsWithChildren, ReactNode } from "react";
 import { createContext, Suspense, use, useEffect, useState } from "react";
 import { Button, Drawer, Loader, useMantineTheme } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { IconListTree } from "@tabler/icons-react";
+
+import { WindowMarketIcon } from "@jitaspace/eve-icons";
 
 import classes from "./MarketLayout.module.css";
 
@@ -101,7 +102,7 @@ export function BrowseMarketButton() {
       hiddenFrom="md"
       fullWidth
       variant="light"
-      leftSection={<IconListTree size={18} />}
+      leftSection={<WindowMarketIcon size={18} alt="" />}
       onClick={openDrawer}
     >
       Browse market

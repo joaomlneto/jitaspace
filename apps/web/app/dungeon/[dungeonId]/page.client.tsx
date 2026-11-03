@@ -16,14 +16,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconFileText,
-  IconHistory,
-  IconListCheck,
-  IconMapPin,
-  IconSitemap,
-  IconSwords,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -31,8 +23,14 @@ import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   AgencyIcon,
   CategoryAgentMissionIcon,
+  CategoryMercenaryDenIcon,
+  SystemArrowRotateLeftIcon,
+  SystemTagIcon,
   WindowAgentIcon,
   WindowInfoIcon,
+  WindowLocationsIcon,
+  WindowNoteIcon,
+  WindowRestrictionIcon,
 } from "@jitaspace/eve-icons";
 import { FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
@@ -597,7 +595,9 @@ function DungeonOverview({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
 
       {archetype?.description && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconSitemap size={18} />}>
+          <SectionHeading
+            icon={<SystemTagIcon size={18} color="currentColor" alt="" />}
+          >
             {archetype.title ?? "Archetype"}
           </SectionHeading>
           <Paper withBorder radius="md" p="md">
@@ -608,7 +608,7 @@ function DungeonOverview({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
 
       {systems.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconMapPin size={18} />}>
+          <SectionHeading icon={<WindowLocationsIcon size={18} alt="" />}>
             Locations
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -684,7 +684,7 @@ export default function DungeonPage({
             {available.description && (
               <Tabs.Tab
                 value="description"
-                leftSection={<IconFileText size={16} />}
+                leftSection={<WindowNoteIcon size={16} alt="" />}
               >
                 Description
               </Tabs.Tab>
@@ -692,7 +692,7 @@ export default function DungeonPage({
             {available["ship-restrictions"] && (
               <Tabs.Tab
                 value="ship-restrictions"
-                leftSection={<IconListCheck size={16} />}
+                leftSection={<WindowRestrictionIcon size={16} alt="" />}
               >
                 Ship Restrictions
               </Tabs.Tab>
@@ -722,17 +722,37 @@ export default function DungeonPage({
             {available.operations && (
               <Tabs.Tab
                 value="operations"
-                leftSection={<IconSwords size={16} />}
+                leftSection={
+                  <CategoryMercenaryDenIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Tactical Operations
               </Tabs.Tab>
             )}
             {available.related && (
-              <Tabs.Tab value="related" leftSection={<IconSitemap size={16} />}>
+              <Tabs.Tab
+                value="related"
+                leftSection={
+                  <SystemTagIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Same Archetype ({dungeon.related.length})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>

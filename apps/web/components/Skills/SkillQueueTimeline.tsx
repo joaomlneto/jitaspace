@@ -10,11 +10,11 @@ import {
   Timeline,
   UnstyledButton,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 
 import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import { SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 import { useCharacterSkillQueue } from "@jitaspace/hooks";
 import { skillLevelRomanNumeral } from "@jitaspace/utils";
 
@@ -120,7 +120,11 @@ export const SkillQueueTimeline = memo(
                           size="sm"
                         >
                           <Group gap="xs">
-                            <IconExternalLink size={14} />
+                            <SystemOpenWindowIcon
+                              size={14}
+                              color="currentColor"
+                              alt=""
+                            />
                             <Anchor>Open in EVE Ref</Anchor>
                           </Group>
                         </Anchor>

@@ -4,14 +4,14 @@ import { memo, useMemo } from "react";
 import Link from "next/link";
 import { Menu, NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconExternalLink,
-  IconLink,
-  IconStar,
-  IconStarFilled,
-} from "@tabler/icons-react";
 
 import { TypeAvatar } from "@jitaspace/eve-components";
+import {
+  SystemLinkIcon,
+  SystemOpenWindowIcon,
+  SystemStarHollowIcon,
+  SystemStarIcon,
+} from "@jitaspace/eve-icons";
 import { EveIconAvatar } from "@jitaspace/ui";
 
 import type { MarketTreeFilter } from "./filterMarketTree";
@@ -51,10 +51,10 @@ const MarketTypeNavLink = memo(
             label={name}
             rightSection={
               inQuickbar ? (
-                <IconStarFilled
+                <SystemStarIcon
                   size={14}
                   color="var(--mantine-color-yellow-5)"
-                  aria-label="On your quickbar"
+                  alt="On your quickbar"
                 />
               ) : null
             }
@@ -68,12 +68,16 @@ const MarketTypeNavLink = memo(
             href={`/market/${typeId}`}
             target="_blank"
             rel="noopener"
-            leftSection={<IconExternalLink size={16} />}
+            leftSection={
+              <SystemOpenWindowIcon size={16} color="currentColor" alt="" />
+            }
           >
             Open in new tab
           </Menu.Item>
           <Menu.Item
-            leftSection={<IconLink size={16} />}
+            leftSection={
+              <SystemLinkIcon size={16} color="currentColor" alt="" />
+            }
             onClick={() =>
               void navigator.clipboard.writeText(
                 new URL(`/market/${typeId}`, window.location.origin).href,
@@ -85,14 +89,18 @@ const MarketTypeNavLink = memo(
           <Menu.Divider />
           {inQuickbar ? (
             <Menu.Item
-              leftSection={<IconStar size={16} />}
+              leftSection={
+                <SystemStarHollowIcon size={16} color="currentColor" alt="" />
+              }
               onClick={() => useQuickbarStore.getState().removeItem(typeId)}
             >
               Remove from quickbar
             </Menu.Item>
           ) : (
             <Menu.Item
-              leftSection={<IconStarFilled size={16} />}
+              leftSection={
+                <SystemStarIcon size={16} color="currentColor" alt="" />
+              }
               onClick={() => useQuickbarStore.getState().addItem(typeId)}
             >
               Add to quickbar
