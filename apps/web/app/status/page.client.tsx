@@ -129,7 +129,9 @@ export default function StatusPage({
           {/* JitaSpace Section */}
           <Card withBorder padding="lg" shadow="sm" radius="md">
             <Stack gap="md">
-              <Title order={3}>JitaSpace</Title>
+              <Title order={2} size="h3">
+                JitaSpace
+              </Title>
               <Stack gap="xs">
                 <Group justify="space-between">
                   <Text size="sm" fw={500}>
@@ -217,7 +219,9 @@ export default function StatusPage({
           <Card withBorder padding="lg" shadow="sm" radius="md">
             <Stack gap="md">
               <Group justify="space-between" align="flex-start">
-                <Title order={3}>Tranquility</Title>
+                <Title order={2} size="h3">
+                  Tranquility
+                </Title>
                 {tqStatus ? (
                   <Badge color="green" variant="light">
                     Online
@@ -280,7 +284,9 @@ export default function StatusPage({
             <Stack gap="md">
               <Group justify="space-between" align="flex-start">
                 <Group gap="xs">
-                  <Title order={3}>ESI API</Title>
+                  <Title order={2} size="h3">
+                    ESI API
+                  </Title>
                   <ActionIcon
                     variant="subtle"
                     color="gray"

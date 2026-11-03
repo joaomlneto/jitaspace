@@ -104,7 +104,7 @@ export function useSearchActions(query: string): SearchActionGroups {
             label: app.name,
             description: app.description,
             group: `${groupName} Apps`,
-            leftSection: <app.Icon width={32} height={32} />,
+            leftSection: <app.Icon width={32} height={32} alt="" />,
             onClick: makeAppOnClick(app.url),
           })),
       ),

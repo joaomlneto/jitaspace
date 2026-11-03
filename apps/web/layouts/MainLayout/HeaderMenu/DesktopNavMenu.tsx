@@ -41,7 +41,7 @@ export const DesktopNavMenu = memo(
         <Menu.Item
           component={Link}
           href={app.url ?? "#"}
-          leftSection={<app.Icon width={20} />}
+          leftSection={<app.Icon width={20} alt="" />}
         >
           {app.name}
         </Menu.Item>
@@ -67,7 +67,7 @@ export const DesktopNavMenu = memo(
             aria-current={active ? "page" : undefined}
           >
             <Center inline>
-              <Icon width={20} />
+              <Icon width={20} alt="" />
               <Box component="span" mx={6} visibleFrom="md">
                 {label}
               </Box>

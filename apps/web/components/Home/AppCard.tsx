@@ -30,7 +30,7 @@ export function AppCard({ app }: Readonly<AppCardProps>) {
         <Card className={classes.card} padding="md">
           <Group wrap="nowrap" gap="sm" align="center">
             <div className={classes.iconBox}>
-              <app.Icon width={30} height={30} alt={app.name} />
+              <app.Icon width={30} height={30} alt="" />
             </div>
             <Text fz="sm" fw={600} truncate style={{ flex: 1, minWidth: 0 }}>
               {app.name}
