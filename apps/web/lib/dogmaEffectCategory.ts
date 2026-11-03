@@ -35,3 +35,66 @@ export function toEffectCategory(
     customDescription: nonBlank(row?.customDescription),
   };
 }
+
+/** The eight categories, keyed by id: what pages send instead of a copy per effect. */
+export type EffectCategories = Record<number, EffectCategory>;
+
+/**
+ * Our name for the category, else CCP's with the prefix dropped
+ * (`dgmEffTarget` → `Target`), else its id.
+ */
+export function effectCategoryLabel(
+  category: Pick<EffectCategory, "effectCategoryId" | "name" | "customName">,
+): string {
+  if (category.customName) return category.customName;
+  if (!category.name) return `Category ${category.effectCategoryId}`;
+  return category.name.replace(/^dgmEff/, "");
+}
+
+/** The label for a category id, for a table column; null when the effect has none. */
+export function effectCategoryLabelById(
+  categories: EffectCategories,
+  effectCategoryId: number | null | undefined,
+): string | null {
+  if (effectCategoryId === null || effectCategoryId === undefined) return null;
+  const category = categories[effectCategoryId];
+  return category
+    ? effectCategoryLabel(category)
+    : `Category ${effectCategoryId}`;
+}
+
+export interface EffectCategoryGroup<T> {
+  /** Null for the effects with no (known) category, listed last. */
+  category: EffectCategory | null;
+  items: T[];
+}
+
+/**
+ * Items grouped by their effect's category, in category-id order (Passive
+ * first), keeping each group's items in their given order. Items whose
+ * category is unknown come last, in one group with a null category.
+ */
+export function groupByEffectCategory<T>(
+  items: readonly T[],
+  categoryIdOf: (item: T) => number | null | undefined,
+  categories: EffectCategories,
+): EffectCategoryGroup<T>[] {
+  const groups = new Map<number | null, T[]>();
+  for (const item of items) {
+    const id = categoryIdOf(item) ?? null;
+    const group = groups.get(id);
+    if (group) group.push(item);
+    else groups.set(id, [item]);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => {
+      if (a === null) return 1;
+      if (b === null) return -1;
+      return a - b;
+    })
+    .map(([id, groupItems]) => ({
+      category:
+        id === null ? null : (categories[id] ?? toEffectCategory(id, null)),
+      items: groupItems,
+    }));
+}

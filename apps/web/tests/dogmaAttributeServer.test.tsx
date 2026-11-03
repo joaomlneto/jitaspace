@@ -15,6 +15,7 @@ const effectFindMany = jest.fn<(args?: unknown) => Promise<Rows>>();
 const typeFindMany = jest.fn<(args?: unknown) => Promise<Rows>>();
 const typeAttributeAggregate =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>>>();
+const effectCategoryFindMany = jest.fn<(args?: unknown) => Promise<Rows>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -28,6 +29,9 @@ jest.mock("~/lib/db", () => ({
     dogmaEffect: { findMany: (a?: unknown) => effectFindMany(a) },
     type: { findMany: (a?: unknown) => typeFindMany(a) },
     typeAttribute: { aggregate: (a?: unknown) => typeAttributeAggregate(a) },
+    dogmaEffectCategory: {
+      findMany: (a?: unknown) => effectCategoryFindMany(a),
+    },
   },
 }));
 jest.mock("next/cache", () => ({
@@ -77,6 +81,7 @@ const modifierRow = (overrides: Record<string, unknown>) => ({
   effect: {
     name: "trackingSpeedBonusEffectLasers",
     displayName: null,
+    effectCategoryId: 0,
     _count: { TypeEffect: 58 },
   },
   ...overrides,
@@ -131,6 +136,7 @@ beforeEach(() => {
               effect: {
                 name: "x",
                 displayName: "Readable",
+                effectCategoryId: 4,
                 _count: { TypeEffect: 2 },
               },
             }),
@@ -142,6 +148,7 @@ beforeEach(() => {
       effectId: 10,
       name: "targetAttack",
       displayName: null,
+      effectCategoryId: 2,
       dischargeAttributeId: null,
       durationAttributeId: null,
       rangeAttributeId: null,
@@ -184,6 +191,14 @@ beforeEach(() => {
     _min: { value: 0.01 },
     _max: { value: 0.5 },
   });
+  effectCategoryFindMany.mockReset().mockResolvedValue([
+    {
+      effectCategoryId: 2,
+      name: "dgmEffTarget",
+      customName: "Targeted",
+      customDescription: " ",
+    },
+  ]);
 });
 
 describe("dogma attribute route (server)", () => {
@@ -214,6 +229,7 @@ describe("dogma attribute route (server)", () => {
       expect.objectContaining({
         effectId: 5189,
         effectName: "trackingSpeedBonusEffectLasers",
+        effectCategoryId: 0,
         carrierCount: 58,
         groupName: "Energy Weapon",
         skillName: null,
@@ -228,8 +244,22 @@ describe("dogma attribute route (server)", () => {
       }),
     ]);
     expect(props.statOf).toEqual([
-      { effectId: 10, effectName: "targetAttack", role: "Tracking" },
+      {
+        effectId: 10,
+        effectName: "targetAttack",
+        effectCategoryId: 2,
+        role: "Tracking",
+      },
     ]);
+    // The categories once, keyed by id, with blank text trimmed to null.
+    expect(props.effectCategories).toEqual({
+      2: {
+        effectCategoryId: 2,
+        name: "dgmEffTarget",
+        customName: "Targeted",
+        customDescription: null,
+      },
+    });
     expect(props.attributes).toContainEqual({
       attributeId: 767,
       name: "trackingSpeedBonus",

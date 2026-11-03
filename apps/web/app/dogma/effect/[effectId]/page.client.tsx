@@ -54,6 +54,7 @@ import {
   YesNoBadge,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { effectCategoryLabel } from "~/lib/dogmaEffectCategory";
 import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import {
   dogmaDomainNoun,
@@ -130,13 +131,6 @@ export interface PageProps {
     domain: string | null;
   }[];
   types: EffectType[];
-}
-
-/** Our name for the category, else CCP's with the prefix dropped: `dgmEffTarget` → `Target`. */
-function categoryLabel(category: NonNullable<PageProps["category"]>): string {
-  if (category.customName) return category.customName;
-  if (!category.name) return `Category ${category.effectCategoryId}`;
-  return category.name.replace(/^dgmEff/, "");
 }
 
 /** The raw SDE rows behind a line, field for field. */
@@ -485,7 +479,7 @@ function EffectHero({
             withArrow
           >
             <Badge variant="light" color="eve_accent">
-              {categoryLabel(category)}
+              {effectCategoryLabel(category)}
             </Badge>
           </Tooltip>
         )}
@@ -729,7 +723,7 @@ function effectDetails(
             label: "Category",
             value: (
               <>
-                {categoryLabel(category)}{" "}
+                {effectCategoryLabel(category)}{" "}
                 <Text component="span" c="dimmed" size="sm">
                   ({category.effectCategoryId}
                   {category.customName && category.name
