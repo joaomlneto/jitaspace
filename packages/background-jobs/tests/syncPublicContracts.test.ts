@@ -8,7 +8,11 @@ import {
 } from "@jest/globals";
 
 import type { JobLogger } from "../core";
-import type { RegionListing } from "../helpers/contractTimelineStore";
+import type { RegionHistory } from "../helpers/contractTimeline";
+import type {
+  AppliedListing,
+  RegionListing,
+} from "../helpers/contractTimelineStore";
 import type { syncPublicContracts as SyncPublicContracts } from "../jobs/scrape/esi/syncPublicContracts";
 
 // @swc/jest doesn't hoist jest.mock, so the mock fns are declared first and the
@@ -76,32 +80,45 @@ jest.mock("../kv", () => ({
 const calls: string[] = [];
 let storedIds: Set<number>;
 let withItems: Set<number>;
-const applyListing = jest.fn((listing: RegionListing) => {
-  calls.push(`apply ${listing.regionId}`);
-  const inserted = listing.contracts
-    .map((c) => c.contractId)
-    .filter((id) => !storedIds.has(id));
-  for (const id of inserted) storedIds.add(id);
-  return Promise.resolve({
-    regionId: listing.regionId,
-    refused: false,
-    inserted,
-    reopened: [],
-    ended: [],
-    corrected: [],
-    missing: 0,
-  });
-});
-jest.mock("../helpers/contractTimelineStore.ts", () => ({
-  applyRegionListing: (l: RegionListing) => applyListing(l),
-  checkpointContractTimeline: () => {
+/** Regions whose next listing the store mock reports as incomplete. */
+let incompleteRegions: Set<number>;
+const applyListing = jest.fn(
+  (listing: RegionListing, history: RegionHistory | null) => {
+    calls.push(`apply ${listing.regionId}`);
+    const inserted = listing.contracts
+      .map((c) => c.contractId)
+      .filter((id) => !storedIds.has(id));
+    for (const id of inserted) storedIds.add(id);
+    const complete = !incompleteRegions.has(listing.regionId);
+    return Promise.resolve<AppliedListing>({
+      regionId: listing.regionId,
+      skipped: false,
+      complete,
+      inserted,
+      reopened: [],
+      ended: [],
+      history: {
+        lastModified: listing.observedAt,
+        lastCompleteAt: complete
+          ? listing.observedAt
+          : (history?.lastCompleteAt ?? null),
+        counts: [...(history?.counts ?? []), listing.contracts.length],
+      },
+    });
+  },
+);
+const checkpoint = jest.fn(
+  (_regions: { regionId: number; lastCompleteAt: number }[]) => {
     calls.push("checkpoint");
     return Promise.resolve(0);
   },
-  pruneContractTimeline: () => {
-    calls.push("prune");
-    return Promise.resolve({ absences: 0, observations: 0 });
-  },
+);
+jest.mock("../helpers/contractTimelineStore.ts", () => ({
+  applyRegionListing: (l: RegionListing, h: RegionHistory | null) =>
+    applyListing(l, h),
+  checkpointContractTimeline: (
+    regions: { regionId: number; lastCompleteAt: number }[],
+  ) => checkpoint(regions),
 }));
 const ensureReferences = jest.fn((_refs: unknown) => {
   calls.push("references");
@@ -223,12 +240,14 @@ const AUCTION = {
 };
 const state = () =>
   JSON.parse(store.get(STATE_KEY)!) as {
+    regions: Record<string, RegionHistory>;
     itemsPending: Record<string, number>;
     lastCheckpointAt: number;
   };
 
 beforeEach(() => {
   dynamicFails = false;
+  incompleteRegions = new Set();
   store.clear();
   calls.length = 0;
   storedIds = new Set();
@@ -285,7 +304,6 @@ describe("esi-sync-public-contracts", () => {
       "apply 10000001",
       "apply 10000002",
       "checkpoint",
-      "prune",
       "items",
       "bids",
     ]);
@@ -356,6 +374,53 @@ describe("esi-sync-public-contracts", () => {
     }
     expect(writeItems.mock.calls[0]?.[0].contracts ?? []).toEqual([]);
     expect(state().itemsPending[101]).toBe(0);
+  });
+
+  it("keeps each region's history between runs and hands it back", async () => {
+    await run();
+    expect(state().regions).toEqual({
+      10000001: {
+        lastModified: Date.parse(LM),
+        lastCompleteAt: Date.parse(LM),
+        counts: [0],
+      },
+      10000002: {
+        lastModified: Date.parse(LM),
+        lastCompleteAt: Date.parse(LM),
+        counts: [3],
+      },
+    });
+    expect(applyListing.mock.calls.map(([, h]) => h)).toEqual([null, null]);
+
+    applyListing.mockClear();
+    const next = "Tue, 03 Nov 2026 21:38:12 GMT";
+    regionPages[10000002] = () =>
+      Promise.resolve(listing([ITEM_EXCHANGE], next));
+    incompleteRegions = new Set([10000002]);
+    const { stats } = await run();
+    expect(applyListing.mock.calls.map(([, h]) => h?.counts)).toEqual([
+      [0],
+      [3],
+    ]);
+    expect(stats).toMatchObject({ incompleteRegions: [10000002] });
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("incomplete"),
+      { regionIds: [10000002] },
+    );
+    // An incomplete listing moves lastModified on, not lastCompleteAt.
+    expect(state().regions[10000002]).toEqual({
+      lastModified: Date.parse(next),
+      lastCompleteAt: Date.parse(LM),
+      counts: [3, 1],
+    });
+  });
+
+  it("checkpoints each region at its last complete listing", async () => {
+    incompleteRegions = new Set([10000001]);
+    await run();
+    expect(checkpoint).toHaveBeenCalledWith([
+      { regionId: 10000002, lastCompleteAt: Date.parse(LM) },
+    ]);
   });
 
   it("checkpoints at most once a day", async () => {

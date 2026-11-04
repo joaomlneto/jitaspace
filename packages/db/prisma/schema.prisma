@@ -874,7 +874,6 @@ model Region {
   isDeleted       Boolean         @default(false)
   constellations  Constellation[]
   contracts       Contract[]      @relation("ContractRegion")
-  contractObservations ContractRegionObservation[]
 
   @@index([name])
   @@index([nebulaGraphicId])
@@ -1982,7 +1981,6 @@ model Contract {
   items        ContractItem[]
   bids         ContractBid[]
   dynamicItems ContractDynamicItem[]
-  absence      ContractAbsence?
 
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
@@ -2017,42 +2015,6 @@ enum ContractEndReason {
   Expired
   /// Gone before expiry: accepted, completed or deleted (indistinguishable publicly).
   RemovedBeforeExpiry
-}
-
-/// One observation of a region's public contract listing, as applied to the
-/// contract timeline. Shared by every writer (the ESI sync job and the EVE Ref
-/// snapshot ingest), so they can run in any order: an observation is keyed by
-/// the listing's Last-Modified (EVE Ref records it as `http_last_modified`),
-/// so two sources reading the same listing record it once.
-model ContractRegionObservation {
-  regionId      Int
-  region        Region   @relation(fields: [regionId], references: [regionId])
-  /// The listing's Last-Modified: when ESI generated it.
-  observedAt    DateTime
-  /// Contracts listed. Two copies of one listing (one partial) keep the larger.
-  contractCount Int
-  /// Not an observation: a count from before this log existed, which only
-  /// feeds the completeness median. Seeds sort before every observation.
-  isSeed        Boolean  @default(false)
-  createdAt     DateTime @default(now())
-
-  @@id([regionId, observedAt])
-}
-
-/// A contract missing from its region's latest observation: still outstanding
-/// (not yet missed twice in complete listings), or ended. `lastSeenAt` is exact
-/// here, unlike Contract.lastSeenAt for outstanding contracts (a daily
-/// checkpoint). Ended rows are kept for 30 days, so an older observation that
-/// arrives late can still correct them.
-model ContractAbsence {
-  contractId Int      @id
-  contract   Contract @relation(fields: [contractId], references: [contractId], onDelete: Cascade)
-  regionId   Int
-  lastSeenAt DateTime
-  ended      Boolean
-  updatedAt  DateTime @updatedAt()
-
-  @@index([regionId, lastSeenAt])
 }
 
 /// An item offered (isIncluded) or asked for (!isIncluded) in a public contract.

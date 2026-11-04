@@ -1,524 +1,434 @@
 import { describe, expect, it } from "@jest/globals";
 
-import type { Observation } from "./support/contractTimelineSim";
+import type {
+  ContractEndReason,
+  OutstandingContract,
+  RegionHistory,
+} from "../helpers/contractTimeline";
 import {
-  completenessOf,
   endReasonOf,
   GAP_MS,
   isRegionComplete,
+  MIN_HISTORY,
+  planRegionListing,
+  REGION_HISTORY_LENGTH,
 } from "../helpers/contractTimeline";
-import {
-  MemoryTimeline,
-  prng,
-  scenario,
-  shuffle,
-  snapshotIngestOracle,
-  T0,
-} from "./support/contractTimelineSim";
 
 const MIN = 60_000;
-const HOUR = 60 * MIN;
-const REGION = 10000002;
+const T0 = Date.UTC(2026, 10, 3, 21, 8, 12);
 /** The listing generation `n` half-hours after T0. */
 const at = (n: number) => T0 + n * 30 * MIN;
 /** Contracts always listed, so a listing of the region counts as complete. */
 const FILLER = Array.from({ length: 100 }, (_, i) => 1_000_000 + i);
-const listing = (n: number, ids: number[], filler = FILLER): Observation => ({
-  regionId: REGION,
-  observedAt: at(n),
-  contractIds: [...ids, ...filler],
+const ids = (...xs: number[]) => new Set([...xs, ...FILLER]);
+/** A region whose last ten listings held ~100 contracts, the last at `n`. */
+const steady = (n: number): RegionHistory => ({
+  lastModified: at(n),
+  lastCompleteAt: at(n),
+  counts: Array<number>(10).fill(FILLER.length),
 });
-/** A region whose last ten listings held ~100 contracts. */
-const steadyHistory = () =>
-  Array.from({ length: 10 }, (_, i) => listing(i - 10, []));
-
-const timeline = (expiries: Record<number, number> = {}) =>
-  new MemoryTimeline(
-    (id) => expiries[id] ?? at(1000),
-    () => REGION,
-  );
-const run = (expiries: Record<number, number>, observations: Observation[]) => {
-  const t = timeline(expiries);
-  for (const o of observations) t.apply(o);
-  return t;
-};
+const outstanding = (
+  contractId: number,
+  dateExpired = at(1000),
+  lastSeenAt = at(-100),
+): OutstandingContract => ({ contractId, dateExpired, lastSeenAt });
+const fillerOutstanding = FILLER.map((id) => outstanding(id));
 
 describe("isRegionComplete", () => {
   it("treats a collapse below 70% of the median as incomplete", () => {
-    const history = Array(10).fill(1000);
+    const history = Array<number>(10).fill(1000);
     expect(isRegionComplete(history, 700)).toBe(true);
     expect(isRegionComplete(history, 699)).toBe(false);
     expect(isRegionComplete(history, 0)).toBe(false);
   });
 
   it("treats tiny regions as complete when present", () => {
-    expect(isRegionComplete(Array(10).fill(10), 1)).toBe(true);
-    expect(isRegionComplete(Array(10).fill(10), 0)).toBe(false);
+    expect(isRegionComplete(Array<number>(10).fill(10), 1)).toBe(true);
+    expect(isRegionComplete(Array<number>(10).fill(10), 0)).toBe(false);
     // So small that an empty listing is plausible.
-    expect(isRegionComplete(Array(10).fill(2), 0)).toBe(true);
+    expect(isRegionComplete(Array<number>(10).fill(2), 0)).toBe(true);
   });
 
-  it("is lenient while the history is short", () => {
-    expect(isRegionComplete([35000], 10)).toBe(true);
-    expect(isRegionComplete([35000], 0)).toBe(false);
-  });
-});
-
-describe("completenessOf", () => {
-  it("judges each observation against those before it in time, whatever order they are given in", () => {
-    const log = [
-      ...Array.from({ length: 6 }, (_, i) => ({
-        observedAt: at(i),
-        contractCount: 100,
-        isSeed: false,
-      })),
-      { observedAt: at(6), contractCount: 50, isSeed: false },
-    ];
-    const forward = completenessOf(log);
-    expect(forward.get(at(6))).toBe(false);
-    expect(completenessOf([...log].reverse())).toEqual(forward);
-  });
-
-  it("never judges a region before it has listed anything", () => {
-    expect(
-      completenessOf([{ observedAt: at(0), contractCount: 0, isSeed: false }]),
-    ).toEqual(new Map([[at(0), false]]));
-  });
-
-  it("counts seeds as history, not as observations", () => {
-    const complete = completenessOf([
-      { observedAt: 0, contractCount: 35000, isSeed: true },
-      { observedAt: at(0), contractCount: 0, isSeed: false },
-    ]);
-    expect(complete).toEqual(new Map([[at(0), false]]));
+  it("judges a short history by presence alone", () => {
+    expect(isRegionComplete([1000, 1000], 1)).toBe(true);
+    expect(isRegionComplete([1000, 1000], 0)).toBe(false);
   });
 });
 
 describe("endReasonOf", () => {
-  it("is RemovedBeforeExpiry when it vanished before expiring, however long the gap", () => {
-    expect(endReasonOf(at(10), at(0), at(5))).toBe("RemovedBeforeExpiry");
+  it("removed before expiry when the expiry was still ahead, whatever the gap", () => {
+    expect(endReasonOf(at(10), at(0), at(1))).toBe("RemovedBeforeExpiry");
+    expect(endReasonOf(at(100), at(0), at(50))).toBe("RemovedBeforeExpiry");
   });
 
-  it("is Expired when it expired between last seen and first missed", () => {
-    expect(endReasonOf(at(1), at(0), at(2))).toBe("Expired");
+  it("expired when it expired between last seen and first missed", () => {
+    expect(endReasonOf(at(1) - MIN, at(0), at(1))).toBe("Expired");
+    // An expiry exactly at the listing is no longer ahead.
+    expect(endReasonOf(at(1), at(0), at(1))).toBe("Expired");
   });
 
-  it("is unknown when that window is longer than GAP_MS", () => {
-    expect(endReasonOf(at(1), at(0), at(0) + GAP_MS + 1)).toBeNull();
-    expect(endReasonOf(at(1), at(0), at(0) + GAP_MS)).toBe("Expired");
-  });
-});
-
-describe("one contract's timeline", () => {
-  it("is first seen in the first listing that lists it", () => {
-    const t = run({}, [...steadyHistory(), listing(0, [42])]);
-    expect(t.outcomes().get(42)).toEqual({
-      isDeleted: false,
-      endReason: null,
-      firstSeenAt: at(0),
-      lastSeen: at(0),
-      missing: false,
-    });
-  });
-
-  it("is missing, not ended, after one complete listing without it", () => {
-    const t = run({}, [...steadyHistory(), listing(0, [42]), listing(1, [])]);
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: false,
-      lastSeen: at(0),
-      missing: true,
-    });
-  });
-
-  it("ends after two complete listings without it", () => {
-    const t = run({}, [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(1, []),
-      listing(2, []),
-    ]);
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: true,
-      endReason: "RemovedBeforeExpiry",
-      lastSeen: at(0),
-    });
-  });
-
-  it("does not count listings of an incomplete region", () => {
-    const partial = FILLER.slice(0, 10);
-    const t = run({}, [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(1, [], partial),
-      listing(2, [], partial),
-      listing(3, [], partial),
-    ]);
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: false,
-      lastSeen: at(0),
-      missing: true,
-    });
-    // The first complete listing after it is only its first miss.
-    t.apply(listing(4, []));
-    expect(t.outcomes().get(42)?.isDeleted).toBe(false);
-    t.apply(listing(5, []));
-    expect(t.outcomes().get(42)?.isDeleted).toBe(true);
-  });
-
-  it("starts over when it is listed again", () => {
-    const t = run({}, [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(1, []),
-      listing(2, [42]),
-      listing(3, []),
-    ]);
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: false,
-      lastSeen: at(2),
-      missing: true,
-    });
-  });
-
-  it("is reopened when listed again after it ended", () => {
-    const t = run({}, [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(1, []),
-      listing(2, []),
-      listing(3, [42]),
-    ]);
-    expect(t.outcomes().get(42)).toEqual({
-      isDeleted: false,
-      endReason: null,
-      firstSeenAt: at(0),
-      lastSeen: at(3),
-      missing: false,
-    });
-  });
-
-  it("marks expiry within a short gap as Expired", () => {
-    const t = run({ 42: at(0) + 10 * MIN }, [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(1, []),
-      listing(2, []),
-    ]);
-    expect(t.outcomes().get(42)?.endReason).toBe("Expired");
-  });
-
-  it("leaves expiry across a long gap unknown", () => {
-    // Last listed at T0, expired an hour later; nothing listed for 5 hours.
-    const t = run({ 42: at(0) + HOUR }, [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(10, []),
-      listing(11, []),
-    ]);
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: true,
-      endReason: null,
-    });
+  it("unknown when that window is longer than the gap", () => {
+    expect(endReasonOf(at(0), at(0), at(0) + GAP_MS)).toBe("Expired");
+    expect(endReasonOf(at(0), at(0), at(0) + GAP_MS + 1)).toBeNull();
   });
 });
 
-describe("sources that overlap, repeat or arrive late", () => {
-  it("records one listing read by two sources once", () => {
-    const t = run({}, [...steadyHistory(), listing(0, [42])]);
-    t.apply(listing(1, []));
-    // The same listing again (the other source, or a retry).
-    const again = t.apply(listing(1, []));
-    expect(again.updates).toEqual([]);
-    expect(again.inserts).toEqual([]);
-    expect(t.outcomes().get(42)).toMatchObject({ isDeleted: false });
+describe("planRegionListing", () => {
+  it("skips a listing already applied, or older than one that was", () => {
+    const history = steady(5);
+    for (const n of [5, 4]) {
+      expect(
+        planRegionListing({
+          history,
+          observedAt: at(n),
+          listedIds: ids(),
+          outstanding: [outstanding(1), ...fillerOutstanding],
+        }),
+      ).toEqual({ skip: true });
+    }
   });
 
-  it("takes the union of two copies of one listing, one of them partial", () => {
-    const t = run({}, [...steadyHistory(), listing(0, [42, 43])]);
-    // A partial copy that lost 42, then the full copy.
-    t.apply(listing(1, [43], FILLER.slice(0, 90)));
-    t.apply(listing(1, [42, 43]));
-    t.apply(listing(2, [42, 43]));
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: false,
-      lastSeen: at(2),
-      missing: false,
+  it("ends a contract on its first miss, last seen in the previous complete listing", () => {
+    const plan = planRegionListing({
+      history: steady(5),
+      observedAt: at(6),
+      listedIds: ids(2),
+      outstanding: [
+        outstanding(1, at(100)),
+        outstanding(2),
+        outstanding(3, at(6) - MIN),
+        ...fillerOutstanding,
+      ],
+    });
+    expect(plan).toMatchObject({
+      skip: false,
+      complete: true,
+      ends: [
+        {
+          contractId: 1,
+          lastSeenAt: at(5),
+          endReason: "RemovedBeforeExpiry",
+        },
+        { contractId: 3, lastSeenAt: at(5), endReason: "Expired" },
+      ],
+      history: { lastModified: at(6), lastCompleteAt: at(6) },
     });
   });
 
-  it("applies an older listing that arrives late as if it had come in order", () => {
-    const observations = [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(1, [42]),
-      listing(2, []),
-      listing(3, []),
-    ];
-    const inOrder = run({}, observations);
-    // The ESI job saw 0, 2 and 3; the snapshot ingest delivers 1 later.
-    const late = run(
-      {},
-      observations.filter((o) => o.observedAt !== at(1)),
-    );
-    expect(late.outcomes().get(42)?.lastSeen).toBe(at(0));
-    late.apply(listing(1, [42]));
-    expect(late.outcomes()).toEqual(inOrder.outcomes());
-    expect(inOrder.outcomes().get(42)?.lastSeen).toBe(at(1));
-  });
-
-  it("corrects an ended contract's reason when a late listing moves its first miss", () => {
-    // Expires 10 minutes after T0. Listings at 0, then nothing until 6 and 7:
-    // a 3h window, so the reason is unknown.
-    const expiries = { 42: at(0) + 10 * MIN };
-    const t = run(expiries, [
-      ...steadyHistory(),
-      listing(0, [42]),
-      listing(6, []),
-      listing(7, []),
+  it("leaves an expired contract's reason unknown after a long gap", () => {
+    // The job was down for three hours: listings 6 to 11 were never read.
+    const plan = planRegionListing({
+      history: steady(5),
+      observedAt: at(12),
+      listedIds: ids(),
+      outstanding: [
+        outstanding(1, at(8)),
+        outstanding(2, at(20)),
+        ...fillerOutstanding,
+      ],
+    });
+    expect(!plan.skip && plan.ends).toEqual([
+      { contractId: 1, lastSeenAt: at(5), endReason: null },
+      { contractId: 2, lastSeenAt: at(5), endReason: "RemovedBeforeExpiry" },
     ]);
-    expect(t.outcomes().get(42)?.endReason).toBeNull();
-    // A snapshot from 30 minutes after T0 turns up: it was missing by then.
-    t.apply(listing(1, []));
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: true,
-      endReason: "Expired",
+  });
+
+  it("ends nothing from an incomplete listing, and keeps its count", () => {
+    const plan = planRegionListing({
+      history: steady(5),
+      observedAt: at(6),
+      listedIds: new Set(FILLER.slice(0, 50)),
+      outstanding: fillerOutstanding,
+    });
+    expect(plan).toEqual({
+      skip: false,
+      complete: false,
+      ends: [],
+      history: {
+        lastModified: at(6),
+        lastCompleteAt: at(5),
+        counts: [...Array<number>(10).fill(100), 50],
+      },
     });
   });
 
-  it("re-judges completeness when a late listing changes a region's history", () => {
-    // Four listings of ~20 contracts, then a listing of 1: lenient (history
-    // shorter than five), so complete. A late fifth listing of 20 makes the
-    // history long enough for the median rule, and the listing of 1 becomes
-    // incomplete: its miss no longer counts.
-    const small = FILLER.slice(0, 20);
-    const early = [0, 1, 2, 3].map((n) => listing(n, [42], small));
-    const t = run({}, [...early, listing(5, [], [1]), listing(6, [], small)]);
-    expect(t.outcomes().get(42)).toMatchObject({ isDeleted: true });
-    t.apply(listing(4, [42], small));
-    expect(t.outcomes().get(42)).toMatchObject({
-      isDeleted: false,
-      lastSeen: at(4),
-      missing: true,
+  it("takes a stored lastSeen later than the previous complete listing", () => {
+    // Contract 1 was first stored from an incomplete listing at 7.
+    const history: RegionHistory = {
+      ...steady(5),
+      lastModified: at(7),
+      counts: [...steady(5).counts, 50, 50],
+    };
+    const plan = planRegionListing({
+      history,
+      observedAt: at(8),
+      listedIds: ids(),
+      outstanding: [outstanding(1, at(7) + MIN, at(7)), ...fillerOutstanding],
     });
-  });
-
-  it("starts from the database's lastSeenAt for contracts stored before the log", () => {
-    const t = timeline();
-    t.preload(42, at(-50), at(-3));
-    for (const id of FILLER) t.preload(id, at(-50), at(-3));
-    t.apply(listing(0, []));
-    expect(t.outcomes().get(42)).toMatchObject({
-      lastSeen: at(-3),
-      missing: true,
-    });
-  });
-
-  it("does not let a region listed as empty end everything on the first run", () => {
-    const t = timeline();
-    for (let id = 1; id <= 300; id++) t.preload(id, at(-50), at(-1));
-    t.apply({ regionId: REGION, observedAt: at(0), contractIds: [] });
-    t.apply({ regionId: REGION, observedAt: at(1), contractIds: [] });
-    expect([...t.outcomes().values()].every((o) => !o.isDeleted)).toBe(true);
-  });
-
-  it("checkpoints lastSeenAt to the latest listing, but leaves missing contracts alone", () => {
-    const t = run({}, [
-      ...steadyHistory(),
-      listing(0, [42, 43]),
-      listing(1, [42]),
+    expect(!plan.skip && plan.ends).toEqual([
+      { contractId: 1, lastSeenAt: at(7), endReason: "Expired" },
     ]);
-    t.checkpoint();
-    const rows = t.rows();
-    expect(rows.get(42)?.lastSeenAt).toBe(at(1));
-    expect(rows.get(43)).toMatchObject({
-      lastSeenAt: at(0),
-      absence: { lastSeenAt: at(0), ended: false },
+  });
+
+  it("judges a region's first listing against the contracts stored there", () => {
+    const stored = [outstanding(1, at(100), at(-2)), ...fillerOutstanding];
+    // Most of the region missing: a failed listing, not 100 contracts ending.
+    const failed = planRegionListing({
+      history: null,
+      observedAt: at(0),
+      listedIds: new Set([FILLER[0]!]),
+      outstanding: stored,
     });
+    expect(failed).toMatchObject({ complete: false, ends: [] });
+    expect(!failed.skip && failed.history.lastCompleteAt).toBeNull();
+
+    // A full listing ends what it lacks, from the stored lastSeen.
+    const full = planRegionListing({
+      history: null,
+      observedAt: at(0),
+      listedIds: ids(),
+      outstanding: stored,
+    });
+    expect(full).toMatchObject({
+      complete: true,
+      ends: [
+        {
+          contractId: 1,
+          lastSeenAt: at(-2),
+          endReason: "RemovedBeforeExpiry",
+        },
+      ],
+      history: { lastModified: at(0), lastCompleteAt: at(0) },
+    });
+  });
+
+  it("does not judge a region that has never listed anything", () => {
+    const plan = planRegionListing({
+      history: null,
+      observedAt: at(0),
+      listedIds: new Set(),
+      outstanding: [],
+    });
+    expect(plan).toEqual({
+      skip: false,
+      complete: false,
+      ends: [],
+      history: { lastModified: at(0), lastCompleteAt: null, counts: [] },
+    });
+  });
+
+  it("absorbs a genuine decline within a few listings", () => {
+    let history: RegionHistory | null = steady(0);
+    const half = new Set(FILLER.slice(0, 50));
+    const completeness: boolean[] = [];
+    for (let n = 1; n <= 12; n++) {
+      const plan = planRegionListing({
+        history,
+        observedAt: at(n),
+        listedIds: half,
+        outstanding: [...half].map((id) => outstanding(id)),
+      });
+      if (plan.skip) throw new Error("not skipped");
+      completeness.push(plan.complete);
+      history = plan.history;
+    }
+    expect(completeness.slice(0, 5)).toEqual(Array<boolean>(5).fill(false));
+    expect(completeness.at(-1)).toBe(true);
+    expect(history.counts).toHaveLength(REGION_HISTORY_LENGTH);
   });
 });
 
-/** Apply observations, then the daily checkpoint: the database's final rows. */
-const final = (
-  s: ReturnType<typeof scenario>,
-  observations: readonly Observation[],
-  preload: (t: MemoryTimeline) => void = () => undefined,
-) => {
-  const t = new MemoryTimeline(s.expiryOf, s.regionOf);
-  preload(t);
-  for (const o of observations) t.apply(o);
-  t.checkpoint();
-  return t;
+// A simulated region: contracts with random lifetimes, listings that are now
+// and then incomplete or never read, applied through an in-memory mirror of
+// `contractTimelineStore.ts`.
+
+/** Deterministic PRNG (mulberry32), so a failing seed reproduces. */
+const prng = (seed: number) => () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-const SEEDS = Array.from({ length: 300 }, (_, i) => i + 1);
+interface Truth {
+  contractId: number;
+  /** First and last listing generation it is in (inclusive). */
+  from: number;
+  to: number;
+  dateExpired: number;
+}
+interface Row {
+  dateExpired: number;
+  firstSeenAt: number;
+  lastSeenAt: number;
+  isDeleted: boolean;
+  endReason: ContractEndReason | null;
+}
 
-describe("against the snapshot ingest's own algorithm", () => {
-  it.each(SEEDS)(
-    "agrees with it on every contract, observations in time order (seed %i)",
-    (seed) => {
-      const s = scenario(seed, { regions: [10000002, 10000043] });
-      const inOrder = [...s.observations].sort(
-        (a, b) => a.observedAt - b.observedAt,
-      );
-      expect(final(s, inOrder).outcomes()).toEqual(
-        snapshotIngestOracle(inOrder, s.expiryOf),
-      );
-    },
-  );
-});
-
-describe("order independence and idempotency", () => {
-  it.each(SEEDS)(
-    "ends up with the same rows whatever order the observations arrive in (seed %i)",
-    (seed) => {
-      const s = scenario(seed, { regions: [10000002, 10000043] });
-      const rnd = prng(seed * 7919);
-      const reference = final(s, s.observations);
-      for (let k = 0; k < 4; k++) {
-        const t = final(s, shuffle(s.observations, rnd));
-        expect(t.rows()).toEqual(reference.rows());
-        expect(t.sortedLogs()).toEqual(reference.sortedLogs());
-      }
-    },
-  );
-
-  it.each(SEEDS)(
-    "changes nothing when every observation is applied again (seed %i)",
-    (seed) => {
-      const s = scenario(seed);
-      const rnd = prng(seed * 104729);
-      const t = final(s, s.observations);
-      const rows = t.rows();
-      for (const o of shuffle(s.observations, rnd)) {
-        const r = t.apply(o);
-        expect(r.inserts).toEqual([]);
-        expect(r.updates).toEqual([]);
-      }
-      expect(t.rows()).toEqual(rows);
-    },
-  );
-
-  it.each(SEEDS)(
-    "treats two sources' copies of one listing, one of them partial, as one listing (seed %i)",
-    (seed) => {
-      const s = scenario(seed);
-      const rnd = prng(seed * 15485863);
-      const reference = final(s, s.observations);
-      // Each listing is read by both sources; one copy is whole, the other
-      // lost anything from none to all of it (a failed scrape), and either
-      // may arrive first.
-      const copies = s.observations.flatMap((o) => {
-        const keep = rnd();
-        const partial = {
-          ...o,
-          contractIds: o.contractIds.filter(() => rnd() < keep),
-        };
-        return rnd() < 0.5 ? [o, partial] : [partial, o];
+const world = (random: () => number, generations: number) => {
+  const truths: Truth[] = [];
+  let next = 1;
+  for (let g = 0; g < generations; g++) {
+    // ~120 live at any time (8 a listing, living 15.5 listings on average):
+    // a steady region, so its listings stay complete.
+    const born = g === 0 ? 120 : 6 + Math.floor(random() * 5);
+    for (let i = 0; i < born; i++) {
+      const life = 1 + Math.floor(random() * 30);
+      // Some expire (their expiry falls in the half-hour after they leave),
+      // the rest are taken down while their expiry is still ahead.
+      const expires = random() < 0.4;
+      truths.push({
+        contractId: next++,
+        from: g,
+        to: g + life - 1,
+        dateExpired: expires
+          ? at(g + life) - Math.floor(random() * 29 * MIN) - MIN
+          : at(g + life + 1 + Math.floor(random() * 100)),
       });
-      expect(final(s, shuffle(copies, rnd)).rows()).toEqual(reference.rows());
-    },
-  );
-
-  it("exercises every path across the scenarios", () => {
-    const seen = {
-      RemovedBeforeExpiry: 0,
-      Expired: 0,
-      unknown: 0,
-      reopened: 0,
-      missing: 0,
-      incomplete: 0,
-      lateCorrections: 0,
-    };
-    for (const seed of SEEDS) {
-      const s = scenario(seed, { regions: [10000002, 10000043] });
-      const t = final(s, s.observations);
-      for (const o of t.outcomes().values()) {
-        if (o.isDeleted) seen[o.endReason ?? "unknown"]++;
-        else if (o.missing) seen.missing++;
-      }
-      for (const log of t.logs.values()) {
-        seen.incomplete += [...completenessOf(log).values()].filter(
-          (c) => !c,
-        ).length;
-      }
-      const oracle = snapshotIngestOracle(
-        [...s.observations].sort((a, b) => a.observedAt - b.observedAt),
-        s.expiryOf,
-      );
-      // Reopened: ended at some point, outstanding at the end.
-      const replay = new MemoryTimeline(s.expiryOf, s.regionOf);
-      const everEnded = new Set<number>();
-      for (const o of [...s.observations].sort(
-        (a, b) => a.observedAt - b.observedAt,
-      )) {
-        replay.apply(o);
-        for (const [id, c] of replay.contracts)
-          if (c.isDeleted) everEnded.add(id);
-      }
-      for (const id of everEnded) {
-        if (oracle.get(id)?.isDeleted === false) seen.reopened++;
-      }
-      // Late corrections: applying newest-first changes something on the
-      // way back in time.
-      const late = new MemoryTimeline(s.expiryOf, s.regionOf);
-      for (const o of [...s.observations].sort(
-        (a, b) => b.observedAt - a.observedAt,
-      )) {
-        seen.lateCorrections += late.apply(o).updates.length;
-      }
     }
-    for (const n of Object.values(seen)) expect(n).toBeGreaterThan(20);
-  });
+  }
+  return truths;
+};
 
-  it.each(SEEDS.slice(0, 100))(
-    "stays order-independent on top of contracts the snapshot ingest stored before the log (seed %i)",
-    (seed) => {
-      const s = scenario(seed);
-      const rnd = prng(seed * 31337);
-      const first = Math.min(...s.observations.map((o) => o.observedAt));
-      // What the database already holds: some contracts, last seen a while
-      // before the first observation.
-      const preload = (t: MemoryTimeline) => {
-        for (const id of new Set(
-          s.observations.flatMap((o) => o.contractIds),
-        )) {
-          if (id % 3 === 0) t.preload(id, first - 10 * HOUR, first - HOUR);
-        }
-      };
-      const reference = final(s, s.observations, preload);
-      for (let k = 0; k < 3; k++) {
-        expect(final(s, shuffle(s.observations, rnd), preload).rows()).toEqual(
-          reference.rows(),
-        );
+const simulate = (seed: number, { flaky }: { flaky: boolean }) => {
+  const random = prng(seed);
+  const generations = 80;
+  const truths = world(random, generations);
+  const rows = new Map<number, Row>();
+  let history: RegionHistory | null = null;
+  /**
+   * Generations the job read: whether that listing was whole, and whether the
+   * engine judged it complete.
+   */
+  const read: { g: number; whole: boolean; complete: boolean }[] = [];
+  for (let g = 0; g < generations; g++) {
+    // The first listings are read whole, as a deployed job's are judged
+    // against the contracts already stored: a region the job knows nothing
+    // about counts any non-empty listing as complete.
+    const roll = g < MIN_HISTORY ? 1 : random();
+    if (flaky && roll < 0.1) continue; // never read (downtime, ESI error)
+    const whole = !flaky || roll > 0.2;
+    const live = truths.filter((t) => t.from <= g && g <= t.to);
+    const listed = whole ? live : live.filter(() => random() < 0.3);
+    const entry = { g, whole, complete: false };
+    read.push(entry);
+    for (let repeat = 0; repeat < (random() < 0.2 ? 2 : 1); repeat++) {
+      const plan = planRegionListing({
+        history,
+        observedAt: at(g),
+        listedIds: new Set(listed.map((t) => t.contractId)),
+        outstanding: [...rows]
+          .filter(([, r]) => !r.isDeleted)
+          .map(([contractId, r]) => ({
+            contractId,
+            dateExpired: r.dateExpired,
+            lastSeenAt: r.lastSeenAt,
+          })),
+      });
+      if (plan.skip) {
+        expect(repeat).toBe(1);
+        continue;
       }
+      for (const t of listed) {
+        const row = rows.get(t.contractId);
+        if (!row) {
+          rows.set(t.contractId, {
+            dateExpired: t.dateExpired,
+            firstSeenAt: at(g),
+            lastSeenAt: at(g),
+            isDeleted: false,
+            endReason: null,
+          });
+        } else if (row.isDeleted) {
+          Object.assign(row, {
+            isDeleted: false,
+            endReason: null,
+            lastSeenAt: Math.max(row.lastSeenAt, at(g)),
+          });
+        }
+      }
+      for (const e of plan.ends) {
+        Object.assign(rows.get(e.contractId)!, {
+          isDeleted: true,
+          endReason: e.endReason,
+          lastSeenAt: e.lastSeenAt,
+        });
+      }
+      entry.complete = plan.complete;
+      history = plan.history;
+    }
+  }
+  return { truths, rows, read };
+};
+
+describe("against a simulated region", () => {
+  const cases = Array.from({ length: 60 }, (_, i) => i + 1).flatMap((seed) => [
+    { seed, flaky: false },
+    { seed, flaky: true },
+  ]);
+
+  it.each(cases)(
+    "ends each gone contract at the next complete listing, never a live one (seed $seed, flaky $flaky)",
+    ({ seed, flaky }) => {
+      const { truths, rows, read } = simulate(seed, { flaky });
+      // The completeness gate is what keeps a partial listing from ending
+      // live contracts: no listing read in part may pass it.
+      expect(read.filter((r) => r.complete && !r.whole)).toEqual([]);
+      const completeAt = new Set(
+        read.filter((r) => r.complete).map((r) => r.g),
+      );
+      let exact = 0;
+      for (const t of truths) {
+        const row = rows.get(t.contractId);
+        const readWhile = read.filter((r) => t.from <= r.g && r.g <= t.to);
+        if (!row) {
+          // Only ever live in listings the job never read, or read in part.
+          expect(readWhile.some((r) => r.whole)).toBe(false);
+          continue;
+        }
+        const missedIn = read.find((r) => r.complete && r.g > t.to);
+        expect(row.isDeleted).toBe(missedIn !== undefined);
+        if (!missedIn) continue;
+        // Last seen no later than the truth, and no earlier than the last
+        // complete listing that showed it.
+        const lastComplete = readWhile.filter((r) => r.complete).at(-1);
+        expect(row.lastSeenAt).toBeLessThanOrEqual(at(t.to));
+        expect(row.lastSeenAt).toBeGreaterThanOrEqual(
+          Math.max(
+            row.firstSeenAt,
+            lastComplete ? at(lastComplete.g) : -Infinity,
+          ),
+        );
+        // The reason follows from what the job saw ...
+        expect(row.endReason).toBe(
+          endReasonOf(t.dateExpired, row.lastSeenAt, at(missedIn.g)),
+        );
+        // ... and is exactly the truth when the job judged complete both the
+        // contract's last listing and the one after.
+        if (completeAt.has(t.to) && missedIn.g === t.to + 1) {
+          expect(row.lastSeenAt).toBe(at(t.to));
+          expect(row.endReason).toBe(
+            endReasonOf(t.dateExpired, at(t.to), at(t.to + 1)),
+          );
+          expect(row.endReason).not.toBeNull();
+          exact++;
+        }
+      }
+      // The simulation does exercise the exact case.
+      expect(exact).toBeGreaterThan(flaky ? 50 : 300);
     },
   );
 
-  it.each(SEEDS.slice(0, 100))(
-    "stays order-independent when stored contracts were last seen in the middle of the observations (seed %i)",
-    (seed) => {
-      // The snapshot ingest re-applying snapshots from before its own last
-      // checkpoint: the database's lastSeenAt lies among the observations.
-      const s = scenario(seed);
-      const rnd = prng(seed * 7727);
-      const times = s.observations
-        .map((o) => o.observedAt)
-        .sort((a, b) => a - b);
-      const preload = (t: MemoryTimeline) => {
-        for (const id of new Set(
-          s.observations.flatMap((o) => o.contractIds),
-        )) {
-          if (id % 2 === 0) {
-            const lastSeen = times[id % times.length]! + 60_000;
-            t.preload(id, times[0]! - HOUR, lastSeen);
-          }
-        }
-      };
-      const reference = final(s, s.observations, preload);
-      for (let k = 0; k < 3; k++) {
-        expect(final(s, shuffle(s.observations, rnd), preload).rows()).toEqual(
-          reference.rows(),
-        );
+  it.each(cases)(
+    "records each contract's first sighting (seed $seed, flaky $flaky)",
+    ({ seed, flaky }) => {
+      const { truths, rows, read } = simulate(seed, { flaky });
+      for (const t of truths) {
+        const row = rows.get(t.contractId);
+        if (!row) continue;
+        expect(row.firstSeenAt).toBeGreaterThanOrEqual(at(t.from));
+        if (!flaky) expect(row.firstSeenAt).toBe(at(t.from));
+        expect(read.some((r) => at(r.g) === row.firstSeenAt)).toBe(true);
       }
     },
   );

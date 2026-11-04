@@ -13,6 +13,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import type { JobLogger } from "../../../core";
+import type { RegionHistory } from "../../../helpers/contractTimeline.ts";
 import type { AppliedListing } from "../../../helpers/contractTimelineStore.ts";
 import type { EsiGate, EsiOutcome } from "../../../helpers/esiRequestGate.ts";
 import type { EsiPublicContract } from "../../../helpers/publicContracts.ts";
@@ -26,7 +27,6 @@ import { prisma } from "../../../db";
 import {
   applyRegionListing,
   checkpointContractTimeline,
-  pruneContractTimeline,
 } from "../../../helpers/contractTimelineStore.ts";
 import {
   createEsiGate,
@@ -70,19 +70,22 @@ const MAX_ITEM_CONTRACTS_PER_RUN = 6000;
 /**
  * When ESI cannot give a contract's items (403 once accepted, 404, an empty
  * answer) or they name a type or dogma the SDE ingest has not stored yet, ask
- * again only after this long. A contract that is gone ends within two runs and
+ * again only after this long. A contract that is gone ends the next run and
  * leaves the queue; one blocked on the SDE retries a few times a day.
  */
 const ITEMS_RETRY_AFTER_MS = 6 * 60 * 60 * 1000;
-/** lastSeenAt is checkpointed (and the timeline pruned) this often. */
+/** lastSeenAt is checkpointed this often. */
 const CHECKPOINT_MS = 24 * 60 * 60 * 1000;
 
 /**
- * What the job keeps between runs, in Redis. The timeline is the database's
- * (shared with the EVE Ref snapshot ingest); this is only the job's own work
- * queue and schedule, and losing it costs a re-check, nothing more.
+ * What the job keeps between runs, in Redis. Losing it costs little: items are
+ * re-checked from the database, and each region starts its history again from
+ * the contracts stored as outstanding there (so the first contracts to end
+ * take their stored, checkpointed lastSeenAt).
  */
 export interface SyncState {
+  /** Each region's listing history, by region ID. */
+  regions: Record<string, RegionHistory>;
   /** Contracts whose items still need fetching, with the earliest next try. */
   itemsPending: Record<string, number>;
   /** Epoch ms of the last checkpoint; 0 if none. */
@@ -99,6 +102,7 @@ const loadState = async (): Promise<SyncState | null> => {
   if (!raw) return null;
   const parsed = JSON.parse(raw) as Partial<SyncState>;
   return {
+    regions: parsed.regions ?? {},
     itemsPending: parsed.itemsPending ?? {},
     lastCheckpointAt: parsed.lastCheckpointAt ?? 0,
   };
@@ -238,7 +242,7 @@ const syncItems = async ({
   };
   if (due.length === 0) return stats;
 
-  // Contracts the snapshot ingest (or an earlier attempt) already filled.
+  // Contracts an earlier attempt (or the EVE Ref import) already filled.
   const stored = await contractsWithItemsOf(due);
   for (const id of stored) delete state.itemsPending[id];
   stats.alreadyStored = stored.size;
@@ -386,8 +390,8 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
   // :14 and :44 reads every region's fresh listing.
   trigger: { type: "cron", cron: "TZ=UTC 14,44 * * * *" },
   singleton: true,
-  // Every write is idempotent, and the timeline is independent of the order
-  // listings arrive in, so a retry repeats only what had not landed.
+  // Every write is idempotent and a listing already applied is skipped, so a
+  // retry repeats only what had not landed.
   retries: 2,
   // A catch-up after downtime fetches thousands of contracts' items.
   maxDurationSeconds: 1500,
@@ -444,27 +448,33 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
       listedContracts.flatMap((c) => npcStationOf(c) ?? []),
     );
 
-    // One region at a time, each in its own transaction under its lock.
+    let state = await loadState();
+    const regions = state?.regions ?? {};
+    // One region at a time, each in its own transaction.
     const applied: AppliedListing[] = [];
     for (const l of observed) {
-      applied.push(
-        await applyRegionListing({
+      const a = await applyRegionListing(
+        {
           regionId: l.regionId,
           observedAt: l.observedAt,
           contracts: l.contracts.map((c) =>
             contractRowFromEsi(c, l.regionId, stationSystems),
           ),
-        }),
+        },
+        regions[l.regionId] ?? null,
       );
+      if (a.history) regions[l.regionId] = a.history;
+      applied.push(a);
     }
-    const refused = applied.filter((a) => a.refused).map((a) => a.regionId);
-    if (refused.length > 0) {
-      ctx.logger.warn("Listing older than the timeline can correct", {
-        regionIds: refused,
+    const incomplete = applied
+      .filter((a) => !a.skipped && !a.complete)
+      .map((a) => a.regionId);
+    if (incomplete.length > 0) {
+      ctx.logger.warn("Listing looks incomplete; nothing ended there", {
+        regionIds: incomplete,
       });
     }
 
-    let state = await loadState();
     if (!state) {
       // First run (or the state was lost): queue outstanding contracts that
       // have no items yet.
@@ -480,6 +490,7 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
         SELECT c.id FROM unnest(${withItems.map((c) => c.contractId)}::int[]) AS c(id)
         WHERE NOT EXISTS (SELECT 1 FROM "ContractItem" i WHERE i."contractId" = c.id)`;
       state = {
+        regions,
         itemsPending: Object.fromEntries(itemless.map((c) => [c.id, 0])),
         lastCheckpointAt: 0,
       };
@@ -512,10 +523,19 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
     }
 
     let checkpointed = 0;
-    let pruned = { absences: 0, observations: 0 };
     if (now - state.lastCheckpointAt >= CHECKPOINT_MS) {
-      checkpointed = await checkpointContractTimeline();
-      pruned = await pruneContractTimeline(now);
+      checkpointed = await checkpointContractTimeline(
+        Object.entries(regions).flatMap(([regionId, h]) =>
+          h.lastCompleteAt === null
+            ? []
+            : [
+                {
+                  regionId: Number(regionId),
+                  lastCompleteAt: h.lastCompleteAt,
+                },
+              ],
+        ),
+      );
       state.lastCheckpointAt = now;
     }
     await saveState(state);
@@ -562,16 +582,14 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
         regions: regionIds.length,
         observed: observed.length,
         failedRegions: failedRegions.map((f) => f.regionId),
-        refusedRegions: refused,
+        skippedRegions: applied.filter((a) => a.skipped).map((a) => a.regionId),
+        incompleteRegions: incomplete,
         listed: listedContracts.length,
         inserted: sum((a) => a.inserted.length),
         reopened: sum((a) => a.reopened.length),
         ended: sum((a) => a.ended.length),
-        corrected: sum((a) => a.corrected.length),
         endReasons,
-        missing: sum((a) => a.missing),
         checkpointed,
-        pruned,
         items,
         bids,
         esi: gate.stats,

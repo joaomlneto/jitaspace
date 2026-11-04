@@ -23,7 +23,7 @@ const CONTRACT_TYPES: Record<EsiPublicContract["type"], ContractTypeName> = {
   loan: "Loan",
 };
 
-/** A type ESI adds later is stored as Unknown, as the snapshot ingest did. */
+/** A type ESI adds later is stored as Unknown, as the EVE Ref import did. */
 export const contractTypeOf = (contract: Pick<EsiPublicContract, "type">) =>
   (CONTRACT_TYPES as Partial<Record<string, ContractTypeName>>)[
     contract.type

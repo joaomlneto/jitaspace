@@ -12,7 +12,6 @@
     "describe-dogma-attributes": "pnpm with-env tsx scripts/describe-dogma-attributes.ts",
     "describe-dogma-effect-categories": "pnpm with-env tsx scripts/describe-dogma-effect-categories.ts",
     "describe-dogma-effects": "pnpm with-env tsx scripts/describe-dogma-effects.ts",
-    "ingest-everef-contracts": "pnpm with-env tsx scripts/ingest-everef-contracts.ts",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "test": "jest",

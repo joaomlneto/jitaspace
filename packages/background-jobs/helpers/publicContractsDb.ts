@@ -1,10 +1,9 @@
 /**
  * Database writes for public contracts' references, items, mutated items and
- * bids, shared by every source (the ESI sync job and the EVE Ref snapshot
- * ingest), so each writes the same rows the same way. All of them are inserts
- * of things that never change, with ON CONFLICT DO NOTHING: running them again,
- * or after the other source, adds nothing twice. The timeline itself is
- * `contractTimelineStore.ts`'s.
+ * bids. All of them are inserts of things that never change, with ON CONFLICT
+ * DO NOTHING, written as the EVE Ref snapshot import wrote them: running them
+ * again, or over rows that import left, adds nothing twice. The timeline itself
+ * is `contractTimelineStore.ts`'s.
  */
 import type {
   ContractsPublicItemsContractIdGet,
