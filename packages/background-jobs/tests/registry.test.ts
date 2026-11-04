@@ -78,6 +78,7 @@ describe("background-jobs registry", () => {
       .map((job) => job.id)
       .sort((a, b) => a.localeCompare(b));
     expect(cronJobIds).toEqual([
+      "esi-refresh-loyalty-store-offers",
       "esi-sync-industry-cost-indices",
       "esi-track-incursions",
       "esi-track-insurance-prices",
