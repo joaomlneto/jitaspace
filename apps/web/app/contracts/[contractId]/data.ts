@@ -65,11 +65,7 @@ export async function readContractDetail(
 
   const row = await prisma.contract.findUnique({
     where: { contractId },
-    select: {
-      ...contractSummarySelect,
-      firstSeenAt: true,
-      endReason: true,
-    },
+    select: { ...contractSummarySelect, firstSeenAt: true },
   });
   if (row === null) return null;
 

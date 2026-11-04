@@ -63,6 +63,7 @@ export const contractSummarySelect = {
   station: { select: { name: true } },
   lastSeenAt: true,
   isDeleted: true,
+  endReason: true,
   // No `_count` here: Prisma counts a relation by grouping the whole related
   // table before joining it, which took 27 s over ContractItem's millions of
   // historical rows. `readPageExtras` counts only the page's contracts.
@@ -156,7 +157,8 @@ export async function readEndStations(
   );
 }
 
-async function readPageExtras(
+/** The counts and end stations a page of rows needs (`toContractSummary`). */
+export async function readPageExtras(
   rows: ContractRow[],
 ): Promise<ContractPageExtras> {
   const contractId = { in: rows.map((row) => row.contractId) };
@@ -264,6 +266,7 @@ export function toContractSummary(
     highestBid: row.bids[0]?.amount ?? null,
     lastSeenAt: row.lastSeenAt?.toISOString() ?? null,
     isOpen: !row.isDeleted,
+    endReason: row.endReason,
   };
 }
 

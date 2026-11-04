@@ -7,6 +7,7 @@ export const CORPORATION_PAGE_TABS = [
   "agents",
   "economy",
   "wars",
+  "contracts",
   "killboard",
 ] as const;
 

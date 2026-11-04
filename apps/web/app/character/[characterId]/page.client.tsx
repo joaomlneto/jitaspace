@@ -31,6 +31,7 @@ import {
   CategoryCorporationIcon,
   CategoryResearchIcon,
   CategorySkullIcon,
+  ContractsIcon,
   SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowBiographyIcon,
@@ -61,6 +62,7 @@ import type {
   EsiCharacterCard,
   NamedRef,
 } from "./types";
+import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import {
   AllianceAnchor,
@@ -450,6 +452,8 @@ export default function CharacterPage({
     biography: Boolean(identity.description),
     history: !isNpc,
     agent: agent !== null,
+    // NPCs and agents never issue contracts.
+    contracts: !isNpc,
     killboard: !isNpc,
   };
   const selectedTab = visibleTabs[activeTab]
@@ -618,6 +622,14 @@ export default function CharacterPage({
                 leftSection={<WindowAgentIcon size={16} alt="" />}
               >
                 Agent
+              </Tabs.Tab>
+            )}
+            {visibleTabs.contracts && (
+              <Tabs.Tab
+                value="contracts"
+                leftSection={<ContractsIcon size={16} alt="" />}
+              >
+                Contracts
               </Tabs.Tab>
             )}
             {visibleTabs.killboard && (
@@ -857,6 +869,12 @@ export default function CharacterPage({
           {visibleTabs.agent && agent && (
             <Tabs.Panel value="agent" pt="lg">
               <AgentPanel agent={agent} />
+            </Tabs.Panel>
+          )}
+
+          {visibleTabs.contracts && (
+            <Tabs.Panel value="contracts" pt="lg">
+              <ContractHistoryTab subject="character" id={characterId} />
             </Tabs.Panel>
           )}
 
