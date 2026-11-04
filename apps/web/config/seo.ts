@@ -22,7 +22,6 @@ export const CRAWLER_DISALLOWED_PATHS = [
   "/fittings",
   "/login",
   "/mail",
-  "/notifications",
   "/settings",
   "/skills",
   "/wallet",

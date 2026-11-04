@@ -11,6 +11,7 @@ import { openContextModal } from "@mantine/modals";
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { NotificationFeedButton } from "~/components/Notifications";
 import { ServerStatusIndicator } from "~/components/ServerStatus/ServerStatusIndicator";
 import { jitaApps } from "~/config/apps";
 import UserButton from "~/layouts/MainLayout/UserButton";
@@ -122,30 +123,35 @@ export function HeaderMenu() {
               </Suspense>
             </Group>
 
-            <Group gap="xs" visibleFrom="sm" wrap="nowrap">
-              <HeaderSearchButton />
-              {characterIds.length > 0 && <UserButton />}
-              {characterIds.length === 0 && (
-                <LoginWithEveOnlineButton
-                  size="small"
-                  onClick={() => {
-                    openContextModal({
-                      modal: "login",
-                      title: <Title order={3}>Login</Title>,
-                      size: "xl",
-                      centered: false,
-                      innerProps: {},
-                    });
-                  }}
-                />
-              )}
-            </Group>
+            <Group gap="xs" wrap="nowrap">
+              <Box visibleFrom="sm">
+                <HeaderSearchButton />
+              </Box>
+              <NotificationFeedButton />
+              <Group gap="xs" visibleFrom="sm" wrap="nowrap">
+                {characterIds.length > 0 && <UserButton />}
+                {characterIds.length === 0 && (
+                  <LoginWithEveOnlineButton
+                    size="small"
+                    onClick={() => {
+                      openContextModal({
+                        modal: "login",
+                        title: <Title order={3} component="span">Login</Title>,
+                        size: "xl",
+                        centered: false,
+                        innerProps: {},
+                      });
+                    }}
+                  />
+                )}
+              </Group>
 
-            <Burger
-              opened={drawerOpened}
-              onClick={toggleDrawer}
-              hiddenFrom="sm"
-            />
+              <Burger
+                opened={drawerOpened}
+                onClick={toggleDrawer}
+                hiddenFrom="sm"
+              />
+            </Group>
           </Group>
         </Container>
       </div>
