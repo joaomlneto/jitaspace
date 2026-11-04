@@ -22,8 +22,10 @@
  * a point on the half-hour grid of its region's listings, at or after the true
  * expiry, so at most 30 minutes after the first listing that misses it. An
  * auction only counts as removed before expiry if it went missing more than
- * {@link AUCTION_EXPIRY_SLACK_MS} before that bound, so one bought out in its
- * last half hour reads as expired.
+ * {@link AUCTION_EXPIRY_SLACK_MS} before that bound. That errs one way only: an
+ * auction that expired never reads as removed, but one taken down in roughly
+ * its last hour (from the listing before the one that misses it) can read as
+ * expired.
  *
  * One miss is enough because ESI's listing is consistent: every page of a
  * region shares one Last-Modified (the job refetches if they don't), and The

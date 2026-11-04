@@ -459,6 +459,11 @@ describe("esi-sync-public-contracts", () => {
   });
 
   it("does not queue contracts whose items are stored, or that are not stored", async () => {
+    // A skipped stale listing shows 104, an item exchange never stored.
+    const unstored = { ...ITEM_EXCHANGE, contract_id: 104 };
+    regionPages[10000002] = () =>
+      Promise.resolve(listing([ITEM_EXCHANGE, COURIER, AUCTION, unstored]));
+    items[104] = () => Promise.resolve({ status: 200, headers: {}, data: [] });
     storedIds = new Set([101, 103]);
     withItems = new Set([101]);
     store.set(
@@ -467,7 +472,9 @@ describe("esi-sync-public-contracts", () => {
     );
     skippedRegions = new Set([10000002]);
     await run();
-    // 101 has items; 103 is stored and itemless; nothing else is stored.
+    // Only 103 is stored and itemless: 101 has items, 104 is not stored.
+    // (103's 403 leaves it queued, deferred.)
+    expect(Object.keys(state().itemsPending)).toEqual(["103"]);
     expect(getItems.mock.calls.map(([id]) => id)).toEqual([103]);
   });
 
