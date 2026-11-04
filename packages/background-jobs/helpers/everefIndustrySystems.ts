@@ -88,7 +88,7 @@ export async function fetchEveRef(path: string): Promise<Response> {
       continue;
     }
     if (response.status < 500) break;
-    await delay(attempt * 5_000);
+    await delay(attempt * 5_000); // NOSONAR: retries are sequential
   }
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
