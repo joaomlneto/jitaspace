@@ -6,3 +6,4 @@ export * from "./PartnerBadge";
 export * from "./SolarSystemSecurityStatusBadge";
 export * from "./WarAggressorTickerBadge";
 export * from "./WarDefenderTickerBadge";
+export * from "./CsmCandidateBadge";

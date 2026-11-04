@@ -18,18 +18,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconAlertTriangle,
-  IconChevronRight,
-  IconExternalLink,
-  IconMeteor,
-  IconMoon,
-  IconRobot,
-  IconRocket,
-  IconShieldHalf,
-  IconSkull,
-  IconSwords,
-} from "@tabler/icons-react";
+import { IconChevronRight, IconMeteor, IconMoon } from "@tabler/icons-react";
 
 import { useGetFwSystems, useGetIncursions } from "@jitaspace/esi-client";
 import {
@@ -38,9 +27,18 @@ import {
   FactionName,
   SolarSystemName,
   SolarSystemSovereigntyAvatar,
-  StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
+import {
+  CategoryDestroyCapsuleerIcon,
+  CategoryFactionalWarfareIcon,
+  CategoryLoseShipIcon,
+  CategoryNpcActivityIcon,
+  CategorySovereigntyIcon,
+  ControlJumpToIcon,
+  SystemOpenWindowIcon,
+  WindowIncursionsIcon,
+} from "@jitaspace/eve-icons";
 import {
   useAllSolarSystemJumps,
   useAllSolarSystemKills,
@@ -62,6 +60,7 @@ import {
 
 import type { SolarSystemSdeInfo } from "./types";
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
+import { StationAnchor } from "~/components/Anchor";
 import {
   PlanetAvatar,
   SolarSystemStarAvatar,
@@ -303,9 +302,10 @@ function SystemControlPanels({
         {hasSovereignty && sov && (
           <Paper p="md" radius="md">
             <Group gap="sm" wrap="nowrap">
-              <IconShieldHalf
+              <CategorySovereigntyIcon
                 size={22}
                 color="var(--mantine-color-eve_primary-4)"
+                alt=""
               />
               <SolarSystemSovereigntyAvatar
                 solarSystemId={systemId}
@@ -328,7 +328,11 @@ function SystemControlPanels({
           <Paper p="md" radius="md">
             <Group justify="space-between" mb="xs">
               <Group gap="xs">
-                <IconSwords size={18} color="var(--mantine-color-orange-5)" />
+                <CategoryFactionalWarfareIcon
+                  size={18}
+                  color="var(--mantine-color-orange-5)"
+                  alt=""
+                />
                 <Text fw={600}>Faction Warfare</Text>
               </Group>
               <Badge
@@ -365,10 +369,7 @@ function SystemControlPanels({
           <Paper p="md" radius="md">
             <Group justify="space-between" mb="xs">
               <Group gap="xs">
-                <IconAlertTriangle
-                  size={18}
-                  color="var(--mantine-color-red-5)"
-                />
+                <WindowIncursionsIcon size={18} alt="" />
                 <Text fw={600}>Incursion</Text>
               </Group>
               <Badge variant="light" color="red" tt="capitalize">
@@ -651,7 +652,13 @@ export default function Page({
                     href={tool.href(systemId)}
                     target="_blank"
                     size="xs"
-                    leftSection={<IconExternalLink size={13} />}
+                    leftSection={
+                      <SystemOpenWindowIcon
+                        size={13}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
                   >
                     {tool.label}
                   </Button>
@@ -667,10 +674,10 @@ export default function Page({
           <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
             <StatTile
               icon={
-                <IconRocket
+                <ControlJumpToIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-teal-4)"
+                  alt=""
                 />
               }
               label="Ship Jumps"
@@ -680,10 +687,10 @@ export default function Page({
             />
             <StatTile
               icon={
-                <IconSwords
+                <CategoryLoseShipIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-red-5)"
+                  alt=""
                 />
               }
               label="Ship Kills"
@@ -693,10 +700,10 @@ export default function Page({
             />
             <StatTile
               icon={
-                <IconSkull
+                <CategoryDestroyCapsuleerIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-grape-4)"
+                  alt=""
                 />
               }
               label="Pod Kills"
@@ -706,10 +713,10 @@ export default function Page({
             />
             <StatTile
               icon={
-                <IconRobot
+                <CategoryNpcActivityIcon
                   size={18}
-                  stroke={1.6}
                   color="var(--mantine-color-orange-5)"
+                  alt=""
                 />
               }
               label="NPC Kills"

@@ -5,22 +5,24 @@ import { Group } from "@mantine/core";
 
 import {
   AllianceName,
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  FactionAnchor,
   FactionName,
 } from "@jitaspace/eve-components";
 import {
-  AllianceAnchor,
   AllianceAvatar,
   CharacterAvatar,
-  CorporationAnchor,
   CorporationAvatar,
   FactionAvatar,
 } from "@jitaspace/ui";
 
 import type { NamedRef } from "~/lib/namedRef";
+import {
+  AllianceAnchor,
+  CharacterAnchor,
+  CorporationAnchor,
+  FactionAnchor,
+} from "~/components/Anchor";
 
 /**
  * Avatar-and-link rows for the entity pages' stat cards. Each shows the name

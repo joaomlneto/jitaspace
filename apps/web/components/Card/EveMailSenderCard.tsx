@@ -2,8 +2,9 @@
 
 import { memo } from "react";
 
-import { EveMailSenderCard as UIEveMailSenderCard } from "@jitaspace/eve-components";
 import { useCharacterMail } from "@jitaspace/hooks";
+
+import { EveMailSenderCardDisplay } from "./EveMailSenderCardDisplay";
 
 export interface EveMailSenderCardProps {
   characterId?: number;
@@ -14,7 +15,10 @@ export const EveMailSenderCard = memo(
   ({ characterId, messageId }: EveMailSenderCardProps) => {
     const { data, isLoading } = useCharacterMail(characterId ?? 0, messageId);
     return (
-      <UIEveMailSenderCard senderId={data?.data.from} isLoading={isLoading} />
+      <EveMailSenderCardDisplay
+        senderId={data?.data.from}
+        isLoading={isLoading}
+      />
     );
   },
 );

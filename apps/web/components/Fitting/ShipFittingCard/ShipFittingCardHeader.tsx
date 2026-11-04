@@ -8,9 +8,11 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
-import { IconClipboard, IconClipboardCheck } from "@tabler/icons-react";
 
-import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import { SystemCheckmarkIcon, SystemCopyIcon } from "@jitaspace/eve-icons";
+
+import { TypeAnchor } from "~/components/Anchor";
 
 interface ShipFittingCardHeaderProps {
   fitString?: string;
@@ -56,9 +58,13 @@ export const ShipFittingCardHeader = memo(
                   onClick={() => fitString && clipboard.copy(fitString.trim())}
                 >
                   {clipboard.copied ? (
-                    <IconClipboardCheck />
+                    <SystemCheckmarkIcon
+                      size={14}
+                      color="currentColor"
+                      alt=""
+                    />
                   ) : (
-                    <IconClipboard />
+                    <SystemCopyIcon size={14} color="currentColor" alt="" />
                   )}
                 </ThemeIcon>
               </UnstyledButton>

@@ -18,11 +18,7 @@ import {
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import {
-  IconChevronDown,
-  IconChevronRight,
-  IconPlus,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 import {
   columnOrderingFeature,
   columnPinningFeature,
@@ -35,10 +31,12 @@ import {
   useTable,
 } from "@tanstack/react-table";
 
-import { DogmaAttributeAnchor, EveIconAvatar } from "@jitaspace/ui";
+import { SystemAddIcon } from "@jitaspace/eve-icons";
+import { EveIconAvatar } from "@jitaspace/ui";
 
 import type { IndexedCompareCatalog } from "./catalog";
 import type { CompareRow, CompareSection, Comparison } from "./comparison";
+import { DogmaAttributeAnchor } from "~/components/Anchor";
 import { draggedTypeId, isColumnDrag } from "./columnDrag";
 import classes from "./Compare.module.css";
 import { CompareItemHeader } from "./CompareItemHeader";
@@ -248,7 +246,7 @@ function CollapsedAddColumn({ children }: Readonly<{ children: ReactNode }>) {
         <Button
           size="compact-xs"
           variant="light"
-          leftSection={<IconPlus size={12} />}
+          leftSection={<SystemAddIcon size={12} color="currentColor" alt="" />}
         >
           Add item
         </Button>

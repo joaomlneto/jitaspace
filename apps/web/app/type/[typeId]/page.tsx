@@ -1,16 +1,20 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { HttpStatusCode } from "axios";
 
 import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
+import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
 import { loadEntityHistory } from "~/lib/history-entity-page";
+import { readLatestTypeInsurance } from "~/lib/insuranceData";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { hasCombatStats } from "~/lib/npcStats";
 import {
@@ -18,8 +22,9 @@ import {
   DRONE_CATEGORY_ID,
   readNpcStats,
 } from "~/lib/npcStatsData";
+import { readEffectCategories } from "~/lib/readEffectCategories";
 import { parsePositiveEntityId } from "~/lib/routeParams";
-import { cacheSdeRead } from "~/lib/sdeCache";
+import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
 import { buildTypeListRuleIndex, matchTypeLists } from "~/lib/typeLists";
 import TypePage from "./page.client";
 import { emptyTypeDogmaMeta } from "./types";
@@ -111,32 +116,59 @@ function nonEmpty(value: string | null | undefined): string | undefined {
  * client page previously discovered these in three cascading round trips.
  *
  * Attributes ESI reports but we have no row for simply stay absent from the map,
- * which is the same thing the old per-attribute 404 produced.
+ * which is the same thing the old per-attribute 404 produced. A second query
+ * names the type's effects and picks each one's description: CCP's, else our
+ * AI-generated one. A third reads the effect categories, so the page can group
+ * the effects by when they apply.
  *
  * A failure throws rather than degrading here: the caller catches it, so a
  * database blip is never what gets written into the cache entry.
+ *
+ * Not `cacheSdeRead()`: effects' `customDescription` and the categories'
+ * names are written by our own scripts, not by the SDE ingest, so the entry
+ * keeps a daily `cacheLife` and only adds the SDE tag, as
+ * `app/lp-store/page.tsx` does.
  */
 async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   "use cache";
-  cacheSdeRead();
+  cacheLife("days");
+  cacheTag(SDE_CACHE_TAG);
 
-  const rows = await prisma.typeAttribute.findMany({
-    select: {
-      attributeId: true,
-      attribute: {
-        select: {
-          displayName: true,
-          name: true,
-          iconId: true,
-          unitId: true,
-          attributeCategoryId: true,
-          DogmaUnit: { select: { displayName: true, name: true } },
-          attributeCategory: { select: { name: true } },
+  const [rows, effectRows, effectCategories] = await Promise.all([
+    prisma.typeAttribute.findMany({
+      select: {
+        attributeId: true,
+        attribute: {
+          select: {
+            displayName: true,
+            name: true,
+            iconId: true,
+            unitId: true,
+            attributeCategoryId: true,
+            DogmaUnit: { select: { displayName: true, name: true } },
+            attributeCategory: { select: { name: true } },
+          },
         },
       },
-    },
-    where: { typeId },
-  });
+      where: { typeId },
+    }),
+    prisma.typeEffect.findMany({
+      select: {
+        effectId: true,
+        effect: {
+          select: {
+            name: true,
+            displayName: true,
+            description: true,
+            customDescription: true,
+            effectCategoryId: true,
+          },
+        },
+      },
+      where: { typeId, isDeleted: false },
+    }),
+    readEffectCategories(),
+  ]);
 
   const attributes: TypeDogmaMeta["attributes"] = {};
   const unitSymbols: TypeDogmaMeta["unitSymbols"] = {};
@@ -164,7 +196,20 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
     }
   }
 
-  return { attributes, unitSymbols, categoryNames };
+  const effects: TypeDogmaMeta["effects"] = {};
+  for (const { effectId, effect } of effectRows) {
+    const description = resolveEffectDescription(
+      effect.description,
+      effect.customDescription,
+    );
+    effects[effectId] = {
+      name: nonEmpty(effect.displayName) ?? effect.name ?? undefined,
+      description: description ?? undefined,
+      categoryId: effect.effectCategoryId ?? undefined,
+    };
+  }
+
+  return { attributes, unitSymbols, categoryNames, effects, effectCategories };
 }
 
 /**
@@ -369,6 +414,20 @@ async function getTypeTypeLists(
   }
 }
 
+/**
+ * The ship's latest insurance prices, for its Insurance tab. The page renders
+ * fine without them, so a database failure just leaves the tab out.
+ */
+async function getTypeInsurance(
+  typeId: number,
+): Promise<InsurancePricePeriod | null> {
+  try {
+    return await readLatestTypeInsurance(typeId);
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -430,12 +489,14 @@ async function PageContent({
   // Not awaited: the History tab streams it in after the rest of the page, so
   // the item's first byte never waits on seconds of history reads.
   const history = loadEntityHistory("type", typeId);
-  const [dogmaMeta, variations, typeLists, npcStats] = await Promise.all([
-    getTypeDogmaMeta(typeId),
-    getTypeVariations(data.variationBaseTypeId),
-    getTypeTypeLists(typeId, data.groupId, data.categoryId),
-    getTypeNpcStats(typeId, data.categoryId),
-  ]);
+  const [dogmaMeta, variations, typeLists, npcStats, insurance] =
+    await Promise.all([
+      getTypeDogmaMeta(typeId),
+      getTypeVariations(data.variationBaseTypeId),
+      getTypeTypeLists(typeId, data.groupId, data.categoryId),
+      getTypeNpcStats(typeId, data.categoryId),
+      getTypeInsurance(typeId),
+    ]);
   return (
     <TypePage
       {...props}
@@ -444,6 +505,7 @@ async function PageContent({
       typeLists={typeLists}
       history={history}
       npcStats={npcStats}
+      insurance={insurance}
     />
   );
 }

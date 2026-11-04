@@ -3,13 +3,10 @@ import { Badge, Group, Text, Tooltip } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
-import {
-  EveEntityAnchor,
-  EveEntityAvatar,
-  EveEntityName,
-} from "@jitaspace/eve-components";
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { DateHoverCard, FormattedDateText, ISKAmount } from "@jitaspace/ui";
 
+import { EveEntityAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import {
   getAccountingEntryType,

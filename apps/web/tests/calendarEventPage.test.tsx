@@ -40,11 +40,17 @@ jest.mock("@jitaspace/ui", () => ({
 
 // Components that moved to @jitaspace/eve-components are stubbed there.
 jest.mock("@jitaspace/eve-components", () => ({
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
   CharacterName: ({ characterId }: { characterId: number }) => (
     <span>{`Name ${characterId}`}</span>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
   ),
   EveEntityNameAnchor: ({ entityId }: { entityId?: number }) => (
     <a href="#">{`Entity ${entityId ?? "none"}`}</a>

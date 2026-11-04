@@ -18,24 +18,29 @@ import {
   Tabs,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
-import {
-  IconArrowsDiff,
-  IconCoin,
-  IconExternalLink,
-  IconFileText,
-  IconHistory,
-  IconInfoCircle,
-  IconListCheck,
-  IconListDetails,
-  IconSwords,
-  IconVersions,
-} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeName } from "@jitaspace/eve-components";
+import {
+  CategoryCombatIcon,
+  CategoryIskIcon,
+  CategoryPowerIcon,
+  SystemArrowRotateLeftIcon,
+  SystemBlockBanIcon,
+  SystemDetailsViewIcon,
+  SystemNumberIcon,
+  SystemOpenWindowIcon,
+  SystemTuneIcon,
+  SystemVariationIcon,
+  WindowCompareToolIcon,
+  WindowInfoIcon,
+  WindowInsuranceIcon,
+  WindowNoteIcon,
+} from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -43,29 +48,34 @@ import {
   useType,
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CategoryAnchor,
-  DogmaAttributeAnchor,
-  DogmaAttributeValue,
-  DogmaEffectAnchor,
-  EveIconAvatar,
-  GroupAnchor,
-  ISKAmount,
-  MarketGroupAnchor,
-} from "@jitaspace/ui";
+import { DogmaAttributeValue, EveIconAvatar, ISKAmount } from "@jitaspace/ui";
 
-import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
+import type {
+  TypeDogmaAttributeMeta,
+  TypeDogmaEffectMeta,
+  TypeDogmaMeta,
+} from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
+import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
+import {
+  CategoryAnchor,
+  DogmaAttributeAnchor,
+  DogmaEffectAnchor,
+  GroupAnchor,
+  MarketGroupAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import {
   TypeInventoryBreadcrumbs,
   TypeMarketBreadcrumbs,
 } from "~/components/Breadcrumbs";
 import { COMPARABLE_CATEGORY_IDS } from "~/components/Compare/catalog";
 import { ItemVariations } from "~/components/Compare/ItemVariations";
+import { EffectCategoryHeading } from "~/components/Dogma";
 import {
   HeroCard,
   HeroStat,
@@ -73,6 +83,7 @@ import {
   StatCard,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   DamageTypeLegend,
   NpcCombatStats,
@@ -86,9 +97,11 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
+import { groupByEffectCategory } from "~/lib/dogmaEffectCategory";
 import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
+import { InsuranceTab } from "./InsuranceTab";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
@@ -201,6 +214,52 @@ function AttributeValue({
   }
 }
 
+/**
+ * An effect's name, linked to its page, with its description underneath: CCP's
+ * own, else our AI-generated one, labelled as such. Falls back to ESI's name
+ * when our database has no row for the effect.
+ */
+function TypeEffectCell({
+  effectId,
+  meta,
+}: Readonly<{
+  effectId: number;
+  meta: TypeDogmaEffectMeta | undefined;
+}>) {
+  const description = meta?.description;
+  return (
+    <Stack gap={2}>
+      <DogmaEffectAnchor effectId={effectId}>
+        {meta?.name ?? <DogmaEffectName span effectId={effectId} />}
+      </DogmaEffectAnchor>
+      {description && (
+        <Group gap={6} align="flex-start" wrap="nowrap">
+          <Text component="div" size="xs" c="dimmed">
+            <MailMessageViewer
+              content={sanitizeFormattedEveString(description.text)}
+            />
+          </Text>
+          {description.source === "ai" && (
+            <Tooltip
+              label="AI-generated from this effect's data, not written by CCP"
+              withArrow
+            >
+              <Badge
+                size="xs"
+                variant="light"
+                color="gray"
+                style={{ flexShrink: 0, cursor: "help" }}
+              >
+                AI
+              </Badge>
+            </Tooltip>
+          )}
+        </Group>
+      )}
+    </Stack>
+  );
+}
+
 /** No history to show; one stable promise, so `use()` never sees a new one. */
 const NO_HISTORY: Promise<EntityHistoryData | null> = Promise.resolve(null);
 
@@ -213,6 +272,7 @@ export default function TypePage({
   typeLists = [],
   history = NO_HISTORY,
   npcStats = null,
+  insurance = null,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
@@ -225,6 +285,8 @@ export default function TypePage({
     history?: Promise<EntityHistoryData | null>;
     /** An NPC's combat figures; null for anything else. */
     npcStats?: NpcStats | null;
+    /** A ship's latest insurance prices; null for anything never insured. */
+    insurance?: InsurancePricePeriod | null;
   }
 >) {
   const character = useSelectedCharacter();
@@ -276,7 +338,8 @@ export default function TypePage({
   // page blank; show the overview instead.
   const selectedTab =
     (activeTab === "type-lists" && typeLists.length === 0) ||
-    (activeTab === "combat" && !npcStats)
+    (activeTab === "combat" && !npcStats) ||
+    (activeTab === "insurance" && !insurance)
       ? DEFAULT_TYPE_PAGE_TAB
       : activeTab;
 
@@ -407,6 +470,18 @@ export default function TypePage({
     [typeData?.dogma_effects],
   );
 
+  // By when they apply (Passive, Activated, Online, …), as the attributes are
+  // grouped by attribute category; effects we have no row for come last.
+  const groupedDogmaEffects = useMemo(
+    () =>
+      groupByEffectCategory(
+        sortedDogmaEffects,
+        (effect) => dogmaMeta.effects[effect.effect_id]?.categoryId,
+        dogmaMeta.effectCategories,
+      ),
+    [sortedDogmaEffects, dogmaMeta.effects, dogmaMeta.effectCategories],
+  );
+
   // Physical properties — only render the ones this type actually defines.
   const propertyItems = useMemo(() => {
     const items: { label: string; value: string }[] = [];
@@ -466,7 +541,9 @@ export default function TypePage({
         >
           <TypeInventoryBreadcrumbs typeId={typeId} fz="sm" />
           <Group gap="sm" align="center">
-            <Title order={2}>{name ?? notAvailableText}</Title>
+            <Title order={1} size="h2">
+              {name ?? notAvailableText}
+            </Title>
             {typeData?.published === false && (
               <Badge color="red" variant="light">
                 Unpublished
@@ -514,11 +591,11 @@ export default function TypePage({
           <Group gap="xs">
             {isComparable && (
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`/compare?types=${typeId}`}
                 size="xs"
                 variant="light"
-                leftSection={<IconArrowsDiff size={14} />}
+                leftSection={<WindowCompareToolIcon size={14} alt="" />}
               >
                 Compare
               </Button>
@@ -529,7 +606,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Ref
             </Button>
@@ -539,7 +618,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Tycoon
             </Button>
@@ -550,7 +631,9 @@ export default function TypePage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 EVE Workbench
               </Button>
@@ -569,19 +652,26 @@ export default function TypePage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
             {npcStats && (
-              <Tabs.Tab value="combat" leftSection={<IconSwords size={16} />}>
+              <Tabs.Tab
+                value="combat"
+                leftSection={
+                  <CategoryCombatIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Combat
               </Tabs.Tab>
             )}
             {hasAttributes && (
               <Tabs.Tab
                 value="attributes"
-                leftSection={<IconListDetails size={16} />}
+                leftSection={
+                  <SystemTuneIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Attributes
               </Tabs.Tab>
@@ -589,20 +679,35 @@ export default function TypePage({
             {hasVariations && (
               <Tabs.Tab
                 value="variations"
-                leftSection={<IconVersions size={16} />}
+                leftSection={
+                  <SystemVariationIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Variations
               </Tabs.Tab>
             )}
             {hasMarket && (
-              <Tabs.Tab value="market" leftSection={<IconCoin size={16} />}>
+              <Tabs.Tab
+                value="market"
+                leftSection={
+                  <CategoryIskIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Market
+              </Tabs.Tab>
+            )}
+            {insurance && (
+              <Tabs.Tab
+                value="insurance"
+                leftSection={<WindowInsuranceIcon size={16} alt="" />}
+              >
+                Insurance
               </Tabs.Tab>
             )}
             {description && (
               <Tabs.Tab
                 value="description"
-                leftSection={<IconFileText size={16} />}
+                leftSection={<WindowNoteIcon size={16} alt="" />}
               >
                 Description
               </Tabs.Tab>
@@ -610,12 +715,27 @@ export default function TypePage({
             {typeLists.length > 0 && (
               <Tabs.Tab
                 value="type-lists"
-                leftSection={<IconListCheck size={16} />}
+                leftSection={
+                  <SystemDetailsViewIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Type Lists
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>
@@ -624,7 +744,7 @@ export default function TypePage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
                   Identity &amp; Classification
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -681,7 +801,11 @@ export default function TypePage({
 
               {propertyItems.length > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconListDetails size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <SystemNumberIcon size={18} color="currentColor" alt="" />
+                    }
+                  >
                     Properties
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
@@ -703,7 +827,15 @@ export default function TypePage({
             <Tabs.Panel value="combat" pt="lg">
               <Stack gap="lg">
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSwords size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryCombatIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Offense &amp; Defense
                   </SectionHeading>
                   <DamageTypeLegend />
@@ -718,7 +850,15 @@ export default function TypePage({
                 </Stack>
                 {npcStats.ewar.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconSwords size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <CategoryCombatIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Abilities
                     </SectionHeading>
                     <NpcEwarTable ewar={npcStats.ewar} />
@@ -734,7 +874,11 @@ export default function TypePage({
               <Stack gap="lg">
                 {sortedDogmaAttributes.length > 0 && (
                   <Stack gap="md">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemTuneIcon size={18} color="currentColor" alt="" />
+                      }
+                    >
                       Attributes
                     </SectionHeading>
                     {categorizedDogmaAttributes.map((category) => (
@@ -803,35 +947,56 @@ export default function TypePage({
 
                 {sortedDogmaEffects.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <CategoryPowerIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Effects
                     </SectionHeading>
-                    <Paper withBorder radius="md" p="sm">
-                      <Table highlightOnHover verticalSpacing="xs">
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th>Effect</Table.Th>
-                            <Table.Th ta="right">Default</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                          {sortedDogmaEffects.map((effect) => (
-                            <Table.Tr key={effect.effect_id}>
-                              <Table.Td>
-                                <DogmaEffectAnchor effectId={effect.effect_id}>
-                                  <DogmaEffectName
-                                    effectId={effect.effect_id}
-                                  />
-                                </DogmaEffectAnchor>
-                              </Table.Td>
-                              <Table.Td ta="right">
-                                {booleanBadge(effect.is_default)}
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    </Paper>
+                    {groupedDogmaEffects.map((group) => (
+                      <Paper
+                        key={group.category?.effectCategoryId ?? "other"}
+                        withBorder
+                        radius="md"
+                        p="sm"
+                      >
+                        <Stack gap="xs">
+                          {/* One uncategorized group means no category data, not a group worth naming. */}
+                          {(group.category !== null ||
+                            groupedDogmaEffects.length > 1) && (
+                            <EffectCategoryHeading category={group.category} />
+                          )}
+                          <Table highlightOnHover verticalSpacing="xs">
+                            <Table.Thead>
+                              <Table.Tr>
+                                <Table.Th>Effect</Table.Th>
+                                <Table.Th ta="right">Default</Table.Th>
+                              </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                              {group.items.map((effect) => (
+                                <Table.Tr key={effect.effect_id}>
+                                  <Table.Td>
+                                    <TypeEffectCell
+                                      effectId={effect.effect_id}
+                                      meta={dogmaMeta.effects[effect.effect_id]}
+                                    />
+                                  </Table.Td>
+                                  <Table.Td ta="right">
+                                    {booleanBadge(effect.is_default)}
+                                  </Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </Table.Tbody>
+                          </Table>
+                        </Stack>
+                      </Paper>
+                    ))}
                   </Stack>
                 )}
               </Stack>
@@ -851,7 +1016,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <TypeMarketBreadcrumbs typeId={typeId} fz="sm" />
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconCoin size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryIskIcon size={18} color="currentColor" alt="" />
+                    }
+                  >
                     Jita / The Forge
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="sm">
@@ -917,6 +1086,13 @@ export default function TypePage({
             </Tabs.Panel>
           )}
 
+          {/* Insurance */}
+          {insurance && (
+            <Tabs.Panel value="insurance" pt="lg">
+              <InsuranceTab typeId={typeId} latest={insurance} />
+            </Tabs.Panel>
+          )}
+
           {/* Description */}
           {description && (
             <Tabs.Panel value="description" pt="lg">
@@ -934,7 +1110,11 @@ export default function TypePage({
               <Stack gap="lg">
                 <Text size="sm" c="dimmed">
                   The game uses{" "}
-                  <Anchor component={Link} href="/type-lists" size="sm">
+                  <Anchor
+                    component={HoverPrefetchLink}
+                    href="/type-lists"
+                    size="sm"
+                  >
                     type lists
                   </Anchor>{" "}
                   to decide which items a rule applies to. A list names the
@@ -942,7 +1122,15 @@ export default function TypePage({
                 </Text>
                 {memberTypeLists.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListCheck size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemDetailsViewIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Member of {memberTypeLists.length}{" "}
                       {memberTypeLists.length === 1 ? "list" : "lists"}
                     </SectionHeading>
@@ -951,7 +1139,15 @@ export default function TypePage({
                 )}
                 {excludedTypeLists.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemBlockBanIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Excluded from {excludedTypeLists.length}{" "}
                       {excludedTypeLists.length === 1 ? "list" : "lists"}
                     </SectionHeading>

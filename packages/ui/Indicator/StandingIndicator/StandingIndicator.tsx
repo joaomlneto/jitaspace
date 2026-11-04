@@ -1,3 +1,10 @@
+// The `.gif` imports below need Next's static-image module declarations. Apps
+// get them from the generated `next-env.d.ts`, but packages do not — and since
+// this package ships TypeScript source, consumers compile this file in *their*
+// program too. Referencing the types here lets the declarations travel with
+// the import graph, so every consumer is covered. Triple-slash directives only
+// count before the first statement, so this sits above "use client".
+/// <reference types="next/image-types/global" />
 "use client";
 
 import type { IndicatorProps } from "@mantine/core";

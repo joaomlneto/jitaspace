@@ -16,33 +16,24 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconCalendarStats,
-  IconChartBar,
-  IconClock,
-  IconMapPin,
-  IconRocket,
-  IconSkull,
-  IconTrophy,
-} from "@tabler/icons-react";
 
 import {
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  SolarSystemAnchor,
   SolarSystemName,
-  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import {
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-  GroupAnchor,
-  ISKAmount,
-} from "@jitaspace/ui";
+  CategorySkullIcon,
+  CategorySpaceshipCommandIcon,
+  CategoryStatisticsIcon,
+  CategoryTrophyIcon,
+  SystemClockIcon,
+  WindowCalendarIcon,
+  WindowMapIcon,
+} from "@jitaspace/eve-icons";
+import { CharacterAvatar, CorporationAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type {
   ZkbEntity,
@@ -50,6 +41,13 @@ import type {
   ZkbStats,
   ZkbTopEntry,
 } from "./zkillboard";
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  GroupAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import { GroupName } from "~/components/Text";
 import { formatDecimal, formatInteger, formatPercent } from "~/lib/format";
@@ -415,7 +413,11 @@ export function KillboardTab({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconSkull size={18} />}>All time</SectionHeading>
+        <SectionHeading
+          icon={<CategorySkullIcon size={18} color="currentColor" alt="" />}
+        >
+          All time
+        </SectionHeading>
         <KillboardSummaryCards
           entity={entity}
           stats={stats}
@@ -425,7 +427,7 @@ export function KillboardTab({
 
       {months.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconCalendarStats size={18} />}>
+          <SectionHeading icon={<WindowCalendarIcon size={18} alt="" />}>
             Last {months.length} months on record
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -449,7 +451,7 @@ export function KillboardTab({
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         {locations.length > 0 && (
           <Stack gap="sm">
-            <SectionHeading icon={<IconMapPin size={18} />}>
+            <SectionHeading icon={<WindowMapIcon size={18} alt="" />}>
               Where they fight
             </SectionHeading>
             <Paper withBorder radius="md" p="sm">
@@ -459,7 +461,9 @@ export function KillboardTab({
         )}
         {timezones.length > 0 && (
           <Stack gap="sm">
-            <SectionHeading icon={<IconClock size={18} />}>
+            <SectionHeading
+              icon={<SystemClockIcon size={18} color="currentColor" alt="" />}
+            >
               When they fight
             </SectionHeading>
             <Paper withBorder radius="md" p="sm">
@@ -477,7 +481,11 @@ export function KillboardTab({
 
       {stats?.activity && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconChartBar size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryStatisticsIcon size={18} color="currentColor" alt="" />
+            }
+          >
             Recent activity (EVE time)
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -488,7 +496,15 @@ export function KillboardTab({
 
       {groups.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconRocket size={18} />}>
+          <SectionHeading
+            icon={
+              <CategorySpaceshipCommandIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Ship classes
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -530,7 +546,9 @@ export function KillboardTab({
 
       {stats?.topAllTime && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconTrophy size={18} />}>
+          <SectionHeading
+            icon={<CategoryTrophyIcon size={18} color="currentColor" alt="" />}
+          >
             All-time top killers
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">

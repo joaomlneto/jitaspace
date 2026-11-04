@@ -17,40 +17,33 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconBuildingStore,
-  IconBuildingWarehouse,
-  IconChartPie,
-  IconExternalLink,
-  IconFileText,
-  IconHistory,
-  IconInfoCircle,
-  IconSkull,
-  IconSwords,
-  IconUserCircle,
-  IconWorld,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CorporationsDetail } from "@jitaspace/esi-client";
 import { isNpcCorporationId } from "@jitaspace/esi-metadata";
 import {
   AllianceName,
-  CharacterAnchor,
   CharacterName,
-  FactionAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
+import {
+  CategoryCorporationIcon,
+  CategoryIskIcon,
+  CategoryLpIcon,
+  CategoryOngoingConflictsIcon,
+  CategorySkullIcon,
+  SystemOpenWindowIcon,
+  WindowAgentIcon,
+  WindowEmploymentHistoryIcon,
+  WindowInfoIcon,
+  WindowNoteIcon,
+  WindowStationIcon,
+} from "@jitaspace/eve-icons";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAnchor,
   CorporationAvatar,
   ISKAmount,
-  RaceAnchor,
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
@@ -58,6 +51,15 @@ import type { CorporationPageTab } from "./tabs";
 import type { CorporationPageData } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
+import {
+  AllianceAnchor,
+  CharacterAnchor,
+  FactionAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StationAnchor,
+} from "~/components/Anchor";
 import {
   corporationPaletteClasses,
   CorporationPaletteStripe,
@@ -212,7 +214,9 @@ function NpcDetails({
 }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconWorld size={18} />}>
+      <SectionHeading
+        icon={<CategoryCorporationIcon size={18} color="currentColor" alt="" />}
+      >
         NPC corporation
       </SectionHeading>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -441,7 +445,7 @@ export default function CorporationPage({
             <Text size="sm">{identity.name ?? corporationId}</Text>
           </Breadcrumbs>
           <Group gap="sm" align="center">
-            <Title order={2}>
+            <Title order={1} size="h2">
               {identity.name ?? `Corporation ${corporationId}`}
             </Title>
             {identity.ticker && (
@@ -559,7 +563,9 @@ export default function CorporationPage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>
@@ -570,7 +576,9 @@ export default function CorporationPage({
                 href={lpStorePath(identity.name)}
                 size="xs"
                 variant="light"
-                leftSection={<IconBuildingStore size={14} />}
+                leftSection={
+                  <CategoryLpIcon size={14} color="currentColor" alt="" />
+                }
               >
                 LP Store
               </Button>
@@ -589,27 +597,30 @@ export default function CorporationPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
             {visibleTabs.description && (
               <Tabs.Tab
                 value="description"
-                leftSection={<IconFileText size={16} />}
+                leftSection={<WindowNoteIcon size={16} alt="" />}
               >
                 Description
               </Tabs.Tab>
             )}
             {visibleTabs.history && (
-              <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+              <Tabs.Tab
+                value="history"
+                leftSection={<WindowEmploymentHistoryIcon size={16} alt="" />}
+              >
                 Alliance History
               </Tabs.Tab>
             )}
             {visibleTabs.stations && profile && (
               <Tabs.Tab
                 value="stations"
-                leftSection={<IconBuildingWarehouse size={16} />}
+                leftSection={<WindowStationIcon size={16} alt="" />}
               >
                 Stations ({formatInteger(profile.counts.stations)})
               </Tabs.Tab>
@@ -617,7 +628,7 @@ export default function CorporationPage({
             {visibleTabs.agents && profile && (
               <Tabs.Tab
                 value="agents"
-                leftSection={<IconUserCircle size={16} />}
+                leftSection={<WindowAgentIcon size={16} alt="" />}
               >
                 Agents ({formatInteger(profile.counts.agents)})
               </Tabs.Tab>
@@ -625,17 +636,33 @@ export default function CorporationPage({
             {visibleTabs.economy && (
               <Tabs.Tab
                 value="economy"
-                leftSection={<IconChartPie size={16} />}
+                leftSection={
+                  <CategoryIskIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Economy
               </Tabs.Tab>
             )}
             {visibleTabs.wars && warSummary && (
-              <Tabs.Tab value="wars" leftSection={<IconSwords size={16} />}>
+              <Tabs.Tab
+                value="wars"
+                leftSection={
+                  <CategoryOngoingConflictsIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
+              >
                 Wars ({formatInteger(warSummary.total)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="killboard" leftSection={<IconSkull size={16} />}>
+            <Tabs.Tab
+              value="killboard"
+              leftSection={
+                <CategorySkullIcon size={16} color="currentColor" alt="" />
+              }
+            >
               Killboard
             </Tabs.Tab>
           </Tabs.List>
@@ -649,7 +676,7 @@ export default function CorporationPage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconInfoCircle size={18} />}>
+                <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
                   Identity &amp; Leadership
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -786,7 +813,15 @@ export default function CorporationPage({
 
               {warSummary && warSummary.total > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSwords size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryOngoingConflictsIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     War record
                   </SectionHeading>
                   <WarSummaryCards summary={warSummary} />
@@ -794,7 +829,11 @@ export default function CorporationPage({
               )}
 
               <Stack gap="sm">
-                <SectionHeading icon={<IconSkull size={18} />}>
+                <SectionHeading
+                  icon={
+                    <CategorySkullIcon size={18} color="currentColor" alt="" />
+                  }
+                >
                   Killboard
                 </SectionHeading>
                 {zkill.isError ? (

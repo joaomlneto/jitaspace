@@ -17,27 +17,23 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconGitBranch,
-  IconHistory,
-  IconInfoCircle,
-  IconListNumbers,
-  IconRoute,
-  IconUsers,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import { FactionAnchor } from "@jitaspace/eve-components";
 import {
-  EveIconAvatar,
-  FactionAvatar,
-  ISKAmount,
-  MissionAnchor,
-} from "@jitaspace/ui";
+  CategoryAgentMissionIcon,
+  CategoryEpicArcIcon,
+  CategoryFlagIcon,
+  SystemArrowRotateLeftIcon,
+  SystemExpandStructureIcon,
+  WindowAgentIcon,
+  WindowInfoIcon,
+} from "@jitaspace/eve-icons";
+import { EveIconAvatar, FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type { EpicArc, EpicArcStep, EpicArcSummary } from "~/lib/epicArcs";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { MissionKind } from "~/lib/missions";
+import { FactionAnchor, MissionAnchor } from "~/components/Anchor";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
 import {
   AgentLabel,
@@ -102,7 +98,9 @@ function EpicArcHero({
         </HeroImage>
         <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
           <Group gap="sm" align="center">
-            <Title order={2}>{arc.name}</Title>
+            <Title order={1} size="h2">
+              {arc.name}
+            </Title>
             <Badge variant="light" color="grape" size="md">
               Epic Arc
             </Badge>
@@ -172,7 +170,7 @@ function EpicArcOverview({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconInfoCircle size={18} />}>
+        <SectionHeading icon={<WindowInfoIcon size={18} alt="" />}>
           Epic Arc
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -208,7 +206,9 @@ function EpicArcOverview({
       </Stack>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconRoute size={18} />}>
+        <SectionHeading
+          icon={<CategoryEpicArcIcon size={18} color="currentColor" alt="" />}
+        >
           Where It Starts
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -220,7 +220,15 @@ function EpicArcOverview({
 
       {summary.branchPoints.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconGitBranch size={18} />}>
+          <SectionHeading
+            icon={
+              <SystemExpandStructureIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Where It Branches
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -248,7 +256,9 @@ function EpicArcOverview({
       )}
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconListNumbers size={18} />}>
+        <SectionHeading
+          icon={<CategoryFlagIcon size={18} color="currentColor" alt="" />}
+        >
           Where It Ends
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -331,17 +341,38 @@ export default function EpicArcPage({
           <Tabs.List>
             <Tabs.Tab
               value="overview"
-              leftSection={<IconInfoCircle size={16} />}
+              leftSection={<WindowInfoIcon size={16} alt="" />}
             >
               Overview
             </Tabs.Tab>
-            <Tabs.Tab value="missions" leftSection={<IconRoute size={16} />}>
+            <Tabs.Tab
+              value="missions"
+              leftSection={
+                <CategoryAgentMissionIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               Missions ({arc.steps.length})
             </Tabs.Tab>
-            <Tabs.Tab value="agents" leftSection={<IconUsers size={16} />}>
+            <Tabs.Tab
+              value="agents"
+              leftSection={<WindowAgentIcon size={16} alt="" />}
+            >
               Agents
             </Tabs.Tab>
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>

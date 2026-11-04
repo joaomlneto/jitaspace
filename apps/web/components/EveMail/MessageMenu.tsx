@@ -1,18 +1,17 @@
 import { ActionIcon, Group, Menu, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import {
-  IconCheck,
-  IconMail,
-  IconMailOpened,
-  IconMenu2,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconMail, IconMailOpened } from "@tabler/icons-react";
 
 import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
+import {
+  SystemCheckmarkIcon,
+  SystemListViewIcon,
+  SystemTrashcanIcon,
+} from "@jitaspace/eve-icons";
 import { useAccessToken, useCharacterMailLabels } from "@jitaspace/hooks";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
@@ -154,7 +153,7 @@ export function MessageMenu({
     <Menu>
       <Menu.Target>
         <ActionIcon size="sm" variant="subtle">
-          <IconMenu2 />
+          <SystemListViewIcon size={16} color="currentColor" alt="" />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
@@ -173,7 +172,11 @@ export function MessageMenu({
                   size={16}
                 >
                   {label.label_id && mail.labels?.includes(label.label_id) && (
-                    <IconCheck size={16} />
+                    <SystemCheckmarkIcon
+                      size={16}
+                      color="currentColor"
+                      alt=""
+                    />
                   )}
                 </MailLabelColorSwatch>
                 {label.label_id && mail.labels?.includes(label.label_id)
@@ -192,7 +195,9 @@ export function MessageMenu({
           Mark as {mail.is_read ? "Unread" : "Read"}
         </Menu.Item>
         <Menu.Item
-          leftSection={<IconTrash size={16} />}
+          leftSection={
+            <SystemTrashcanIcon size={16} color="currentColor" alt="" />
+          }
           color="red"
           onClick={() => {
             openConfirmModal({

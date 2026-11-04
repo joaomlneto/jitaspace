@@ -61,6 +61,11 @@ export const DateHoverCard = memo(
         withArrow
         openDelay={200}
         closeDelay={100}
+        // The target is a plain <span>, where aria-haspopup/aria-expanded are
+        // not allowed. The card only repeats the date in other formats, so it
+        // is a mouse-only aid: the date text itself is what a screen reader
+        // reads.
+        withRoles={false}
         {...hoverCardProps}
       >
         <HoverCard.Target>

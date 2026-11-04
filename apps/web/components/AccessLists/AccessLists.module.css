@@ -1,0 +1,26 @@
+/*
+ * Secondary text. Mantine's `dimmed` is gray-6 in the light scheme, 3.15:1 on
+ * a striped table row; gray-7 clears 4.5:1 on both stripes.
+ */
+.secondary {
+  color: var(--mantine-color-dimmed);
+
+  @mixin light {
+    color: var(--mantine-color-gray-7);
+  }
+}
+
+/* Keep line breaks the author typed into a description. */
+.description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Names and badges keep their width in a narrow table, which scrolls
+ * sideways instead; squeezed, a badge shrinks to an unreadable sliver.
+ */
+.nowrap {
+  white-space: nowrap;
+  flex: none;
+}

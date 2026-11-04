@@ -1,10 +1,8 @@
 import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import {
-  EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
-  EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
 } from "@jitaspace/eve-components";
@@ -16,6 +14,7 @@ import {
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { MailboxTableProps } from "~/components/EveMail/MailboxTable";
+import { EveEntityAnchor, EveMailSenderAnchor } from "~/components/Anchor";
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 import { MessageMenu } from "~/components/EveMail/MessageMenu";

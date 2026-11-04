@@ -45,9 +45,6 @@ jest.mock("@jitaspace/ui", () => ({
   TimeAgoText: ({ date }: { date: Date }) => (
     <span data-testid="time-ago">{date.toISOString()}</span>
   ),
-  WarAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="war-anchor">{children}</span>
-  ),
 }));
 
 // Components that moved to @jitaspace/eve-components are stubbed there.
@@ -67,11 +64,20 @@ jest.mock("@jitaspace/eve-components", () => ({
   TypeName: ({ typeId }: { typeId?: number }) => (
     <span data-testid="type-name">{`type-${typeId ?? "?"}`}</span>
   ),
-  SolarSystemAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="solar-anchor">{children}</span>
-  ),
   SolarSystemName: ({ solarSystemId }: { solarSystemId?: number | string }) => (
     <span data-testid="solar-name">{`system-${solarSystemId ?? "?"}`}</span>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
+  WarAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="war-anchor">{children}</span>
+  ),
+  SolarSystemAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="solar-anchor">{children}</span>
   ),
 }));
 

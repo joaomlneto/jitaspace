@@ -16,10 +16,9 @@ import {
   Title,
   useMantineTheme,
 } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
 import posthog from "posthog-js";
 
-import { LPStoreIcon } from "@jitaspace/eve-icons";
+import { LPStoreIcon, SystemSearchIcon } from "@jitaspace/eve-icons";
 import { CorporationAvatar, FactionAvatar } from "@jitaspace/ui";
 
 import type { LPStoreGroup } from "./groups";
@@ -90,7 +89,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
           <LPStoreIcon width={48} />
           <Title>LP Store</Title>
         </Group>
-        <Title order={3}>
+        <Title order={2} size="h3">
           Select a corporation below or{" "}
           <Anchor inherit component={Link} href="/lp-store/all">
             show all offers
@@ -101,7 +100,9 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
             style={{ flex: 1, minWidth: 220 }}
             aria-label="Filter corporations and factions"
             placeholder="Filter by corporation or faction name"
-            leftSection={<IconSearch size={16} />}
+            leftSection={
+              <SystemSearchIcon size={16} color="currentColor" alt="" />
+            }
             // Mantine makes input sections ignore the pointer by default, which
             // would let a click on the clear button fall through to the input.
             rightSectionPointerEvents="all"
@@ -165,7 +166,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
                       factionId={group.faction.factionId}
                       size="md"
                     />
-                    <Title order={4}>
+                    <Title order={3} size="h4">
                       <Anchor
                         inherit
                         component={Link}
@@ -176,7 +177,9 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
                     </Title>
                   </>
                 ) : (
-                  <Title order={4}>Other corporations</Title>
+                  <Title order={3} size="h4">
+                    Other corporations
+                  </Title>
                 )}
                 <Badge variant="light" color="gray">
                   {group.corporations.length}

@@ -4,7 +4,7 @@ import { getUniverseStargatesStargateId } from "@jitaspace/esi-client";
 
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
-import { prisma } from "../../../db";
+import { Prisma, prisma } from "../../../db";
 import { SDE_OWNED_STARGATE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -96,21 +96,25 @@ const processStargateBatch = async (
           })),
         }),
       );
-      // step two: update the stargates with their respective links
-      return Promise.all(
-        entries.map((entry) =>
-          limit(async () =>
-            prisma.stargate.update({
-              data: {
-                destinationStargateId: entry.destinationStargateId,
-              },
-              where: {
-                stargateId: entry.stargateId,
-              },
-            }),
+      // step two: link each stargate to its destination, in ONE statement.
+      // Gates come in mutually-referencing pairs and PostgreSQL takes a FOR KEY
+      // SHARE lock on the referenced row, so concurrent per-row updates on a
+      // pair deadlock (40P01); a single statement cannot deadlock against
+      // itself. Same fix as ingestSdeStargates. A batch is at most ~2k rows
+      // (2 params each), far under the 65535-parameter limit. `@updatedAt` is
+      // client-side, so the raw UPDATE sets it explicitly.
+      if (entries.length === 0) return;
+      await prisma.$executeRaw`
+        UPDATE "Stargate" AS s
+        SET "destinationStargateId" = v."destinationStargateId",
+            "updatedAt" = ${new Date()}
+        FROM (VALUES ${Prisma.join(
+          entries.map(
+            (entry) =>
+              Prisma.sql`(${entry.stargateId}::int, ${entry.destinationStargateId}::int)`,
           ),
-        ),
-      );
+        )}) AS v("stargateId", "destinationStargateId")
+        WHERE s."stargateId" = v."stargateId"`;
     },
     batchDelete: (entries) =>
       prisma.stargate.updateMany({

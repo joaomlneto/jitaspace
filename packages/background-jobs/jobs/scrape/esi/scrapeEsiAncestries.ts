@@ -27,6 +27,14 @@ export const scrapeEsiAncestries = defineJob<
     const ancestries = await getUniverseAncestries().then((res) => res.data);
     const ancestryIds = ancestries.map((ancestry) => ancestry.id);
 
+    // `Icon` is filled by the SDE ingest, which runs after this scrape on a
+    // fresh database: keep an unknown icon null rather than break the FK.
+    const iconIds = new Set(
+      await prisma.icon
+        .findMany({ select: { iconId: true } })
+        .then((entries) => entries.map((entry) => entry.iconId)),
+    );
+
     const ancestryChanges = await updateTable({
       fetchLocalEntries: async () =>
         prisma.ancestry
@@ -53,7 +61,10 @@ export const scrapeEsiAncestries = defineJob<
             name: ancestry.name,
             shortDescription: ancestry.short_description ?? null,
             description: ancestry.description,
-            iconId: ancestry.icon_id ?? null,
+            iconId:
+              ancestry.icon_id && iconIds.has(ancestry.icon_id)
+                ? ancestry.icon_id
+                : null,
             bloodlineId: ancestry.bloodline_id,
             isDeleted: false,
           })),

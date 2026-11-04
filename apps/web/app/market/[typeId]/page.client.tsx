@@ -18,12 +18,12 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconStar, IconStarFilled } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState, useQueryStates } from "nuqs";
 import posthog from "posthog-js";
 
 import type { RegionalMarketOrder } from "@jitaspace/hooks";
 import { TypeAvatar } from "@jitaspace/eve-components";
+import { SystemStarHollowIcon, SystemStarIcon } from "@jitaspace/eve-icons";
 import { useTypeMarketOrders } from "@jitaspace/hooks";
 
 import {
@@ -97,7 +97,11 @@ function QuickbarStar({
           else store.addItem(typeId);
         }}
       >
-        {inQuickbar ? <IconStarFilled size={20} /> : <IconStar size={20} />}
+        {inQuickbar ? (
+          <SystemStarIcon size={20} color="currentColor" alt="" />
+        ) : (
+          <SystemStarHollowIcon size={20} color="currentColor" alt="" />
+        )}
       </ActionIcon>
     </Tooltip>
   );

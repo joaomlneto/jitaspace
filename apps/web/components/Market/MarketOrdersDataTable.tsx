@@ -5,10 +5,11 @@ import { addDays } from "date-fns";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { RegionalMarketOrder } from "@jitaspace/hooks";
-import { EveEntityAnchor, EveEntityName } from "@jitaspace/eve-components";
+import { EveEntityName } from "@jitaspace/eve-components";
 import { UNIVERSE_NAMES_MAX_ID } from "@jitaspace/hooks";
 import { DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
+import { EveEntityAnchor } from "~/components/Anchor";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { DataTable } from "~/components/DataTable";
 import classes from "./MarketOrdersDataTable.module.css";

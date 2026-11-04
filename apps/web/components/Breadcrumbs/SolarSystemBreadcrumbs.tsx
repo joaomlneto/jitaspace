@@ -3,8 +3,9 @@
 import type { BreadcrumbsProps, TextProps } from "@mantine/core";
 import { memo } from "react";
 
-import { SolarSystemBreadcrumbs as UISolarSystemBreadcrumbs } from "@jitaspace/eve-components";
 import { useConstellation, useSolarSystem } from "@jitaspace/hooks";
+
+import { SolarSystemBreadcrumbsDisplay } from "./SolarSystemBreadcrumbsDisplay";
 
 export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   solarSystemId?: string | number;
@@ -29,7 +30,7 @@ export const SolarSystemBreadcrumbs = memo(
     const regionId = constellation?.data.region_id;
 
     return (
-      <UISolarSystemBreadcrumbs
+      <SolarSystemBreadcrumbsDisplay
         solarSystemId={solarSystemId}
         constellationId={constellationId}
         regionId={regionId}

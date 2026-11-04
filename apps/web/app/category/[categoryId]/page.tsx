@@ -10,24 +10,32 @@ import {
   Title,
 } from "@mantine/core";
 
-import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
-
+import { GroupAnchor } from "~/components/Anchor";
+import { CategoryBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
 import { parseEntityId } from "~/lib/routeParams";
 import { cacheSdeRead } from "~/lib/sdeCache";
 
-interface PageProps {
-  name?: string;
+interface CategoryData {
+  name: string;
   groups: { groupId: number; name: string }[];
 }
 
-async function getCategoryData(categoryId: number): Promise<PageProps> {
+/**
+ * Uncaught on purpose: this route is cached whole, so a database failure must
+ * throw rather than store a 404 (see "Never catch a database error inside a
+ * `"use cache"` scope" in CLAUDE.md). `findUnique` plus a null test keeps a
+ * category that genuinely does not exist apart from a failed query.
+ */
+async function getCategoryData(
+  categoryId: number,
+): Promise<CategoryData | null> {
   "use cache";
   cacheSdeRead();
 
-  const category = await prisma.category.findUniqueOrThrow({
+  const category = await prisma.category.findUnique({
     select: {
       categoryId: true,
       name: true,
@@ -42,6 +50,8 @@ async function getCategoryData(categoryId: number): Promise<PageProps> {
       categoryId,
     },
   });
+
+  if (!category) return null;
 
   return {
     name: category.name,
@@ -61,19 +71,31 @@ export async function generateMetadata({
   // bare site title and no canonical.
   const categoryId = parseEntityId(categoryIdParam);
   if (categoryId === null) return {};
-  try {
-    const { name, groups } = await getCategoryData(categoryId);
-    if (!name) return {};
-    return pageMetadata({
-      title: name,
-      description: `Browse EVE Online ${name} by group — ${groups.length} groups of items with attributes and market prices.`,
-      path: `/category/${categoryId}`,
-      badge: "Item Category",
-      facts: [{ label: "Groups", value: String(groups.length) }],
-    });
-  } catch {
-    return {};
-  }
+
+  // Uncaught, like the page body: a database failure must throw rather than
+  // store generic metadata. It shares `getCategoryData` with the page, so both
+  // resolve to one cache entry.
+  const category = await getCategoryData(categoryId);
+  if (!category) return {};
+
+  const { name, groups } = category;
+  return pageMetadata({
+    title: name,
+    description: `Browse EVE Online ${name} by group — ${groups.length} groups of items with attributes and market prices.`,
+    path: `/category/${categoryId}`,
+    badge: "Item Category",
+    facts: [{ label: "Groups", value: String(groups.length) }],
+  });
+}
+
+// ISR per category: without `generateStaticParams` an unlisted id re-renders,
+// and re-runs the query below, on every request (see apps/web/CLAUDE.md → "ISR
+// for a dynamic `[param]` route"). The real ids live in the database, which
+// `next build` cannot reach in CI, and Cache Components rejects an empty list
+// — so this lists one id `parseEntityId` refuses, which prerenders as a 404
+// without a query. Not `0`: `/category/0` is a real row.
+export function generateStaticParams() {
+  return [{ categoryId: "-1" }];
 }
 
 async function PageContent({
@@ -88,15 +110,9 @@ async function PageContent({
     notFound();
   }
 
-  let name: PageProps["name"] = undefined;
-  let groups: PageProps["groups"] = [];
-  try {
-    const data = await getCategoryData(categoryId);
-    name = data.name;
-    groups = data.groups;
-  } catch {
-    notFound();
-  }
+  const category = await getCategoryData(categoryId);
+  if (!category) notFound();
+  const { name, groups } = category;
 
   const sortedGroups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
 
@@ -108,7 +124,9 @@ async function PageContent({
         </Group>
         <CategoryBreadcrumbs categoryId={categoryId} categoryName={name} />
         <Stack gap="xs">
-          <Title order={3}>Groups</Title>
+          <Title order={2} size="h3">
+            Groups
+          </Title>
           <SimpleGrid spacing="xs" cols={{ base: 1, xs: 2, md: 3 }}>
             {sortedGroups.map((group) => (
               <Group key={group.groupId}>

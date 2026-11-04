@@ -4,7 +4,8 @@ import type { BreadcrumbsProps } from "@mantine/core";
 import { memo } from "react";
 
 import { useCategory, useGroup } from "@jitaspace/hooks";
-import { GroupBreadcrumbs as UIGroupBreadcrumbs } from "@jitaspace/ui";
+
+import { GroupBreadcrumbsDisplay } from "./GroupBreadcrumbsDisplay";
 
 export type GroupBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   groupId?: number;
@@ -17,7 +18,7 @@ export const GroupBreadcrumbs = memo(
     const { data: category } = useCategory(categoryId);
 
     return (
-      <UIGroupBreadcrumbs
+      <GroupBreadcrumbsDisplay
         groupId={groupId}
         groupName={group?.data.name}
         categoryId={categoryId}

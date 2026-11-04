@@ -42,9 +42,6 @@ jest.mock("@jitaspace/hooks", () => ({
 // as a passthrough that surfaces the props it received so we can assert them.
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
-  GroupBreadcrumbs: (props: Record<string, unknown>) => (
-    <div data-testid="ui-group-breadcrumbs">{JSON.stringify(props)}</div>
-  ),
   OpenInformationWindowActionIcon: ({
     onOpen,
     disabled,
@@ -136,20 +133,9 @@ jest.mock("@jitaspace/ui", () => ({
 
 // ---------------------------------------------------------------------------
 // "@jitaspace/eve-components" mocks. Same passthrough stubs as above, for the
-// dumb components that moved out of @jitaspace/ui into @jitaspace/eve-components.
+// names and avatars the cards render.
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/eve-components", () => ({
-  EveMailSenderCard: ({
-    senderId,
-    isLoading,
-  }: {
-    senderId?: number;
-    isLoading?: boolean;
-  }) => (
-    <div data-testid="ui-mail-sender-card" data-loading={String(!!isLoading)}>
-      {`Sender ${senderId ?? ""}`}
-    </div>
-  ),
   SolarSystemName: ({ solarSystemId }: { solarSystemId?: number | string }) => (
     <span>{`SolarSystemName ${solarSystemId ?? ""}`}</span>
   ),
@@ -161,15 +147,45 @@ jest.mock("@jitaspace/eve-components", () => ({
   StationName: ({ stationId }: { stationId?: number }) => (
     <span>{`StationName ${stationId ?? ""}`}</span>
   ),
-  SolarSystemBreadcrumbs: (props: Record<string, unknown>) => (
+}));
+
+// ---------------------------------------------------------------------------
+// The presentational halves of the wrappers under test. Each wrapper renders
+// its sibling *Display component; stub those as passthroughs that surface the
+// props they received.
+// ---------------------------------------------------------------------------
+jest.mock("~/components/Card/EveMailSenderCardDisplay", () => ({
+  EveMailSenderCardDisplay: ({
+    senderId,
+    isLoading,
+  }: {
+    senderId?: number;
+    isLoading?: boolean;
+  }) => (
+    <div data-testid="ui-mail-sender-card" data-loading={String(!!isLoading)}>
+      {`Sender ${senderId ?? ""}`}
+    </div>
+  ),
+}));
+jest.mock("~/components/Breadcrumbs/GroupBreadcrumbsDisplay", () => ({
+  GroupBreadcrumbsDisplay: (props: Record<string, unknown>) => (
+    <div data-testid="ui-group-breadcrumbs">{JSON.stringify(props)}</div>
+  ),
+}));
+jest.mock("~/components/Breadcrumbs/SolarSystemBreadcrumbsDisplay", () => ({
+  SolarSystemBreadcrumbsDisplay: (props: Record<string, unknown>) => (
     <div data-testid="ui-solar-system-breadcrumbs">{JSON.stringify(props)}</div>
   ),
-  TypeInventoryBreadcrumbs: (props: Record<string, unknown>) => (
+}));
+jest.mock("~/components/Breadcrumbs/TypeInventoryBreadcrumbsDisplay", () => ({
+  TypeInventoryBreadcrumbsDisplay: (props: Record<string, unknown>) => (
     <div data-testid="ui-type-inventory-breadcrumbs">
       {JSON.stringify(props)}
     </div>
   ),
-  TypeMarketBreadcrumbs: (props: Record<string, unknown>) => (
+}));
+jest.mock("~/components/Breadcrumbs/TypeMarketBreadcrumbsDisplay", () => ({
+  TypeMarketBreadcrumbsDisplay: (props: Record<string, unknown>) => (
     <div data-testid="ui-type-market-breadcrumbs">{JSON.stringify(props)}</div>
   ),
 }));
@@ -194,8 +210,8 @@ jest.mock("~/components/Badge", () => ({
 }));
 
 // NOTE: "~/components/Breadcrumbs" is intentionally NOT mocked. The cards render
-// the real SolarSystemBreadcrumbs, whose own dependencies (the hooks and the
-// "@jitaspace/ui" breadcrumbs) are already mocked, so it renders the stubbed
+// the real SolarSystemBreadcrumbs, whose own dependencies (the hooks and
+// SolarSystemBreadcrumbsDisplay) are already mocked, so it renders the stubbed
 // UI breadcrumbs (data-testid="ui-solar-system-breadcrumbs"). This also keeps
 // the real Breadcrumbs wrappers available for the dedicated Breadcrumbs tests
 // further down, which import them from the same barrel.

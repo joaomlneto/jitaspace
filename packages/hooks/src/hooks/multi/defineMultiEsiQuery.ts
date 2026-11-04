@@ -9,6 +9,7 @@ import type {
   EsiQuerySource,
   MultiEsiQueryConfig,
   MultiEsiQueryEnvelope,
+  MultiEsiQueryOptions,
   SubjectQueryOptions,
 } from "./useEsiSubjectQueries";
 import { useEsiSubjectQueries } from "./useEsiSubjectQueries";
@@ -49,9 +50,14 @@ export interface MultiEsiQueryResult<TItem> extends MultiEsiQueryEnvelope {
  *     getCharactersCharacterIdFittingsQueryOptions(id, headers),
  * });
  * ```
+ *
+ * The built hook queries every reachable subject by default; pass
+ * `{ subjectIds }` to restrict it to a chosen few, e.g.
+ * `useMultipleCharacterFittings({ subjectIds: [characterId] })`.
  */
 export function defineMultiEsiQuery<TItem>(
-  config: MultiEsiQueryConfig & {
+  // `subjectIds` is chosen per call (see MultiEsiQueryOptions), not per hook.
+  config: Omit<MultiEsiQueryConfig, "subjectIds"> & {
     query: (
       subjectId: number,
       authHeaders: Record<string, string>,
@@ -72,9 +78,11 @@ export function defineMultiEsiQuery<TItem>(
         response.data.map((item) => ({ ...item, subjectId: subject.id })),
     }) as unknown as SubjectQueryOptions<EsiSubjectItem<TItem>[]>;
 
-  return function useMultiEsiQuery(): MultiEsiQueryResult<TItem> {
+  return function useMultiEsiQuery(
+    options: MultiEsiQueryOptions = {},
+  ): MultiEsiQueryResult<TItem> {
     const { selected, ...envelope } = useEsiSubjectQueries(
-      subjectConfig,
+      { ...subjectConfig, subjectIds: options.subjectIds },
       buildQuery,
     );
 

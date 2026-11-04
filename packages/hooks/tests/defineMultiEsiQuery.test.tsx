@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
+import {
+  focusManager,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 import type { ResponseConfig } from "@jitaspace/esi-client";
 import type { ESIScope } from "@jitaspace/esi-metadata";
@@ -189,6 +193,36 @@ describe("defineMultiEsiQuery", () => {
     expect(result.current.errors[0]?.error).toBeInstanceOf(Error);
   });
 
+  it("lists only the subjects that are still pending", async () => {
+    login(
+      character({ characterId: 100, scopes: [SCOPE] }),
+      character({ characterId: 101, scopes: [SCOPE] }),
+    );
+
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings", subjectId],
+        // Subject 100 never settles; 101 resolves straight away.
+        queryFn: () =>
+          subjectId === 100
+            ? new Promise<ResponseConfig<Fitting[]>>(() => undefined)
+            : Promise.resolve(response([{ fitting_id: 1 }])),
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple(), { wrapper });
+
+    await waitFor(() =>
+      expect(result.current.data).toEqual([{ fitting_id: 1, subjectId: 101 }]),
+    );
+    // The envelope as a whole is still pending, but a consumer showing only
+    // subject 101 can tell that its data is complete.
+    expect(result.current.isPending).toBe(true);
+    expect(result.current.pendingSubjectIds).toEqual([100]);
+  });
+
   it("does not re-run select on every render", async () => {
     login(character({ characterId: 100, scopes: [SCOPE] }));
 
@@ -313,5 +347,122 @@ describe("defineMultiEsiQuery", () => {
     expect(result.current.data).toEqual([]);
     expect(result.current.subjectIds).toEqual([]);
     expect(result.current.isLoading).toBe(false);
+  });
+
+  it("does not go back to pending while a failed subject is retried", async () => {
+    login(
+      character({ characterId: 100, scopes: [SCOPE] }),
+      character({ characterId: 101, scopes: [SCOPE] }),
+    );
+    let fail = () => Promise.reject(new Error("boom"));
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings-retry", subjectId],
+        queryFn: () =>
+          subjectId === 100 ? fail() : Promise.resolve(response([])),
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple(), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.isPending).toBe(false);
+
+    // Focus refetches the failed query, which react-query resets to pending
+    // with no error while it runs: a page reading isPending would flash its
+    // loading state on every focus.
+    let release: (() => void) | undefined;
+    fail = () =>
+      new Promise((_resolve, reject) => {
+        release = () => {
+          reject(new Error("boom"));
+        };
+      });
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await waitFor(() => expect(release).toBeDefined());
+
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.pendingSubjectIds).toEqual([]);
+
+    act(() => release?.());
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+
+  describe("subjectIds", () => {
+    const queried: number[] = [];
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings-by-id", subjectId],
+        queryFn: () => {
+          queried.push(subjectId);
+          return Promise.resolve(response([{ fitting_id: subjectId }]));
+        },
+      }),
+    });
+
+    beforeEach(() => {
+      queried.length = 0;
+      login(
+        character({ characterId: 100, scopes: [SCOPE] }),
+        character({ characterId: 101, scopes: [SCOPE] }),
+        character({ characterId: 102, scopes: [SCOPE] }),
+      );
+    });
+
+    it("queries only the subjects asked for", async () => {
+      const { result } = renderHook(
+        () => useMultiple({ subjectIds: [102, 100] }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+
+      // Subject order stays the login order, not the order asked for.
+      expect(result.current.subjectIds).toEqual([100, 102]);
+      expect(result.current.data.map((item) => item.subjectId)).toEqual([
+        100, 102,
+      ]);
+      expect(queried.sort()).toEqual([100, 102]);
+    });
+
+    it("leaves out an id no logged-in character can authorise", async () => {
+      const { result } = renderHook(
+        () => useMultiple({ subjectIds: [101, 999] }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+
+      expect(result.current.subjectIds).toEqual([101]);
+      expect(queried).toEqual([101]);
+    });
+
+    it("queries nothing for an empty list, unlike omitting it", async () => {
+      const { result } = renderHook(() => useMultiple({ subjectIds: [] }), {
+        wrapper,
+      });
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+
+      expect(result.current.subjectIds).toEqual([]);
+      expect(result.current.data).toEqual([]);
+      expect(queried).toEqual([]);
+    });
+
+    it("keeps its result stable when given an equal, fresh array", async () => {
+      const { result, rerender } = renderHook(
+        () => useMultiple({ subjectIds: [100] }),
+        { wrapper },
+      );
+      await waitFor(() => expect(result.current.isPending).toBe(false));
+      const first = result.current.data;
+
+      rerender();
+
+      expect(result.current.data).toBe(first);
+    });
   });
 });

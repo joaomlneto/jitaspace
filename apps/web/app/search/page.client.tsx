@@ -10,8 +10,9 @@ import {
   Title,
   UnstyledButton,
 } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
 import { debounce, parseAsString, useQueryState } from "nuqs";
+
+import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import { SearchScopeNotice } from "~/components/Spotlight/SearchScopeNotice";
 import { useSearchActions } from "~/components/Spotlight/useSearchActions";
@@ -47,12 +48,16 @@ function SearchView() {
   return (
     <Container size="sm">
       <Stack gap="md">
-        <Title order={2}>Search</Title>
+        <Title order={1} size="h2">
+          Search
+        </Title>
         <TextInput
           ref={inputRef}
           size="md"
           aria-label="Search"
-          leftSection={<IconSearch size={18} />}
+          leftSection={
+            <SystemSearchIcon size={18} color="currentColor" alt="" />
+          }
           placeholder="Search characters, corporations, items, tools…"
           value={query}
           onChange={(event) => void setQuery(event.currentTarget.value)}
