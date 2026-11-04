@@ -14,13 +14,14 @@ import {
   Title,
 } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
-import { IconSearch } from "@tabler/icons-react";
 import {
   parseAsArrayOf,
   parseAsInteger,
   parseAsString,
   useQueryState,
 } from "nuqs";
+
+import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import type { PiCatalog } from "./catalog";
 import type { SchematicEntry } from "./schematics";
@@ -179,7 +180,9 @@ export const SchematicsBrowser = memo(
           <TextInput
             label="Search"
             placeholder="Schematic or commodity"
-            leftSection={<IconSearch size={16} aria-hidden />}
+            leftSection={
+              <SystemSearchIcon size={16} color="currentColor" alt="" />
+            }
             value={text}
             onChange={(event) => {
               setText(event.currentTarget.value);
