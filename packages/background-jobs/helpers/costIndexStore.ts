@@ -15,6 +15,11 @@ import { fromCostIndexRow } from "./industryCostIndices.ts";
 
 type SolarSystemCostIndexSource = "esi" | "everef";
 
+type LatestRow = { solarSystemId: number } & Record<
+  CostIndexColumn,
+  number | null
+>;
+
 /** Systems per state query: a few hundred `LIMIT 1` scans plan quickly. */
 const STATE_QUERY_BATCH = 500;
 
@@ -65,9 +70,8 @@ export async function loadCostIndexState(
           LIMIT 1
         )`,
     );
-    const rows = await prisma.$queryRaw<
-      ({ solarSystemId: number } & Record<CostIndexColumn, number | null>)[]
-    >(Prisma.join(branches, " UNION ALL "));
+    const query = Prisma.join(branches, " UNION ALL ");
+    const rows = await prisma.$queryRaw<LatestRow[]>(query); // NOSONAR: a few batches, one at a time
     for (const row of rows) {
       const values = fromCostIndexRow(row);
       if (values.some((value) => value !== null)) {
@@ -127,9 +131,8 @@ export async function appendCostIndexSnapshots(
       const rows = snapshots.flatMap((snapshot) => snapshot.rows);
       // One at a time: the transaction holds a single connection.
       for (let start = 0; start < rows.length; start += 5_000) {
-        await tx.solarSystemCostIndex.createMany({
-          data: rows.slice(start, start + 5_000),
-        }); // NOSONAR: one at a time, see above
+        const batch = rows.slice(start, start + 5_000);
+        await tx.solarSystemCostIndex.createMany({ data: batch }); // NOSONAR: one at a time, see above
       }
       await tx.solarSystemCostIndexSnapshot.createMany({
         data: snapshots.map((snapshot, index) => ({

@@ -113,7 +113,7 @@ function useCostIndexHistory(systemId: number, range: CostIndexRange) {
 }
 
 /** Every visible index at the hovered time, values in text ink. */
-function HistoryTooltip({
+export function HistoryTooltip({
   active,
   payload,
   visible,

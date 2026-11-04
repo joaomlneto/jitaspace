@@ -63,7 +63,7 @@ export async function fetchEveRef(path: string): Promise<Response> {
   const url = new URL(path, EVEREF_BASE_URL).toString();
   let lastError: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    await takeRequestSlot();
+    await takeRequestSlot(); // NOSONAR: retries are sequential
     let response: Response;
     try {
       response = await fetch(url, {
@@ -205,7 +205,8 @@ export async function listEveRefSnapshotsBetween({
     day <= until && found.length < limit;
     day.setUTCDate(day.getUTCDate() + 1)
   ) {
-    for (const file of await listEveRefSnapshotsForDay(day)) {
+    const listed = await listEveRefSnapshotsForDay(day); // NOSONAR: one day at a time
+    for (const file of listed) {
       if (file.time > after && file.time <= until && found.length < limit) {
         found.push(file);
       }
@@ -235,12 +236,13 @@ const BODY_ATTEMPTS = 3;
 export async function fetchEveRefBz2Text(path: string): Promise<string> {
   for (let attempt = 1; ; attempt++) {
     try {
-      return await bunzip2Text(await fetchEveRef(path));
+      const response = await fetchEveRef(path); // NOSONAR: retries are sequential
+      return await bunzip2Text(response); // NOSONAR: retries are sequential
     } catch (error) {
       if (error instanceof EveRefNotFoundError || attempt >= BODY_ATTEMPTS) {
         throw error;
       }
-      await delay(attempt * 5_000);
+      await delay(attempt * 5_000); // NOSONAR: retries are sequential
     }
   }
 }

@@ -17,12 +17,12 @@
  *   --daily-from <YYYY-MM-DD>        first day of hourly files to read
  *                                    (default: where the archives end)
  *   --until <ISO time>               stop after this time (default: now)
- *   --cache-dir <dir>                downloads, kept for re-runs
  *   --dry-run                        count what would be written; write nothing
  *   --cluster                        afterwards, rewrite the table in system order
  *                                    (see below)
  *
- * Downloads are cached in `--cache-dir`, so a dry run followed by a real run
+ * Downloads are cached in `~/.cache/jitaspace/everef-industry-systems`
+ * (`CACHE_DIR`), so a dry run followed by a real run
  * reads EVE Ref once. EVE Ref allows full downloads; requests go one at a
  * time and back off on its rate limit (see `everefIndustrySystems.ts`). The
  * yearly archives are `.tar.xz`, decompressed by the system's `xz` (Node has
@@ -45,7 +45,7 @@ import {
   statSync,
 } from "node:fs";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -88,28 +88,32 @@ const { values: options } = parseArgs({
     archives: { type: "string", default: "all" },
     "daily-from": { type: "string" },
     until: { type: "string" },
-    "cache-dir": {
-      type: "string",
-      default: join(tmpdir(), "jitaspace-everef-industry-systems"),
-    },
     "dry-run": { type: "boolean", default: false },
     cluster: { type: "boolean", default: false },
   },
 });
 
-const archiveYears: "all" | Set<number> =
-  options.archives === "all"
-    ? "all"
-    : new Set(
-        options.archives === "none"
-          ? []
-          : options.archives.split(",").map((year) => Number(year.trim())),
-      );
+const parseArchiveYears = (value: string): "all" | Set<number> => {
+  if (value === "all") return "all";
+  if (value === "none") return new Set();
+  return new Set(value.split(",").map((year) => Number(year.trim())));
+};
+const archiveYears = parseArchiveYears(options.archives);
 const dailyFrom = options["daily-from"]
   ? new Date(`${options["daily-from"]}T00:00:00Z`)
   : null;
 const until = options.until ? new Date(options.until) : new Date();
-const cacheDir = options["cache-dir"];
+/**
+ * Fixed, not an option: a path taken from the command line would reach the
+ * file system unchecked. In the home directory so it outlives a reboot (a
+ * temporary directory's copy did not).
+ */
+const cacheDir = join(
+  homedir(),
+  ".cache",
+  "jitaspace",
+  "everef-industry-systems",
+);
 const dryRun = options["dry-run"];
 
 /** Snapshots per write transaction: about a day's worth. */
@@ -197,16 +201,17 @@ async function downloadToFile(archive: EveRefYearlyArchive, file: string) {
   const whole = () =>
     existsSync(file) &&
     (archive.size === null || statSync(file).size === archive.size);
-  for (let attempt = 1; !whole(); attempt++) {
+  for (let attempt = 1; ; attempt++) {
+    if (whole()) return;
     try {
-      const response = await fetchEveRef(archive.path);
+      const response = await fetchEveRef(archive.path); // NOSONAR: one download at a time
       if (response.body === null)
         throw new Error(`${archive.path}: empty body`);
-      await pipeline(
-        Readable.fromWeb(response.body as NodeWebReadableStream<Uint8Array>),
-        createWriteStream(`${file}.partial`),
+      const body = Readable.fromWeb(
+        response.body as NodeWebReadableStream<Uint8Array>,
       );
-      await rename(`${file}.partial`, file);
+      await pipeline(body, createWriteStream(`${file}.partial`)); // NOSONAR: one download at a time
+      await rename(`${file}.partial`, file); // NOSONAR: one download at a time
     } catch (error) {
       if (
         error instanceof EveRefNotFoundError ||
@@ -217,6 +222,26 @@ async function downloadToFile(archive: EveRefYearlyArchive, file: string) {
       log(`retrying ${archive.path}: ${String(error)}`);
     }
   }
+}
+
+/**
+ * Where `xz` is installed: looked up in fixed system directories rather than
+ * through `PATH`, which a user can point anywhere.
+ */
+const XZ_LOCATIONS = [
+  "/usr/bin/xz",
+  "/bin/xz",
+  "/usr/local/bin/xz",
+  "/opt/homebrew/bin/xz",
+];
+function findXz(): string {
+  const xz = XZ_LOCATIONS.find((location) => existsSync(location));
+  if (!xz) {
+    throw new Error(
+      `xz is needed to read EVE Ref's archives; looked in ${XZ_LOCATIONS.join(", ")}`,
+    );
+  }
+  return xz;
 }
 
 /** Calls `onEntry` with each file in a .tar.xz (or .tar.bz2), in order. */
@@ -240,7 +265,7 @@ async function readArchive(
     await pipeline(createReadStream(file), bz2(), extract);
     return;
   }
-  const xz = spawn("xz", ["-dc", file], {
+  const xz = spawn(findXz(), ["-dc", file], {
     stdio: ["ignore", "pipe", "inherit"],
   });
   const exited = new Promise<void>((resolve, reject) => {
@@ -317,7 +342,8 @@ async function replayDaily() {
   );
   day.setUTCHours(0, 0, 0, 0);
   for (; day <= until; day.setUTCDate(day.getUTCDate() + 1)) {
-    const files = (await listEveRefSnapshotsForDay(day)).filter(
+    const listed = await listEveRefSnapshotsForDay(day); // NOSONAR: one day at a time, in order
+    const files = listed.filter(
       (file) =>
         (previousAt === null || file.time > previousAt) && file.time <= until,
     );
@@ -350,8 +376,8 @@ async function main() {
   );
   log(`yearly archives: ${archives.map((archive) => archive.year).join(", ")}`);
   for (const archive of archives) {
-    await replayArchive(archive);
-    await flush();
+    await replayArchive(archive); // NOSONAR: in order, each diff depends on the last
+    await flush(); // NOSONAR: in order
   }
   if (dailyFrom === null || dailyFrom <= until) await replayDaily();
   await flush();
@@ -363,7 +389,7 @@ async function main() {
   }
 
   log(
-    `done: ${totals.snapshots} snapshots, ${totals.rows} rows${dryRun ? " (not written)" : ""}; skipped ${totals.skipped} already stored, ${totals.invalid} invalid, ${totals.partial} partial`,
+    `done: ${totals.snapshots} snapshots, ${totals.rows} rows${dryRun ? " (not written)" : ""}; skipped ${totals.skipped} already stored or after --until, ${totals.invalid} invalid, ${totals.partial} partial`,
   );
   if (Object.keys(unknownActivities).length > 0) {
     log(`activities with no column: ${JSON.stringify(unknownActivities)}`);

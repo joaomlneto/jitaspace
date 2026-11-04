@@ -102,8 +102,9 @@ async function readDailyCloses(
   solarSystemId: number,
   from: Date | null,
 ): Promise<CostIndexRow[]> {
-  // The day is computed once and named: CockroachDB does not match a
-  // repeated date_trunc() between DISTINCT ON and ORDER BY.
+  // The day is computed once and named, in a subquery: Postgres would also
+  // take the expression repeated, but CockroachDB (where this ran first) did
+  // not match a repeated date_trunc() between DISTINCT ON and ORDER BY.
   return prisma.$queryRaw<CostIndexRow[]>`
     SELECT DISTINCT ON ("day")
       "validFrom", "manufacturing", "researchingTimeEfficiency",

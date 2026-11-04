@@ -58,7 +58,7 @@ pnpm lint
 fills the industry cost index history from EVE Ref's archive before the hourly
 `esi-sync-industry-cost-indices` job first runs (the history is append-only, so
 nothing can be added before what the job has written). It resumes where the
-database ends, and caches its downloads for re-runs:
+database ends, and caches its downloads in `~/.cache/jitaspace/everef-industry-systems` for re-runs:
 
 ```
 pnpm with-env tsx scripts/bootstrapIndustryCostIndices.ts --dry-run   # count only
