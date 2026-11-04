@@ -46,6 +46,7 @@ import {
   toOperationRows,
 } from "~/components/MercenaryTacticalOperations";
 import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
+import { grantedScopesOf } from "~/lib/grantedScopes";
 
 /** Where each Mercenary Den is: optional, the page works without it. */
 const DENS_SCOPE: ESIScope = "esi-structures.read_character.v1";
@@ -71,12 +72,6 @@ function parseAsSelection<T>(item: SingleParser<T>) {
     serialize: array.serialize,
     eq: array.eq,
   });
-}
-
-/** The scopes a character's token holds. EVE writes a lone scope as a string. */
-function grantedScopesOf(scp: readonly string[] | string | undefined) {
-  if (scp === undefined) return [];
-  return typeof scp === "string" ? [scp] : [...scp];
 }
 
 export interface MercenaryTacticalOperationsPageProps {

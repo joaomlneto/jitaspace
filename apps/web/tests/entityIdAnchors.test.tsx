@@ -9,6 +9,7 @@ import { render, screen } from "@testing-library/react";
 import { AllianceAnchor } from "~/components/Anchor/AllianceAnchor";
 import { BloodlineAnchor } from "~/components/Anchor/BloodlineAnchor";
 import { CategoryAnchor } from "~/components/Anchor/CategoryAnchor";
+import { ContractAnchor } from "~/components/Anchor/ContractAnchor";
 import { CorporationAnchor } from "~/components/Anchor/CorporationAnchor";
 import { DogmaAttributeAnchor } from "~/components/Anchor/DogmaAttributeAnchor";
 import { DogmaEffectAnchor } from "~/components/Anchor/DogmaEffectAnchor";
@@ -64,6 +65,12 @@ const anchors = [
     idProp: "starId",
   },
   { name: "WarAnchor", path: "/war", Component: WarAnchor, idProp: "warId" },
+  {
+    name: "ContractAnchor",
+    path: "/contracts",
+    Component: ContractAnchor,
+    idProp: "contractId",
+  },
   {
     name: "DogmaEffectAnchor",
     path: "/dogma/effect",

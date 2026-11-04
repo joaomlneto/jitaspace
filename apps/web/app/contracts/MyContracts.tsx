@@ -59,8 +59,9 @@ function matchesFilters(
     return false;
   }
   if (filters.minPrice !== null || filters.maxPrice !== null) {
-    const amount =
-      contract.type === "courier" ? contract.reward : contract.price;
+    // The amount the row shows, as the public list filters on: a "want to
+    // buy" exchange is listed at its reward, its price being 0.
+    const { amount } = contractHeadlineIsk(contract);
     if (amount === null) return false;
     if (filters.minPrice !== null && amount < filters.minPrice) return false;
     if (filters.maxPrice !== null && amount > filters.maxPrice) return false;

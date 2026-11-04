@@ -28,6 +28,7 @@ import {
   SystemFreelanceProjectsIcon,
   VotesIcon,
   WalletIcon,
+  WarReportIcon,
   WarsIcon,
   WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
@@ -461,6 +462,14 @@ export const universeApps: Record<string, JitaApp> = {
     description: "View all active wars.",
     url: "/active-wars",
     Icon: (props) => <WarsIcon {...props} />,
+    scopes: {},
+  },
+  militaryCampaigns: {
+    name: "Military Campaigns",
+    description:
+      "Follow every military campaign and its objectives, and what your characters contributed.",
+    url: "/military-campaigns",
+    Icon: (props) => <WarReportIcon {...props} />,
     scopes: {},
   },
   incursions: {

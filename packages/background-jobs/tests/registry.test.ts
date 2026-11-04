@@ -80,6 +80,7 @@ describe("background-jobs registry", () => {
     expect(cronJobIds).toEqual([
       "esi-refresh-loyalty-store-offers",
       "esi-sync-industry-cost-indices",
+      "esi-sync-public-contracts",
       "esi-track-incursions",
       "esi-track-insurance-prices",
       "esi-track-sovereignty",

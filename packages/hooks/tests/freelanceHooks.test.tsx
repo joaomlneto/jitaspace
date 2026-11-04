@@ -27,6 +27,9 @@ jest.mock("@jitaspace/auth-utils", () => ({
 }));
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
+  // The cursor walk is real (esiCursorQueryOptions delegates to it); the
+  // endpoints and the retry policy below are stubbed.
+  ...jest.requireActual<object>("@jitaspace/esi-client"),
   shouldRetryEsiRequest: () => false,
   postCharactersAffiliation: jest.fn(),
   getCharactersCharacterIdRoles: jest.fn(),
