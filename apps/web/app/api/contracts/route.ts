@@ -7,8 +7,7 @@ import { parseContractFilters } from "~/components/Contracts/filters";
  *
  * Cached at the CDN per query string. The snapshots it reads change at most
  * hourly, so a filter combination costs the database about one read an hour
- * however many visitors use it — the database has a quarter of a vCPU, and the
- * item filter in particular walks every historical listing of that item.
+ * however many visitors use it — the database has a quarter of a vCPU.
  */
 const CACHE_OK =
   "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400";
