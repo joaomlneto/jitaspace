@@ -11,10 +11,10 @@ import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 
 /**
  * The characters a page leaves out, and a way to share from each: sign in
- * again as it, asking for what it already granted plus `scopes`. One button
- * whatever their number or the length of their names, and the text truncates,
- * so the line stays one line. EVE SSO signs in whichever character is picked
- * on its page, so the menu says which one to pick.
+ * again as it, asking for what it already granted plus `scopes`. One short
+ * button whatever their number or the length of their names, and the text
+ * truncates, so the line stays one line. EVE SSO signs in whichever character
+ * is picked on its page, so the menu says which one to pick.
  */
 function MissingCharactersNotice({
   missing,
@@ -26,15 +26,15 @@ function MissingCharactersNotice({
   scopes: readonly ESIScope[];
 }>) {
   return (
-    // A zero basis lets it share the line rather than wrap onto the next.
-    <Group gap="sm" wrap="nowrap" miw={0} style={{ flex: "1 1 0" }}>
-      <Text size="sm" truncate="end" title={text}>
+    <>
+      {/* Takes whatever room is left on the line, down to none. */}
+      <Text size="sm" truncate="end" title={text} style={{ flex: "1 1 0" }}>
         {text}
       </Text>
       <Menu position="bottom-start">
         <Menu.Target>
           <Button size="compact-sm" variant="light" style={{ flexShrink: 0 }}>
-            Sign in to share
+            Sign in…
           </Button>
         </Menu.Target>
         {/* Repeats the text, which a narrow screen may truncate away. */}
@@ -53,7 +53,7 @@ function MissingCharactersNotice({
           ))}
         </Menu.Dropdown>
       </Menu>
-    </Group>
+    </>
   );
 }
 
@@ -84,10 +84,13 @@ export function AccessStatusLine({
   /**
    * Logged-in characters the page leaves out because they have not granted
    * `scopes` (or their session ended). Named, so a missing character reads as
-   * "not shared" rather than as a bug, each with a button to fix it.
+   * "not shared" rather than as a bug, with a menu to sign in as each.
    */
   missing?: readonly CharacterWithoutScopes[];
-  /** Says what the `missing` characters have not shared, e.g. "planets". */
+  /**
+   * The sentence naming the `missing` characters, given their names joined
+   * with commas, e.g. `(names) => \`Planets not shared by ${names}.\``.
+   */
   missingText?: (names: string) => string;
   /** Shown after the text, e.g. filters, once there is access. */
   children?: ReactNode;
@@ -114,7 +117,8 @@ export function AccessStatusLine({
   } else if (hasAccess) {
     content = (
       <>
-        <Text size="sm" c="dimmed">
+        {/* Truncates only once the notice has none of the line left. */}
+        <Text size="sm" c="dimmed" truncate={missingNotice ? "end" : undefined}>
           {summary}
         </Text>
         {children}
@@ -141,7 +145,14 @@ export function AccessStatusLine({
     );
   }
   return (
-    <Group gap="sm" mih={30} aria-live="polite">
+    // With the notice the line must not wrap: it appears only after hydration,
+    // so a second line would push the page down.
+    <Group
+      gap="sm"
+      mih={30}
+      wrap={missingNotice ? "nowrap" : "wrap"}
+      aria-live="polite"
+    >
       {content}
     </Group>
   );

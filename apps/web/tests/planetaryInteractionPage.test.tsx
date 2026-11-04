@@ -311,9 +311,7 @@ describe("Planetary Interaction page", () => {
       screen.getByText("Planets not shared by Joao Neto."),
     ).toBeInTheDocument();
 
-    await userEvent.click(
-      screen.getByRole("button", { name: "Sign in to share" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Sign in…" }));
     await userEvent.click(
       await screen.findByRole("menuitem", { name: "Sign in as Joao Neto" }),
     );
@@ -343,9 +341,7 @@ describe("Planetary Interaction page", () => {
     expect(
       screen.queryByRole("button", { name: "Sign in with EVE Online" }),
     ).not.toBeInTheDocument();
-    await userEvent.click(
-      screen.getByRole("button", { name: "Sign in to share" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "Sign in…" }));
     expect(
       await screen.findByRole("menuitem", {
         name: "Sign in as Joao Neto again",
