@@ -133,7 +133,12 @@ const PROPS: PageProps = {
   iconId: null,
   guid: "effects.Laser",
   distribution: 2,
-  category: { effectCategoryId: 0, name: "dgmEffPassive" },
+  category: {
+    effectCategoryId: 0,
+    name: "dgmEffPassive",
+    customName: null,
+    customDescription: null,
+  },
   flags: {
     isOffensive: true,
     isAssistance: false,
@@ -248,6 +253,22 @@ describe("Dogma effect page (client)", () => {
     expect(screen.getByTestId("mail-viewer")).toHaveTextContent(
       "Automatically generated effect",
     );
+  });
+
+  it("prefers our category name and shows its description and CCP's name", () => {
+    renderPage({
+      category: {
+        effectCategoryId: 5,
+        name: "dgmEffOverload",
+        customName: "Overheated",
+        customDescription: "An extra bonus while the module is overheated.",
+      },
+    });
+    expect(screen.getAllByText("Overheated").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("(5, dgmEffOverload)")).toBeInTheDocument();
+    expect(
+      screen.getByText("An extra bonus while the module is overheated."),
+    ).toBeInTheDocument();
   });
 
   it("shows the internal name under a display name that differs", () => {

@@ -22,6 +22,7 @@ import {
   DRONE_CATEGORY_ID,
   readNpcStats,
 } from "~/lib/npcStatsData";
+import { readEffectCategories } from "~/lib/readEffectCategories";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
 import { buildTypeListRuleIndex, matchTypeLists } from "~/lib/typeLists";
@@ -117,21 +118,23 @@ function nonEmpty(value: string | null | undefined): string | undefined {
  * Attributes ESI reports but we have no row for simply stay absent from the map,
  * which is the same thing the old per-attribute 404 produced. A second query
  * names the type's effects and picks each one's description: CCP's, else our
- * AI-generated one.
+ * AI-generated one. A third reads the effect categories, so the page can group
+ * the effects by when they apply.
  *
  * A failure throws rather than degrading here: the caller catches it, so a
  * database blip is never what gets written into the cache entry.
  *
- * Not `cacheSdeRead()`: effects' `customDescription` is written by our own
- * script, not by the SDE ingest, so the entry keeps a daily `cacheLife` and
- * only adds the SDE tag, as `app/lp-store/page.tsx` does.
+ * Not `cacheSdeRead()`: effects' `customDescription` and the categories'
+ * names are written by our own scripts, not by the SDE ingest, so the entry
+ * keeps a daily `cacheLife` and only adds the SDE tag, as
+ * `app/lp-store/page.tsx` does.
  */
 async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   "use cache";
   cacheLife("days");
   cacheTag(SDE_CACHE_TAG);
 
-  const [rows, effectRows] = await Promise.all([
+  const [rows, effectRows, effectCategories] = await Promise.all([
     prisma.typeAttribute.findMany({
       select: {
         attributeId: true,
@@ -158,11 +161,13 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
             displayName: true,
             description: true,
             customDescription: true,
+            effectCategoryId: true,
           },
         },
       },
       where: { typeId, isDeleted: false },
     }),
+    readEffectCategories(),
   ]);
 
   const attributes: TypeDogmaMeta["attributes"] = {};
@@ -200,10 +205,11 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
     effects[effectId] = {
       name: nonEmpty(effect.displayName) ?? effect.name ?? undefined,
       description: description ?? undefined,
+      categoryId: effect.effectCategoryId ?? undefined,
     };
   }
 
-  return { attributes, unitSymbols, categoryNames, effects };
+  return { attributes, unitSymbols, categoryNames, effects, effectCategories };
 }
 
 /**

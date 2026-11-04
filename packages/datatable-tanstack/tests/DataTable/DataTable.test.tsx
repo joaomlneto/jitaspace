@@ -77,6 +77,18 @@ describe("DataTable — empty state", () => {
     renderWithMantine(<DataTable columns={columns} data={[]} />);
     expect(screen.queryByText("Alice")).not.toBeInTheDocument();
   });
+
+  // jsdom does no layout, so this checks the mechanism, not the result: the
+  // message stays in view when a wide table is scrolled sideways on a phone.
+  it("keeps the empty text in the visible part of a table wider than the screen", () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={[]} emptyText="Nothing here" />,
+    );
+    expect(screen.getByText("Nothing here").parentElement).toHaveStyle({
+      position: "sticky",
+      left: "0px",
+    });
+  });
 });
 
 describe("DataTable — loading state", () => {
@@ -316,6 +328,18 @@ describe("DataTable — pagination", () => {
       <DataTable columns={columns} data={data} withPagination />,
     );
     expect(screen.getByText("Rows per page:")).toBeInTheDocument();
+  });
+
+  it("names its arrow buttons, so a screen reader can tell them apart", () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withPagination />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Previous page" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next page" }),
+    ).toBeInTheDocument();
   });
 
   it("shows the total filtered row count", () => {

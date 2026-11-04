@@ -19,14 +19,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconBook,
-  IconHistory,
-  IconMessages,
-  IconTarget,
-  IconUser,
-  IconVersions,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -34,7 +26,14 @@ import {
   CategoryAgentMissionIcon,
   CategoryEpicArcIcon,
   CategoryIskIcon,
+  ControlStartConversationIcon,
+  SystemArrowRotateLeftIcon,
+  SystemPersonIcon,
+  SystemVariationIcon,
+  WindowAgentIcon,
+  WindowEvemailIcon,
   WindowInfoIcon,
+  WindowJournalIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import {
@@ -175,7 +174,7 @@ function DialogueLine({
   const avatar =
     avatarId === null ? (
       <Avatar size="md">
-        <IconUser size={18} />
+        <SystemPersonIcon size={18} color="currentColor" alt="" />
       </Avatar>
     ) : (
       <CharacterAvatar characterId={avatarId} size="md" />
@@ -229,7 +228,9 @@ function EpicArcPanel({
           <EveIconAvatar iconId={arc.iconId} size="lg" radius="sm" />
           <Stack gap={2}>
             <EpicArcAnchor epicArcId={arc.epicArcId}>
-              <Title order={3}>{arc.name}</Title>
+              <Title order={2} size="h3">
+                {arc.name}
+              </Title>
             </EpicArcAnchor>
             <Group gap="xs">
               {arc.faction && <FactionLabel faction={arc.faction} />}
@@ -395,7 +396,7 @@ function MissionHeroImage({ mission }: Readonly<{ mission: MissionDetail }>) {
       />
     );
   }
-  return <IconTarget size={56} stroke={1.2} />;
+  return <WindowAgentIcon size={56} alt="" />;
 }
 
 /** Faction · corporation · agent type, with separators only between parts. */
@@ -448,7 +449,9 @@ function MissionHero({ mission }: Readonly<{ mission: MissionDetail }>) {
         </HeroImage>
         <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
           <Group gap="sm" align="center">
-            <Title order={2}>{mission.name}</Title>
+            <Title order={1} size="h2">
+              {mission.name}
+            </Title>
             <MissionKindBadge kind={mission.kind} size="md" />
             {mission.epicArcs.length > 0 && (
               <Badge variant="light" color="grape" size="md">
@@ -749,7 +752,7 @@ function MissionBriefing({
       )}
       {journal.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconBook size={18} />}>
+          <SectionHeading icon={<WindowJournalIcon size={18} alt="" />}>
             Epic Journal
           </SectionHeading>
           {journal.map((entry) => (
@@ -784,7 +787,15 @@ function MissionDialogue({
     <Stack gap="lg">
       {groups.dialogueStages.map(([stage, lines]) => (
         <Stack key={stage} gap="sm">
-          <SectionHeading icon={<IconMessages size={18} />}>
+          <SectionHeading
+            icon={
+              <ControlStartConversationIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             {stage}
           </SectionHeading>
           {lines.map((line) => (
@@ -804,7 +815,7 @@ function MissionDialogue({
       ))}
       {groups.mailPairs.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconMessages size={18} />}>
+          <SectionHeading icon={<WindowEvemailIcon size={18} alt="" />}>
             Notification Mails
           </SectionHeading>
           {groups.mailPairs.map(([label, mail]) => (
@@ -902,14 +913,23 @@ export default function MissionPage({
               Overview
             </Tabs.Tab>
             {available.briefing && (
-              <Tabs.Tab value="briefing" leftSection={<IconBook size={16} />}>
+              <Tabs.Tab
+                value="briefing"
+                leftSection={<WindowJournalIcon size={16} alt="" />}
+              >
                 Briefing
               </Tabs.Tab>
             )}
             {available.dialogue && (
               <Tabs.Tab
                 value="dialogue"
-                leftSection={<IconMessages size={16} />}
+                leftSection={
+                  <ControlStartConversationIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Dialogue
               </Tabs.Tab>
@@ -927,12 +947,23 @@ export default function MissionPage({
             {available.variants && (
               <Tabs.Tab
                 value="variants"
-                leftSection={<IconVersions size={16} />}
+                leftSection={
+                  <SystemVariationIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Variants ({mission.variants.length})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>
@@ -979,7 +1010,17 @@ export default function MissionPage({
           {available.variants && (
             <Tabs.Panel value="variants" pt="lg">
               <Stack gap="sm">
-                <Alert variant="light" color="gray" icon={<IconVersions />}>
+                <Alert
+                  variant="light"
+                  color="gray"
+                  icon={
+                    <SystemVariationIcon
+                      size={20}
+                      color="currentColor"
+                      alt=""
+                    />
+                  }
+                >
                   Other missions named “{mission.name}” — usually the same
                   mission offered by another faction, corporation or agent
                   level.

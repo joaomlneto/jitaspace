@@ -16,13 +16,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconExternalLink,
-  IconId,
-  IconMapPin,
-  IconUserCircle,
-  IconUsers,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CharactersDetail } from "@jitaspace/esi-client";
@@ -35,9 +28,16 @@ import {
   TypeAvatar,
 } from "@jitaspace/eve-components";
 import {
+  CategoryCorporationIcon,
+  CategoryResearchIcon,
   CategorySkullIcon,
+  SystemOpenWindowIcon,
+  WindowAgentIcon,
+  WindowBiographyIcon,
+  WindowCharacterSheetIcon,
   WindowEmploymentHistoryIcon,
   WindowInfoIcon,
+  WindowLocationsIcon,
 } from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
@@ -73,6 +73,7 @@ import {
   StationAnchor,
   TypeAnchor,
 } from "~/components/Anchor";
+import { CsmCandidateBadge } from "~/components/Badge";
 import {
   CharacterLocationCard,
   CharacterSkillTrainingCard,
@@ -247,7 +248,7 @@ function AgentPanel({ agent }: Readonly<{ agent: AgentDetails }>) {
       </SimpleGrid>
 
       <Stack gap="sm">
-        <SectionHeading icon={<IconMapPin size={18} />}>
+        <SectionHeading icon={<WindowLocationsIcon size={18} alt="" />}>
           Location
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -321,7 +322,11 @@ function AgentPanel({ agent }: Readonly<{ agent: AgentDetails }>) {
 
       {agent.researchSkills.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconId size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryResearchIcon size={18} color="currentColor" alt="" />
+            }
+          >
             Research fields
           </SectionHeading>
           <Paper withBorder radius="md" p="sm">
@@ -356,7 +361,7 @@ function CapsuleerStatus({ characterId }: Readonly<{ characterId: number }>) {
   }
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconUserCircle size={18} />}>
+      <SectionHeading icon={<WindowCharacterSheetIcon size={18} alt="" />}>
         Your character
       </SectionHeading>
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
@@ -501,10 +506,11 @@ export default function CharacterPage({
             </Text>
           )}
           <Group gap="sm" align="center">
-            <Title order={2}>
+            <Title order={1} size="h2">
               {identity.name ?? `Character ${characterId}`}
             </Title>
             {badge && <Badge variant="light">{badge}</Badge>}
+            <CsmCandidateBadge characterId={characterId} />
             {identity.securityStatus !== null && (
               <Badge
                 variant="light"
@@ -563,7 +569,9 @@ export default function CharacterPage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>
@@ -589,7 +597,7 @@ export default function CharacterPage({
             {visibleTabs.biography && (
               <Tabs.Tab
                 value="biography"
-                leftSection={<IconUserCircle size={16} />}
+                leftSection={<WindowBiographyIcon size={16} alt="" />}
               >
                 Biography
               </Tabs.Tab>
@@ -605,7 +613,10 @@ export default function CharacterPage({
               </Tabs.Tab>
             )}
             {visibleTabs.agent && (
-              <Tabs.Tab value="agent" leftSection={<IconId size={16} />}>
+              <Tabs.Tab
+                value="agent"
+                leftSection={<WindowAgentIcon size={16} alt="" />}
+              >
                 Agent
               </Tabs.Tab>
             )}
@@ -624,7 +635,9 @@ export default function CharacterPage({
           <Tabs.Panel value="overview" pt="lg">
             <Stack gap="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconId size={18} />}>
+                <SectionHeading
+                  icon={<WindowCharacterSheetIcon size={18} alt="" />}
+                >
                   Identity
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -702,7 +715,15 @@ export default function CharacterPage({
               </Stack>
 
               <Stack gap="sm">
-                <SectionHeading icon={<IconUsers size={18} />}>
+                <SectionHeading
+                  icon={
+                    <CategoryCorporationIcon
+                      size={18}
+                      color="currentColor"
+                      alt=""
+                    />
+                  }
+                >
                   Affiliations
                 </SectionHeading>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -760,7 +781,7 @@ export default function CharacterPage({
 
               {agent && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconId size={18} />}>
+                  <SectionHeading icon={<WindowAgentIcon size={18} alt="" />}>
                     Agent
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">

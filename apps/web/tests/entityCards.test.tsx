@@ -242,6 +242,26 @@ describe("CharacterCard", () => {
     renderWithMantine(<CharacterCard characterId={123} />);
     expect(screen.queryByTestId("alliance-avatar")).not.toBeInTheDocument();
   });
+
+  it("badges a CSM 21 candidate, linking to their card on /csm", () => {
+    // Ceema (KarmaFleet), standing for CSM 21.
+    renderWithMantine(<CharacterCard characterId={585213969} />);
+    expect(
+      screen.getByRole("link", { name: "CSM 21 Candidate" }),
+    ).toHaveAttribute("href", "/csm#candidate-585213969");
+  });
+
+  it("does not badge a character who is not standing", () => {
+    renderWithMantine(<CharacterCard characterId={123} />);
+    expect(screen.queryByText("CSM 21 Candidate")).not.toBeInTheDocument();
+  });
+
+  it("drops the badge when asked to, as /csm does", () => {
+    renderWithMantine(
+      <CharacterCard characterId={585213969} withCsmBadge={false} />,
+    );
+    expect(screen.queryByText("CSM 21 Candidate")).not.toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------

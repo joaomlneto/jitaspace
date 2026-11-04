@@ -24,7 +24,6 @@ import { describe, expect, it } from "@jest/globals";
 // tools — they should not appear in search results.
 const EXCLUDED_PAGES = new Set([
   "app/calendar/[eventId]/page.tsx", // personal calendar event — auth required
-  "app/contract/[contractId]/page.tsx", // personal/private contract — auth required
   "app/debug/page.tsx", // internal developer tool
   "app/mail/page.tsx", // personal mail — auth required
   "app/settings/page.tsx", // user settings — auth required

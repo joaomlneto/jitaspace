@@ -135,24 +135,28 @@ function mockSdeReads() {
       solarSystemId: LABAPI,
       name: "Labapi",
       securityStatus: "0.3",
+      constellationId: JAYAI,
       _count: { stations: 2 },
     },
     {
       solarSystemId: ROUSHZAR,
       name: "Roushzar",
       securityStatus: "0.2",
+      constellationId: JAYAI,
       _count: { stations: 0 },
     },
     {
       solarSystemId: SOSAN,
       name: "Sosan",
       securityStatus: "0.3",
+      constellationId: JAYAI,
       _count: { stations: 1 },
     },
     {
       solarSystemId: TARARAN,
       name: "Tararan",
       securityStatus: "0.4",
+      constellationId: JAYAI,
       _count: { stations: 0 },
     },
   ]);
@@ -208,6 +212,7 @@ function mockIncursions(active = true) {
       ? [
           {
             incursionId: 3,
+            constellationId: JAYAI,
             state: "mobilizing",
             influence: 0.6,
             hasBoss: false,
@@ -220,6 +225,7 @@ function mockIncursions(active = true) {
       : []),
     {
       incursionId: 2,
+      constellationId: JAYAI,
       state: "withdrawing",
       influence: 1,
       hasBoss: true,
@@ -230,6 +236,7 @@ function mockIncursions(active = true) {
     },
     {
       incursionId: 1,
+      constellationId: JAYAI,
       state: "withdrawing",
       influence: null,
       hasBoss: null,
@@ -254,6 +261,57 @@ describe("readConstellation", () => {
     prismaMock.constellation.findUnique.mockResolvedValue(null);
     await expect(loadData().readConstellation(JAYAI)).resolves.toBeNull();
     expect(prismaMock.solarSystem.findMany).not.toHaveBeenCalled();
+  });
+
+  it("is null for a constellation ESI no longer lists", async () => {
+    mockSdeReads();
+    prismaMock.constellation.findUnique.mockResolvedValue({
+      name: "Jayai",
+      regionId: DEVOID,
+      region: { name: "Devoid" },
+      factionId: null,
+      wormholeClassId: null,
+      isDeleted: true,
+    });
+    await expect(loadData().readConstellation(JAYAI)).resolves.toBeNull();
+  });
+
+  it("lists only the systems ESI still lists", async () => {
+    mockSdeReads();
+    await loadData().readConstellation(JAYAI);
+    expect(prismaMock.solarSystem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { constellationId: JAYAI, isDeleted: false },
+      }),
+    );
+  });
+
+  it("leaves out a gate whose far side ESI no longer lists", async () => {
+    mockSdeReads();
+    const there = (isDeleted: boolean) => ({
+      solarSystemId: 30002982,
+      name: "Rahadalon",
+      isDeleted,
+      constellationId: NEIGHBOUR,
+      constellation: {
+        name: "Kabo",
+        regionId: DEVOID,
+        region: { name: "Devoid" },
+      },
+    });
+    prismaMock.stargate.findMany.mockResolvedValue([
+      // A deleted destination gate, then a gate into a deleted system.
+      {
+        solarSystem: { solarSystemId: TARARAN, name: "Tararan" },
+        DestinationStargate: { isDeleted: true, solarSystem: there(false) },
+      },
+      {
+        solarSystem: { solarSystemId: LABAPI, name: "Labapi" },
+        DestinationStargate: { isDeleted: false, solarSystem: there(true) },
+      },
+    ]);
+    const constellation = await loadData().readConstellation(JAYAI);
+    expect(constellation?.neighbours).toEqual([]);
   });
 
   it("gathers its systems, their stations and site roles, and its faction", async () => {
@@ -285,7 +343,7 @@ describe("readConstellation", () => {
     const constellation = await loadData().readConstellation(JAYAI);
     expect(constellation?.neighbours).toEqual([
       {
-        constellationId: NEIGHBOUR,
+        id: NEIGHBOUR,
         name: "Kabo",
         region: { id: DEVOID, name: "Devoid" },
         gates: [
@@ -336,7 +394,7 @@ describe("readConstellationIncursions", () => {
     const { incursions } = await loadData().readConstellationIncursions(JAYAI);
     expect(prismaMock.incursion.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { constellationId: JAYAI },
+        where: { constellationId: { in: [JAYAI] } },
         orderBy: { firstSeenAt: "desc" },
       }),
     );
@@ -556,6 +614,8 @@ describe("constellation page (client)", () => {
     // Two past incursions, one of which reached the boss.
     expect(card("Incursions").getByText("2")).toBeVisible();
     expect(card("Reached the boss").getByText("1")).toBeVisible();
+    // 7d 4h and 3d: the median of an even count is halfway between them.
+    expect(card("Typical length").getByText("5d 2h")).toBeVisible();
   });
 
   it("lists each system's site in the Systems tab", async () => {

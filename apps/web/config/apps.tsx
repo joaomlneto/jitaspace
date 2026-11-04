@@ -3,6 +3,7 @@ import React from "react";
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
 import {
+  AccessGroupsIcon,
   AgencyIcon,
   AgentFinderIcon,
   AlliancesIcon,
@@ -11,7 +12,7 @@ import {
   CalendarIcon,
   CharacterSheetIcon,
   ContactsIcon,
-  CorporationIcon,
+  ContractsIcon,
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
@@ -21,11 +22,29 @@ import {
   LPStoreIcon,
   MapIcon,
   MarketIcon,
+  PlanetsIcon,
   ShipsIcon,
   SkillsIcon,
+  SystemFreelanceProjectsIcon,
+  VotesIcon,
   WalletIcon,
   WarsIcon,
+  WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
+
+/**
+ * Everything "Your freelance jobs" can use. Corporation jobs are gated on the
+ * Project_Manager role, which is only known once the roles scope is granted.
+ */
+export const FREELANCE_SCOPES: ESIScope[] = [
+  "esi-characters.read_freelance_jobs.v1",
+  "esi-corporations.read_freelance_jobs.v1",
+  "esi-characters.read_corporation_roles.v1",
+];
+
+const FreelanceIcon = (props: EveIconProps) => (
+  <SystemFreelanceProjectsIcon color="currentColor" {...props} />
+);
 
 export interface AppScopeSet {
   reason: string;
@@ -37,6 +56,11 @@ export interface JitaApp {
   name: string;
   description: string;
   url?: string;
+  /**
+   * The app's page for one corporation or alliance, for the menus that list a
+   * single entity's apps. Falls back to `url`.
+   */
+  subjectUrl?: (subjectId: number) => string;
   onClick?: () => void;
   Icon: (props: EveIconProps) => React.ReactElement;
   hotKey?: string[];
@@ -115,8 +139,8 @@ export const characterApps: Record<string, JitaApp> = {
   },
   contacts: {
     name: "Contacts",
-    description: "View and manage your character's contacts.",
-    url: "/contacts/character",
+    description: "View your character, corporation and alliance contacts.",
+    url: "/contacts",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
       optional: [
@@ -155,6 +179,23 @@ export const characterApps: Record<string, JitaApp> = {
         {
           reason: "Update Character Fittings",
           scopes: ["esi-fittings.write_fittings.v1"],
+        },
+      ],
+    },
+  },
+  accessLists: {
+    name: "Access Lists",
+    description:
+      "Browse the access lists your characters manage, and who each one allows or blocks.",
+    url: "/access-lists",
+    Icon: (props) => React.createElement(AccessGroupsIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Access Lists",
+          description:
+            "Read the access lists your characters are a Manager or Admin of, with their members.",
+          scopes: ["esi-access.read_lists.v1"],
         },
       ],
     },
@@ -207,6 +248,66 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  mercenaryTacticalOperations: {
+    name: "Mercenary Operations",
+    description:
+      "See the Mercenary Tactical Operations your Mercenary Dens are offering.",
+    url: "/mercenary-tactical-operations",
+    Icon: (props) => React.createElement(WindowMercenaryIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Mercenary Tactical Operations",
+          scopes: ["esi-activities.read_character.v1"],
+        },
+      ],
+      // The den locations (esi-structures.read_character.v1) are not listed
+      // as optional: getEnabledApps treats an app with optional sets as
+      // needing one of them, which would hide this app from a character that
+      // granted only the activities scope. They are in extraJitaFeatures, so
+      // the login modal asks for them, and the page asks for them itself.
+    },
+  },
+  planetaryInteraction: {
+    name: "Planetary Interaction",
+    description:
+      "Track your colonies: extractor programs, factories, storage and daily production.",
+    url: "/planetary-interaction",
+    Icon: (props) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "View your planetary colonies",
+          scopes: ["esi-planets.manage_planets.v1"],
+        },
+      ],
+    },
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description:
+      "Track the freelance jobs your characters have joined and the ones your corporations have posted.",
+    url: "/freelance/mine",
+    Icon: FreelanceIcon,
+    scopes: {
+      optional: [
+        {
+          reason: "Read your freelance jobs",
+          description: "The jobs your characters are participating in.",
+          scopes: ["esi-characters.read_freelance_jobs.v1"],
+        },
+        {
+          reason: "Read your corporation's freelance jobs",
+          description:
+            "Every job your corporation has posted, and who joined it. Needs the Project Manager role.",
+          scopes: [
+            "esi-corporations.read_freelance_jobs.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
+        },
+      ],
+    },
+  },
   /*
   notifications: {
     name: "Notifications",
@@ -229,25 +330,57 @@ export const corporationApps: Record<string, JitaApp> = {
   contacts: {
     name: "Contacts",
     description: "View and manage your corporation's contacts.",
-    url: "/contacts/corporation",
+    url: "/contacts",
+    subjectUrl: (id) => `/contacts?sources=corporation:${id}`,
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
+      // Only the corporation's own contacts scope: the link opens /contacts
+      // filtered to this corporation, which needs that list to be readable.
       optional: [
-        {
-          reason: "Read Character Contacts",
-          scopes: ["esi-characters.read_contacts.v1"],
-        },
         {
           reason: "Read Corporation Contacts",
           scopes: ["esi-corporations.read_contacts.v1"],
         },
+      ],
+    },
+  },
+  customsOffices: {
+    name: "Customs Offices",
+    description: "Review your corporation's customs office taxes and access.",
+    url: "/planetary-interaction/customs-offices",
+    subjectUrl: (id) =>
+      `/planetary-interaction/customs-offices?corporations=${id}`,
+    Icon: (props: EveIconProps) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      optional: [
         {
-          reason: "Read Alliance Contacts",
-          scopes: ["esi-alliances.read_contacts.v1"],
+          reason: "Read Corporation Customs Offices",
+          description:
+            "Only a corporation's Directors can read them, so your roles are read too.",
+          scopes: [
+            "esi-planets.read_customs_offices.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
         },
+      ],
+    },
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description: "Every freelance job your corporation has posted.",
+    url: "/freelance/mine",
+    subjectUrl: (id) => `/freelance/mine?sources=corporation:${id}`,
+    Icon: FreelanceIcon,
+    scopes: {
+      // The link opens the list filtered to this corporation, so it needs that
+      // corporation's jobs to be readable.
+      optional: [
         {
-          reason: "Update Character Contacts",
-          scopes: ["esi-characters.write_contacts.v1"],
+          reason: "Read your corporation's freelance jobs",
+          scopes: [
+            "esi-corporations.read_freelance_jobs.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
         },
       ],
     },
@@ -279,7 +412,8 @@ export const allianceApps: Record<string, JitaApp> = {
   contacts: {
     name: "Contacts",
     description: "View and manage your alliance's contacts.",
-    url: "/contacts/alliance",
+    url: "/contacts",
+    subjectUrl: (id) => `/contacts?sources=alliance:${id}`,
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     scopes: {
       optional: [
@@ -301,6 +435,27 @@ export const universeApps: Record<string, JitaApp> = {
     hotKey: ["⌘", "P"],
     scopes: {},
   },
+  contracts: {
+    name: "Contracts",
+    description:
+      "Browse public item exchanges, auctions and courier contracts, and your own.",
+    url: "/contracts",
+    Icon: (props) => <ContractsIcon {...props} />,
+    scopes: {
+      optional: [
+        {
+          reason: "See your contracts",
+          description: "List the contracts your characters have issued",
+          scopes: ["esi-contracts.read_character_contracts.v1"],
+        },
+        {
+          reason: "See your corporation's contracts",
+          description: "List the contracts issued for your corporations",
+          scopes: ["esi-contracts.read_corporation_contracts.v1"],
+        },
+      ],
+    },
+  },
   wars: {
     name: "Active Wars",
     description: "View all active wars.",
@@ -314,6 +469,22 @@ export const universeApps: Record<string, JitaApp> = {
       "Track active Sansha incursions, their spawn timeline and every past incursion since 2015.",
     url: "/incursions",
     Icon: (props) => <IncursionsIcon {...props} />,
+    scopes: {},
+  },
+  csm: {
+    name: "CSM 21",
+    description:
+      "Meet the candidates for the Council of Stellar Management, with their pitches, campaign threads and interviews.",
+    url: "/csm",
+    Icon: (props) => <VotesIcon {...props} />,
+    scopes: {},
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description:
+      "Browse the public freelance jobs: hauling, mining, combat and more, with their rewards and progress.",
+    url: "/freelance",
+    Icon: FreelanceIcon,
     scopes: {},
   },
   alliances: {
@@ -506,6 +677,14 @@ export const extraJitaFeatures: AppScopeSet[] = [
     reason: "View your character assets (and active ship fitting)",
     scopes: ["esi-assets.read_assets.v1"],
   },
+  {
+    // Here rather than as an optional scope of Mercenary Operations, which
+    // would hide that app from a character without it (getEnabledApps). Being
+    // in the login modal's default set also keeps a later login from dropping
+    // it.
+    reason: "Read where your Mercenary Dens are",
+    scopes: ["esi-structures.read_character.v1"],
+  },
 ];
 
 export const jitaApps: Record<
@@ -520,16 +699,6 @@ export const jitaApps: Record<
     apps: characterApps,
     name: "Character",
     Icon: (props) => <CharacterSheetIcon {...props} />,
-  },
-  corporation: {
-    apps: corporationApps,
-    name: "Corporation",
-    Icon: (props) => <CorporationIcon {...props} />,
-  },
-  alliance: {
-    apps: allianceApps,
-    name: "Alliance",
-    Icon: (props) => <AlliancesIcon {...props} />,
   },
   universe: {
     apps: universeApps,
