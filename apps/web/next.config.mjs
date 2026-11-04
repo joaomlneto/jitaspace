@@ -288,6 +288,14 @@ const config = {
       permanent: true,
     },
     {
+      // Contracts moved from /contract/<id> to /contracts/<id>, next to the
+      // /contracts browser. In-game contract links in old EveMail rendered as
+      // /contract/<id>, so the old form keeps working.
+      source: "/contract/:contractId",
+      destination: "/contracts/:contractId",
+      permanent: true,
+    },
+    {
       // Deep-link to a specific tab on a type page: /type/<id>/<tab> sends the
       // browser to the canonical /type/<id>?tab=<tab>, which selects that tab.
       // Unrecognised tab names are harmless — the page falls back to Overview.

@@ -43,6 +43,10 @@ jest.mock("next/dynamic", () => ({
 jest.mock("@jitaspace/eve-icons", () => ({
   IncursionsIcon: () => null,
   WindowInfoIcon: () => null,
+  CategorySkullIcon: () => null,
+  SystemClockIcon: () => null,
+  SystemOpenWindowIcon: () => null,
+  WindowRepairShopIcon: () => null,
 }));
 
 // The shared stub, plus what this page needs from the real package.

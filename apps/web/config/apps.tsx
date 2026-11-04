@@ -12,6 +12,7 @@ import {
   CalendarIcon,
   CharacterSheetIcon,
   ContactsIcon,
+  ContractsIcon,
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
@@ -21,12 +22,14 @@ import {
   LPStoreIcon,
   MapIcon,
   MarketIcon,
+  PlanetsIcon,
   ShipsIcon,
   SkillsIcon,
   SystemFreelanceProjectsIcon,
   VotesIcon,
   WalletIcon,
   WarsIcon,
+  WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
 
 /**
@@ -245,6 +248,41 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  mercenaryTacticalOperations: {
+    name: "Mercenary Operations",
+    description:
+      "See the Mercenary Tactical Operations your Mercenary Dens are offering.",
+    url: "/mercenary-tactical-operations",
+    Icon: (props) => React.createElement(WindowMercenaryIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Mercenary Tactical Operations",
+          scopes: ["esi-activities.read_character.v1"],
+        },
+      ],
+      // The den locations (esi-structures.read_character.v1) are not listed
+      // as optional: getEnabledApps treats an app with optional sets as
+      // needing one of them, which would hide this app from a character that
+      // granted only the activities scope. They are in extraJitaFeatures, so
+      // the login modal asks for them, and the page asks for them itself.
+    },
+  },
+  planetaryInteraction: {
+    name: "Planetary Interaction",
+    description:
+      "Track your colonies: extractor programs, factories, storage and daily production.",
+    url: "/planetary-interaction",
+    Icon: (props) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "View your planetary colonies",
+          scopes: ["esi-planets.manage_planets.v1"],
+        },
+      ],
+    },
+  },
   freelance: {
     name: "Freelance Jobs",
     description:
@@ -302,6 +340,27 @@ export const corporationApps: Record<string, JitaApp> = {
         {
           reason: "Read Corporation Contacts",
           scopes: ["esi-corporations.read_contacts.v1"],
+        },
+      ],
+    },
+  },
+  customsOffices: {
+    name: "Customs Offices",
+    description: "Review your corporation's customs office taxes and access.",
+    url: "/planetary-interaction/customs-offices",
+    subjectUrl: (id) =>
+      `/planetary-interaction/customs-offices?corporations=${id}`,
+    Icon: (props: EveIconProps) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      optional: [
+        {
+          reason: "Read Corporation Customs Offices",
+          description:
+            "Only a corporation's Directors can read them, so your roles are read too.",
+          scopes: [
+            "esi-planets.read_customs_offices.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
         },
       ],
     },
@@ -375,6 +434,27 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => React.createElement(LPStoreIcon, props),
     hotKey: ["⌘", "P"],
     scopes: {},
+  },
+  contracts: {
+    name: "Contracts",
+    description:
+      "Browse public item exchanges, auctions and courier contracts, and your own.",
+    url: "/contracts",
+    Icon: (props) => <ContractsIcon {...props} />,
+    scopes: {
+      optional: [
+        {
+          reason: "See your contracts",
+          description: "List the contracts your characters have issued",
+          scopes: ["esi-contracts.read_character_contracts.v1"],
+        },
+        {
+          reason: "See your corporation's contracts",
+          description: "List the contracts issued for your corporations",
+          scopes: ["esi-contracts.read_corporation_contracts.v1"],
+        },
+      ],
+    },
   },
   wars: {
     name: "Active Wars",
@@ -596,6 +676,14 @@ export const extraJitaFeatures: AppScopeSet[] = [
   {
     reason: "View your character assets (and active ship fitting)",
     scopes: ["esi-assets.read_assets.v1"],
+  },
+  {
+    // Here rather than as an optional scope of Mercenary Operations, which
+    // would hide that app from a character without it (getEnabledApps). Being
+    // in the login modal's default set also keeps a later login from dropping
+    // it.
+    reason: "Read where your Mercenary Dens are",
+    scopes: ["esi-structures.read_character.v1"],
   },
 ];
 
