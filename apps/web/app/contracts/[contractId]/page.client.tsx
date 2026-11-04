@@ -75,13 +75,10 @@ function fromEsiItem(item: EsiContractItem): ContractItemDetail {
     isIncluded: item.is_included,
     // ESI marks a copy with raw_quantity -2.
     isBlueprintCopy: item.raw_quantity === -2 ? true : null,
-    // -1 is an original blueprint, -2 a copy; anything else is not one.
-    imageVariation:
-      item.raw_quantity === -1
-        ? "bp"
-        : item.raw_quantity === -2
-          ? "bpc"
-          : undefined,
+    // -2 is always a blueprint copy. -1 is any singleton (an assembled ship
+    // too), so an original blueprint is left to the avatar, which finds `bp`
+    // once `icon` fails.
+    imageVariation: item.raw_quantity === -2 ? "bpc" : undefined,
     materialEfficiency: null,
     timeEfficiency: null,
     runs: null,
@@ -224,7 +221,11 @@ function ContractHero({
   firstItem,
 }: Readonly<{
   contract: ContractSummary;
-  firstItem: { typeId: number; imageVariation?: string } | null;
+  firstItem: {
+    typeId: number;
+    name?: string | null;
+    imageVariation?: string;
+  } | null;
 }>) {
   const amounts: { label: string; amount: number | null }[] = [
     {
@@ -245,11 +246,16 @@ function ContractHero({
         firstItem !== null ? (
           <TypeAvatar
             typeId={firstItem.typeId}
-            variation={firstItem.imageVariation ?? "icon"}
+            variation={firstItem.imageVariation}
             size={128}
+            alt={firstItem.name ?? undefined}
+            // A SKIN or the like has no image: show what the contract is, at
+            // the 64 px the window icons are drawn at, on no tile of its own.
+            variant="transparent"
+            fallback={<ContractTypeIcon type={contract.type} size={64} />}
           />
         ) : (
-          <ContractTypeIcon type={contract.type} size={96} />
+          <ContractTypeIcon type={contract.type} size={64} />
         )
       }
     >

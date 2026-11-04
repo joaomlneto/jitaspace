@@ -1,18 +1,9 @@
 "use client";
 
 import { memo } from "react";
-import {
-  Box,
-  Group,
-  Paper,
-  Skeleton,
-  Stack,
-  Text,
-  ThemeIcon,
-} from "@mantine/core";
+import { Box, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 
-import { TypeAvatar } from "@jitaspace/eve-components";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type { ContractSummary } from "./contract";
@@ -20,6 +11,7 @@ import { ContractAnchor } from "~/components/Anchor";
 import { contractHeadlineIsk } from "./contract";
 import classes from "./ContractCard.module.css";
 import {
+  ContractArtwork,
   contractDisplayName,
   ContractIssuer,
   ContractLocationLine,
@@ -96,18 +88,7 @@ export const ContractCard = memo(function ContractCard({
         </Group>
 
         <Group gap="sm" wrap="nowrap" align="flex-start">
-          {first ? (
-            <TypeAvatar
-              typeId={first.typeId}
-              variation={first.imageVariation}
-              size={40}
-              radius="sm"
-            />
-          ) : (
-            <ThemeIcon variant="default" size={40} radius="sm">
-              <ContractTypeIcon type={contract.type} size={28} />
-            </ThemeIcon>
-          )}
+          <ContractArtwork type={contract.type} item={first} size={40} />
           <Stack gap={2} miw={0} style={{ flex: 1 }}>
             <ContractAnchor
               contractId={contract.contractId}

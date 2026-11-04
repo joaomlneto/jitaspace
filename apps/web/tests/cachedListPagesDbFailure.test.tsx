@@ -522,10 +522,11 @@ describe("lp-store route server data", () => {
         },
       ],
     });
-    // One query: only corporations with at least one offer, no separate groupBy.
+    // One query: only corporations with at least one offer still on sale, no
+    // separate groupBy.
     expect(corporationFindMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { LoyaltyStoreOffer: { some: {} } },
+        where: { LoyaltyStoreOffer: { some: { isDeleted: false } } },
       }),
     );
     expect(loyaltyStoreOfferGroupBy).not.toHaveBeenCalled();

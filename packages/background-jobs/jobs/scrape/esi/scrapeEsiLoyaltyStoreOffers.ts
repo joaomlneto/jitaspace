@@ -17,6 +17,20 @@ export interface ScrapeLoyaltyStoreOffersEventPayload {
   };
 }
 
+/**
+ * Marks the rows ESI no longer lists as deleted, matching each by `key`. Rows
+ * already marked are left out, so their `updatedAt` keeps the run that saw
+ * them go, and nothing is written when no row is left.
+ */
+const markDeleted = async <T extends { isDeleted: boolean }, K>(
+  entries: T[],
+  key: (entry: T) => K,
+  write: (keys: K[]) => Promise<unknown>,
+) => {
+  const keys = entries.filter((entry) => !entry.isDeleted).map(key);
+  if (keys.length > 0) await write(keys);
+};
+
 async function fetchCorporationLoyaltyStoreOffers(corporationId: number) {
   const res = await getLoyaltyStoresCorporationIdOffers(corporationId);
   return res.data.map((offer) => ({ corporationId, ...offer }));
@@ -95,17 +109,19 @@ export const scrapeEsiLoyaltyStoreOffers = defineJob<
           }),
         );
       },
+      // By the full key: an offer id is shared by every store that sells the
+      // offer (3561 is in 46 of them), so matching `offerId` alone marked an
+      // offer deleted everywhere when one store dropped it.
       batchDelete: (entries) =>
-        prisma.loyaltyStoreOffer.updateMany({
-          data: {
-            isDeleted: true,
-          },
-          where: {
-            offerId: {
-              in: entries.map((entry) => entry.offerId),
-            },
-          },
-        }),
+        markDeleted(
+          entries,
+          ({ offerId, corporationId }) => ({ offerId, corporationId }),
+          (keys) =>
+            prisma.loyaltyStoreOffer.updateMany({
+              data: { isDeleted: true },
+              where: { OR: keys },
+            }),
+        ),
       batchUpdate: (entries) =>
         Promise.all(
           entries.map((entry) =>
@@ -156,16 +172,19 @@ export const scrapeEsiLoyaltyStoreOffers = defineJob<
         );
       },
       batchDelete: (entries) =>
-        prisma.loyaltyStoreOfferRequiredItem.updateMany({
-          data: {
-            isDeleted: true,
-          },
-          where: {
-            offerId: {
-              in: entries.map((entry) => entry.offerId),
-            },
-          },
-        }),
+        markDeleted(
+          entries,
+          ({ offerId, corporationId, typeId }) => ({
+            offerId,
+            corporationId,
+            typeId,
+          }),
+          (keys) =>
+            prisma.loyaltyStoreOfferRequiredItem.updateMany({
+              data: { isDeleted: true },
+              where: { OR: keys },
+            }),
+        ),
       batchUpdate: (entries) =>
         Promise.all(
           entries.map((entry) =>
