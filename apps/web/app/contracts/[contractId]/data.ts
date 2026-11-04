@@ -24,9 +24,9 @@ export interface ContractItemDetail {
   materialEfficiency: number | null;
   timeEfficiency: number | null;
   runs: number | null;
-  /** Set for mutated items, whose rolled stats live in `DynamicItem`. */
   /** See typeImageVariation. */
   imageVariation?: string;
+  /** Set for mutated items, whose rolled stats live in `DynamicItem`. */
   mutation: {
     itemId: string;
     sourceTypeId: number;
