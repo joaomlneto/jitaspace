@@ -133,7 +133,7 @@ export const planRegionListing = ({
   const counts =
     history?.counts ??
     (outstanding.length > 0
-      ? Array<number>(MIN_HISTORY).fill(outstanding.length)
+      ? new Array<number>(MIN_HISTORY).fill(outstanding.length)
       : []);
   const count = listedIds.size;
   // A region that has never listed anything is not judged: its empty listing

@@ -382,6 +382,87 @@ const syncBids = async ({
   return { auctions: contractIds.length, bids: bids.length, unavailable };
 };
 
+/** Each region's listing, one at a time, each in its own transaction. */
+const applyListings = async (
+  observed: Extract<RegionFetch, { ok: true }>[],
+  regions: Record<string, RegionHistory>,
+  stationSystems: ReadonlyMap<number, number | null>,
+) => {
+  const applied: AppliedListing[] = [];
+  for (const l of observed) {
+    const a = await applyRegionListing(
+      {
+        regionId: l.regionId,
+        observedAt: l.observedAt,
+        contracts: l.contracts.map((c) =>
+          contractRowFromEsi(c, l.regionId, stationSystems),
+        ),
+      },
+      regions[l.regionId] ?? null,
+    );
+    if (a.history) regions[l.regionId] = a.history;
+    applied.push(a);
+  }
+  return applied;
+};
+
+/**
+ * First run (or the state was lost): queue the outstanding contracts that have
+ * no items yet.
+ */
+const initialState = async (
+  regions: Record<string, RegionHistory>,
+): Promise<SyncState> => {
+  const withItems = await prisma.contract.findMany({
+    select: { contractId: true },
+    where: { isDeleted: false, type: { in: [...TYPES_WITH_ITEMS] } },
+  });
+  const itemless = await prisma.$queryRaw<{ id: number }[]>`
+    SELECT c.id FROM unnest(${withItems.map((c) => c.contractId)}::int[]) AS c(id)
+    WHERE NOT EXISTS (SELECT 1 FROM "ContractItem" i WHERE i."contractId" = c.id)`;
+  return {
+    regions,
+    itemsPending: Object.fromEntries(itemless.map((c) => [c.id, 0])),
+    lastCheckpointAt: 0,
+  };
+};
+
+/**
+ * Queue the items of contracts this run inserted or reopened, and drop queued
+ * contracts that are no longer outstanding.
+ */
+const queueItems = async (
+  state: SyncState,
+  applied: readonly AppliedListing[],
+  listedContracts: readonly EsiPublicContract[],
+) => {
+  const typeOf = new Map(
+    listedContracts.map((c) => [c.contract_id, contractTypeOf(c)]),
+  );
+  for (const id of applied.flatMap((a) => [...a.inserted, ...a.reopened])) {
+    const type = typeOf.get(id);
+    if (
+      type &&
+      TYPES_WITH_ITEMS.has(type) &&
+      !Object.hasOwn(state.itemsPending, id)
+    ) {
+      state.itemsPending[id] = 0;
+    }
+  }
+  const pendingIds = Object.keys(state.itemsPending).map(Number);
+  const live = new Set(
+    (
+      await prisma.contract.findMany({
+        select: { contractId: true },
+        where: { contractId: { in: pendingIds }, isDeleted: false },
+      })
+    ).map((c) => c.contractId),
+  );
+  for (const id of pendingIds) {
+    if (!live.has(id)) delete state.itemsPending[id];
+  }
+};
+
 export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
   id: "esi-sync-public-contracts",
   name: "Sync public contracts from ESI",
@@ -448,24 +529,9 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
       listedContracts.flatMap((c) => npcStationOf(c) ?? []),
     );
 
-    let state = await loadState();
-    const regions = state?.regions ?? {};
-    // One region at a time, each in its own transaction.
-    const applied: AppliedListing[] = [];
-    for (const l of observed) {
-      const a = await applyRegionListing(
-        {
-          regionId: l.regionId,
-          observedAt: l.observedAt,
-          contracts: l.contracts.map((c) =>
-            contractRowFromEsi(c, l.regionId, stationSystems),
-          ),
-        },
-        regions[l.regionId] ?? null,
-      );
-      if (a.history) regions[l.regionId] = a.history;
-      applied.push(a);
-    }
+    const saved = await loadState();
+    const regions = saved?.regions ?? {};
+    const applied = await applyListings(observed, regions, stationSystems);
     const incomplete = applied
       .filter((a) => !a.skipped && !a.complete)
       .map((a) => a.regionId);
@@ -475,52 +541,11 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
       });
     }
 
-    if (!state) {
-      // First run (or the state was lost): queue outstanding contracts that
-      // have no items yet.
+    if (!saved) {
       ctx.logger.info("No sync state on record; checking items from scratch");
-      const withItems = await prisma.contract.findMany({
-        select: { contractId: true },
-        where: {
-          isDeleted: false,
-          type: { in: [...TYPES_WITH_ITEMS] },
-        },
-      });
-      const itemless = await prisma.$queryRaw<{ id: number }[]>`
-        SELECT c.id FROM unnest(${withItems.map((c) => c.contractId)}::int[]) AS c(id)
-        WHERE NOT EXISTS (SELECT 1 FROM "ContractItem" i WHERE i."contractId" = c.id)`;
-      state = {
-        regions,
-        itemsPending: Object.fromEntries(itemless.map((c) => [c.id, 0])),
-        lastCheckpointAt: 0,
-      };
     }
-    const typeOf = new Map(
-      listedContracts.map((c) => [c.contract_id, contractTypeOf(c)]),
-    );
-    for (const id of applied.flatMap((a) => [...a.inserted, ...a.reopened])) {
-      const type = typeOf.get(id);
-      if (
-        type &&
-        TYPES_WITH_ITEMS.has(type) &&
-        !Object.hasOwn(state.itemsPending, id)
-      ) {
-        state.itemsPending[id] = 0;
-      }
-    }
-    // Queued contracts that are no longer outstanding are done with.
-    const pendingIds = Object.keys(state.itemsPending).map(Number);
-    const live = new Set(
-      (
-        await prisma.contract.findMany({
-          select: { contractId: true },
-          where: { contractId: { in: pendingIds }, isDeleted: false },
-        })
-      ).map((c) => c.contractId),
-    );
-    for (const id of pendingIds) {
-      if (!live.has(id)) delete state.itemsPending[id];
-    }
+    const state = saved ?? (await initialState(regions));
+    await queueItems(state, applied, listedContracts);
 
     let checkpointed = 0;
     if (now - state.lastCheckpointAt >= CHECKPOINT_MS) {
