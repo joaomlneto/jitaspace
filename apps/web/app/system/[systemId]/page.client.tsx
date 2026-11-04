@@ -809,10 +809,12 @@ export default function Page({
         </SimpleGrid>
 
         {/* ---- Industry cost indices: now (ESI) and over time (our record) ---- */}
-        <section>
-          <SectionHeader title="Industry Indices" />
-          <Stack gap="md">
-            {systemCostIndices.length > 0 && (
+        {/* ESI lists every system with indices, so one it does not list has
+            no history to chart either. */}
+        {systemCostIndices.length > 0 && (
+          <section>
+            <SectionHeader title="Industry Indices" />
+            <Stack gap="md">
               <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing="md">
                 {systemCostIndices.map((index) => (
                   <Paper key={index.activity} p="md" radius="md">
@@ -825,10 +827,10 @@ export default function Page({
                   </Paper>
                 ))}
               </SimpleGrid>
-            )}
-            <CostIndexHistory systemId={systemId} />
-          </Stack>
-        </section>
+              <CostIndexHistory systemId={systemId} />
+            </Stack>
+          </section>
+        )}
 
         {/* ---- System information ---- */}
         <SystemInfoSection

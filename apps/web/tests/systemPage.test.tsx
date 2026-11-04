@@ -110,6 +110,13 @@ jest.mock("~/components/SolarSystem3D", () => ({
   SolarSystem3D: () => <div data-testid="solar-system-3d" />,
 }));
 
+// The history chart fetches its own data (React Query); covered by
+// systemCostIndices.test.ts.
+jest.mock("~/app/system/[systemId]/CostIndexHistory", () => ({
+  CostIndexHistory: () => <div data-testid="cost-index-history" />,
+  formatCostIndex: (value: number) => `${(value * 100).toFixed(2)}%`,
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
@@ -318,6 +325,7 @@ describe("System page", () => {
     expect(screen.getByText("manufacturing")).toBeInTheDocument();
     expect(screen.getByText("5.12%")).toBeInTheDocument();
     expect(screen.getByText("researching time efficiency")).toBeInTheDocument();
+    expect(screen.getByTestId("cost-index-history")).toBeInTheDocument();
 
     // System information + SDE-derived data
     expect(screen.getByText("Security Status")).toBeInTheDocument();
@@ -344,6 +352,7 @@ describe("System page", () => {
     expect(screen.queryByText("Incursion")).not.toBeInTheDocument();
     // No cost indices for this system -> section hidden
     expect(screen.queryByText("Industry Indices")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("cost-index-history")).not.toBeInTheDocument();
     // No SDE data -> no trait chips
     expect(screen.queryByText("Trade Hub")).not.toBeInTheDocument();
     // Headers and empty-state copy still render
