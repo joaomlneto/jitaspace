@@ -104,7 +104,7 @@ const layouts = (
 function renderPage(searchParams = "") {
   const Page = require("~/app/planetary-interaction/page.client").default;
   return render(
-    <MantineProvider>
+    <MantineProvider env="test">
       <Page catalog={CATALOG} />
     </MantineProvider>,
     { wrapper: withNuqsTestingAdapter({ searchParams, hasMemory: true }) },
@@ -312,7 +312,10 @@ describe("Planetary Interaction page", () => {
     ).toBeInTheDocument();
 
     await userEvent.click(
-      screen.getByRole("button", { name: "Sign in as Joao Neto" }),
+      screen.getByRole("button", { name: "Sign in to share" }),
+    );
+    await userEvent.click(
+      await screen.findByRole("menuitem", { name: "Sign in as Joao Neto" }),
     );
     // What that character had, plus the planets: signing in again must not
     // take away what it already shared.
@@ -323,7 +326,7 @@ describe("Planetary Interaction page", () => {
     ]);
   });
 
-  it("says which characters to sign in as when none has shared its planets", () => {
+  it("says which characters to sign in as when none has shared its planets", async () => {
     mockWithoutPlanets.mockReturnValue([
       {
         characterId: 90000003,
@@ -338,11 +341,16 @@ describe("Planetary Interaction page", () => {
       screen.getByText("Planets not shared by Joao Neto."),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Sign in as Joao Neto again" }),
-    ).toBeInTheDocument();
-    expect(
       screen.queryByRole("button", { name: "Sign in with EVE Online" }),
     ).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Sign in to share" }),
+    );
+    expect(
+      await screen.findByRole("menuitem", {
+        name: "Sign in as Joao Neto again",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("does not ask for access while the characters are still loading", () => {
