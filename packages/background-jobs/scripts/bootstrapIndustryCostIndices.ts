@@ -1,8 +1,8 @@
 /**
  * Fills the SolarSystemCostIndex change log from EVE Ref's archive of GET
  * /industry/systems (https://data.everef.net/industry-systems/), oldest first:
- * the yearly archives (parts of 2017–2022), then the hourly files from
- * 2022-12-16 to now.
+ * the yearly archives of past years (from 2017-11-29; there is no 2020), then
+ * the current year's hourly files up to now.
  *
  * Run it before the hourly `esi-sync-industry-cost-indices` job's first run:
  * the log is append-only, so nothing can be inserted before the latest
@@ -13,18 +13,38 @@
  *   pnpm --filter @jitaspace/background-jobs with-env \
  *     tsx scripts/bootstrapIndustryCostIndices.ts [options]
  *
- *   --archives 2017,2018,2019,2021,2022   yearly archives to read (or "none")
- *   --daily-from 2022-12-16               first day of hourly files to read
- *   --until <ISO time>                    stop after this time (default: now)
- *   --cache-dir <dir>                     downloads, kept for re-runs
- *   --dry-run                             count what would be written; write nothing
+ *   --archives all|none|2017,2018,…  yearly archives to read (default: all)
+ *   --daily-from <YYYY-MM-DD>        first day of hourly files to read
+ *                                    (default: where the archives end)
+ *   --until <ISO time>               stop after this time (default: now)
+ *   --cache-dir <dir>                downloads, kept for re-runs
+ *   --dry-run                        count what would be written; write nothing
+ *   --cluster                        afterwards, rewrite the table in system order
+ *                                    (see below)
  *
  * Downloads are cached in `--cache-dir`, so a dry run followed by a real run
  * reads EVE Ref once. EVE Ref allows full downloads; requests go one at a
- * time and back off on its rate limit (see `everefIndustrySystems.ts`).
+ * time and back off on its rate limit (see `everefIndustrySystems.ts`). The
+ * yearly archives are `.tar.xz`, decompressed by the system's `xz` (Node has
+ * no xz decoder), which is about ten times faster than decoding in
+ * JavaScript would be.
+ *
+ * The log is written in time order, so one system's rows end up one per table
+ * page: a busy system's whole history (~21k rows) reads ~24k pages. `--cluster`
+ * runs CLUSTER on the primary key once the import is done, which cuts that to
+ * a few hundred and rebuilds the index ~30% smaller (measured on Postgres 18
+ * with 41M rows: 45 s locally). It locks the table while it runs, so pause the
+ * hourly job first. Rows the job appends later are not clustered; re-run
+ * CLUSTER now and then if long ranges get slow.
  */
-import { createReadStream, createWriteStream, existsSync } from "node:fs";
-import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import {
+  createReadStream,
+  createWriteStream,
+  existsSync,
+  statSync,
+} from "node:fs";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
@@ -36,6 +56,7 @@ import tar from "tar-stream";
 import bz2 from "unbzip2-stream";
 
 import type { CostIndexSnapshotWrite } from "../helpers/costIndexStore.ts";
+import type { EveRefYearlyArchive } from "../helpers/everefIndustrySystems.ts";
 import type {
   CostIndexState,
   IndustrySystemsResponse,
@@ -47,10 +68,11 @@ import {
   loadLatestCostIndexSnapshot,
 } from "../helpers/costIndexStore.ts";
 import {
-  EVEREF_DAILY_ARCHIVE_START,
+  EveRefNotFoundError,
   fetchEveRef,
   fetchEveRefBz2Text,
   listEveRefSnapshotsForDay,
+  listEveRefYearlyArchives,
   parseArchivedResponse,
 } from "../helpers/everefIndustrySystems.ts";
 import {
@@ -61,29 +83,31 @@ import {
   parseIndustrySystems,
 } from "../helpers/industryCostIndices.ts";
 
-const YEARLY_ARCHIVES = [2017, 2018, 2019, 2021, 2022];
-
 const { values: options } = parseArgs({
   options: {
-    archives: { type: "string", default: YEARLY_ARCHIVES.join(",") },
-    "daily-from": {
-      type: "string",
-      default: EVEREF_DAILY_ARCHIVE_START.toISOString().slice(0, 10),
-    },
+    archives: { type: "string", default: "all" },
+    "daily-from": { type: "string" },
     until: { type: "string" },
     "cache-dir": {
       type: "string",
       default: join(tmpdir(), "jitaspace-everef-industry-systems"),
     },
     "dry-run": { type: "boolean", default: false },
+    cluster: { type: "boolean", default: false },
   },
 });
 
-const archives =
-  options.archives === "none"
-    ? []
-    : options.archives.split(",").map((year) => Number(year.trim()));
-const dailyFrom = new Date(`${options["daily-from"]}T00:00:00Z`);
+const archiveYears: "all" | Set<number> =
+  options.archives === "all"
+    ? "all"
+    : new Set(
+        options.archives === "none"
+          ? []
+          : options.archives.split(",").map((year) => Number(year.trim())),
+      );
+const dailyFrom = options["daily-from"]
+  ? new Date(`${options["daily-from"]}T00:00:00Z`)
+  : null;
 const until = options.until ? new Date(options.until) : new Date();
 const cacheDir = options["cache-dir"];
 const dryRun = options["dry-run"];
@@ -163,47 +187,74 @@ async function ingest(
 }
 
 // ---------------------------------------------------------------------------
-// Yearly archives: a .tar.bz2 of JSON files in no particular order. Each entry
-// is spilled to disk (gzipped, ~100 KB) so they can be replayed sorted without
-// holding a year in memory.
+// Yearly archives: one .tar.xz per past year, its entries in time order, so it
+// is streamed straight into the replay.
 
-async function downloadToFile(path: string, file: string) {
-  if (existsSync(file)) return;
-  const response = await fetchEveRef(path);
-  if (response.body === null) throw new Error(`${path}: empty body`);
-  await pipeline(
-    Readable.fromWeb(response.body as NodeWebReadableStream<Uint8Array>),
-    createWriteStream(`${file}.partial`),
-  );
-  await rename(`${file}.partial`, file);
+/** Whole downloads retried when the connection drops mid-file. */
+const DOWNLOAD_ATTEMPTS = 3;
+
+async function downloadToFile(archive: EveRefYearlyArchive, file: string) {
+  const whole = () =>
+    existsSync(file) &&
+    (archive.size === null || statSync(file).size === archive.size);
+  for (let attempt = 1; !whole(); attempt++) {
+    try {
+      const response = await fetchEveRef(archive.path);
+      if (response.body === null)
+        throw new Error(`${archive.path}: empty body`);
+      await pipeline(
+        Readable.fromWeb(response.body as NodeWebReadableStream<Uint8Array>),
+        createWriteStream(`${file}.partial`),
+      );
+      await rename(`${file}.partial`, file);
+    } catch (error) {
+      if (
+        error instanceof EveRefNotFoundError ||
+        attempt >= DOWNLOAD_ATTEMPTS
+      ) {
+        throw error;
+      }
+      log(`retrying ${archive.path}: ${String(error)}`);
+    }
+  }
 }
 
-async function spillArchive(archive: string, entriesDir: string) {
-  const done = join(entriesDir, ".complete");
-  if (existsSync(done)) return;
-  await mkdir(entriesDir, { recursive: true });
+/** Calls `onEntry` with each file in a .tar.xz (or .tar.bz2), in order. */
+async function readArchive(
+  file: string,
+  onEntry: (name: string, text: string) => Promise<void>,
+) {
   const extract = tar.extract();
   extract.on("entry", (header, stream, next) => {
     const chunks: Buffer[] = [];
     stream.on("data", (chunk: Buffer) => chunks.push(chunk));
     stream.on("error", next);
     stream.on("end", () => {
-      const time = parseEveRefSnapshotTime(header.name);
-      if (time === null) {
-        next();
-        return;
-      }
-      writeFile(
-        join(entriesDir, `${time.toISOString()}.json.gz`),
-        gzipSync(Buffer.concat(chunks)),
-      ).then(() => next(), next);
+      onEntry(header.name, Buffer.concat(chunks).toString("utf8")).then(
+        () => next(),
+        next,
+      );
     });
   });
-  await pipeline(createReadStream(archive), bz2(), extract);
-  await writeFile(done, "");
+  if (!file.endsWith(".xz")) {
+    await pipeline(createReadStream(file), bz2(), extract);
+    return;
+  }
+  const xz = spawn("xz", ["-dc", file], {
+    stdio: ["ignore", "pipe", "inherit"],
+  });
+  const exited = new Promise<void>((resolve, reject) => {
+    xz.on("error", reject);
+    xz.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`xz exited with ${code} reading ${file}`));
+    });
+  });
+  await Promise.all([pipeline(xz.stdout, extract), exited]);
 }
 
-async function replayArchive(year: number) {
+async function replayArchive(archive: EveRefYearlyArchive) {
+  const { year } = archive;
   if (
     previousAt !== null &&
     previousAt >= new Date(`${year + 1}-01-01T00:00:00Z`)
@@ -211,28 +262,23 @@ async function replayArchive(year: number) {
     log(`${year}: already stored`);
     return;
   }
-  const name = `industry-systems-${year}.tar.bz2`;
-  const archive = join(cacheDir, name);
-  const entriesDir = join(cacheDir, `industry-systems-${year}`);
+  const name = archive.path.split("/").at(-1) ?? `${year}`;
+  const file = join(cacheDir, name);
   log(`${year}: downloading ${name}`);
-  await downloadToFile(`/industry-systems/history/${name}`, archive);
-  log(`${year}: unpacking`);
-  await spillArchive(archive, entriesDir);
-  const entries = (await readdir(entriesDir))
-    .filter((file) => file.endsWith(".json.gz"))
-    .sort((a, b) => a.localeCompare(b));
-  log(`${year}: replaying ${entries.length} snapshots`);
-  for (const entry of entries) {
-    const time = new Date(entry.replace(/\.json\.gz$/, ""));
-    const json = gunzipSync(await readFile(join(entriesDir, entry))).toString(
-      "utf8",
-    );
-    await ingest(
-      time,
-      `/industry-systems/history/${name}#${entry.replace(/\.gz$/, "")}`,
-      parseArchivedResponse(json),
-    ); // NOSONAR: in order, each diff depends on the last
-  }
+  await downloadToFile(archive, file);
+  log(`${year}: replaying`);
+  let lastTime: Date | null = null;
+  await readArchive(file, async (entry, text) => {
+    const time = parseEveRefSnapshotTime(entry);
+    if (time === null) return;
+    // The log must be written in time order; EVE Ref's old archives were not.
+    if (lastTime !== null && time <= lastTime) {
+      throw new Error(`${name}: ${entry} is out of time order`);
+    }
+    lastTime = time;
+    await ingest(time, `${archive.path}#${entry}`, parseArchivedResponse(text));
+  });
+  log(`${year}: ${totals.snapshots} snapshots, ${totals.rows} rows so far`);
 }
 
 // ---------------------------------------------------------------------------
@@ -262,11 +308,11 @@ async function readDailyFile(
 
 async function replayDaily() {
   await mkdir(join(cacheDir, "daily"), { recursive: true });
+  // From where the archives (or the database) end, else the current year.
   const day = new Date(
     Math.max(
-      dailyFrom.getTime(),
-      previousAt?.getTime() ?? 0,
-      EVEREF_DAILY_ARCHIVE_START.getTime(),
+      dailyFrom?.getTime() ?? 0,
+      previousAt?.getTime() ?? Date.UTC(new Date().getUTCFullYear(), 0, 1),
     ),
   );
   day.setUTCHours(0, 0, 0, 0);
@@ -299,12 +345,22 @@ async function main() {
     `${dryRun ? "DRY RUN: " : ""}resuming after ${previousAt?.toISOString() ?? "the beginning"}; cache in ${cacheDir}`,
   );
 
-  for (const year of archives) {
-    await replayArchive(year);
+  const archives = (await listEveRefYearlyArchives()).filter(
+    (archive) => archiveYears === "all" || archiveYears.has(archive.year),
+  );
+  log(`yearly archives: ${archives.map((archive) => archive.year).join(", ")}`);
+  for (const archive of archives) {
+    await replayArchive(archive);
     await flush();
   }
-  if (dailyFrom <= until) await replayDaily();
+  if (dailyFrom === null || dailyFrom <= until) await replayDaily();
   await flush();
+
+  if (options.cluster && !dryRun) {
+    log("clustering SolarSystemCostIndex by its primary key");
+    await prisma.$executeRaw`CLUSTER "SolarSystemCostIndex" USING "SolarSystemCostIndex_pkey"`;
+    await prisma.$executeRaw`ANALYZE "SolarSystemCostIndex"`;
+  }
 
   log(
     `done: ${totals.snapshots} snapshots, ${totals.rows} rows${dryRun ? " (not written)" : ""}; skipped ${totals.skipped} already stored, ${totals.invalid} invalid, ${totals.partial} partial`,

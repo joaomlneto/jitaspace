@@ -1002,8 +1002,8 @@ enum SolarSystemCostIndexSource {
   /// Our own `esi-sync-industry-cost-indices` job, reading ESI's GET /industry/systems.
   esi
   /// EVE Ref's archive of GET /industry/systems responses
-  /// (data.everef.net/industry-systems): hourly since 2022-12-16, with
-  /// yearly archives for parts of 2017–2022.
+  /// (data.everef.net/industry-systems): hourly from 2017-11-29, with no
+  /// 2020 and most of 2019 and 2021 missing.
   everef
 }
 

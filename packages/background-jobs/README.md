@@ -62,5 +62,12 @@ database ends, and caches its downloads for re-runs:
 
 ```
 pnpm with-env tsx scripts/bootstrapIndustryCostIndices.ts --dry-run   # count only
-pnpm with-env tsx scripts/bootstrapIndustryCostIndices.ts
+pnpm with-env tsx scripts/bootstrapIndustryCostIndices.ts --cluster
 ```
+
+It needs `xz` on the PATH (EVE Ref's yearly archives are `.tar.xz`). The full
+history (from 2017-11-29) is ~41M rows; on Postgres 18 it loaded in 3.5 hours,
+mostly waiting on EVE Ref's rate limit for the current year's hourly files.
+`--cluster` rewrites the table in system order afterwards (it locks the table,
+so pause the hourly job first); without it, a busy system's "All" chart reads
+one table page per row.

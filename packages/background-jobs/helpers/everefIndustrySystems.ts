@@ -1,10 +1,12 @@
 /**
  * Reads EVE Ref's archive of GET /industry/systems responses
  * (https://data.everef.net/industry-systems/). EVE Ref fetches the endpoint
- * every hour and keeps each response as
- * `history/<year>/<date>/industry-systems-<date>_<hh-mm-ss>.json.bz2`, from
- * 2022-12-16 on; parts of 2017–2022 are in yearly `.tar.bz2` archives instead
- * (read by the bootstrap script, not here).
+ * every hour. The current year's responses are kept one file each, as
+ * `history/<year>/<date>/industry-systems-<date>_<hh-mm-ss>.json.bz2`; past
+ * years (from 2017-11-29, with no 2020) are repacked into one
+ * `history/industry-systems-<year>.tar.xz` each, read by the bootstrap
+ * script. EVE Ref repacked them in late 2026: until then 2023–2025 were
+ * hourly files too, and the yearly archives were `.tar.bz2`.
  *
  * EVE Ref allows full downloads, but sits behind a Cloudflare rate limit that
  * answers bursts with 429 (error 1015). Requests here go one at a time, at
@@ -23,9 +25,6 @@ import {
 } from "./industryCostIndices.ts";
 
 export const EVEREF_BASE_URL = "https://data.everef.net";
-
-/** The day the hourly archive begins. */
-export const EVEREF_DAILY_ARCHIVE_START = new Date("2022-12-16T00:00:00Z");
 
 const MIN_REQUEST_INTERVAL_MS = 1_000;
 const REQUEST_TIMEOUT_MS = 120_000;
@@ -120,7 +119,39 @@ export interface EveRefSnapshotFile {
 }
 
 interface EveRefIndex {
-  files?: { name: string; url: string }[];
+  files?: { name: string; url: string; size?: number }[];
+}
+
+export interface EveRefYearlyArchive {
+  year: number;
+  /** Path under data.everef.net. */
+  path: string;
+  /** Bytes, as EVE Ref's index lists it, to tell a cached copy is whole. */
+  size: number | null;
+}
+
+/** EVE Ref's yearly archives of past years, oldest first. */
+export async function listEveRefYearlyArchives(): Promise<
+  EveRefYearlyArchive[]
+> {
+  const response = await fetchEveRef("/industry-systems/history/index.json");
+  const index = (await response.json()) as EveRefIndex;
+  return (index.files ?? [])
+    .flatMap((file) => {
+      const match = /^industry-systems-(\d{4})\.tar\.(?:xz|bz2)$/.exec(
+        file.name,
+      );
+      return match
+        ? [
+            {
+              year: Number(match[1]),
+              path: new URL(file.url).pathname,
+              size: file.size ?? null,
+            },
+          ]
+        : [];
+    })
+    .sort((a, b) => a.year - b.year);
 }
 
 const isoDate = (time: Date) => time.toISOString().slice(0, 10);
@@ -165,9 +196,9 @@ export async function listEveRefSnapshotsBetween({
   limit: number;
 }): Promise<EveRefSnapshotFile[]> {
   const found: EveRefSnapshotFile[] = [];
-  const day = new Date(
-    Math.max(after.getTime(), EVEREF_DAILY_ARCHIVE_START.getTime()),
-  );
+  // A day with no directory (repacked into a yearly archive, or missing) lists
+  // nothing.
+  const day = new Date(after);
   day.setUTCHours(0, 0, 0, 0);
   for (
     ;
