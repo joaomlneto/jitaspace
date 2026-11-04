@@ -6,6 +6,7 @@ import type {
   RegionHistory,
 } from "../helpers/contractTimeline";
 import {
+  AUCTION_EXPIRY_SLACK_MS,
   endReasonOf,
   GAP_MS,
   isRegionComplete,
@@ -31,7 +32,8 @@ const outstanding = (
   contractId: number,
   dateExpired = at(1000),
   lastSeenAt = at(-100),
-): OutstandingContract => ({ contractId, dateExpired, lastSeenAt });
+  isAuction = false,
+): OutstandingContract => ({ contractId, dateExpired, isAuction, lastSeenAt });
 const fillerOutstanding = FILLER.map((id) => outstanding(id));
 
 describe("isRegionComplete", () => {
@@ -70,6 +72,14 @@ describe("endReasonOf", () => {
   it("unknown when that window is longer than the gap", () => {
     expect(endReasonOf(at(0), at(0), at(0) + GAP_MS)).toBe("Expired");
     expect(endReasonOf(at(0), at(0), at(0) + GAP_MS + 1)).toBeNull();
+  });
+
+  it("allows for an expiry that may be above the truth", () => {
+    const slack = AUCTION_EXPIRY_SLACK_MS;
+    expect(endReasonOf(at(1) + slack, at(0), at(1), slack)).toBe("Expired");
+    expect(endReasonOf(at(1) + slack + 1, at(0), at(1), slack)).toBe(
+      "RemovedBeforeExpiry",
+    );
   });
 });
 
@@ -113,6 +123,29 @@ describe("planRegionListing", () => {
       ],
       history: { lastModified: at(6), lastCompleteAt: at(6) },
     });
+  });
+
+  it("reads an auction whose rounded-up expiry is still ahead as expired", () => {
+    // It expired at 5:45. The listing at 5 gave 5 + 1 h, a second late by
+    // Last-Modified jitter: after the listing at 6 that misses it.
+    const rounded = at(7) + 1000;
+    const plan = planRegionListing({
+      history: steady(5),
+      observedAt: at(6),
+      listedIds: ids(),
+      outstanding: [
+        outstanding(1, rounded, at(-1), true),
+        // The same expiry on another type is exact: removed before it.
+        outstanding(2, rounded),
+        // An auction taken down hours before its expiry is still removed.
+        outstanding(3, at(6) + 3 * 60 * MIN, at(-1), true),
+      ],
+    });
+    expect(!plan.skip && plan.ends.map((e) => e.endReason)).toEqual([
+      "Expired",
+      "RemovedBeforeExpiry",
+      "RemovedBeforeExpiry",
+    ]);
   });
 
   it("leaves an expired contract's reason unknown after a long gap", () => {
@@ -252,12 +285,15 @@ const prng = (seed: number) => () => {
 
 interface Truth {
   contractId: number;
+  /** Its listings give a rounded-up expiry (see `contractTimeline.ts`). */
+  isAuction: boolean;
   /** First and last listing generation it is in (inclusive). */
   from: number;
   to: number;
   dateExpired: number;
 }
 interface Row {
+  isAuction: boolean;
   dateExpired: number;
   firstSeenAt: number;
   lastSeenAt: number;
@@ -279,6 +315,7 @@ const world = (random: () => number, generations: number) => {
       const expires = random() < 0.4;
       truths.push({
         contractId: next++,
+        isAuction: random() < 0.3,
         from: g,
         to: g + life - 1,
         dateExpired: expires
@@ -288,6 +325,15 @@ const world = (random: () => number, generations: number) => {
     }
   }
   return truths;
+};
+
+const DAY = 24 * 60 * MIN;
+/** The expiry a listing at generation `g` gives: ESI's, rounded up for auctions. */
+const reportedExpiry = (t: Truth, g: number) => {
+  if (!t.isAuction) return t.dateExpired;
+  const left = t.dateExpired - at(g);
+  const unit = left > DAY ? DAY : 60 * MIN;
+  return at(g) + Math.ceil(left / unit) * unit;
 };
 
 const simulate = (seed: number, { flaky }: { flaky: boolean }) => {
@@ -322,6 +368,7 @@ const simulate = (seed: number, { flaky }: { flaky: boolean }) => {
           .map(([contractId, r]) => ({
             contractId,
             dateExpired: r.dateExpired,
+            isAuction: r.isAuction,
             lastSeenAt: r.lastSeenAt,
           })),
       });
@@ -331,9 +378,14 @@ const simulate = (seed: number, { flaky }: { flaky: boolean }) => {
       }
       for (const t of listed) {
         const row = rows.get(t.contractId);
+        if (row) {
+          // The store keeps an auction's lowest expiry seen.
+          row.dateExpired = Math.min(row.dateExpired, reportedExpiry(t, g));
+        }
         if (!row) {
           rows.set(t.contractId, {
-            dateExpired: t.dateExpired,
+            isAuction: t.isAuction,
+            dateExpired: reportedExpiry(t, g),
             firstSeenAt: at(g),
             lastSeenAt: at(g),
             isDeleted: false,
@@ -399,17 +451,28 @@ describe("against a simulated region", () => {
             lastComplete ? at(lastComplete.g) : -Infinity,
           ),
         );
+        const slack = t.isAuction ? AUCTION_EXPIRY_SLACK_MS : 0;
+        // A stored expiry is never below the truth, and an auction's is within
+        // the slack of it once seen in its last hour.
+        expect(row.dateExpired).toBeGreaterThanOrEqual(t.dateExpired);
         // The reason follows from what the job saw ...
         expect(row.endReason).toBe(
-          endReasonOf(t.dateExpired, row.lastSeenAt, at(missedIn.g)),
+          endReasonOf(row.dateExpired, row.lastSeenAt, at(missedIn.g), slack),
         );
         // ... and is exactly the truth when the job judged complete both the
-        // contract's last listing and the one after.
+        // contract's last listing and the one after: an auction's too, unless
+        // it was taken down within the slack of its expiry.
         if (completeAt.has(t.to) && missedIn.g === t.to + 1) {
           expect(row.lastSeenAt).toBe(at(t.to));
-          expect(row.endReason).toBe(
-            endReasonOf(t.dateExpired, at(t.to), at(t.to + 1)),
-          );
+          const ambiguous =
+            t.isAuction &&
+            t.dateExpired > at(t.to + 1) &&
+            t.dateExpired <= at(t.to + 1) + slack;
+          if (!ambiguous) {
+            expect(row.endReason).toBe(
+              endReasonOf(t.dateExpired, at(t.to), at(t.to + 1)),
+            );
+          }
           expect(row.endReason).not.toBeNull();
           exact++;
         }

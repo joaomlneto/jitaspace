@@ -14,6 +14,17 @@
  *     apart (then NULL: it may have been accepted first);
  *   - a contract that reappears is reopened.
  *
+ * Auctions' expiry is rounded up. ESI gives an auction's date_expired as the
+ * listing's time plus the time left rounded up to whole days (whole hours in
+ * its last day), and its date_issued only to the day. So every listing gives an
+ * upper bound, and the store keeps the lowest one seen. Once the auction has
+ * been listed in its last day, that bound is a listing's time plus whole hours:
+ * a point on the half-hour grid of its region's listings, at or after the true
+ * expiry, so at most 30 minutes after the first listing that misses it. An
+ * auction only counts as removed before expiry if it went missing more than
+ * {@link AUCTION_EXPIRY_SLACK_MS} before that bound, so one bought out in its
+ * last half hour reads as expired.
+ *
  * One miss is enough because ESI's listing is consistent: every page of a
  * region shares one Last-Modified (the job refetches if they don't), and The
  * Forge's 35-page cap keeps the lowest IDs, so a listed contract can only drop
@@ -27,6 +38,12 @@
  */
 
 export const GAP_MS = 2 * 60 * 60 * 1000;
+/**
+ * How far past the first listing that misses an expired auction its stored
+ * expiry can be: one listing interval, plus a minute for the listings'
+ * Last-Modified jitter.
+ */
+export const AUCTION_EXPIRY_SLACK_MS = 31 * 60 * 1000;
 /** A region is complete if its count is at least 70% of its recent median. */
 export const COMPLETE_FRACTION = 0.7;
 /** Regions typically listing fewer contracts than this: complete when present. */
@@ -52,6 +69,8 @@ export interface RegionHistory {
 export interface OutstandingContract {
   contractId: number;
   dateExpired: number;
+  /** Auctions' dateExpired is an upper bound (see the module comment). */
+  isAuction: boolean;
   /** Stored lastSeenAt (or firstSeenAt, or dateIssued, whichever is set). */
   lastSeenAt: number;
 }
@@ -98,13 +117,15 @@ export const isRegionComplete = (history: number[], count: number) => {
  * Gone while its expiry was still ahead: removed before expiry, however long
  * the gap. Expiry fell between last seen and first missed: expired, unless that
  * window is so long it could equally have been accepted first (then unknown).
+ * `expirySlack` is how far dateExpired may be above the true expiry.
  */
 export const endReasonOf = (
   dateExpired: number,
   lastSeen: number,
   firstMissed: number,
+  expirySlack = 0,
 ): ContractEndReason | null => {
-  if (dateExpired > firstMissed) return "RemovedBeforeExpiry";
+  if (dateExpired > firstMissed + expirySlack) return "RemovedBeforeExpiry";
   return firstMissed - lastSeen <= GAP_MS ? "Expired" : null;
 };
 
@@ -150,7 +171,12 @@ export const planRegionListing = ({
           return {
             contractId: c.contractId,
             lastSeenAt,
-            endReason: endReasonOf(c.dateExpired, lastSeenAt, observedAt),
+            endReason: endReasonOf(
+              c.dateExpired,
+              lastSeenAt,
+              observedAt,
+              c.isAuction ? AUCTION_EXPIRY_SLACK_MS : 0,
+            ),
           };
         })
     : [];

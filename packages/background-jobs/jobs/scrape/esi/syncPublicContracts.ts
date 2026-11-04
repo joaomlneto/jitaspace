@@ -44,6 +44,7 @@ import {
 import {
   contractsWithItemsOf,
   ensureReferences,
+  itemlessContractsOf,
   mutatedItemsOf,
   stationSystemsOf,
   storedContractIdsOf,
@@ -122,8 +123,9 @@ type RegionFetch =
 
 /**
  * Every page of one region's listing. Pages must share one Last-Modified: a
- * listing regenerated mid-way can shift contracts between pages, so it is
- * fetched again once, then given up on for this run.
+ * listing regenerated mid-way can shift contracts between pages (or drop the
+ * last page, which then answers 404), so it is fetched again once, then given
+ * up on for this run.
  */
 const fetchRegionListing = async (
   gate: EsiGate,
@@ -136,6 +138,7 @@ const fetchRegionListing = async (
         userAgent: ESI_USER_AGENT,
       }),
     );
+  let reason = "pages changed while paginating";
   for (let attempt = 1; attempt <= 2; attempt++) {
     const first = await page(1);
     if (!first.ok) {
@@ -149,10 +152,12 @@ const fetchRegionListing = async (
     const rest = await Promise.all(
       Array.from({ length: pages - 1 }, (_, i) => page(i + 2)),
     );
-    for (const r of rest) {
-      if (!r.ok) {
-        return { regionId, ok: false, reason: `HTTP ${r.status ?? "none"}` };
-      }
+    const failed = rest.find((r) => !r.ok);
+    if (failed) {
+      // The gate already retried what was transient; a later page that still
+      // fails (404 past a shrunken listing's end, say) is worth one refetch.
+      reason = `HTTP ${failed.status ?? "none"} on a later page`;
+      continue;
     }
     if (rest.every((r) => r.ok && lastModifiedOf(r.headers) === observedAt)) {
       return {
@@ -162,8 +167,9 @@ const fetchRegionListing = async (
         contracts: [first, ...rest].flatMap((r) => (r.ok ? r.data : [])),
       };
     }
+    reason = "pages changed while paginating";
   }
-  return { regionId, ok: false, reason: "pages changed while paginating" };
+  return { regionId, ok: false, reason };
 };
 
 /**
@@ -407,47 +413,26 @@ const applyListings = async (
 };
 
 /**
- * First run (or the state was lost): queue the outstanding contracts that have
- * no items yet.
- */
-const initialState = async (
-  regions: Record<string, RegionHistory>,
-): Promise<SyncState> => {
-  const withItems = await prisma.contract.findMany({
-    select: { contractId: true },
-    where: { isDeleted: false, type: { in: [...TYPES_WITH_ITEMS] } },
-  });
-  const itemless = await prisma.$queryRaw<{ id: number }[]>`
-    SELECT c.id FROM unnest(${withItems.map((c) => c.contractId)}::int[]) AS c(id)
-    WHERE NOT EXISTS (SELECT 1 FROM "ContractItem" i WHERE i."contractId" = c.id)`;
-  return {
-    regions,
-    itemsPending: Object.fromEntries(itemless.map((c) => [c.id, 0])),
-    lastCheckpointAt: 0,
-  };
-};
-
-/**
- * Queue the items of contracts this run inserted or reopened, and drop queued
- * contracts that are no longer outstanding.
+ * Queue every listed contract that is stored as outstanding, lists items, and
+ * has none stored yet; drop queued contracts that are no longer outstanding.
+ * Read off the database each run rather than from what this run inserted, so a
+ * run that failed after committing a region (or lost its state) leaves nothing
+ * unqueued.
  */
 const queueItems = async (
   state: SyncState,
-  applied: readonly AppliedListing[],
   listedContracts: readonly EsiPublicContract[],
 ) => {
-  const typeOf = new Map(
-    listedContracts.map((c) => [c.contract_id, contractTypeOf(c)]),
-  );
-  for (const id of applied.flatMap((a) => [...a.inserted, ...a.reopened])) {
-    const type = typeOf.get(id);
-    if (
-      type &&
-      TYPES_WITH_ITEMS.has(type) &&
-      !Object.hasOwn(state.itemsPending, id)
-    ) {
-      state.itemsPending[id] = 0;
-    }
+  for (const id of await itemlessContractsOf(
+    listedContracts
+      .filter(
+        (c) =>
+          TYPES_WITH_ITEMS.has(contractTypeOf(c)) &&
+          !Object.hasOwn(state.itemsPending, c.contract_id),
+      )
+      .map((c) => c.contract_id),
+  )) {
+    state.itemsPending[id] = 0;
   }
   const pendingIds = Object.keys(state.itemsPending).map(Number);
   const live = new Set(
@@ -541,11 +526,9 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
       });
     }
 
-    if (!saved) {
-      ctx.logger.info("No sync state on record; checking items from scratch");
-    }
-    const state = saved ?? (await initialState(regions));
-    await queueItems(state, applied, listedContracts);
+    if (!saved) ctx.logger.info("No sync state on record; starting afresh");
+    const state = saved ?? { regions, itemsPending: {}, lastCheckpointAt: 0 };
+    await queueItems(state, listedContracts);
 
     let checkpointed = 0;
     if (now - state.lastCheckpointAt >= CHECKPOINT_MS) {
@@ -584,8 +567,14 @@ export const syncPublicContracts = defineJob<SyncPublicContractsPayload>({
       applied.flatMap((a) => [...a.inserted, ...a.reopened]),
     );
     // A listed contract is outstanding: the listing that showed it says so.
+    // Only stored ones, though: a stale listing that was skipped can list an
+    // auction never stored, and its bids would have no contract to point at.
     const auctions = listedContracts
-      .filter((c) => TYPES_WITH_BIDS.has(contractTypeOf(c)))
+      .filter(
+        (c) =>
+          TYPES_WITH_BIDS.has(contractTypeOf(c)) &&
+          (stored.has(c.contract_id) || newIds.has(c.contract_id)),
+      )
       .map((c) => ({
         contractId: c.contract_id,
         dateExpired: Date.parse(c.date_expired),

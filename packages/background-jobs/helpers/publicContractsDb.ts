@@ -112,6 +112,20 @@ export const contractsWithItemsOf = async (contractIds: readonly number[]) =>
     ).map((r) => r.id),
   );
 
+/**
+ * IDs of outstanding contracts with no items stored, among those given (one
+ * index probe each).
+ */
+export const itemlessContractsOf = async (contractIds: readonly number[]) =>
+  contractIds.length === 0
+    ? []
+    : (
+        await prisma.$queryRaw<{ id: number }[]>`
+          SELECT c."contractId" id FROM unnest(${[...contractIds]}::int[]) AS v(id)
+          JOIN "Contract" c ON c."contractId" = v.id AND c."isDeleted" = false
+          WHERE NOT EXISTS (SELECT 1 FROM "ContractItem" i WHERE i."contractId" = v.id)`
+      ).map((r) => r.id);
+
 export type ContractItemRow = ContractsPublicItemsContractIdGet[number];
 export type DynamicItemData = DogmaDynamicItemsTypeIdItemIdGet;
 

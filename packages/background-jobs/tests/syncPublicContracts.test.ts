@@ -82,9 +82,22 @@ let storedIds: Set<number>;
 let withItems: Set<number>;
 /** Regions whose next listing the store mock reports as incomplete. */
 let incompleteRegions: Set<number>;
+/** Regions whose listing the store mock skips (a stale copy). */
+let skippedRegions: Set<number>;
 const applyListing = jest.fn(
   (listing: RegionListing, history: RegionHistory | null) => {
     calls.push(`apply ${listing.regionId}`);
+    if (skippedRegions.has(listing.regionId)) {
+      return Promise.resolve<AppliedListing>({
+        regionId: listing.regionId,
+        skipped: true,
+        complete: false,
+        inserted: [],
+        reopened: [],
+        ended: [],
+        history,
+      });
+    }
     const inserted = listing.contracts
       .map((c) => c.contractId)
       .filter((id) => !storedIds.has(id));
@@ -126,6 +139,7 @@ const ensureReferences = jest.fn((_refs: unknown) => {
 });
 const writeItems = jest.fn((args: { contracts: { contractId: number }[] }) => {
   calls.push("items");
+  for (const c of args.contracts) withItems.add(c.contractId);
   return Promise.resolve({
     written: args.contracts.map((c) => c.contractId),
     blocked: [] as number[],
@@ -142,6 +156,10 @@ jest.mock("../helpers/publicContractsDb.ts", () => ({
     Promise.resolve(new Set(ids.filter((id) => storedIds.has(id)))),
   contractsWithItemsOf: (ids: number[]) =>
     Promise.resolve(new Set(ids.filter((id) => withItems.has(id)))),
+  itemlessContractsOf: (ids: number[]) =>
+    Promise.resolve(
+      ids.filter((id) => storedIds.has(id) && !withItems.has(id)),
+    ),
   mutatedItemsOf: (
     contracts: {
       contractId: number;
@@ -248,6 +266,7 @@ const state = () =>
 beforeEach(() => {
   dynamicFails = false;
   incompleteRegions = new Set();
+  skippedRegions = new Set();
   store.clear();
   calls.length = 0;
   storedIds = new Set();
@@ -423,6 +442,48 @@ describe("esi-sync-public-contracts", () => {
     ]);
   });
 
+  it("queues the items of contracts an earlier, failed attempt stored", async () => {
+    // The last attempt committed region 10000002, then failed before saving
+    // its state: the contracts are stored, so this one inserts none of them.
+    storedIds = new Set([101, 102, 103]);
+    store.set(
+      STATE_KEY,
+      JSON.stringify({ regions: {}, itemsPending: {}, lastCheckpointAt: 0 }),
+    );
+    const { stats } = await run();
+    expect(stats).toMatchObject({ inserted: 0 });
+    expect(getItems.mock.calls.map(([id]) => id).sort()).toEqual([101, 103]);
+    expect(
+      writeItems.mock.calls[0]![0].contracts.map((c) => c.contractId),
+    ).toEqual([101]);
+  });
+
+  it("does not queue contracts whose items are stored, or that are not stored", async () => {
+    storedIds = new Set([101, 103]);
+    withItems = new Set([101]);
+    store.set(
+      STATE_KEY,
+      JSON.stringify({ regions: {}, itemsPending: {}, lastCheckpointAt: 0 }),
+    );
+    skippedRegions = new Set([10000002]);
+    await run();
+    // 101 has items; 103 is stored and itemless; nothing else is stored.
+    expect(getItems.mock.calls.map(([id]) => id)).toEqual([103]);
+  });
+
+  it("fetches no bids for an auction a skipped listing shows but nothing stored", async () => {
+    // Ending within the hour: its bids would be fetched if it were stored.
+    const ending = {
+      ...AUCTION,
+      date_expired: new Date(Date.now() + 3600_000).toISOString(),
+    };
+    regionPages[10000002] = () => Promise.resolve(listing([ending]));
+    skippedRegions = new Set([10000002]);
+    await run();
+    expect(getBids).not.toHaveBeenCalled();
+    expect(writeBids).toHaveBeenCalledWith([]);
+  });
+
   it("checkpoints at most once a day", async () => {
     await run();
     calls.length = 0;
@@ -448,6 +509,47 @@ describe("esi-sync-public-contracts", () => {
     expect(getRegion).toHaveBeenCalledTimes(8);
     expect(calls).toEqual([]);
     expect(store.size).toBe(0);
+  });
+
+  it("fetches a region again when a later page is gone, as when it shrank", async () => {
+    let attempt = 0;
+    regionPages = {
+      10000001: () => Promise.resolve(listing([])),
+      10000002: (page) => {
+        if (page === 1) attempt++;
+        if (attempt === 1) {
+          return page === 1
+            ? Promise.resolve({
+                ...listing([ITEM_EXCHANGE]),
+                headers: { "x-pages": "2", "last-modified": LM },
+              })
+            : Promise.reject(httpError(404));
+        }
+        return Promise.resolve(listing([ITEM_EXCHANGE]));
+      },
+    };
+    const { stats } = await run();
+    expect(attempt).toBe(2);
+    expect(stats).toMatchObject({ observed: 2, failedRegions: [] });
+  });
+
+  it("gives up on a region whose later page keeps failing", async () => {
+    regionPages = {
+      10000001: () => Promise.resolve(listing([])),
+      10000002: (page) =>
+        page === 1
+          ? Promise.resolve({
+              ...listing([ITEM_EXCHANGE]),
+              headers: { "x-pages": "2", "last-modified": LM },
+            })
+          : Promise.reject(httpError(404)),
+    };
+    const { stats } = await run();
+    expect(stats).toMatchObject({ observed: 1, failedRegions: [10000002] });
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("unavailable"),
+      { regionId: 10000002, reason: "HTTP 404 on a later page" },
+    );
   });
 
   it("gives up on a region whose pages keep changing while it paginates", async () => {

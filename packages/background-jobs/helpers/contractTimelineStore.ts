@@ -2,7 +2,8 @@
  * Writes the contract timeline that `contractTimeline.ts` plans. Each region's
  * listing is applied in one transaction, and every statement is idempotent
  * (inserts skip stored contracts, reopens and ends only touch rows still in the
- * other state), so a retry repeats only what had not landed.
+ * other state, auction expiries only move down), so a retry repeats only what
+ * had not landed.
  */
 import type { Prisma } from "../db";
 import type {
@@ -51,12 +52,19 @@ const outstandingOf = async (
 ): Promise<OutstandingContract[]> =>
   (
     await tx.$queryRaw<
-      { contractId: number; dateExpired: Date; lastSeenAt: Date }[]
-    >`SELECT "contractId", "dateExpired", COALESCE("lastSeenAt", "firstSeenAt", "dateIssued") AS "lastSeenAt"
+      {
+        contractId: number;
+        dateExpired: Date;
+        isAuction: boolean;
+        lastSeenAt: Date;
+      }[]
+    >`SELECT "contractId", "dateExpired", type = 'Auction' AS "isAuction",
+        COALESCE("lastSeenAt", "firstSeenAt", "dateIssued") AS "lastSeenAt"
       FROM "Contract" WHERE "regionId" = ${regionId} AND "isDeleted" = false`
   ).map((c) => ({
     contractId: c.contractId,
     dateExpired: c.dateExpired.getTime(),
+    isAuction: c.isAuction,
     lastSeenAt: c.lastSeenAt.getTime(),
   }));
 
@@ -118,6 +126,24 @@ const reopenContracts = async (
   return reopened;
 };
 
+/**
+ * An auction's expiry as the lowest any listing gave: each is an upper bound
+ * (see `contractTimeline.ts`). Written only where a listing's is lower.
+ */
+const tightenAuctionExpiries = async (
+  tx: Prisma.TransactionClient,
+  auctions: ContractRow[],
+) => {
+  for (const c of chunks(auctions)) {
+    await tx.$executeRaw`
+      UPDATE "Contract" c SET "dateExpired" = v.e AT TIME ZONE 'UTC', "updatedAt" = now()
+      FROM unnest(${c.map((a) => a.contractId)}::int[],
+        ${c.map((a) => a.dateExpired.toISOString())}::timestamptz[]) AS v(id, e)
+      WHERE c."contractId" = v.id AND c.type = 'Auction'
+        AND c."dateExpired" > v.e AT TIME ZONE 'UTC'`;
+  }
+};
+
 const endContracts = async (
   tx: Prisma.TransactionClient,
   ends: ContractEnd[],
@@ -172,6 +198,10 @@ export const applyRegionListing = (
         tx,
         unknown.map((c) => c.contractId).filter((id) => !fresh.has(id)),
         observedAt,
+      );
+      await tightenAuctionExpiries(
+        tx,
+        contracts.filter((c) => c.type === "Auction"),
       );
       await endContracts(tx, plan.ends);
       return {
