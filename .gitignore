@@ -140,3 +140,6 @@ fabric.properties
 apps/web/cypress/screenshots/
 apps/web/cypress/videos/
 apps/web/cypress/downloads/
+
+# Python bytecode (apps/web/scripts/logo).
+__pycache__/

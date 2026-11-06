@@ -113,7 +113,7 @@ export function HeaderMenu() {
                     than on sight (see HoverPrefetchLink). */}
                 <HoverPrefetchLink href="/" className={classes.logo}>
                   <Image
-                    src="/logo.png"
+                    src="/logo-small.svg"
                     alt="Jita logo"
                     width={32}
                     height={32}
