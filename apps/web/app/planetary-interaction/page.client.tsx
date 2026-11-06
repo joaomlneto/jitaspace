@@ -25,6 +25,7 @@ import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import {
   PLANETS_SCOPE,
   useCharacterPlanetLayouts,
+  useCharactersWithoutScopes,
   useMultipleCharacterPlanets,
 } from "@jitaspace/hooks";
 
@@ -71,6 +72,8 @@ export default function PlanetaryInteractionPageClient({
   catalog,
 }: Readonly<{ catalog: PiCatalog }>) {
   const colonies = useMultipleCharacterPlanets();
+  // Logged-in characters left out for not having shared their planets.
+  const withoutPlanets = useCharactersWithoutScopes(COLONY_SCOPES);
   const now = useNow();
 
   // `null` (no param) means every character, so a bare URL shows them all
@@ -244,6 +247,8 @@ export default function PlanetaryInteractionPageClient({
           scopes={COLONY_SCOPES}
           signedOut="Sign in with a character that shares its planets to see your colonies."
           summary={`${colonies.data.length} ${colonies.data.length === 1 ? "colony" : "colonies"} across ${characterIds.length} ${characterIds.length === 1 ? "character" : "characters"}`}
+          missing={withoutPlanets}
+          missingText={(names) => `Planets not shared by ${names}.`}
         />
 
         {/* Status first: it is always there, so the character chips that

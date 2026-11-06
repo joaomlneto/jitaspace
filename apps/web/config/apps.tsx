@@ -282,6 +282,9 @@ export const characterApps: Record<string, JitaApp> = {
           scopes: ["esi-planets.manage_planets.v1"],
         },
       ],
+      // The corporation's customs offices are in extraJitaFeatures, not here
+      // as optional: getEnabledApps would then hide this app from every
+      // character that is not a Director.
     },
   },
   freelance: {
@@ -693,6 +696,19 @@ export const extraJitaFeatures: AppScopeSet[] = [
     // it.
     reason: "Read where your Mercenary Dens are",
     scopes: ["esi-structures.read_character.v1"],
+  },
+  {
+    // The Customs Offices corporation app needs this, but the login modal
+    // asks only for the character apps' scopes and these extra features.
+    // Not an optional scope of Planetary Interaction, for the same reason as
+    // the Mercenary Dens above.
+    reason: "Read your corporation's customs offices",
+    description:
+      "Only a corporation's Directors can read them, so your roles are read too.",
+    scopes: [
+      "esi-planets.read_customs_offices.v1",
+      "esi-characters.read_corporation_roles.v1",
+    ],
   },
 ];
 
