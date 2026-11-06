@@ -27,6 +27,7 @@ import {
   setStoredAppTheme,
   usePreferencesStore,
 } from "~/lib/preferences";
+import { themes } from "~/themes";
 import { DEFAULT_THEME_SEASON_END } from "~/themes/season";
 
 function ThemePrimaryColorText() {
@@ -262,4 +263,19 @@ describe("cssVariablesResolver", () => {
       "var(--mantine-color-gray-6)",
     );
   });
+
+  it.each(["eve", "eve_compact", "default", "caldari", "whpd"] as const)(
+    "darkens light-scheme dimmed text in %s, and leaves its dark scheme alone",
+    (name) => {
+      const resolved = cssVariablesResolver(
+        mergeMantineTheme(DEFAULT_THEME, themes[name]),
+      );
+      expect(resolved.light["--mantine-color-dimmed"]).toBe(
+        "color-mix(in srgb, var(--mantine-color-gray-6), black 30%)",
+      );
+      expect(resolved.dark["--mantine-color-dimmed"]).toBe(
+        "color-mix(in srgb, var(--mantine-color-dark-2), white 18%)",
+      );
+    },
+  );
 });

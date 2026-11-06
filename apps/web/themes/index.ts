@@ -17,6 +17,11 @@ declare module "@mantine/core" {
     appBackground?: string;
     /** Same wallpaper, cropped and sized for portrait phones. */
     appBackgroundMobile?: string;
+    /**
+     * The light scheme's `--mantine-color-dimmed`, in place of Mantine's
+     * `gray.6` (app/mantine-provider.tsx).
+     */
+    lightDimmed?: string;
   }
 }
 
