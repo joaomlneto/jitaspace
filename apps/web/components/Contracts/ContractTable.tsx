@@ -14,9 +14,8 @@ import {
   contractDisplayName,
   ContractIssuer,
   ContractLocationLine,
-  ContractStatusBadge,
+  ContractTiming,
   ContractTypeIcon,
-  ExpiryText,
   formatVolume,
   RelativeTime,
 } from "./ContractParts";
@@ -175,14 +174,7 @@ function columns(
       header: "Expires",
       accessor: "dateExpired",
       width: 150,
-      cell: (row) =>
-        row.status && row.status !== "outstanding" ? (
-          <ContractStatusBadge status={row.status} size="sm" />
-        ) : (
-          <Text size="sm" c="dimmed" style={NOWRAP}>
-            <ExpiryText date={row.dateExpired} />
-          </Text>
-        ),
+      cell: (row) => <ContractTiming contract={row} size="sm" />,
     },
   ];
 }

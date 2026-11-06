@@ -44,7 +44,7 @@ export const CONTRACT_SEARCH_MAX_LENGTH = 64;
 export const PUBLIC_CONTRACTS_MAX_PAGE = 2_000;
 
 /** Region and contract ids are Postgres `integer`s; larger ones cannot exist. */
-const INT4_MAX = 2_147_483_647;
+export const INT4_MAX = 2_147_483_647;
 
 export interface ContractFilters {
   type: ContractTypeFilter;
@@ -58,7 +58,8 @@ export interface ContractFilters {
   page: number;
 }
 
-function positiveInt(raw: string | null, max = INT4_MAX): number | null {
+/** A canonical positive integer up to `max` (an `integer` column's), or null. */
+export function positiveInt(raw: string | null, max = INT4_MAX): number | null {
   if (raw === null || !/^[1-9]\d{0,9}$/.test(raw)) return null;
   const value = Number(raw);
   return value <= max ? value : null;

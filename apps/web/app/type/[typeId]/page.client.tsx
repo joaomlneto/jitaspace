@@ -29,6 +29,7 @@ import {
   CategoryCombatIcon,
   CategoryIskIcon,
   CategoryPowerIcon,
+  ContractsIcon,
   SystemArrowRotateLeftIcon,
   SystemBlockBanIcon,
   SystemDetailsViewIcon,
@@ -60,6 +61,7 @@ import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
+import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
   CategoryAnchor,
@@ -506,6 +508,8 @@ export default function TypePage({
 
   const hasAttributes =
     sortedDogmaAttributes.length > 0 || sortedDogmaEffects.length > 0;
+  // Unpublished types never reach a player's hangar, so never a contract.
+  const isTradeable = typeData?.published !== false;
   const hasMarket =
     typeData?.market_group_id !== undefined ||
     marketPrice !== undefined ||
@@ -694,6 +698,14 @@ export default function TypePage({
                 }
               >
                 Market
+              </Tabs.Tab>
+            )}
+            {isTradeable && (
+              <Tabs.Tab
+                value="contracts"
+                leftSection={<ContractsIcon size={16} alt="" />}
+              >
+                Contracts
               </Tabs.Tab>
             )}
             {insurance && (
@@ -1083,6 +1095,13 @@ export default function TypePage({
                   </Text>
                 </Stack>
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Contracts — every public contract that listed this type */}
+          {isTradeable && (
+            <Tabs.Panel value="contracts" pt="lg">
+              <ContractHistoryTab subject="type" id={typeId} />
             </Tabs.Panel>
           )}
 
