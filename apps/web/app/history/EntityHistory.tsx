@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { Suspense, use } from "react";
-import Link from "next/link";
 import {
   Alert,
   Anchor,
@@ -20,6 +19,7 @@ import { parseAsArrayOf, parseAsString, useQueryStates } from "nuqs";
 
 import type { Provenance, TimelineEvent } from "~/lib/history";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   collectionMeta,
   fromBuildLabel,
@@ -103,7 +103,7 @@ function EntityTimelineView({
         {header}
         <Alert color="gray">
           No recorded changes for this entity across the tracked builds.{" "}
-          <Anchor component={Link} href="/history">
+          <Anchor component={HoverPrefetchLink} href="/history">
             Back to history
           </Anchor>
         </Alert>
@@ -175,7 +175,7 @@ function EntityTimelineView({
             </Group>
           </Chip.Group>
         )}
-        <Anchor component={Link} href="/history" size="sm">
+        <Anchor component={HoverPrefetchLink} href="/history" size="sm">
           All history
         </Anchor>
       </Group>
@@ -208,7 +208,7 @@ function EntityTimelineView({
                 title={
                   <Group gap="xs">
                     <Anchor
-                      component={Link}
+                      component={HoverPrefetchLink}
                       href={`/history/build/${group.build}`}
                       fw={500}
                     >

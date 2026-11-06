@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useMemo } from "react";
-import Link from "next/link";
 import {
   Alert,
   Anchor,
@@ -56,6 +55,7 @@ import {
 } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   AgentLabel,
   HeroImage,
@@ -651,7 +651,7 @@ export default function DungeonPage({
     <Container size="lg" py="md">
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor component={Link} href="/dungeons" size="sm">
+          <Anchor component={HoverPrefetchLink} href="/dungeons" size="sm">
             Dungeons
           </Anchor>
           {archetypeTitle && (

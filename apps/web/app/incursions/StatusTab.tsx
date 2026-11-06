@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -36,6 +35,7 @@ import type {
   IncursionSolarSystem,
   TrackedIncursionRow,
 } from "./types";
+import { HoverPrefetchLink } from "~/components/Link";
 import { InfluenceChart } from "./InfluenceChart";
 import {
   formatCountdown,
@@ -417,7 +417,7 @@ function SystemsTable({
                       {stations.map((station) => (
                         <Group key={station.stationId} gap={6} wrap="nowrap">
                           <Anchor
-                            component={Link}
+                            component={HoverPrefetchLink}
                             href={`/station/${station.stationId}`}
                             size="xs"
                           >
@@ -507,7 +507,7 @@ function ActiveIncursion({
                     `${securityStatusBand(stagingSecurity)} · `}
                   {region && (
                     <Anchor
-                      component={Link}
+                      component={HoverPrefetchLink}
                       href={`/region/${region.regionId}`}
                       inherit
                       c="dimmed"

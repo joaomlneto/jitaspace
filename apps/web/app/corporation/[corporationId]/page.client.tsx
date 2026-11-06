@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -79,6 +78,7 @@ import {
   StatCard,
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
+import { HoverPrefetchLink } from "~/components/Link";
 import { CorporationAllianceHistoryTimeline } from "~/components/Timeline";
 import {
   toWarRow,
@@ -336,7 +336,10 @@ function NpcDetails({
           <StatCard
             label="Loyalty point store"
             value={
-              <Anchor component={Link} href={lpStorePath(corporationName)}>
+              <Anchor
+                component={HoverPrefetchLink}
+                href={lpStorePath(corporationName)}
+              >
                 {formatInteger(npc.lpOffers)} offers
               </Anchor>
             }
@@ -558,7 +561,7 @@ export default function CorporationPage({
             {EXTERNAL_LINKS.map((link) => (
               <Button
                 key={link.label}
-                component={Link}
+                component="a"
                 href={`${link.href}${corporationId}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -572,7 +575,7 @@ export default function CorporationPage({
             ))}
             {npc && npc.lpOffers > 0 && identity.name && (
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={lpStorePath(identity.name)}
                 size="xs"
                 variant="light"

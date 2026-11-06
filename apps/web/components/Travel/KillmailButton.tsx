@@ -1,5 +1,4 @@
 import { memo } from "react";
-import Link from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -29,6 +28,7 @@ import {
 } from "@jitaspace/ui";
 
 import { WarAnchor } from "~/components/Anchor";
+import { HoverPrefetchLink } from "~/components/Link";
 import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
 interface KillButtonProps {
@@ -71,7 +71,7 @@ export const KillmailButton = memo(
     const { data } = useKillmail(killmailHash, killmailId);
     return (
       <Anchor
-        component={Link}
+        component={HoverPrefetchLink}
         href={`https://zkillboard.com/kill/${killmailId}/`}
         target="_blank"
       >

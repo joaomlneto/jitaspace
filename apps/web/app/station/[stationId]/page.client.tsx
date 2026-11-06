@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -65,6 +64,7 @@ import {
   SectionHeading,
   StatCard,
 } from "~/components/EntityPage";
+import { HoverPrefetchLink } from "~/components/Link";
 import { RaceName } from "~/components/Text";
 import { formatCountOf, formatInteger, formatPercent } from "~/lib/format";
 import { lpStorePath } from "~/lib/lpStorePath";
@@ -121,7 +121,7 @@ function OrbitValue({ orbit }: Readonly<{ orbit: StationOrbit }>) {
   switch (orbit.kind) {
     case "planet":
       return (
-        <Anchor component={Link} href={`/planet/${orbit.id}`}>
+        <Anchor component={HoverPrefetchLink} href={`/planet/${orbit.id}`}>
           {orbit.name}
         </Anchor>
       );
@@ -164,7 +164,7 @@ function serviceDetail(
     case SERVICE.loyaltyPointStore:
       return live.owner ? (
         <Anchor
-          component={Link}
+          component={HoverPrefetchLink}
           href={
             live.owner.name
               ? lpStorePath(live.owner.name)
@@ -306,7 +306,7 @@ function OverviewPanel({
               sub={
                 orbit.planet ? (
                   <Anchor
-                    component={Link}
+                    component={HoverPrefetchLink}
                     href={`/planet/${orbit.planet.id}`}
                     size="xs"
                   >
@@ -655,7 +655,7 @@ export default function StationPage({
 
           <Group gap="xs">
             <Button
-              component={Link}
+              component={HoverPrefetchLink}
               href={`https://evemaps.dotlan.net/station/${stationId}`}
               target="_blank"
               rel="noopener noreferrer"

@@ -1,7 +1,6 @@
 "use client";
 
 import { memo } from "react";
-import Link from "next/link";
 import {
   Avatar,
   Card,
@@ -15,6 +14,7 @@ import {
 import { TypeAvatar } from "@jitaspace/eve-components";
 
 import type { ComparePreset } from "./presets";
+import { HoverPrefetchLink } from "~/components/Link";
 import { COMPARE_PRESETS } from "./presets";
 
 /** The URL of a comparison of `typeIds`. */
@@ -47,7 +47,7 @@ export const CompareEmptyState = memo(
         {COMPARE_PRESETS.map((preset) => (
           <Card
             key={preset.key}
-            component={Link}
+            component={HoverPrefetchLink}
             href={compareHref(preset.typeIds)}
             onClick={() => onPresetClick?.(preset)}
             withBorder

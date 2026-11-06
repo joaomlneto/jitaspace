@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -15,6 +14,7 @@ import {
 
 import type { FileDiff, StringChange } from "~/lib/resource-history";
 import { TextDiff } from "~/components/History";
+import { HoverPrefetchLink } from "~/components/Link";
 import { LANGUAGE_LABEL } from "~/lib/resource-history";
 import { filePageHref, stringPageHref } from "~/lib/resource-pages";
 import { RowSpoiler } from "./_row-spoiler";
@@ -59,7 +59,7 @@ function PathList({
             {visible.map((p) => (
               <Anchor
                 key={p}
-                component={Link}
+                component={HoverPrefetchLink}
                 prefetch={false}
                 href={filePageHref(p)}
                 size="xs"
@@ -147,7 +147,7 @@ function StringList({
                   {stringChangePrefix(c.kind)}
                 </Text>
                 <Anchor
-                  component={Link}
+                  component={HoverPrefetchLink}
                   prefetch={false}
                   href={stringPageHref(c.id)}
                   size="xs"

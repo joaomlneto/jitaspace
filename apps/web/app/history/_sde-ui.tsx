@@ -2,8 +2,9 @@
 
 import type { TextProps } from "@mantine/core";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { Anchor, Text } from "@mantine/core";
+
+import { HoverPrefetchLink } from "~/components/Link";
 
 /**
  * Local stand-ins for the `@jitaspace/ui` anchor and value components that were
@@ -33,7 +34,13 @@ function LinkAnchor({
   return (
     // No prefetch: a timeline holds hundreds of these, and prefetching every
     // visible one would fire a request per label.
-    <Anchor component={Link} href={href} size={size} c={c} prefetch={false}>
+    <Anchor
+      component={HoverPrefetchLink}
+      href={href}
+      size={size}
+      c={c}
+      prefetch={false}
+    >
       {children}
     </Anchor>
   );
