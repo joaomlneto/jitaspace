@@ -22,7 +22,10 @@
  * Character references in the text (`&lt;`, `&gt;`, `&amp;`, `&quot;`,
  * `&apos;`, `&nbsp;` and numeric ones) are decoded after tags are parsed, as
  * in HTML: authors escape brackets to show them (`&lt;CEO&gt;` reads `<CEO>`).
- * An unknown or unterminated one stays as written.
+ * Unlike HTML, only those six names are known, in lower case; a reference
+ * needs its `;`, with at most 10 characters before it; and numeric references
+ * to C1 controls (`&#150;`) are not remapped to Windows-1252. Anything else
+ * stays as written.
  *
  * It scans characters rather than running a tag regex, because a single
  * `replace(/<[^<>]*>/g, "")` pass is not a sanitizer: `<scr<b>ipt>` loses only
@@ -121,7 +124,7 @@ function readCharacterReference(
 }
 
 function decodeReference(name: string): string | undefined {
-  const numeric = /^#(?:x([0-9a-f]+)|([0-9]+))$/i.exec(name);
+  const numeric = /^#(?:x([0-9a-f]+)|(\d+))$/i.exec(name);
   if (numeric) {
     const codePoint = numeric[1]
       ? Number.parseInt(numeric[1], 16)
