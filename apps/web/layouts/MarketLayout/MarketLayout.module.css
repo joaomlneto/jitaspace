@@ -16,9 +16,9 @@
 }
 
 /* The sidebar keeps its place while the orders scroll: sticky under the
-   header, and exactly as tall as the space between the header and the footer
-   (both fixed), so the tree scrolls on its own instead of running off under
-   the footer. */
+   header, and exactly as tall as the space below it (minus any fixed footer;
+   from md there is none, the page footer is in the flow), so the tree scrolls
+   on its own instead of running off the bottom of the screen. */
 .sidebar {
   display: none;
 }

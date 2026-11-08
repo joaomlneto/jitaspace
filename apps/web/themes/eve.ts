@@ -365,6 +365,15 @@ export const eveTheme = createTheme({
     // Cradle of War, under a 68% black overlay. Faction themes swap in their
     // own wallpaper.
     ...WALLPAPERS.cradleOfWar,
+    // The light scheme's dimmed text. Mantine's gray.6 (#868e96) is 2.8–3.2:1
+    // on the pale panels (#f1f1f1, Crimson Harvest's #f6e9e7, gray.0–2), and
+    // 2.2:1 where it sits straight on the wallpaper's light veil (page
+    // subtitles, count badges, sort icons), which is #d0d4d8 over the
+    // wallpaper's black. 37% black (#54595f) is 4.7:1 there and 5.9:1 or more
+    // on the panels, and stays lighter than gray.7. Only
+    // `--mantine-color-dimmed` changes: the `gray` scale, and the dark
+    // scheme, stay Mantine's.
+    lightDimmed: "color-mix(in srgb, var(--mantine-color-gray-6), black 37%)",
     fonts: {
       display: displayFont,
       body: displayFont,

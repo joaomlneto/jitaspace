@@ -48,7 +48,7 @@ describe("FooterWithLinks", () => {
     // requests each, ~400k requests/day in production. Almost nobody
     // navigates here, so the prefetch must stay off.
     for (const [label, href] of [
-      ["About", "/about"],
+      ["About JitaSpace", "/about"],
       ["Support", "/support"],
       ["Status", "/status"],
     ]) {

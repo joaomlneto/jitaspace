@@ -98,6 +98,7 @@ import {
   KillboardTab,
   useZkillboardStats,
 } from "~/components/Zkillboard";
+import { stripEveMarkup } from "~/lib/eveMarkup";
 import {
   formatAge,
   formatDate,
@@ -431,6 +432,8 @@ export default function CharacterPage({
     () => resolveIdentity(liveCharacter?.data, esi, record),
     [liveCharacter?.data, esi, record],
   );
+  // Titles are EVE markup; show the text, and nothing when none is left.
+  const titleText = identity.title ? stripEveMarkup(identity.title) : "";
   const stints = useMemo(
     () => toStints(history?.data ?? [], now),
     [history?.data, now],
@@ -503,10 +506,9 @@ export default function CharacterPage({
             )}
             <Text size="sm">{identity.name ?? characterId}</Text>
           </Breadcrumbs>
-          {identity.title && (
+          {titleText && (
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-              {/* Titles are EVE markup; show the text. */}
-              {identity.title.replace(/<[^<>]*>/g, "").trim()}
+              {titleText}
             </Text>
           )}
           <Group gap="sm" align="center">

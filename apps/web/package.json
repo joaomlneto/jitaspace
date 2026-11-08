@@ -51,7 +51,7 @@
     "@mantine/nprogress": "^9.3.0",
     "@mantine/spotlight": "^9.3.0",
     "@mantine/tiptap": "^9.3.0",
-    "@next/third-parties": "16.2.6",
+    "@next/third-parties": "16.4.5",
     "@react-hook/cache": "^1.1.1",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
@@ -78,7 +78,7 @@
     "jose": "^6.2.3",
     "jwt-decode": "^4.0.0",
     "mantine-datatable": "^9.2.2",
-    "next": "16.2.11",
+    "next": "16.4.5",
     "next-seo": "^6.8.0",
     "nextjs-cors": "^2.2.1",
     "nextjs-routes": "^2.2.5",
@@ -98,7 +98,7 @@
     "superjson": "2.2.6",
     "swr": "^2.4.1",
     "three": "^0.184.0",
-    "zod": "^3.25.76",
+    "zod": "^4.6.7",
     "zustand": "^5.0.13"
   },
   "devDependencies": {

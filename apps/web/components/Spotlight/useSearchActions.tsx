@@ -9,7 +9,7 @@ import type { EsiSearchCategory } from "@jitaspace/hooks";
 import { EveEntityAvatar } from "@jitaspace/eve-components";
 import { useEsiNameLookup, useEsiSearch } from "@jitaspace/hooks";
 
-import { jitaApps } from "~/config/apps";
+import { isExternalUrl, jitaApps } from "~/config/apps";
 
 // Where each ESI search category resolves to. Kept as a lookup table so the
 // click handler stays a single push instead of a large switch.
@@ -75,6 +75,11 @@ export function useSearchActions(query: string): SearchActionGroups {
 
   const navigate = useCallback(
     (url: string) => {
+      // The Discord invite leaves the site, so it gets a tab of its own.
+      if (isExternalUrl(url)) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        return;
+      }
       // router.push returns a promise we intentionally don't await.
 
       router.push(url);
@@ -99,17 +104,18 @@ export function useSearchActions(query: string): SearchActionGroups {
 
   const appActions: SpotlightActionData[] = useMemo(
     () =>
-      Object.values(jitaApps).flatMap(({ name: groupName, apps }) =>
-        Object.values(apps)
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map((app) => ({
-            id: `app/${groupName}/${app.name}`,
-            label: app.name,
-            description: app.description,
-            group: `${groupName} Apps`,
-            leftSection: <app.Icon width={32} height={32} alt="" />,
-            onClick: makeAppOnClick(app.url),
-          })),
+      Object.values(jitaApps).flatMap(
+        ({ name: groupName, searchGroup, apps }) =>
+          Object.values(apps)
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((app) => ({
+              id: `app/${groupName}/${app.name}`,
+              label: app.name,
+              description: app.description,
+              group: searchGroup ?? `${groupName} Apps`,
+              leftSection: <app.Icon width={32} height={32} alt="" />,
+              onClick: makeAppOnClick(app.url),
+            })),
       ),
     [makeAppOnClick],
   );

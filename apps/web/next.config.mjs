@@ -169,10 +169,15 @@ const config = {
   // `next start` (`/category`, and `/history/type` while it existed) they
   // respond as before. Without
   // this, a route with `generateStaticParams` silently re-renders unlisted
-  // params on every request. Next 16.3 documents this as `partialPrefetching`,
-  // so re-check it on upgrade: request a build page twice and expect
-  // `x-nextjs-cache: HIT` from `next start`.
-  experimental: { partialFallbacks: true },
+  // params on every request. Re-check it on upgrade: request a build page
+  // twice and expect `x-nextjs-cache: HIT` from `next start`.
+  //
+  // Next 16.4 removed `experimental.partialFallbacks`. The fallback-shell
+  // upgrade is now gated on top-level `partialPrefetching` (see
+  // `app-page-runtime`: `nextConfig.partialPrefetching && …`). The flag also
+  // makes `<Link prefetch={true}>` fetch only a route's static parts. No link
+  // in this app passes `prefetch={true}`: HoverPrefetchLink uses `null`/`false`.
+  partialPrefetching: true,
 
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [

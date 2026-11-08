@@ -48,6 +48,7 @@ jest.mock("@jitaspace/ui", () => ({
 }));
 
 jest.mock("~/config/apps", () => ({
+  isExternalUrl: (url: string) => /^https?:\/\//.test(url),
   jitaApps: {
     character: {
       name: "Character",
@@ -73,6 +74,18 @@ jest.mock("~/config/apps", () => ({
           name: "Market",
           description: "Browse EVE's regional markets",
           url: "/market",
+          Icon: () => null,
+        },
+      },
+    },
+    about: {
+      name: "About",
+      searchGroup: "About",
+      apps: {
+        status: {
+          name: "Status",
+          description: "Server status",
+          url: "/status",
           Icon: () => null,
         },
       },
@@ -168,6 +181,12 @@ describe("MainSpotlight", () => {
       renderSpotlight();
       expect(screen.getByTestId("group-Character Apps")).toBeInTheDocument();
       expect(screen.getByTestId("group-Universe Apps")).toBeInTheDocument();
+    });
+
+    it("uses a group's own search heading when it has one", () => {
+      renderSpotlight();
+      expect(screen.getByTestId("group-About")).toBeInTheDocument();
+      expect(screen.queryByTestId("group-About Apps")).toBeNull();
     });
 
     it("renders apps within their category group", () => {
