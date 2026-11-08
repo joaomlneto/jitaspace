@@ -22,14 +22,13 @@ import {
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type { ContractView } from "~/app/contracts/ContractList";
-import type {
-  ContractRegionFacet,
-  OpenContractsOverview,
-} from "~/app/contracts/data";
 import type * as FiltersBarModule from "~/app/contracts/FiltersBar";
 import type * as ListPageModule from "~/app/contracts/page.client";
 import type { ContractFilterUpdate } from "~/app/contracts/useContractFilters";
 import type * as FiltersHookModule from "~/app/contracts/useContractFilters";
+import type { OpenContracts } from "~/app/contracts/useOpenContracts";
+import type { ContractRegionFacet } from "~/components/Contracts/clientFilter";
+import type { ContractSummary } from "~/components/Contracts/contract";
 import type { ContractFilters } from "~/components/Contracts/filters";
 
 // The /contracts filter bar, the URL state behind it, and the page that wires
@@ -71,6 +70,12 @@ jest.mock("~/app/contracts/PublicContracts", () => {
       ),
   };
 });
+
+// The open contracts the page loads in the browser, as each test sets them.
+const mockUseOpenContracts = jest.fn<() => OpenContracts>();
+jest.mock("~/app/contracts/useOpenContracts", () => ({
+  useOpenContracts: () => mockUseOpenContracts(),
+}));
 
 // Mantine's Select scrolls the selected option into view; jsdom cannot.
 Element.prototype.scrollIntoView = () => undefined;
@@ -126,7 +131,7 @@ function renderBar(filters: Partial<ContractFilters> = {}) {
 
 const searchBox = () =>
   screen.getByRole<HTMLInputElement>("textbox", {
-    name: "Search contract titles",
+    name: "Search contracts",
   });
 
 describe("FiltersBar", () => {
@@ -321,25 +326,61 @@ describe("useContractFilters", () => {
 });
 
 describe("ContractsPage", () => {
-  const overview = (
-    overrides: Partial<OpenContractsOverview> = {},
-  ): OpenContractsOverview => ({
-    regions: REGIONS,
-    total: 13023,
+  /** An open contract in a region, of a kind. */
+  const open = (
+    contractId: number,
+    regionId: number,
+    regionName: string,
+    type: ContractSummary["type"] = "item_exchange",
+  ) => ({
+    contract: {
+      contractId,
+      type,
+      title: `Contract ${contractId}`,
+      issuerId: 1,
+      issuerCorporationId: 2,
+      forCorporation: false,
+      dateIssued: "2026-11-01T00:00:00.000Z",
+      dateExpired: "2026-11-30T00:00:00.000Z",
+      daysToComplete: null,
+      volume: null,
+      price: 1000,
+      reward: null,
+      collateral: null,
+      buyout: null,
+      start: null,
+      end: null,
+      regionId,
+      regionName,
+    },
+    search: `contract ${contractId}`,
+    typeIds: [],
+  });
+
+  const snapshot = (overrides: Partial<OpenContracts> = {}): OpenContracts => ({
+    contracts: [
+      open(1, 10000002, "The Forge"),
+      open(2, 10000002, "The Forge"),
+      open(3, 10000002, "The Forge", "courier"),
+      open(4, 10000043, "Domain", "courier"),
+    ],
+    isPending: false,
+    isError: false,
     snapshotAt: "2026-11-04T10:30:00.000Z",
     isBackfilling: false,
     ...overrides,
   });
 
   const renderPage = (
-    value: OpenContractsOverview,
+    value: OpenContracts,
     searchParams = "",
     wrapper?: ({ children }: { children: ReactNode }) => ReactNode,
   ) => {
+    mockUseOpenContracts.mockReturnValue(value);
     const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
     render(
       <MantineProvider>
-        <ContractsPage overview={value} />
+        <ContractsPage />
       </MantineProvider>,
       {
         wrapper:
@@ -361,10 +402,10 @@ describe("ContractsPage", () => {
     >;
 
   it("summarises the open contracts and how current they are", () => {
-    renderPage(overview());
+    renderPage(snapshot());
     expect(
       screen.getByText(
-        `${(13023).toLocaleString()} open public contracts across 2 regions, and your own.`,
+        "4 open public contracts across 2 regions, and your own.",
       ),
     ).toBeInTheDocument();
     expect(
@@ -372,9 +413,19 @@ describe("ContractsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("describes the listing in general until it has loaded", () => {
+    renderPage(snapshot({ contracts: [], isPending: true, snapshotAt: null }));
+    expect(
+      screen.getByText("Open public contracts across New Eden, and your own."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Public contracts as of/),
+    ).not.toBeInTheDocument();
+  });
+
   it("explains a snapshot still being backfilled", () => {
     renderPage(
-      overview({ snapshotAt: "2024-03-01T00:00:00.000Z", isBackfilling: true }),
+      snapshot({ snapshotAt: "2024-03-01T00:00:00.000Z", isBackfilling: true }),
     );
     expect(
       screen.getByText("Public contracts as of 2024-03-01"),
@@ -384,15 +435,34 @@ describe("ContractsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("says nothing of a snapshot when there is none", () => {
-    renderPage(overview({ snapshotAt: null, regions: [], total: 0 }));
+  it("counts each region's contracts under the other filters", async () => {
+    renderPage(snapshot());
+    fireEvent.click(screen.getByRole("combobox", { name: "Region" }));
     expect(
-      screen.queryByText(/Public contracts as of/),
-    ).not.toBeInTheDocument();
+      await screen.findByRole("option", { name: "The Forge (3)" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Domain (1)", hidden: true }),
+    ).toBeInTheDocument();
+  });
+
+  it("narrows the region counts to the contract type picked", async () => {
+    renderPage(snapshot(), "?type=courier&region=10000043");
+    fireEvent.click(screen.getByRole("combobox", { name: "Region" }));
+    // The region filter itself does not narrow its own counts.
+    expect(
+      await screen.findByRole("option", {
+        name: "The Forge (1)",
+        hidden: true,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Domain (1)", hidden: true }),
+    ).toBeInTheDocument();
   });
 
   it("passes the URL's filters and view to the lists, and keeps them in it", async () => {
-    const { onUrlUpdate } = renderPage(overview(), "?type=auction&view=cards");
+    const { onUrlUpdate } = renderPage(snapshot(), "?type=auction&view=cards");
     expect(mine()).toMatchObject({ type: "auction", view: "cards" });
     const urlBecomes = (queryString: string) =>
       waitFor(() =>
