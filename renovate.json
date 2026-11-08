@@ -25,6 +25,21 @@
       "enabled": true,
       "groupName": "@jitaspace/db-builds",
       "schedule": ["at any time"]
+    },
+    {
+      "description": "pnpm-workspace.yaml overrides @opentelemetry/api to ~1.9.1 because Sentry v10 runs on OpenTelemetry SDK v2 (getsentry/sentry-javascript#25717). Sentry v11 needs api 1.10 + SDK v3, and the override also rewrites peer ranges, so `pnpm peers check` stays green on a v11 PR whose tracing is broken. Remind the reviewer on the PR itself.",
+      "matchPackageNames": ["@sentry/**"],
+      "matchUpdateTypes": ["major"],
+      "prBodyNotes": [
+        "> [!WARNING]\n> **Check the `@opentelemetry/api` override before merging.** `pnpm-workspace.yaml` pins `@opentelemetry/api` to `~1.9.1` for Sentry v10 (OpenTelemetry SDK v2, see getsentry/sentry-javascript#25717). If this release needs api 1.10 / SDK v3, the override silently forces 1.9.1 and also rewrites peer ranges, so `pnpm peers check` will NOT flag it. If `@trigger.dev/core` still pins api 1.9.1 / otel core 2.x, hold this PR: there is no single API version both can share. Otherwise drop the override in this PR and confirm there is exactly one copy: `find node_modules -path '*@opentelemetry/api/package.json' -not -path '*/dist/compiled/*'`."
+      ]
+    },
+    {
+      "description": "The other half of the @opentelemetry/api override's removal condition: it can go only once trigger.dev is off OpenTelemetry SDK v2 too.",
+      "matchPackageNames": ["trigger.dev", "@trigger.dev/**"],
+      "prBodyNotes": [
+        "> [!NOTE]\n> `pnpm-workspace.yaml` overrides `@opentelemetry/api` to `~1.9.1`, partly because `@trigger.dev/core` pins api 1.9.1 and otel core 2.x. If this release moves to api 1.10 / OpenTelemetry SDK v3 and Sentry is already on v11, the override can be removed. Check with `npm view @trigger.dev/core@<new version> dependencies`."
+      ]
     }
   ],
   "updateInternalDeps": true
