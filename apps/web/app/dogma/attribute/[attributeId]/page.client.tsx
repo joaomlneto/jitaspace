@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   WindowAttributesIcon,
   WindowFittingIcon,
@@ -23,13 +23,7 @@ import {
   WindowItemsIcon,
 } from "@jitaspace/eve-icons";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CategoryAnchor,
-  DogmaAttributeValue,
-  DogmaEffectAnchor,
-  EveIconAvatar,
-  GroupAnchor,
-} from "@jitaspace/ui";
+import { DogmaAttributeValue, EveIconAvatar } from "@jitaspace/ui";
 
 import type {
   DogmaAttributeLabel,
@@ -39,8 +33,19 @@ import type {
   DogmaAttributeTypeRow,
   DogmaAttributeTypesPayload,
 } from "~/lib/dogmaAttributeTypes";
+import type { EffectCategories } from "~/lib/dogmaEffectCategory";
+import {
+  CategoryAnchor,
+  DogmaEffectAnchor,
+  GroupAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
-import { AttributeLink, ModifierSentence } from "~/components/Dogma";
+import {
+  AttributeLink,
+  EffectCategoryHeading,
+  ModifierSentence,
+} from "~/components/Dogma";
 import {
   HeroCard,
   HeroStat,
@@ -51,6 +56,10 @@ import {
 } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import { unpackTypeRows } from "~/lib/dogmaAttributeTypes";
+import {
+  effectCategoryLabelById,
+  groupByEffectCategory,
+} from "~/lib/dogmaEffectCategory";
 import { groupDogmaModifiers } from "~/lib/dogmaModifiers";
 
 const BLUEPRINT_CATEGORY_ID = 9;
@@ -65,6 +74,8 @@ interface AttributeRef {
 export interface AttributeModifierRow extends NamedDogmaModifier {
   effectId: number;
   effectName: string | null;
+  /** A key of `PageProps.effectCategories`. */
+  effectCategoryId: number | null;
   /** How many items carry the modifier's effect. */
   carrierCount: number;
 }
@@ -110,7 +121,14 @@ export interface PageProps {
   /** Modifiers that read this attribute to change another. */
   modifies: AttributeModifierRow[];
   /** Effects that point at this attribute, and as what. */
-  statOf: { effectId: number; effectName: string | null; role: string }[];
+  statOf: {
+    effectId: number;
+    effectName: string | null;
+    effectCategoryId: number | null;
+    role: string;
+  }[];
+  /** Every effect category, keyed by id; rows carry only the id. */
+  effectCategories: EffectCategories;
 }
 
 const plural = (count: number, one: string, many: string) =>
@@ -164,6 +182,7 @@ const renderEffect = (row: AttributeModifierRow) => (
 
 function modifierColumns(
   attributes: Map<number, DogmaAttributeLabel>,
+  effectCategories: EffectCategories,
 ): DataTableColumn<AttributeModifierRow>[] {
   return [
     {
@@ -172,6 +191,16 @@ function modifierColumns(
       accessor: "effectName",
       sortable: true,
       cell: renderEffect,
+    },
+    {
+      // Not "Category": the item list below has one, for the items' category.
+      id: "effectCategory",
+      header: "Effect category",
+      accessor: (row) =>
+        effectCategoryLabelById(effectCategories, row.effectCategoryId),
+      sortable: true,
+      filter: { type: "multi-select" },
+      width: 180,
     },
     {
       id: "modifier",
@@ -196,14 +225,19 @@ function ModifierTableSection({
   intro,
   rows,
   attributes,
+  effectCategories,
 }: Readonly<{
   icon: ReactNode;
   title: string;
   intro: string;
   rows: AttributeModifierRow[];
   attributes: Map<number, DogmaAttributeLabel>;
+  effectCategories: EffectCategories;
 }>) {
-  const columns = useMemo(() => modifierColumns(attributes), [attributes]);
+  const columns = useMemo(
+    () => modifierColumns(attributes, effectCategories),
+    [attributes, effectCategories],
+  );
   if (rows.length === 0) return null;
   return (
     <Stack gap="sm">
@@ -415,7 +449,9 @@ function AttributeHero(props: Readonly<PageProps>) {
       }
     >
       <Stack gap={4}>
-        <Title order={2}>{title}</Title>
+        <Title order={1} size="h2">
+          {title}
+        </Title>
         {displayName && name && displayName !== name && (
           <Code w="fit-content">{name}</Code>
         )}
@@ -536,27 +572,52 @@ function AttributeDescriptions({
   );
 }
 
-function StatOfSection({ statOf }: Readonly<{ statOf: PageProps["statOf"] }>) {
+function StatOfSection({
+  statOf,
+  effectCategories,
+}: Readonly<{
+  statOf: PageProps["statOf"];
+  effectCategories: EffectCategories;
+}>) {
+  const groups = useMemo(
+    () =>
+      groupByEffectCategory(
+        statOf,
+        (entry) => entry.effectCategoryId,
+        effectCategories,
+      ),
+    [statOf, effectCategories],
+  );
   if (statOf.length === 0) return null;
   return (
     <Stack gap="sm">
       <SectionHeading icon={<WindowFittingIcon size={18} alt="" />}>
         Used as a stat by effects
       </SectionHeading>
-      <Paper withBorder radius="md" p="sm">
-        <Stack gap={6}>
-          {statOf.map((entry) => (
-            <Group key={`${entry.effectId}-${entry.role}`} gap="xs">
-              <Badge size="sm" variant="light" color="gray">
-                {entry.role}
-              </Badge>
-              <DogmaEffectAnchor effectId={entry.effectId}>
-                {entry.effectName ?? `Effect ${entry.effectId}`}
-              </DogmaEffectAnchor>
-            </Group>
-          ))}
-        </Stack>
-      </Paper>
+      {groups.map((group) => (
+        <Paper
+          key={group.category?.effectCategoryId ?? "other"}
+          withBorder
+          radius="md"
+          p="sm"
+        >
+          <Stack gap="xs">
+            <EffectCategoryHeading category={group.category} />
+            <Stack gap={6}>
+              {group.items.map((entry) => (
+                <Group key={`${entry.effectId}-${entry.role}`} gap="xs">
+                  <Badge size="sm" variant="light" color="gray">
+                    {entry.role}
+                  </Badge>
+                  <DogmaEffectAnchor effectId={entry.effectId}>
+                    {entry.effectName ?? `Effect ${entry.effectId}`}
+                  </DogmaEffectAnchor>
+                </Group>
+              ))}
+            </Stack>
+          </Stack>
+        </Paper>
+      ))}
     </Stack>
   );
 }
@@ -652,6 +713,7 @@ export default function DogmaAttributePage(props: Readonly<PageProps>) {
           intro="Every effect modifier that changes this attribute, and what it changes it with."
           rows={props.modifiedBy}
           attributes={attributes}
+          effectCategories={props.effectCategories}
         />
         <ModifierTableSection
           icon={<WindowAttributesIcon size={18} alt="" />}
@@ -659,8 +721,12 @@ export default function DogmaAttributePage(props: Readonly<PageProps>) {
           intro="Effect modifiers that read this attribute's value to change another attribute."
           rows={props.modifies}
           attributes={attributes}
+          effectCategories={props.effectCategories}
         />
-        <StatOfSection statOf={props.statOf} />
+        <StatOfSection
+          statOf={props.statOf}
+          effectCategories={props.effectCategories}
+        />
         <TypesSection
           attributeId={props.attributeId}
           itemCount={props.itemCount}

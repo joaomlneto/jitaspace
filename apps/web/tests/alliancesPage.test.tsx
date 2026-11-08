@@ -42,10 +42,16 @@ jest.mock("@jitaspace/eve-icons", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
+  AllianceAvatar: () => <span data-testid="alliance-avatar" />,
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
+  ),
   AllianceAnchor: ({ children }: { children?: React.ReactNode }) => (
     <span data-testid="alliance-anchor">{children}</span>
   ),
-  AllianceAvatar: () => <span data-testid="alliance-avatar" />,
   CorporationAnchor: ({ children }: { children?: React.ReactNode }) => (
     <span data-testid="corporation-anchor">{children}</span>
   ),

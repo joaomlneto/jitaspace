@@ -11,12 +11,13 @@ import {
   Text,
   VisuallyHidden,
 } from "@mantine/core";
-import { IconArrowsDiff } from "@tabler/icons-react";
 
-import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
+import { WindowCompareToolIcon } from "@jitaspace/eve-icons";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import { ISKAmount } from "@jitaspace/ui";
 
+import { TypeAnchor } from "~/components/Anchor";
 import { SHIP_CATEGORY_ID } from "./catalog";
 import classes from "./Compare.module.css";
 import { compareHref } from "./CompareEmptyState";
@@ -113,7 +114,15 @@ export function ItemVariations({
           <Button
             size="xs"
             variant="light"
-            leftSection={<IconArrowsDiff size={14} />}
+            leftSection={
+              // A full-colour icon ignores the disabled text colour, so
+              // dim it to match the greyed-out label.
+              <WindowCompareToolIcon
+                size={14}
+                alt=""
+                style={{ opacity: 0.5 }}
+              />
+            }
             disabled
           >
             Compare {compared.length} selected
@@ -124,7 +133,7 @@ export function ItemVariations({
             href={compareHref(compared)}
             size="xs"
             variant="light"
-            leftSection={<IconArrowsDiff size={14} />}
+            leftSection={<WindowCompareToolIcon size={14} alt="" />}
           >
             Compare {compared.length} selected
           </Button>

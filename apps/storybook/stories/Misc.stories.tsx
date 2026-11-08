@@ -1,13 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Group, Stack } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { fn } from "storybook/test";
 
-import {
-  CategoryBreadcrumbs,
-  GroupBreadcrumbs,
-  LoginWithEveOnlineButton,
-  MailLabelColorSwatch,
-} from "@jitaspace/ui";
+import { LoginWithEveOnlineButton, MailLabelColorSwatch } from "@jitaspace/ui";
 
 const meta = {
   title: "Components/Miscellaneous",
@@ -23,21 +18,6 @@ type Story = StoryObj<typeof meta>;
 
 /** CCP's own SSO button art, in the variant matching the colour scheme. */
 export const LoginWithEveOnline: Story = {};
-
-export const Breadcrumbs: Story = {
-  render: () => (
-    <Stack>
-      <CategoryBreadcrumbs categoryId={6} categoryName="Ship" />
-      <GroupBreadcrumbs
-        categoryId={6}
-        categoryName="Ship"
-        groupId={25}
-        groupName="Frigate"
-      />
-      <GroupBreadcrumbs categoryId={6} groupId={25} />
-    </Stack>
-  ),
-};
 
 export const MailLabelColors: Story = {
   render: () => (

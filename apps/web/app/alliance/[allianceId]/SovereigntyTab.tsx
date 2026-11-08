@@ -14,27 +14,24 @@ import {
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import { useGetSovereigntyCampaigns } from "@jitaspace/esi-client";
-import {
-  AllianceName,
-  ConstellationAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  SolarSystemName,
-} from "@jitaspace/eve-components";
+import { AllianceName, SolarSystemName } from "@jitaspace/eve-components";
 import {
   CategoryOngoingConflictsIcon,
   CategorySolarSystemIcon,
   ControlRegionLayoutIcon,
   WindowSovereigntyIcon,
 } from "@jitaspace/eve-icons";
-import {
-  AllianceAnchor,
-  CorporationAnchor,
-  SolarSystemSecurityStatusBadge,
-} from "@jitaspace/ui";
+import { SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
 
 import type { SovereigntySummary } from "./sovereignty";
 import type { AllianceSovereigntySystem } from "./types";
+import {
+  AllianceAnchor,
+  ConstellationAnchor,
+  CorporationAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { SectionHeading, StatCard } from "~/components/EntityPage";
 import {
@@ -284,10 +281,12 @@ function Campaigns({
                       <Stack gap={2}>
                         <Progress.Root size="md">
                           <Progress.Section
+                            aria-label="Defender"
                             value={defender * 100}
                             color="teal"
                           />
                           <Progress.Section
+                            aria-label="Attackers"
                             value={attackers * 100}
                             color="red"
                           />
@@ -460,6 +459,7 @@ export function SovereigntyTab({
                   </Table.Td>
                   <Table.Td>
                     <Progress
+                      aria-label="Share of held systems"
                       value={(region.systems / summary.systems) * 100}
                       size="sm"
                     />

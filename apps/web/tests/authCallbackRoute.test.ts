@@ -4,19 +4,25 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
+import type * as AuthModule from "@jitaspace/auth";
+
 const mockCompleteLoginFlow =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockSealLoginResult = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
-jest.mock("@jitaspace/auth", () => ({
-  completeLoginFlow: (...args: unknown[]) => mockCompleteLoginFlow(...args),
-  sealLoginResult: (...args: unknown[]) => mockSealLoginResult(...args),
-  getOAuthFlowCookieName: (secure: boolean) =>
-    secure ? "__Host-eve.oauth.flow" : "eve.oauth.flow",
-  getOAuthResultCookieName: (secure: boolean) =>
-    secure ? "__Host-eve.oauth.result" : "eve.oauth.result",
-  OAUTH_RESULT_MAX_AGE_SECONDS: 60,
-}));
+jest.mock("@jitaspace/auth", () => {
+  const actual = jest.requireActual<typeof AuthModule>("@jitaspace/auth");
+  return {
+    completeLoginFlow: (...args: unknown[]) => mockCompleteLoginFlow(...args),
+    sealLoginResult: (...args: unknown[]) => mockSealLoginResult(...args),
+    getOAuthFlowCookieName: actual.getOAuthFlowCookieName,
+    getOAuthResultCookieName: actual.getOAuthResultCookieName,
+    getCookieChunkName: actual.getCookieChunkName,
+    joinCookieChunks: actual.joinCookieChunks,
+    splitCookieValue: actual.splitCookieValue,
+    OAUTH_RESULT_MAX_AGE_SECONDS: 60,
+  };
+});
 
 jest.mock("~/env", () => ({
   env: {
@@ -94,8 +100,43 @@ describe("GET /api/auth/callback/eveonline", () => {
     );
     const cookie = res.headers
       .getSetCookie()
-      .find((c) => c.startsWith("__Host-eve.oauth.result="));
-    expect(cookie).toContain("__Host-eve.oauth.result=SEALED-RESULT");
+      .find((c) => c.startsWith("__Host-eve.oauth.result.0="));
+    expect(cookie).toContain("__Host-eve.oauth.result.0=SEALED-RESULT");
+  });
+
+  it("splits a result too large for one cookie, and expires stale chunks", async () => {
+    // A 42-scope login seals to ~4.5 kB: over the browser's 4096-byte limit
+    // for a single cookie, which it drops without a trace.
+    const sealed = "S".repeat(4500);
+    mockSealLoginResult.mockResolvedValue(sealed);
+    mockCompleteLoginFlow.mockResolvedValue({
+      accessToken: "AT",
+      encryptedRefreshToken: "ERT",
+      returnTo: "/",
+    });
+    const req = request("code=the-code&state=the-state");
+    req.cookies.set("__Host-eve.oauth.result.2", "STALE");
+
+    const res = await loadGET()(req);
+
+    const setCookies = res.headers.getSetCookie();
+    const valueOf = (name: string) =>
+      setCookies
+        .find((c) => c.startsWith(`${name}=`))
+        ?.split(";")[0]
+        ?.slice(name.length + 1);
+    const chunk0 = valueOf("__Host-eve.oauth.result.0") ?? "";
+    const chunk1 = valueOf("__Host-eve.oauth.result.1") ?? "";
+    expect(chunk0 + chunk1).toBe(sealed);
+    for (const c of setCookies.filter((c) =>
+      c.startsWith("__Host-eve.oauth.result."),
+    )) {
+      expect(c.split(";")[0]?.length).toBeLessThanOrEqual(4096);
+    }
+    const stale = setCookies.find((c) =>
+      c.startsWith("__Host-eve.oauth.result.2="),
+    );
+    expect(stale).toMatch(/Max-Age=0/i);
   });
 
   it("captures login_callback_succeeded and flushes via after() for a valid token", async () => {

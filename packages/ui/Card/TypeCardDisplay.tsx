@@ -1,5 +1,6 @@
 "use client";
 
+import type { CardProps } from "@mantine/core";
 import type { ReactNode } from "react";
 import { memo } from "react";
 import { Badge, Group, Text } from "@mantine/core";
@@ -40,6 +41,8 @@ export interface TypeCardDisplayProps {
   /** The image server's `render` (ships, structures) rather than the icon. */
   imageVariation?: "icon" | "render";
   headerRightSection?: ReactNode;
+  /** Passed to the card frame, e.g. `withBorder={false}` to embed it. */
+  cardProps?: Omit<CardProps, "children">;
 }
 
 const quantity = (value: number | undefined, unit: string) =>
@@ -55,9 +58,11 @@ export const TypeCardDisplay = memo(
     variant = "full",
     imageVariation = "icon",
     headerRightSection,
+    cardProps,
   }: TypeCardDisplayProps) => {
     return (
       <EntityCard
+        {...cardProps}
         variant={variant}
         loading={!type}
         avatar={

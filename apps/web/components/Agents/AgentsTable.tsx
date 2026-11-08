@@ -5,18 +5,17 @@ import { Group } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import {
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
-import {
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-} from "@jitaspace/ui";
+import { CharacterAvatar, CorporationAvatar } from "@jitaspace/ui";
 
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  StationAnchor,
+} from "~/components/Anchor";
 import { StationAvatar } from "~/components/Avatar";
 import { DataTable } from "~/components/DataTable";
 

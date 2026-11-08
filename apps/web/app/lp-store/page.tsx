@@ -34,8 +34,8 @@ export default async function Page() {
       name: true,
       faction: { select: { factionId: true, name: true } },
     },
-    // The corporations that have at least one LP store offer.
-    where: { LoyaltyStoreOffer: { some: {} } },
+    // The corporations that have at least one LP store offer still on sale.
+    where: { LoyaltyStoreOffer: { some: { isDeleted: false } } },
   });
 
   return <LPStorePage groups={groupCorporationsByFaction(corporations)} />;

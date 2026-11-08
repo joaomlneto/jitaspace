@@ -4,14 +4,13 @@ import type { ReactNode } from "react";
 import { Fragment } from "react";
 import { Code, Text, Tooltip } from "@mantine/core";
 
-import { TypeAnchor } from "@jitaspace/eve-components";
+import type { DogmaModifier, DogmaModifierLine } from "~/lib/dogmaModifiers";
 import {
   DogmaAttributeAnchor,
   DogmaEffectAnchor,
   GroupAnchor,
-} from "@jitaspace/ui";
-
-import type { DogmaModifier, DogmaModifierLine } from "~/lib/dogmaModifiers";
+  TypeAnchor,
+} from "~/components/Anchor";
 import {
   DOGMA_DOMAIN_HINTS,
   dogmaDomainNoun,

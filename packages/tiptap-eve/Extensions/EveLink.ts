@@ -88,7 +88,7 @@ export const renderEveHref = (href: string) => {
 
   if (href.startsWith(CONTRACT_PREFIX)) {
     const contractId = href.slice(CONTRACT_PREFIX.length).split("//")[1];
-    return `/contract/${contractId}`;
+    return `/contracts/${contractId}`;
   }
 
   return href;

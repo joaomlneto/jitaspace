@@ -1,5 +1,6 @@
 "use client";
 
+import type { CardProps } from "@mantine/core";
 import type { ReactNode } from "react";
 import { memo } from "react";
 import { Badge, Flex, Skeleton, Stack, Text } from "@mantine/core";
@@ -39,6 +40,8 @@ export interface AllianceCardDisplayProps {
   alliance?: AllianceCardData;
   variant?: EntityCardVariant;
   headerRightSection?: ReactNode;
+  /** Passed to the card frame, e.g. `withBorder={false}` to embed it. */
+  cardProps?: Omit<CardProps, "children">;
 }
 
 /** An alliance: ticker, executor, founding, and its member corporations. */
@@ -48,6 +51,7 @@ export const AllianceCardDisplay = memo(
     alliance,
     variant = "full",
     headerRightSection,
+    cardProps,
   }: AllianceCardDisplayProps) => {
     const members = alliance?.memberCorporations;
     const memberCount = alliance?.memberCorporationCount ?? members?.length;
@@ -63,6 +67,7 @@ export const AllianceCardDisplay = memo(
 
     return (
       <EntityCard
+        {...cardProps}
         variant={variant}
         loading={!alliance}
         avatar={

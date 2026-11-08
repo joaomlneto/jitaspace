@@ -21,24 +21,16 @@ import {
   IconBrandGithub,
   IconBuildingStore,
   IconCoffee,
-  IconCoins,
-  IconGift,
   IconHeartHandshake,
   IconMessageReport,
   IconShoppingBag,
 } from "@tabler/icons-react";
 
-import {
-  CharacterAnchor,
-  CharacterName,
-  CorporationName,
-} from "@jitaspace/eve-components";
-import {
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-} from "@jitaspace/ui";
+import { CharacterName, CorporationName } from "@jitaspace/eve-components";
+import { CategoryIskIcon, WindowGiftIcon } from "@jitaspace/eve-icons";
+import { CharacterAvatar, CorporationAvatar } from "@jitaspace/ui";
 
+import { CharacterAnchor, CorporationAnchor } from "~/components/Anchor";
 import { env } from "~/env";
 
 /**
@@ -263,7 +255,7 @@ export function SupportContent() {
           <Card withBorder padding="md">
             <Group wrap="nowrap" align="flex-start" gap="md">
               <ThemeIcon variant="light" size="xl">
-                <IconCoins size={24} />
+                <CategoryIskIcon size={24} color="currentColor" alt="" />
               </ThemeIcon>
               <Stack gap="xs">
                 <Text size="sm">
@@ -299,7 +291,7 @@ export function SupportContent() {
                 </Group>
                 <Group gap="xs" wrap="nowrap" align="flex-start">
                   <ThemeIcon variant="transparent" color="gray" size="sm">
-                    <IconGift size={16} />
+                    <WindowGiftIcon size={16} alt="" />
                   </ThemeIcon>
                   <Text size="sm" c="dimmed">
                     ISK sent to the corporation goes straight back to the

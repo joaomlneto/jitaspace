@@ -9,13 +9,14 @@ import { render, screen, waitFor } from "@testing-library/react";
 // ---------------------------------------------------------------------------
 // The category page is an async server component: it reads params (a Promise),
 // loads a category from prisma (wrapped in a "use cache" helper), renders its
-// groups, and calls notFound() on error. Its `generateMetadata` twin runs the
+// groups, and calls notFound() for a category that does not exist. A failed
+// read throws instead: the route is cached whole (ISR), so a 404 it rendered
+// for a database error would be stored. Its `generateMetadata` twin runs the
 // same read to build the title and the canonical. Both are exercised here,
 // because the two guard the id differently on purpose — see the `0` cases.
 // ---------------------------------------------------------------------------
 
-const mockFindUniqueOrThrow =
-  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockNotFound = jest.fn((..._args: unknown[]) => {
   throw new Error("NEXT_NOT_FOUND");
 });
@@ -23,7 +24,7 @@ const mockNotFound = jest.fn((..._args: unknown[]) => {
 jest.mock("~/lib/db", () => ({
   prisma: {
     category: {
-      findUniqueOrThrow: (...args: unknown[]) => mockFindUniqueOrThrow(...args),
+      findUnique: (...args: unknown[]) => mockFindUnique(...args),
     },
   },
 }));
@@ -38,12 +39,17 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 
-// The shared __mocks__/@jitaspace/ui stub exports neither of the two
-// components this page imports, so an undefined element type would crash the
-// render before any assertion ran.
-jest.mock("@jitaspace/ui", () => ({
+// Stub the breadcrumbs and the group links this page renders, so the assertions
+// see plain markers instead of the real components.
+jest.mock("~/components/Breadcrumbs", () => ({
   CategoryBreadcrumbs: ({ categoryId }: { categoryId: number }) => (
     <div data-testid="breadcrumbs">{`Breadcrumbs ${categoryId}`}</div>
+  ),
+}));
+
+jest.mock("~/components/Anchor", () => ({
+  ...jest.requireActual<Record<string, unknown>>(
+    "../__mocks__/components/Anchor",
   ),
   GroupAnchor: ({ children }: { children?: ReactNode }) => (
     <a href="#">{children}</a>
@@ -85,12 +91,12 @@ async function metadataFor(categoryId: string) {
 
 describe("Category Page", () => {
   beforeEach(() => {
-    mockFindUniqueOrThrow.mockReset();
+    mockFindUnique.mockReset();
     mockNotFound.mockClear();
   });
 
   it("renders the category name, breadcrumbs and alphabetically-sorted groups", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       categoryId: 7,
       name: "Module",
       groups: [
@@ -107,7 +113,7 @@ describe("Category Page", () => {
       "Breadcrumbs 7",
     );
     expect(screen.getByText("Groups")).toBeInTheDocument();
-    expect(mockFindUniqueOrThrow).toHaveBeenCalledWith(
+    expect(mockFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { categoryId: 7 } }),
     );
 
@@ -127,21 +133,47 @@ describe("Category Page", () => {
       await expect(resolveServerTree(categoryId)).rejects.toThrow(
         "NEXT_NOT_FOUND",
       );
-      expect(mockFindUniqueOrThrow).not.toHaveBeenCalled();
+      expect(mockFindUnique).not.toHaveBeenCalled();
     },
   );
 
-  it("calls notFound() when the category lookup throws", async () => {
-    mockFindUniqueOrThrow.mockRejectedValue(new Error("db error"));
+  it("calls notFound() for a category that does not exist", async () => {
+    mockFindUnique.mockResolvedValue(null);
 
     await expect(resolveServerTree("7")).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  // The route is cached whole, so a 404 rendered for a failed read would be
+  // stored and served after the database recovers. The error must propagate.
+  it("lets a failed lookup throw instead of rendering a 404", async () => {
+    mockFindUnique.mockRejectedValue(new Error("db error"));
+
+    await expect(resolveServerTree("7")).rejects.toThrow("db error");
+    expect(mockNotFound).not.toHaveBeenCalled();
+  });
+
+  // `0` is a real category, so the build's placeholder must be an id the
+  // parser refuses: it prerenders as a 404 without reaching the database,
+  // which CI's build cannot.
+  it("lists one placeholder param that 404s before any query", async () => {
+    const { generateStaticParams } =
+      require("~/app/category/[categoryId]/page") as {
+        generateStaticParams: () => { categoryId: string }[];
+      };
+    const params = generateStaticParams();
+    expect(params).toEqual([{ categoryId: "-1" }]);
+
+    await expect(resolveServerTree(params[0]!.categoryId)).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(mockFindUnique).not.toHaveBeenCalled();
   });
 
   // /category/0 is "#System", a real non-deleted row the sitemap advertises.
   // The page and its metadata must both accept it: the metadata used to reject
   // 0, so the URL rendered with the bare site title and no canonical.
   it("still serves category 0, which the sitemap advertises", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       categoryId: 0,
       name: "Category Zero",
       groups: [],
@@ -152,13 +184,13 @@ describe("Category Page", () => {
     await waitFor(() =>
       expect(screen.getByText("Category Zero")).toBeInTheDocument(),
     );
-    expect(mockFindUniqueOrThrow).toHaveBeenCalledWith(
+    expect(mockFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { categoryId: 0 } }),
     );
   });
 
   it("titles and canonicalises category 0 like any other category", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       categoryId: 0,
       name: "#System",
       groups: [],
@@ -173,7 +205,7 @@ describe("Category Page", () => {
   });
 
   it("points the canonical at the parsed id, relative to metadataBase", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       categoryId: 7,
       name: "Module",
       groups: [],
@@ -191,13 +223,20 @@ describe("Category Page", () => {
     "emits no metadata for the non-canonical id %p",
     async (categoryId) => {
       expect(await metadataFor(categoryId)).toEqual({});
-      expect(mockFindUniqueOrThrow).not.toHaveBeenCalled();
+      expect(mockFindUnique).not.toHaveBeenCalled();
     },
   );
 
-  it("emits no metadata when the lookup throws, so a failed read is never canonicalised", async () => {
-    mockFindUniqueOrThrow.mockRejectedValue(new Error("db error"));
+  it("emits no metadata for a category that does not exist", async () => {
+    mockFindUnique.mockResolvedValue(null);
 
     expect(await metadataFor("7")).toEqual({});
+  });
+
+  // Generic metadata for a failed read would be stored with the page.
+  it("lets a failed lookup throw instead of emitting generic metadata", async () => {
+    mockFindUnique.mockRejectedValue(new Error("db error"));
+
+    await expect(metadataFor("7")).rejects.toThrow("db error");
   });
 });

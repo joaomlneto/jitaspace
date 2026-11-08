@@ -1,6 +1,7 @@
 "use client";
 
 import type { AvatarProps } from "@mantine/core";
+import type { ReactNode } from "react";
 import { memo, useState } from "react";
 import useSWRImmutable from "swr/immutable";
 
@@ -10,6 +11,8 @@ export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
   typeId?: string | number;
   /** Pin a variation to skip the lookup entirely. */
   variation?: string;
+  /** What to show when the type has no image at all (see the ui TypeAvatar). */
+  fallback?: ReactNode;
 };
 
 /** The image server lists a type's available variations at `/types/<id>`. */

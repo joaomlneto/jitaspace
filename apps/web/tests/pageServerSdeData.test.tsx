@@ -27,6 +27,8 @@ const dogmaEffectModifierFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const dogmaAttributeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const dogmaEffectCategoryFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -42,6 +44,9 @@ jest.mock("~/lib/db", () => ({
     dogmaEffect: { findMany: (a?: unknown) => dogmaEffectFindMany(a) },
     dogmaEffectModifier: {
       findMany: (a?: unknown) => dogmaEffectModifierFindMany(a),
+    },
+    dogmaEffectCategory: {
+      findMany: (a?: unknown) => dogmaEffectCategoryFindMany(a),
     },
     dogmaAttribute: { findMany: (a?: unknown) => dogmaAttributeFindMany(a) },
   },
@@ -108,6 +113,7 @@ beforeEach(() => {
   metaGroupFindMany.mockReset().mockResolvedValue([]);
   typeListEntryFindMany.mockReset().mockResolvedValue([]);
   dogmaEffectFindMany.mockReset().mockResolvedValue([]);
+  dogmaEffectCategoryFindMany.mockReset().mockResolvedValue([]);
   dogmaEffectModifierFindMany.mockReset().mockResolvedValue([]);
   dogmaAttributeFindMany.mockReset().mockResolvedValue([]);
   globalThis.fetch = jest.fn(() =>
@@ -264,6 +270,7 @@ describe("type route dogma metadata", () => {
       unitSymbols: { 113: "HP" },
       categoryNames: { 7: "Armor" },
       effects: {},
+      effectCategories: {},
     });
   });
 
@@ -332,6 +339,7 @@ describe("type route dogma metadata", () => {
           displayName: "Low power",
           description: "Requires a low power slot",
           customDescription: "Ignored: CCP wrote one.",
+          effectCategoryId: 0,
         },
       },
       {
@@ -362,6 +370,7 @@ describe("type route dogma metadata", () => {
       11: {
         name: "Low power",
         description: { text: "Requires a low power slot", source: "ccp" },
+        categoryId: 0,
       },
       5189: {
         name: "trackingSpeedBonusEffectLasers",
@@ -371,6 +380,32 @@ describe("type route dogma metadata", () => {
         },
       },
       16: { name: "online", description: undefined },
+    });
+  });
+
+  it("sends the effect categories to group the effects by", async () => {
+    dogmaEffectCategoryFindMany.mockResolvedValue([
+      {
+        effectCategoryId: 4,
+        name: "dgmEffOnline",
+        customName: "Online",
+        customDescription: "Applies while a module is online.",
+      },
+    ]);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "587",
+    });
+
+    expect(
+      (props.dogmaMeta as { effectCategories: unknown }).effectCategories,
+    ).toEqual({
+      4: {
+        effectCategoryId: 4,
+        name: "dgmEffOnline",
+        customName: "Online",
+        customDescription: "Applies while a module is online.",
+      },
     });
   });
 
@@ -386,6 +421,7 @@ describe("type route dogma metadata", () => {
       unitSymbols: {},
       categoryNames: {},
       effects: {},
+      effectCategories: {},
     });
   });
 });

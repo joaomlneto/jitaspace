@@ -20,15 +20,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconBuildingFortress,
-  IconExternalLink,
-  IconFileText,
-  IconHistory,
-  IconListCheck,
-  IconShieldHalf,
-  IconUsersGroup,
-} from "@tabler/icons-react";
 import { parseAsBoolean, parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -37,15 +28,7 @@ import {
   useGetFwSystems,
   useGetFwWars,
 } from "@jitaspace/esi-client";
-import {
-  ConstellationAnchor,
-  FactionAnchor,
-  FactionName,
-  RegionAnchor,
-  SolarSystemAnchor,
-  SolarSystemName,
-  TypeAnchor,
-} from "@jitaspace/eve-components";
+import { FactionName, SolarSystemName } from "@jitaspace/eve-components";
 import {
   CategoryAgentMissionIcon,
   CategoryCombatSitesIcon,
@@ -53,25 +36,29 @@ import {
   CategoryEpicArcIcon,
   CategoryFactionalWarfareIcon,
   CategoryMapFwIcon,
+  CategorySocialIcon,
   CategorySolarSystemIcon,
+  CategoryStructureManagementIcon,
   ControlCargoInventoryIcon,
   ControlRegionLayoutIcon,
+  SystemArrowRotateLeftIcon,
+  SystemOpenWindowIcon,
   SystemShipTreeIcon,
+  SystemSkillPlanIcon,
+  WindowDirectoryServicesIcon,
   WindowInfoIcon,
+  WindowNoteIcon,
+  WindowRestrictionIcon,
   WindowStandingsIcon,
 } from "@jitaspace/eve-icons";
 import { useEsiNameLookup } from "@jitaspace/hooks";
 import { SHIP_TREE_FACTIONS } from "@jitaspace/ship-tree/factions";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAnchor,
   AllianceAvatar,
-  CategoryAnchor,
   EveIconAvatar,
   FactionAvatar,
   formatSecurityStatus,
-  GroupAnchor,
-  RaceAnchor,
   SolarSystemSecurityStatusBadge,
   TypeAvatar,
 } from "@jitaspace/ui";
@@ -88,6 +75,17 @@ import type {
   FactionTables,
 } from "./types";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
+import {
+  AllianceAnchor,
+  CategoryAnchor,
+  ConstellationAnchor,
+  FactionAnchor,
+  GroupAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import {
   CorporationLink,
@@ -1220,7 +1218,9 @@ export default function FactionPage({
             Factions
           </Anchor>
           <Group gap="sm" align="center">
-            <Title order={2}>{faction.name}</Title>
+            <Title order={1} size="h2">
+              {faction.name}
+            </Title>
             {hasWarfare && (
               <Badge color="red" variant="light">
                 Faction Warfare
@@ -1274,7 +1274,9 @@ export default function FactionPage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               zKillboard
             </Button>
@@ -1301,7 +1303,11 @@ export default function FactionPage({
         >
           <Tabs.List>
             {tab("overview", <WindowInfoIcon size={16} alt="" />, "Overview")}
-            {tab("description", <IconFileText size={16} />, "Description")}
+            {tab(
+              "description",
+              <WindowNoteIcon size={16} alt="" />,
+              "Description",
+            )}
             {tab(
               "territory",
               <ControlRegionLayoutIcon size={16} color="currentColor" alt="" />,
@@ -1342,7 +1348,7 @@ export default function FactionPage({
             )}
             {tab(
               "contraband",
-              <IconShieldHalf size={16} />,
+              <WindowRestrictionIcon size={16} alt="" />,
               "Contraband",
               counts.contraband,
             )}
@@ -1362,7 +1368,15 @@ export default function FactionPage({
               "Standings",
               counts.standingRestrictions,
             )}
-            {tab("history", <IconHistory size={16} />, "History")}
+            {tab(
+              "history",
+              <SystemArrowRotateLeftIcon
+                size={16}
+                color="currentColor"
+                alt=""
+              />,
+              "History",
+            )}
           </Tabs.List>
 
           {/* Overview */}
@@ -1509,7 +1523,9 @@ export default function FactionPage({
           {visibleTabs.has("standings") && (
             <Tabs.Panel value="standings" pt="lg">
               <Stack gap="sm">
-                <SectionHeading icon={<IconBuildingFortress size={18} />}>
+                <SectionHeading
+                  icon={<WindowDirectoryServicesIcon size={18} alt="" />}
+                >
                   Station services
                 </SectionHeading>
                 <Text size="sm" c="dimmed">
@@ -1720,7 +1736,9 @@ function OverviewPanel({
 
       {faction.races.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconUsersGroup size={18} />}>
+          <SectionHeading
+            icon={<CategorySocialIcon size={18} color="currentColor" alt="" />}
+          >
             Races
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, xs: 2, sm: 4 }} spacing="sm">
@@ -1745,7 +1763,15 @@ function OverviewPanel({
 
       {faction.starbaseCharters.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconBuildingFortress size={18} />}>
+          <SectionHeading
+            icon={
+              <CategoryStructureManagementIcon
+                size={18}
+                color="currentColor"
+                alt=""
+              />
+            }
+          >
             Starbase charters
           </SectionHeading>
           <Text size="sm" c="dimmed">
@@ -1778,7 +1804,9 @@ function OverviewPanel({
 
       {faction.skillPlans.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconListCheck size={18} />}>
+          <SectionHeading
+            icon={<SystemSkillPlanIcon size={18} color="currentColor" alt="" />}
+          >
             Skill plans
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">

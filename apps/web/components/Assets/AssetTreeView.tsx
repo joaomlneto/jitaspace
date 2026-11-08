@@ -11,17 +11,15 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
-import { IconChevronRight, IconMapPin } from "@tabler/icons-react";
+import { IconChevronRight } from "@tabler/icons-react";
 
 import type { CharacterAsset } from "@jitaspace/hooks";
-import {
-  EveEntityName,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
+import { EveEntityName, TypeAvatar } from "@jitaspace/eve-components";
+import { WindowLocationsIcon } from "@jitaspace/eve-icons";
 import { ISKAmount } from "@jitaspace/ui";
 
 import type { AssetLocationSummary, AssetTree } from "./assetTree";
+import { TypeAnchor } from "~/components/Anchor";
 import { groupBySection, isFlatSectioning } from "./assetTree";
 import classes from "./AssetTreeView.module.css";
 
@@ -228,7 +226,7 @@ export const AssetLocationPanel = memo(function AssetLocationPanel({
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
           <ExpandChevron open={open} />
           <ThemeIcon variant="light" size="lg" radius="md">
-            <IconMapPin size={18} />
+            <WindowLocationsIcon size={18} alt="" />
           </ThemeIcon>
           <Box style={{ minWidth: 0 }}>
             <EveEntityName

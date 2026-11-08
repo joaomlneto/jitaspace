@@ -6,7 +6,6 @@ import { memo } from "react";
 import { Group } from "@mantine/core";
 
 import type { EntityKind, EntityRef } from "./types";
-import { EveEntityAnchorDisplay } from "../Anchor";
 import {
   AllianceAvatar,
   CharacterAvatar,
@@ -15,7 +14,7 @@ import {
   TypeAvatar,
 } from "../Avatar";
 import { EveEntityNameDisplay } from "../Text";
-import { entityHref } from "./types";
+import { EntityAnchor } from "./EntityLinks";
 
 export type EntityLinkProps = TextProps & {
   kind: EntityKind;
@@ -78,12 +77,7 @@ export const EntityLink = memo(
         {withAvatar && (
           <EntityAvatar kind={kind} id={entity.id} size={avatarSize} />
         )}
-        <EveEntityAnchorDisplay
-          href={entityHref(kind, entity.id)}
-          size={size}
-          miw={0}
-          truncate
-        >
+        <EntityAnchor kind={kind} id={entity.id} size={size} miw={0} truncate>
           <EveEntityNameDisplay
             name={entity.name}
             loading={entity.name === undefined}
@@ -94,7 +88,7 @@ export const EntityLink = memo(
             truncate
             {...textProps}
           />
-        </EveEntityAnchorDisplay>
+        </EntityAnchor>
       </Group>
     );
   },
@@ -112,8 +106,9 @@ export const EntityCardTitle = memo(
   ({ kind, entity, variant, ...textProps }: EntityCardTitleProps) => {
     const size = variant === "full" ? "lg" : "sm";
     return (
-      <EveEntityAnchorDisplay
-        href={entityHref(kind, entity.id)}
+      <EntityAnchor
+        kind={kind}
+        id={entity.id}
         size={size}
         fw={500}
         truncate
@@ -128,7 +123,7 @@ export const EntityCardTitle = memo(
           truncate
           {...textProps}
         />
-      </EveEntityAnchorDisplay>
+      </EntityAnchor>
     );
   },
 );

@@ -19,10 +19,8 @@ import {
 import { usePagination } from "@mantine/hooks";
 
 import {
-  EveEntityAnchor,
   EveEntityName,
   EveEntitySelect,
-  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
@@ -34,6 +32,7 @@ import {
 } from "@jitaspace/hooks";
 import { ISKAmount } from "@jitaspace/ui";
 
+import { EveEntityAnchor, TypeAnchor } from "~/components/Anchor";
 import { AssetStat } from "~/components/Assets/AssetStat";
 import { ScopeGuard } from "~/components/ScopeGuard";
 

@@ -7,6 +7,7 @@ import { ModalsProvider } from "@mantine/modals";
 
 import type { AppTheme } from "~/lib/preferences";
 import { cssVariablesResolver } from "~/app/mantine-provider";
+import { WebEntityLinksProvider } from "~/components/Link/EntityLinks";
 import { APP_THEME_OPTIONS } from "~/lib/preferences";
 import { resolveAppTheme } from "~/themes";
 import { isDefaultThemeSeasonOver } from "~/themes/season";
@@ -47,22 +48,25 @@ const withMantine: Decorator = (Story, context) => {
       cssVariablesResolver={cssVariablesResolver}
     >
       <ModalsProvider>
-        {context.viewMode === "docs" ? (
-          // Docs pages sit on Storybook's own light canvas, which the dark
-          // scheme's text would vanish into; give each example the app's body.
-          <Box
-            p="md"
-            bg="var(--mantine-color-body)"
-            c="var(--mantine-color-text)"
-          >
-            <Story />
-          </Box>
-        ) : (
-          <>
-            {wallpaper && <Wallpaper />}
-            <Story />
-          </>
-        )}
+        {/* The web app's routes, so the cards link as they do on the site. */}
+        <WebEntityLinksProvider>
+          {context.viewMode === "docs" ? (
+            // Docs pages sit on Storybook's own light canvas, which the dark
+            // scheme's text would vanish into; give each example the app's body.
+            <Box
+              p="md"
+              bg="var(--mantine-color-body)"
+              c="var(--mantine-color-text)"
+            >
+              <Story />
+            </Box>
+          ) : (
+            <>
+              {wallpaper && <Wallpaper />}
+              <Story />
+            </>
+          )}
+        </WebEntityLinksProvider>
       </ModalsProvider>
     </MantineProvider>
   );

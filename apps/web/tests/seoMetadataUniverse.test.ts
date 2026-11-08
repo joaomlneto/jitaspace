@@ -50,12 +50,18 @@ const mockPlanetFindUnique =
 jest.mock("~/lib/db", () => ({
   prisma: {
     region: { findUnique: (...a: unknown[]) => mockRegionFindUnique(...a) },
+    // The region page also lists its constellations.
+    faction: { findUnique: () => Promise.resolve(null) },
     constellation: {
       findUnique: (...a: unknown[]) => mockConstellationFindUnique(...a),
+      findMany: () => Promise.resolve([]),
     },
     solarSystem: {
       findUnique: (...a: unknown[]) => mockSolarSystemFindUnique(...a),
+      // The constellation page lists its systems and their stargates.
+      findMany: () => Promise.resolve([]),
     },
+    stargate: { findMany: () => Promise.resolve([]) },
     star: { findUnique: (...a: unknown[]) => mockStarFindUnique(...a) },
     planet: { findUnique: (...a: unknown[]) => mockPlanetFindUnique(...a) },
   },
@@ -79,7 +85,8 @@ describe("region/[regionId] generateMetadata", () => {
     mockRegionFindUnique.mockResolvedValue({
       name: "The Forge",
       description: "Caldari space.",
-      _count: { constellations: 20 },
+      factionId: null,
+      wormholeClassId: null,
     });
     const { generateMetadata } = await import("~/app/region/[regionId]/page");
     const result = await generateMetadata({
@@ -93,7 +100,8 @@ describe("region/[regionId] generateMetadata", () => {
     mockRegionFindUnique.mockResolvedValue({
       name: "The Forge",
       description: null,
-      _count: { constellations: 20 },
+      factionId: null,
+      wormholeClassId: null,
     });
     const { generateMetadata } = await import("~/app/region/[regionId]/page");
     const result = await generateMetadata({
@@ -124,12 +132,12 @@ describe("region/[regionId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockRegionFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/region/[regionId]/page");
-    expect(
-      await generateMetadata({ params: rp({ regionId: "10000002" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ regionId: "10000002" }) }),
+    ).rejects.toThrow("db");
   });
 });
 
@@ -146,8 +154,10 @@ describe("constellation/[constellationId] generateMetadata", () => {
   it("returns constellation name", async () => {
     mockConstellationFindUnique.mockResolvedValue({
       name: "Kimotoro",
+      regionId: 10000002,
       region: { name: "The Forge" },
-      _count: { solarSystems: 8 },
+      factionId: null,
+      wormholeClassId: null,
     });
     const { generateMetadata } =
       await import("~/app/constellation/[constellationId]/page");
@@ -174,13 +184,13 @@ describe("constellation/[constellationId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockConstellationFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } =
       await import("~/app/constellation/[constellationId]/page");
-    expect(
-      await generateMetadata({ params: rp({ constellationId: "20000001" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ constellationId: "20000001" }) }),
+    ).rejects.toThrow("db");
   });
 });
 
@@ -318,12 +328,14 @@ describe("planet/[planetId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  // The route is cached whole, so generic metadata for a failed read would be
+  // stored with the page. The error must propagate.
+  it("throws when Prisma throws, as the route is cached whole", async () => {
     mockPlanetFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/planet/[planetId]/page");
-    expect(
-      await generateMetadata({ params: rp({ planetId: "40009081" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ planetId: "40009081" }) }),
+    ).rejects.toThrow("db");
   });
 });
 

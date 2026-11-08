@@ -1,9 +1,11 @@
 "use client";
 
+import type { CardProps } from "@mantine/core";
 import type { ReactNode } from "react";
 import { memo } from "react";
 import { Anchor, Badge, Group, Text } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+
+import { SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 
 import type { EntityCardVariant, EntityRef } from "./types";
 import { TypeAvatar } from "../Avatar";
@@ -40,6 +42,8 @@ export interface KillmailCardDisplayProps {
   killmail?: KillmailCardData;
   variant?: EntityCardVariant;
   headerRightSection?: ReactNode;
+  /** Passed to the card frame, e.g. `withBorder={false}` to embed it. */
+  cardProps?: Omit<CardProps, "children">;
 }
 
 const KILLBOARDS = [
@@ -57,12 +61,14 @@ export const KillmailCardDisplay = memo(
     killmail,
     variant = "full",
     headerRightSection,
+    cardProps,
   }: KillmailCardDisplayProps) => {
     const victim = killmail?.victim;
     const system = killmail?.solarSystem;
 
     return (
       <EntityCard
+        {...cardProps}
         variant={variant}
         loading={!killmail}
         avatar={
@@ -188,7 +194,7 @@ export const KillmailCardDisplay = memo(
                 size="xs"
               >
                 <Group gap={4} wrap="nowrap">
-                  <IconExternalLink size={14} />
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
                   <Text size="xs" span>
                     {name}
                   </Text>

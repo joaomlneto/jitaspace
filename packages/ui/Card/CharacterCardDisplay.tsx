@@ -1,5 +1,6 @@
 "use client";
 
+import type { CardProps } from "@mantine/core";
 import type { ReactNode } from "react";
 import { memo } from "react";
 import { Text } from "@mantine/core";
@@ -31,6 +32,10 @@ export interface CharacterCardDisplayProps {
   character?: CharacterCardData;
   variant?: EntityCardVariant;
   headerRightSection?: ReactNode;
+  /** Passed to the card frame, e.g. `withBorder={false}` to embed it. */
+  cardProps?: Omit<CardProps, "children">;
+  /** Shown beside the name, e.g. a badge the app adds. */
+  badges?: ReactNode;
 }
 
 /** A character, with their corporation, alliance and militia. */
@@ -40,9 +45,12 @@ export const CharacterCardDisplay = memo(
     character,
     variant = "full",
     headerRightSection,
+    cardProps,
+    badges,
   }: CharacterCardDisplayProps) => {
     return (
       <EntityCard
+        {...cardProps}
         variant={variant}
         loading={!character}
         avatar={
@@ -79,6 +87,7 @@ export const CharacterCardDisplay = memo(
             )}
           </>
         }
+        badges={badges}
         headerRightSection={headerRightSection}
         stats={[
           {

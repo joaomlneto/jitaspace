@@ -24,6 +24,7 @@ export const APP_THEME_OPTIONS = [
   { value: "default", label: "Default" },
   { value: "minimal", label: "Minimal" },
   { value: "eve", label: "EVE" },
+  { value: "eve_compact", label: "EVE (compact)" },
   { value: "amarr", label: "Amarr" },
   { value: "caldari", label: "Caldari" },
   { value: "gallente", label: "Gallente" },
@@ -33,6 +34,7 @@ export const APP_THEME_OPTIONS = [
   { value: "carbon", label: "Carbon" },
   { value: "photon", label: "Photon" },
   { value: "whpd", label: "WHPD" },
+  { value: "excel", label: "Excel" },
 ] as const;
 
 /** The engines every data table can render with (`~/components/DataTable`). */

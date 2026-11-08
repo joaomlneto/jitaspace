@@ -50,6 +50,12 @@ export interface MultiEsiQueryEnvelope {
   errors: EsiSubjectError[];
   /** The subject ids that were queried, in result order. */
   subjectIds: number[];
+  /**
+   * The subjects whose query has not settled yet. `isPending` is true while
+   * any of them is, so a consumer showing only some subjects checks these
+   * instead, and is not held up by a slow subject it is not showing.
+   */
+  pendingSubjectIds: number[];
   /** Refetch every subject's query. */
   refetch: () => void;
 }
@@ -88,18 +94,28 @@ export type SubjectQueryOptions<TSelected> = UseQueryOptions<
  * over nothing, so it cannot go stale; each subject's data is already tagged
  * by that query's own `select`.
  */
+/**
+ * Whether a subject's first load is still outstanding. A subject that failed
+ * is retried with react-query's state reset to pending, as if it had never
+ * loaded (on every window focus, by default), so `isPending` alone would put
+ * the whole envelope back to loading each time; its error count survives.
+ */
+const isFirstLoadPending = (result: UseQueryResult<unknown, unknown>) =>
+  result.isPending && result.errorUpdateCount === 0;
+
 function combineSubjectResults<TSelected>(
   results: UseQueryResult<TSelected, ResponseErrorConfig<Error>>[],
 ) {
   return {
     selected: results.map((result) => result.data),
     isLoading: results.some((result) => result.isLoading),
-    isSettling: results.some((result) => result.isPending),
+    isSettling: results.some(isFirstLoadPending),
     isError: results.some((result) => result.isError),
     // Index-aligned with the queries, and so with the subjects that built them.
     // Attribution happens below, where the subjects are in scope, rather than
     // in a closure here that could drift from the results it describes.
     errorByIndex: results.map((result) => result.error ?? null),
+    pendingByIndex: results.map(isFirstLoadPending),
     refetch: () => results.forEach((result) => void result.refetch()),
   };
 }
@@ -108,7 +124,22 @@ export interface MultiEsiQueryConfig {
   kind: EsiSubjectKind;
   scopes?: ESIScope[];
   roles?: CharactersCharacterIdRolesGetRolesEnum[];
+  /**
+   * Restrict the fan-out to these subjects. Omit it for every subject the
+   * logged-in characters can reach; ids none of them can reach are ignored
+   * rather than queried, since there is no token to authorise them.
+   */
+  subjectIds?: readonly number[];
 }
+
+/**
+ * What a caller of a hook built with `defineMultiEsiQuery` or
+ * `defineMultiEsiValueQuery` may pass when calling it: the same subject filter
+ * as {@link MultiEsiQueryConfig.subjectIds}, chosen per call instead of per
+ * hook. Ids no logged-in character can reach are left out of the envelope's
+ * `subjectIds`; an empty list queries none.
+ */
+export type MultiEsiQueryOptions = Pick<MultiEsiQueryConfig, "subjectIds">;
 
 /**
  * Run one query per reachable subject and assemble the shared envelope.
@@ -121,7 +152,17 @@ export function useEsiSubjectQueries<TSelected>(
   config: MultiEsiQueryConfig,
   buildQuery: (subject: EsiSubject) => SubjectQueryOptions<TSelected>,
 ): MultiEsiQueryEnvelope & { selected: (TSelected | undefined)[] } {
-  const subjects = useEsiSubjects(config);
+  const reachableSubjects = useEsiSubjects(config);
+  // Keyed on the ids' contents rather than the array, so a caller passing a
+  // fresh array literal each render does not rebuild every query.
+  const subjectIdsKey = config.subjectIds?.join(",");
+  const subjects = useMemo(() => {
+    if (subjectIdsKey === undefined) return reachableSubjects;
+    const wanted = new Set(
+      subjectIdsKey === "" ? [] : subjectIdsKey.split(",").map(Number),
+    );
+    return reachableSubjects.filter((subject) => wanted.has(subject.id));
+  }, [reachableSubjects, subjectIdsKey]);
   const hasHydrated = useAuthStoreHasHydrated();
 
   // Memoised so each `select` keeps its identity between renders: React Query
@@ -136,14 +177,24 @@ export function useEsiSubjectQueries<TSelected>(
   // React Query types `combine`'s parameter as a conditional
   // (`unknown extends TSelected ? unknown : TSelected`) which cannot resolve
   // against a generic that is still open here, so the result is re-asserted.
-  const { errorByIndex, isSettling, selected, ...combined } = useQueries({
-    queries,
-    combine: combineSubjectResults,
-  }) as ReturnType<typeof combineSubjectResults<TSelected>>;
+  const { errorByIndex, pendingByIndex, isSettling, selected, ...combined } =
+    useQueries({
+      queries,
+      combine: combineSubjectResults,
+    }) as ReturnType<typeof combineSubjectResults<TSelected>>;
 
   const subjectIds = useMemo(
     () => subjects.map((subject) => subject.id),
     [subjects],
+  );
+
+  // Index-aligned with the subjects for the same reason as `errors` below.
+  const pendingSubjectIds = useMemo(
+    () =>
+      subjects
+        .filter((_subject, index) => pendingByIndex[index])
+        .map((subject) => subject.id),
+    [subjects, pendingByIndex],
   );
 
   // Walk the subjects rather than the errors: the two are index-aligned (the
@@ -163,6 +214,7 @@ export function useEsiSubjectQueries<TSelected>(
     selected,
     errors,
     subjectIds,
+    pendingSubjectIds,
     // Before rehydration there are no subjects yet, so every query reports
     // settled-and-empty. Treat that as pending so consumers do not flash an
     // empty state on first paint.

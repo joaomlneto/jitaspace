@@ -6,7 +6,8 @@ import { mergeConfig } from "vite";
  * The stories render in the web app's own Mantine themes, so `apps/web`'s
  * `~/` alias has to resolve here too: `themes/`, `app/mantine-provider.tsx`
  * (for its CSS variables resolver) and the `lib/` helpers they import all use
- * it. No other web-app code is bundled.
+ * it. So does `components/Link/EntityLinks.tsx`, which gives the cards the web
+ * app's routes. No other web-app code is bundled.
  */
 const webApp = fileURLToPath(new URL("../../web/", import.meta.url));
 

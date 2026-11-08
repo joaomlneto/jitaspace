@@ -8,6 +8,7 @@ import type { DogmaAttributeLabel } from "~/components/Dogma";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, toDescription } from "~/lib/metadata";
+import { readEffectCategories } from "~/lib/readEffectCategories";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { SDE_CACHE_TAG } from "~/lib/sdeCache";
 import DogmaAttributePage from "./page.client";
@@ -56,6 +57,7 @@ const MODIFIER_SELECT = {
     select: {
       name: true,
       displayName: true,
+      effectCategoryId: true,
       _count: { select: { TypeEffect: { where: { isDeleted: false } } } },
     },
   },
@@ -65,11 +67,12 @@ const MODIFIER_SELECT = {
  * Everything the page shows except its item list (served by
  * `/api/dogma/attribute/[attributeId]/types`): the attribute, its unit and
  * category, the effects that change it or read it, and the effects that use
- * it as a stat. Returns null for an attribute that does not exist.
+ * it as a stat, with the effect categories to group them by. Returns null for
+ * an attribute that does not exist.
  *
- * Not `cacheSdeRead()`: `customDescription` is written by our own script, not
- * by the SDE ingest, so the entry keeps a daily `cacheLife` and only adds the
- * SDE tag, as `app/lp-store/page.tsx` does.
+ * Not `cacheSdeRead()`: `customDescription` and the effect categories' names
+ * are written by our own scripts, not by the SDE ingest, so the entry keeps a
+ * daily `cacheLife` and only adds the SDE tag, as `app/lp-store/page.tsx` does.
  */
 async function getAttributeData(
   attributeId: number,
@@ -113,50 +116,53 @@ async function getAttributeData(
   });
   if (!attribute) return null;
 
-  const [modifiedBy, modifies, statEffects, items] = await Promise.all([
-    prisma.dogmaEffectModifier.findMany({
-      select: MODIFIER_SELECT,
-      where: {
-        modifiedAttributeId: attributeId,
-        isDeleted: false,
-        effect: { isDeleted: false },
-      },
-    }),
-    prisma.dogmaEffectModifier.findMany({
-      select: MODIFIER_SELECT,
-      where: {
-        modifyingAttributeId: attributeId,
-        isDeleted: false,
-        effect: { isDeleted: false },
-      },
-    }),
-    prisma.dogmaEffect.findMany({
-      select: {
-        effectId: true,
-        name: true,
-        displayName: true,
-        dischargeAttributeId: true,
-        durationAttributeId: true,
-        rangeAttributeId: true,
-        falloffAttributeId: true,
-        trackingSpeedAttributeId: true,
-        resistanceAttributeId: true,
-        npcUsageChanceAttributeId: true,
-        npcActivationChanceAttributeId: true,
-        fittingUsageChanceAttributeId: true,
-      },
-      where: {
-        isDeleted: false,
-        OR: STAT_ROLE_KEYS.map((key) => ({ [key]: attributeId })),
-      },
-    }),
-    prisma.typeAttribute.aggregate({
-      where: { attributeId, isDeleted: false, type: { isDeleted: false } },
-      _count: true,
-      _min: { value: true },
-      _max: { value: true },
-    }),
-  ]);
+  const [modifiedBy, modifies, statEffects, items, effectCategories] =
+    await Promise.all([
+      prisma.dogmaEffectModifier.findMany({
+        select: MODIFIER_SELECT,
+        where: {
+          modifiedAttributeId: attributeId,
+          isDeleted: false,
+          effect: { isDeleted: false },
+        },
+      }),
+      prisma.dogmaEffectModifier.findMany({
+        select: MODIFIER_SELECT,
+        where: {
+          modifyingAttributeId: attributeId,
+          isDeleted: false,
+          effect: { isDeleted: false },
+        },
+      }),
+      prisma.dogmaEffect.findMany({
+        select: {
+          effectId: true,
+          name: true,
+          displayName: true,
+          effectCategoryId: true,
+          dischargeAttributeId: true,
+          durationAttributeId: true,
+          rangeAttributeId: true,
+          falloffAttributeId: true,
+          trackingSpeedAttributeId: true,
+          resistanceAttributeId: true,
+          npcUsageChanceAttributeId: true,
+          npcActivationChanceAttributeId: true,
+          fittingUsageChanceAttributeId: true,
+        },
+        where: {
+          isDeleted: false,
+          OR: STAT_ROLE_KEYS.map((key) => ({ [key]: attributeId })),
+        },
+      }),
+      prisma.typeAttribute.aggregate({
+        where: { attributeId, isDeleted: false, type: { isDeleted: false } },
+        _count: true,
+        _min: { value: true },
+        _max: { value: true },
+      }),
+      readEffectCategories(),
+    ]);
 
   // Every attribute the page names: the related ones, and both sides of each
   // modifier.
@@ -202,6 +208,7 @@ async function getAttributeData(
   const toRow = (m: (typeof modifiedBy)[number]): AttributeModifierRow => ({
     effectId: m.effectId,
     effectName: effectName(m.effect),
+    effectCategoryId: m.effect.effectCategoryId,
     carrierCount: m.effect._count.TypeEffect,
     modifierIndex: m.modifierIndex,
     func: m.func,
@@ -280,6 +287,7 @@ async function getAttributeData(
     ),
     modifiedBy: modifiedBy.map(toRow),
     modifies: modifies.map(toRow),
+    effectCategories,
     statOf: statEffects.flatMap((effect) =>
       STAT_ROLE_KEYS.flatMap((key) =>
         effect[key] === attributeId
@@ -287,6 +295,7 @@ async function getAttributeData(
               {
                 effectId: effect.effectId,
                 effectName: effectName(effect),
+                effectCategoryId: effect.effectCategoryId,
                 role: STAT_ROLES[key],
               },
             ]

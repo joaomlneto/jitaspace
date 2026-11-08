@@ -1,9 +1,11 @@
 "use client";
 
+import type { CardProps } from "@mantine/core";
 import type { ReactNode } from "react";
 import { memo } from "react";
 import { Anchor, Badge, Group, Skeleton, Stack, Text } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+
+import { SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 
 import type { CorporationPalette } from "../CorporationPalette";
 import type { EntityCardVariant, EntityRef } from "./types";
@@ -47,6 +49,8 @@ export interface CorporationCardDisplayProps {
   corporation?: CorporationCardData;
   variant?: EntityCardVariant;
   headerRightSection?: ReactNode;
+  /** Passed to the card frame, e.g. `withBorder={false}` to embed it. */
+  cardProps?: Omit<CardProps, "children">;
 }
 
 /** Only links that leave for an http(s) page; ESI's `url` is free text. */
@@ -70,6 +74,7 @@ export const CorporationCardDisplay = memo(
     corporation,
     variant = "full",
     headerRightSection,
+    cardProps,
   }: CorporationCardDisplayProps) => {
     const slots = getCorporationPaletteSlots(corporation?.palette);
     const colors = slots.map(({ color }) => color);
@@ -101,6 +106,7 @@ export const CorporationCardDisplay = memo(
 
     return (
       <EntityCard
+        {...cardProps}
         variant={variant}
         loading={!corporation}
         style={paletteVars}
@@ -187,7 +193,11 @@ export const CorporationCardDisplay = memo(
                   size="xs"
                 >
                   <Group gap={4} wrap="nowrap">
-                    <IconExternalLink size={14} />
+                    <SystemOpenWindowIcon
+                      size={14}
+                      color="currentColor"
+                      alt=""
+                    />
                     <Text size="xs" truncate>
                       {homepage}
                     </Text>

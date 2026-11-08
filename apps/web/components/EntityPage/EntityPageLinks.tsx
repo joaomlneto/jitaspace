@@ -3,15 +3,16 @@
 import { Group, Text } from "@mantine/core";
 
 import {
-  ConstellationAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-} from "@jitaspace/eve-components";
-import {
-  CorporationAnchor,
   CorporationAvatar,
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
+
+import {
+  ConstellationAnchor,
+  CorporationAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+} from "~/components/Anchor";
 
 /** A solar system and where it is, as the entity pages show one. */
 export interface EntityLocation {

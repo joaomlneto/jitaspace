@@ -5,16 +5,39 @@ import { describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen, within } from "@testing-library/react";
 
+import type { EntityKind } from "../../Card/types";
 import { AllianceCardDisplay } from "../../Card/AllianceCardDisplay";
 import { CharacterCardDisplay } from "../../Card/CharacterCardDisplay";
 import { CorporationCardDisplay } from "../../Card/CorporationCardDisplay";
+import { EntityLinksProvider } from "../../Card/EntityLinks";
 import { KillmailCardDisplay } from "../../Card/KillmailCardDisplay";
 import { TypeCardDisplay } from "../../Card/TypeCardDisplay";
-import { entityHref } from "../../Card/types";
 import { WarCardDisplay, warStatus } from "../../Card/WarCardDisplay";
 
+/** The routes the web app uses, so the assertions read naturally. */
+const ROUTES: Record<EntityKind, string> = {
+  alliance: "alliance",
+  category: "category",
+  character: "character",
+  corporation: "corporation",
+  faction: "faction",
+  group: "group",
+  killmail: "kill",
+  solar_system: "system",
+  type: "type",
+  war: "war",
+};
+
 const renderWithMantine = (ui: ReactElement) =>
-  render(<MantineProvider>{ui}</MantineProvider>);
+  render(
+    <MantineProvider>
+      <EntityLinksProvider
+        links={{ href: (kind, id) => `/${ROUTES[kind]}/${id}` }}
+      >
+        {ui}
+      </EntityLinksProvider>
+    </MantineProvider>,
+  );
 
 const linkTo = (name: string) =>
   screen.getByText(name).closest("a")?.getAttribute("href");
@@ -26,20 +49,43 @@ const statRow = (label: string) => {
   return within(row);
 };
 
-describe("entityHref", () => {
-  it.each([
-    ["alliance", "/alliance/1"],
-    ["category", "/category/1"],
-    ["character", "/character/1"],
-    ["corporation", "/corporation/1"],
-    ["faction", "/faction/1"],
-    ["group", "/group/1"],
-    ["killmail", "/kill/1"],
-    ["solar_system", "/system/1"],
-    ["type", "/type/1"],
-    ["war", "/war/1"],
-  ] as const)("links a %s to %s", (kind, href) => {
-    expect(entityHref(kind, 1)).toBe(href);
+describe("EntityLinksProvider", () => {
+  it("links nothing without a provider: names render as plain text", () => {
+    render(
+      <MantineProvider>
+        <CharacterCardDisplay characterId={1} character={{ name: "Chribba" }} />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("Chribba").closest("a")).toBeNull();
+  });
+
+  it("renders the app's link component, and no link where it has no page", () => {
+    const Link = ({ href, ...props }: { href: string }) => (
+      <a data-link="app" href={href} {...props} />
+    );
+    render(
+      <MantineProvider>
+        <EntityLinksProvider
+          links={{
+            href: (kind, id) =>
+              kind === "character" ? `/pilot/${id}` : undefined,
+            component: Link,
+          }}
+        >
+          <CharacterCardDisplay
+            characterId={1}
+            character={{
+              name: "Chribba",
+              corporation: { id: 2, name: "Corp" },
+            }}
+          />
+        </EntityLinksProvider>
+      </MantineProvider>,
+    );
+    const anchor = screen.getByText("Chribba").closest("a");
+    expect(anchor).toHaveAttribute("href", "/pilot/1");
+    expect(anchor).toHaveAttribute("data-link", "app");
+    expect(screen.getByText("Corp").closest("a")).toBeNull();
   });
 });
 

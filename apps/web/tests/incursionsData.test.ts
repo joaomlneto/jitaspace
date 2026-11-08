@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type * as HistoryRoute from "~/app/api/incursions/history/route";
+import type * as LayoutsRoute from "~/app/api/incursions/layouts/route";
 import type * as IncursionsDataModule from "~/app/incursions/data";
 
 // The /incursions reads, against a stubbed Prisma: each model's findMany
@@ -67,11 +68,13 @@ const OLD = incursion({
 });
 
 const incursionFindMany = findMany((where) => {
-  if (where?.endedAt === null) return [ACTIVE];
-  const endedAt = where?.endedAt as Row | undefined;
+  // The layouts read every incursion.
+  if (where === undefined) return [ACTIVE, RECENTLY_ENDED, OLD];
+  if (where.endedAt === null) return [ACTIVE];
+  const endedAt = where.endedAt as Row | undefined;
   if (endedAt && "gte" in endedAt) return [RECENTLY_ENDED];
   if (endedAt && "not" in endedAt) return [RECENTLY_ENDED, OLD];
-  const ids = (where?.incursionId as { in: number[] } | undefined)?.in ?? [];
+  const ids = (where.incursionId as { in: number[] } | undefined)?.in ?? [];
   return [ACTIVE, RECENTLY_ENDED, OLD].filter((i) =>
     ids.includes(i.incursionId as number),
   );
@@ -139,9 +142,24 @@ const models = {
   },
   solarSystem: {
     findMany: findMany(() => [
-      { solarSystemId: 30000001, name: "Claysson", securityStatus: "0.9" },
-      { solarSystemId: 30000003, name: "Adiere", securityStatus: "0.8" },
-      { solarSystemId: 30000100, name: "ZD4-G9", securityStatus: "-0.3" },
+      {
+        solarSystemId: 30000001,
+        name: "Claysson",
+        securityStatus: "0.9",
+        constellationId: 20000001,
+      },
+      {
+        solarSystemId: 30000003,
+        name: "Adiere",
+        securityStatus: "0.8",
+        constellationId: 20000001,
+      },
+      {
+        solarSystemId: 30000100,
+        name: "ZD4-G9",
+        securityStatus: "-0.3",
+        constellationId: 20000002,
+      },
     ]),
   },
   faction: {
@@ -310,6 +328,38 @@ describe("readIncursionHistory", () => {
     expect(response.headers.get("Cache-Control")).toContain("s-maxage=300");
     const body = (await response.json()) as { incursions: unknown[] };
     expect(body.incursions).toHaveLength(3);
+  });
+});
+
+describe("readIncursionLayouts", () => {
+  it("lays out each constellation with incursions, by site type", async () => {
+    const { layouts, constellations, solarSystems } =
+      await loadData().readIncursionLayouts();
+    expect(layouts.map((l) => l.constellationId)).toEqual([
+      20000001, 20000002, 20000003,
+    ]);
+    // 30000001 and 30000003 are vanguard systems in the real role map.
+    expect(layouts[0]).toMatchObject({
+      stagingSolarSystemId: 30000001,
+      vanguard: [30000003, 30000001],
+      incursionCount: 1,
+      latestIncursionAt: "2026-10-05T08:10:00.000Z",
+    });
+    expect(layouts[2]?.stagingSolarSystemId).toBeNull();
+    expect(constellations[20000001]?.name).toBe("Agiesseson");
+    expect(solarSystems[30000100]).toEqual({
+      name: "ZD4-G9",
+      securityStatus: -0.3,
+    });
+  });
+
+  it("is served as cacheable JSON by /api/incursions/layouts", async () => {
+    const { GET } =
+      require("~/app/api/incursions/layouts/route") as typeof LayoutsRoute;
+    const response = await GET();
+    expect(response.headers.get("Cache-Control")).toContain("s-maxage=3600");
+    const body = (await response.json()) as { layouts: unknown[] };
+    expect(body.layouts).toHaveLength(3);
   });
 });
 

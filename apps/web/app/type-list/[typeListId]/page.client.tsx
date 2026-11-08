@@ -20,11 +20,11 @@ import {
 } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
-import { CategoryAnchor, GroupAnchor } from "@jitaspace/ui";
+import { TypeAvatar } from "@jitaspace/eve-components";
 
 import type { TypeListDetail, TypeListRuleDetail } from "./data";
 import type { TypeListRefType } from "~/lib/typeLists";
+import { CategoryAnchor, GroupAnchor, TypeAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import { TypeListMatchBadges } from "~/components/TypeLists";
 import {

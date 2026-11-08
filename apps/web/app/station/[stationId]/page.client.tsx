@@ -18,35 +18,22 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconExternalLink,
-  IconHistory,
-  IconMapPin,
-  IconSchool,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import {
-  ConstellationAnchor,
-  RegionAnchor,
-  SolarSystemAnchor,
-  TypeAnchor,
-  TypeAvatar,
-} from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import {
   CategoryCorporationIcon,
+  SystemArrowRotateLeftIcon,
+  SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowDirectoryServicesIcon,
   WindowInfoIcon,
+  WindowLocationsIcon,
   WindowReprocessingIcon,
+  WindowTutorialIcon,
 } from "@jitaspace/eve-icons";
 import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
-import {
-  ISKAmount,
-  RaceAnchor,
-  SolarSystemSecurityStatusBadge,
-  StarAnchor,
-} from "@jitaspace/ui";
+import { ISKAmount, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
 
 import type { StationPageTab } from "./tabs";
 import type {
@@ -61,6 +48,14 @@ import {
   SetAutopilotDestinationActionIcon,
 } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
+import {
+  ConstellationAnchor,
+  RaceAnchor,
+  RegionAnchor,
+  SolarSystemAnchor,
+  StarAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import {
   CorporationLine,
   EntityLine,
@@ -266,7 +261,7 @@ function OverviewPanel({
   return (
     <Stack gap="lg">
       <Stack gap="sm">
-        <SectionHeading icon={<IconMapPin size={18} />}>
+        <SectionHeading icon={<WindowLocationsIcon size={18} alt="" />}>
           Location
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -467,7 +462,7 @@ function OverviewPanel({
 
       {station.schools.length > 0 && (
         <Stack gap="sm">
-          <SectionHeading icon={<IconSchool size={18} />}>
+          <SectionHeading icon={<WindowTutorialIcon size={18} alt="" />}>
             Starting station
           </SectionHeading>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -608,7 +603,9 @@ export default function StationPage({
             </Text>
           )}
           <Group gap="sm" align="center">
-            <Title order={2}>{live.name}</Title>
+            <Title order={1} size="h2">
+              {live.name}
+            </Title>
             {location && (
               <SolarSystemSecurityStatusBadge
                 securityStatus={location.securityStatus}
@@ -663,7 +660,9 @@ export default function StationPage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               DOTLAN EveMaps
             </Button>
@@ -701,7 +700,16 @@ export default function StationPage({
                 Agents ({formatInteger(station.agents.length)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>

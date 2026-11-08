@@ -1,9 +1,9 @@
 import React from "react";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 
-import { RegionAnchor } from "@jitaspace/eve-components";
 import { MapIcon } from "@jitaspace/eve-icons";
 
+import { RegionAnchor } from "~/components/Anchor";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
 import { cacheSdeRead } from "~/lib/sdeCache";
@@ -77,7 +77,9 @@ export default async function Page() {
         </Group>
         {galaxyRegions.map((galaxy) => (
           <React.Fragment key={galaxy.name}>
-            <Title order={3}>{galaxy.name}</Title>
+            <Title order={2} size="h3">
+              {galaxy.name}
+            </Title>
             <SimpleGrid
               cols={{ base: 1, ["25em"]: 2, xs: 3, sm: 4 }}
               spacing={{ base: "sm", sm: "md" }}

@@ -1,11 +1,12 @@
 import { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
-import { SolarSystemAnchor, SolarSystemName } from "@jitaspace/eve-components";
+import { SolarSystemName } from "@jitaspace/eve-components";
 import { InfoIcon } from "@jitaspace/eve-icons";
 import { useAllSolarSystemKills } from "@jitaspace/hooks";
 import { TimeAgoText } from "@jitaspace/ui";
 
+import { SolarSystemAnchor } from "~/components/Anchor";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
 

@@ -4,16 +4,16 @@ import { memo } from "react";
 import { Box, Group, Skeleton, Text, VisuallyHidden } from "@mantine/core";
 import { IconThumbDown, IconThumbUp } from "@tabler/icons-react";
 
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
-import {
-  DogmaAttributeAnchor,
-  formatDogmaAttributeValue,
-  GroupAnchor,
-  ISKAmount,
-} from "@jitaspace/ui";
+import { TypeName } from "@jitaspace/eve-components";
+import { formatDogmaAttributeValue, ISKAmount } from "@jitaspace/ui";
 
 import type { CompareCatalog } from "./catalog";
 import type { CompareCell, CompareRow } from "./comparison";
+import {
+  DogmaAttributeAnchor,
+  GroupAnchor,
+  TypeAnchor,
+} from "~/components/Anchor";
 import { GroupName } from "~/components/Text";
 import classes from "./Compare.module.css";
 import { REFERENCE_UNIT_IDS } from "./comparison";

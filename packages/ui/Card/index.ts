@@ -3,6 +3,7 @@ export * from "./CharacterCardDisplay";
 export * from "./CorporationCardDisplay";
 export * from "./EntityCard";
 export * from "./EntityLink";
+export * from "./EntityLinks";
 export * from "./KillmailCardDisplay";
 export * from "./TypeCardDisplay";
 export * from "./types";

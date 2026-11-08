@@ -29,8 +29,10 @@ const assignments = sourceFiles(root).flatMap((file) =>
 );
 
 describe("displayName", () => {
+  // A floor, not a count: it fails if the pattern stops matching, so the
+  // per-component cases below cannot pass by finding nothing.
   it("finds the components' displayName assignments", () => {
-    expect(assignments.length).toBeGreaterThan(80);
+    expect(assignments.length).toBeGreaterThan(50);
   });
 
   it.each(assignments)(

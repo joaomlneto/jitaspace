@@ -19,22 +19,19 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { GetAlliancesAllianceIdQueryResponse } from "@jitaspace/esi-client";
 import {
-  CharacterAnchor,
   CharacterName,
   CorporationName,
-  FactionAnchor,
   FactionName,
-  SolarSystemAnchor,
 } from "@jitaspace/eve-components";
 import {
   CategoryCorporationIcon,
   CategoryOngoingConflictsIcon,
   CategorySkullIcon,
+  SystemOpenWindowIcon,
   WindowInfoIcon,
   WindowSovereigntyIcon,
 } from "@jitaspace/eve-icons";
@@ -43,12 +40,7 @@ import {
   useEsiAllianceMemberCorporations,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
-import {
-  AllianceAvatar,
-  CharacterAvatar,
-  CorporationAnchor,
-  FactionAvatar,
-} from "@jitaspace/ui";
+import { AllianceAvatar, CharacterAvatar, FactionAvatar } from "@jitaspace/ui";
 
 import type { CorporationRow } from "./corporations";
 import type { AlliancePageTab } from "./tabs";
@@ -58,6 +50,12 @@ import type {
   CompositionEntry,
 } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import {
+  CharacterAnchor,
+  CorporationAnchor,
+  FactionAnchor,
+  SolarSystemAnchor,
+} from "~/components/Anchor";
 import {
   CorporationLine,
   EntityLine,
@@ -135,6 +133,7 @@ function CompositionBar({
               label={`${row.name}: ${formatInteger(row.memberCount)} pilots (${formatPercent(row.memberCount / pilots)})`}
             >
               <Progress.Section
+                aria-label={row.name}
                 value={(row.memberCount / pilots) * 100}
                 color={COMPOSITION_COLORS[index % COMPOSITION_COLORS.length]}
               />
@@ -145,6 +144,7 @@ function CompositionBar({
               label={`${formatInteger(corporations - top.length)} other corporations: ${formatInteger(others)} pilots (${formatPercent(others / pilots)})`}
             >
               <Progress.Section
+                aria-label="Other corporations"
                 value={(others / pilots) * 100}
                 color="dark.3"
               />
@@ -393,7 +393,9 @@ export default function AlliancePage({
             <Text size="sm">{name ?? allianceId}</Text>
           </Breadcrumbs>
           <Group gap="sm" align="center">
-            <Title order={2}>{name ?? `Alliance ${allianceId}`}</Title>
+            <Title order={1} size="h2">
+              {name ?? `Alliance ${allianceId}`}
+            </Title>
             {ticker && (
               <Badge variant="light" size="lg">
                 {`<${ticker}>`}
@@ -500,7 +502,9 @@ export default function AlliancePage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>

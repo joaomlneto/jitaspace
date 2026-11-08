@@ -1,5 +1,6 @@
 "use client";
 
+import type { CardProps } from "@mantine/core";
 import type { ReactNode } from "react";
 import { memo } from "react";
 import {
@@ -14,13 +15,12 @@ import {
 } from "@mantine/core";
 
 import type { EntityCardVariant, EntityRef } from "./types";
-import { EveEntityAnchorDisplay } from "../Anchor";
 import { AllianceAvatar, CorporationAvatar } from "../Avatar";
 import { DateHoverCard, FormattedDateText } from "../DateText";
 import { ISKAmount } from "../Text";
 import { EntityCard, EntityCardSection } from "./EntityCard";
 import { EntityLink } from "./EntityLink";
-import { entityHref } from "./types";
+import { EntityAnchor } from "./EntityLinks";
 
 /** An alliance or corporation taking part in a war. */
 export interface WarParticipant {
@@ -59,6 +59,8 @@ export interface WarCardDisplayProps {
   war?: WarCardData;
   variant?: EntityCardVariant;
   headerRightSection?: ReactNode;
+  /** Passed to the card frame, e.g. `withBorder={false}` to embed it. */
+  cardProps?: Omit<CardProps, "children">;
 }
 
 /**
@@ -154,6 +156,7 @@ export const WarCardDisplay = memo(
     war,
     variant = "full",
     headerRightSection,
+    cardProps,
   }: WarCardDisplayProps) => {
     const avatarSize = variant === "full" ? 56 : 30;
     const status = war?.status && STATUS_BADGE[war.status];
@@ -161,6 +164,7 @@ export const WarCardDisplay = memo(
 
     return (
       <EntityCard
+        {...cardProps}
         variant={variant}
         loading={!war}
         avatar={
@@ -186,13 +190,14 @@ export const WarCardDisplay = memo(
           )
         }
         title={
-          <EveEntityAnchorDisplay
-            href={entityHref("war", warId)}
+          <EntityAnchor
+            kind="war"
+            id={warId}
             size={variant === "full" ? "lg" : "sm"}
             fw={500}
           >
             War {warId}
-          </EveEntityAnchorDisplay>
+          </EntityAnchor>
         }
         badges={
           <>

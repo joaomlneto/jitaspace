@@ -4,15 +4,15 @@ import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/eve-components";
 import {
-  CorporationAnchor,
   CorporationAvatar,
   EveEntityNameDisplay,
   ISKAmount,
 } from "@jitaspace/ui";
 
 import type { AugmentedOffer } from "./pricing";
+import { CorporationAnchor, TypeAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
 import {
   useIskResource,

@@ -158,7 +158,10 @@ export const crimsonHarvestTheme = createTheme({
       styles: panelStyles,
     },
 
+    // Outline by default, where EVE fills: neon lines rather than solid
+    // blocks of red.
     Button: {
+      defaultProps: { variant: "outline" },
       classNames: { root: classes.button },
     },
 

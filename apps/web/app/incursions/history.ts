@@ -1,6 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { IncursionHistory, IncursionLookups } from "./types";
+import type {
+  IncursionHistory,
+  IncursionLayouts,
+  IncursionLookups,
+} from "./types";
 
 /** The History tab's data, from the CDN-cached `/api/incursions/history`. */
 export function useIncursionHistory() {
@@ -14,6 +18,21 @@ export function useIncursionHistory() {
       return (await response.json()) as IncursionHistory;
     },
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** The Layouts tab's data, from the CDN-cached `/api/incursions/layouts`. */
+export function useIncursionLayouts() {
+  return useQuery({
+    queryKey: ["incursion-layouts"],
+    queryFn: async (): Promise<IncursionLayouts> => {
+      const response = await fetch("/api/incursions/layouts");
+      if (!response.ok) {
+        throw new Error(`Incursion layouts: HTTP ${response.status}`);
+      }
+      return (await response.json()) as IncursionLayouts;
+    },
+    staleTime: 60 * 60 * 1000,
   });
 }
 

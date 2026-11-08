@@ -8,11 +8,12 @@ import { IncursionsIcon } from "@jitaspace/eve-icons";
 
 import type { IncursionRatGroup, IncursionsData } from "./types";
 import { ArchiveTab, TimelineTab } from "./HistoryTabs";
+import { LayoutsTab } from "./LayoutsTab";
 import { useNames } from "./parts";
 import { RatsTab } from "./RatsTab";
 import { StatusTab } from "./StatusTab";
 
-const TABS = ["status", "timeline", "archive", "rats"] as const;
+const TABS = ["status", "timeline", "archive", "layouts", "rats"] as const;
 type Tab = (typeof TABS)[number];
 const isTab = (value: string): value is Tab =>
   (TABS as readonly string[]).includes(value);
@@ -79,6 +80,7 @@ export default function IncursionsPage({
             <Tabs.Tab value="status">Status</Tabs.Tab>
             <Tabs.Tab value="timeline">Timeline</Tabs.Tab>
             <Tabs.Tab value="archive">Archive</Tabs.Tab>
+            <Tabs.Tab value="layouts">Layouts</Tabs.Tab>
             <Tabs.Tab value="rats">Rats</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="status">
@@ -89,6 +91,9 @@ export default function IncursionsPage({
           </Tabs.Panel>
           <Tabs.Panel value="archive">
             <ArchiveTab data={data} />
+          </Tabs.Panel>
+          <Tabs.Panel value="layouts">
+            <LayoutsTab />
           </Tabs.Panel>
           <Tabs.Panel value="rats">
             <RatsTab rats={rats} />

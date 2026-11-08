@@ -4,6 +4,7 @@ import type { Prisma } from "@jitaspace/db";
 
 import type {
   IncursionHistory,
+  IncursionLayouts,
   IncursionLookups,
   IncursionRatGroup,
   IncursionRow,
@@ -15,8 +16,9 @@ import { prisma } from "~/lib/db";
 import { computeNpcStats } from "~/lib/npcStats";
 import { readNpcStats } from "~/lib/npcStatsData";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
+import { buildIncursionLayouts } from "./layouts";
 import { longestDistanceAu } from "./math";
-import { incursionSiteRole } from "./siteRoles";
+import { INCURSION_SITE_ROLES, incursionSiteRole } from "./siteRoles";
 import { isTrackedIncursion } from "./types";
 
 /**
@@ -394,6 +396,86 @@ export async function readIncursionHistory(): Promise<IncursionHistory> {
       event.kind as IncursionStateEventTuple[3],
       event.state,
     ]),
+  };
+}
+
+/**
+ * Where each site type spawns, constellation by constellation, with the
+ * latest staging system and how often incursions spawned there, for the
+ * Layouts tab. Too heavy for the page itself, so `/api/incursions/layouts`
+ * serves it when the tab opens. Deliberately uncaught, like
+ * `readIncursionsData`.
+ */
+export async function readIncursionLayouts(): Promise<IncursionLayouts> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(SDE_CACHE_TAG);
+
+  const readAt = new Date();
+  const incursions = await prisma.incursion.findMany({
+    select: {
+      constellationId: true,
+      stagingSolarSystemId: true,
+      firstSeenAt: true,
+    },
+    orderBy: { firstSeenAt: "desc" },
+  });
+  const systems = await prisma.solarSystem.findMany({
+    select: {
+      solarSystemId: true,
+      name: true,
+      securityStatus: true,
+      constellationId: true,
+    },
+    where: {
+      solarSystemId: {
+        in: unique([
+          ...INCURSION_SITE_ROLES.keys(),
+          ...incursions.flatMap((i) =>
+            i.stagingSolarSystemId === null ? [] : [i.stagingSolarSystemId],
+          ),
+        ]),
+      },
+    },
+  });
+  const layouts = buildIncursionLayouts({
+    incursions,
+    systems,
+    roles: INCURSION_SITE_ROLES,
+  });
+
+  const constellations = await prisma.constellation.findMany({
+    select: { constellationId: true, name: true, regionId: true },
+    where: {
+      constellationId: { in: layouts.map((l) => l.constellationId) },
+    },
+  });
+  const regions = await prisma.region.findMany({
+    select: { regionId: true, name: true },
+    where: { regionId: { in: unique(constellations.map((c) => c.regionId)) } },
+  });
+
+  return {
+    readAt: readAt.toISOString(),
+    layouts,
+    constellations: Object.fromEntries(
+      constellations.map((c) => [
+        c.constellationId,
+        { name: c.name, regionId: c.regionId },
+      ]),
+    ),
+    regions: Object.fromEntries(regions.map((r) => [r.regionId, r.name])),
+    factions: {},
+    alliances: {},
+    solarSystems: Object.fromEntries(
+      systems.map((system) => [
+        system.solarSystemId,
+        {
+          name: system.name,
+          securityStatus: Number(system.securityStatus),
+        },
+      ]),
+    ),
   };
 }
 
