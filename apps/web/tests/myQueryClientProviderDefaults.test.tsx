@@ -79,4 +79,33 @@ describe("MyQueryClientProvider's QueryClient", () => {
 
     expect(retry).toBe(shouldRetryQuery);
   });
+
+  it("keeps notifications for as long as ESI caches them", () => {
+    // The header feed reads every character's notifications on every page;
+    // without this, each window focus re-asks ESI for each of them.
+    let notifications: unknown;
+    let other: unknown;
+    const Probe = () => {
+      const client = useQueryClient();
+      notifications = client.getQueryDefaults([
+        {
+          url: "/characters/:character_id/notifications",
+          params: { character_id: 2112625428 },
+        },
+      ]).staleTime;
+      other = client.getQueryDefaults([
+        { url: "/characters/:character_id/wallet" },
+      ]).staleTime;
+      return null;
+    };
+
+    render(
+      <MyQueryClientProvider>
+        <Probe />
+      </MyQueryClientProvider>,
+    );
+
+    expect(notifications).toBe(10 * 60 * 1000);
+    expect(other).toBeUndefined();
+  });
 });

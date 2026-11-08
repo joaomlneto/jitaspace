@@ -31,14 +31,33 @@ export function parseNotificationFields(
   for (const line of (text ?? "").split(/\r?\n/)) {
     const match = /^([A-Za-z_]\w*):[ \t]*(.*)$/.exec(line);
     if (!match?.[1]) continue;
-    const value = (match[2] ?? "")
-      // An anchor or tag in front of the value: `&id001 123`, `!!python/long 5`.
-      .replace(/^(?:(?:&\w+|!!\S+)\s+)+/, "")
-      .trim()
-      .replace(/^(['"])(.*)\1$/, "$2");
-    if (value !== "") fields.set(match[1].toLowerCase(), value);
+    const value = scalarValue(
+      (match[2] ?? "")
+        // An anchor or tag in front of the value: `&id001 123`, `!!python/long 5`.
+        .replace(/^(?:(?:&\w+|!!\S+)\s+)+/, "")
+        .trim(),
+    );
+    if (value) fields.set(match[1].toLowerCase(), value);
   }
   return fields;
+}
+
+/**
+ * A one-line YAML scalar's value, or undefined for one this reader can't take
+ * whole: a block scalar (`subject: |`, `body: >-`) or a quoted string that
+ * continues on the next line. Those are long free text, and showing their first
+ * line (or the bare indicator) would be wrong.
+ */
+function scalarValue(raw: string): string | undefined {
+  if (raw === "" || /^[|>][-+0-9]*$/.test(raw)) return undefined;
+  const quote = raw[0];
+  if (quote === "'" || quote === '"') {
+    if (raw.length < 2 || !raw.endsWith(quote)) return undefined;
+    const inner = raw.slice(1, -1);
+    // Single-quoted YAML escapes a quote by doubling it.
+    return quote === "'" ? inner.replaceAll("''", "'") : inner;
+  }
+  return raw;
 }
 
 /** The first of `keys` holding a positive integer id. */
@@ -112,10 +131,10 @@ export interface NotificationContext {
   fields: NotificationFields;
 }
 
-/** The parties to a war, and when a notification about it was sent. */
+/** The sides of a war, and when a notification about it was sent. */
 export interface WarQuery {
   aggressorId: number;
-  defenderId?: number;
+  defenderId: number;
   /**
    * The notification does not say which side declared (surrenders name the
    * two sides as `ownerID1`/`ownerID2`), so match the pair either way round.
@@ -131,8 +150,11 @@ export function warFindUrl({
   eitherWay,
   at,
 }: WarQuery): string {
-  const params = new URLSearchParams({ aggressor: String(aggressorId), at });
-  if (defenderId !== undefined) params.set("defender", String(defenderId));
+  const params = new URLSearchParams({
+    aggressor: String(aggressorId),
+    defender: String(defenderId),
+    at,
+  });
   if (eitherWay) params.set("either", "1");
   return `/api/wars/find?${params.toString()}`;
 }
@@ -189,14 +211,18 @@ const placeTarget = (
   return href ? { href } : undefined;
 };
 
-/** The war between two sides, else the first side's page. */
+/**
+ * The war between two sides, else the first side's page. With one side alone
+ * there is no lookup: that side's latest war could be any of its wars.
+ */
 function warTarget(
   aggressorId: number | undefined,
   defenderId: number | undefined,
   at: string,
   eitherWay = false,
 ): NotificationTarget | undefined {
-  if (aggressorId === undefined) return entityTarget(defenderId);
+  if (aggressorId === undefined || defenderId === undefined)
+    return entityTarget(aggressorId ?? defenderId);
   return {
     war: { aggressorId, defenderId, at, ...(eitherWay && { eitherWay }) },
     fallback: entityTarget(aggressorId),
@@ -209,10 +235,20 @@ const entityFrom =
   ({ fields }) =>
     entityTarget(fieldId(fields, ...keys));
 
+/**
+ * Reads the target from the first of the named id fields that is a place we
+ * have a page for. A field can hold an Upwell structure (outside every id
+ * range), so the next field, such as the system, gets its turn.
+ */
 const placeFrom =
   (...keys: string[]): TargetRule =>
-  ({ fields }) =>
-    placeTarget(fieldId(fields, ...keys));
+  ({ fields }) => {
+    for (const key of keys) {
+      const target = placeTarget(fieldId(fields, key));
+      if (target) return target;
+    }
+    return undefined;
+  };
 
 /**
  * Where clicking a notification goes, first match wins. A type with no rule —

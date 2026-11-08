@@ -70,6 +70,26 @@ describe("parseNotificationFields", () => {
     );
   });
 
+  it("skips values it can't read whole: block scalars and multi-line quotes", () => {
+    const fields = parseNotificationFields(
+      [
+        "subject: >-",
+        "  Raise tax",
+        "  and buy a Keepstar",
+        "body: |",
+        "  line",
+        "title: 'Raise tax and",
+        "  buy a Keepstar'",
+        "ok: 'It''s fine'",
+      ].join("\n"),
+    );
+    expect(fields.has("subject")).toBe(false);
+    expect(fields.has("body")).toBe(false);
+    expect(fields.has("title")).toBe(false);
+    // A doubled single quote is YAML's escaped quote.
+    expect(fields.get("ok")).toBe("It's fine");
+  });
+
   it("drops Python tags in front of a value", () => {
     const fields = parseNotificationFields("amount: !!python/long 15000000\n");
     expect(fieldId(fields, "amount")).toBe(15000000);
@@ -135,12 +155,13 @@ describe("notificationTarget", () => {
         fallback: { href: "/alliance/99005338" },
       });
     }
+  });
+
+  it("links the one side it knows rather than guessing at a war", () => {
+    // An aggressor alone matches any of its wars, so there is no lookup.
     expect(
       target("AllyJoinedWarDefenderMsg", "aggressorID: 99005338\nallyID: 1\n"),
-    ).toEqual({
-      war: { aggressorId: 99005338, at: SENT_AT },
-      fallback: { href: "/alliance/99005338" },
-    });
+    ).toEqual({ href: "/alliance/99005338" });
   });
 
   it("finds a surrendered war with its sides either way round", () => {
@@ -198,6 +219,17 @@ describe("notificationTarget", () => {
     ["GiftReceived", "message: hi\nsenderCharID: 2112625428\n"],
   ])("links %s to the character it is about", (type, text) => {
     expect(href(type, text)).toBe("/character/2112625428");
+  });
+
+  it("passes over a structure id to a field that has a page", () => {
+    // An Upwell structure's id is outside every id range: no page, so the
+    // system gets its turn.
+    expect(
+      href(
+        "CloneRevokedMsg2",
+        "corpID: 98000001\nstationID: 1035466617946\nsolarSystemID: 30000142\n",
+      ),
+    ).toBe("/system/30000142");
   });
 
   it("links a moved clone to its new station", () => {

@@ -2,8 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Fragment, memo, useMemo } from "react";
-import Link from "next/link";
-import { Box, Group, Stack, Text } from "@mantine/core";
+import { Avatar, Box, Group, Stack, Text, VisuallyHidden } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
 import type { CharactersCharacterIdNotificationsGet } from "@jitaspace/esi-client";
@@ -16,6 +15,7 @@ import type {
   SubjectPart,
   WarQuery,
 } from "./notificationDetails";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   categoryHref,
   notificationSubject,
@@ -67,6 +67,51 @@ export function isUnreadNotification(notification: NotificationListItem) {
   return notification.is_read !== true;
 }
 
+/** One event, however many of the user's characters it was delivered to. */
+export interface GroupedNotification {
+  key: string;
+  notification: NotificationListItem;
+  /** The characters it was delivered to, in delivery order. */
+  recipients: number[];
+  /** Unread by at least one recipient. */
+  unread: boolean;
+}
+
+/**
+ * Merge copies of one event: a corporation- or alliance-wide notice reaches
+ * each of the user's characters in it as its own notification. Copies agree on
+ * type, time, sender and text; anything else is a different notification.
+ * Keeps the input's order (each group where its first copy was).
+ */
+export function groupNotifications(
+  notifications: readonly NotificationListItem[],
+): GroupedNotification[] {
+  const groups = new Map<string, GroupedNotification>();
+  for (const notification of notifications) {
+    const key = [
+      notification.type,
+      notification.timestamp,
+      notification.sender_id,
+      notification.text ?? "",
+    ].join("\u0000");
+    const group = groups.get(key);
+    if (group) {
+      if (notification.subjectId !== undefined)
+        group.recipients.push(notification.subjectId);
+      group.unread ||= isUnreadNotification(notification);
+      continue;
+    }
+    groups.set(key, {
+      key,
+      notification,
+      recipients:
+        notification.subjectId === undefined ? [] : [notification.subjectId],
+      unread: isUnreadNotification(notification),
+    });
+  }
+  return [...groups.values()];
+}
+
 /**
  * A list of character notifications laid out like the in-game notification
  * history: type icon, title, what it is about, sender and how long ago, newest
@@ -84,9 +129,11 @@ export function NotificationList({
 
   const sorted = useMemo(
     () =>
-      [...notifications]
-        .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
-        .slice(0, limit),
+      groupNotifications(
+        [...notifications].sort(
+          (a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp),
+        ),
+      ).slice(0, limit),
     [notifications, limit],
   );
 
@@ -100,13 +147,11 @@ export function NotificationList({
 
   return (
     <Stack gap={0}>
-      {sorted.map((notification) => (
+      {sorted.map((group) => (
         <NotificationRow
-          // Two characters can share a corporation-wide notice, so the id is
-          // only unique per recipient.
-          key={`${notification.subjectId ?? ""}:${notification.notification_id}`}
-          notification={notification}
-          title={notificationTitle(notification.type, typeNames)}
+          key={group.key}
+          group={group}
+          title={notificationTitle(group.notification.type, typeNames)}
           showRecipient={showRecipient}
           onNavigate={onNavigate}
         />
@@ -126,19 +171,22 @@ function EntityText({ parts }: { parts: readonly SubjectPart[] }) {
   );
 }
 
+/** The most recipient portraits drawn in an icon's corner. */
+const MAX_RECIPIENT_AVATARS = 3;
+
 const NotificationRow = memo(function NotificationRow({
-  notification,
+  group,
   title,
   showRecipient,
   onNavigate,
 }: {
-  notification: NotificationListItem;
+  group: GroupedNotification;
   /** The type's display name, possibly a template such as `Quit {corp_name}`. */
   title: string;
   showRecipient: boolean;
   onNavigate?: () => void;
 }) {
-  const unread = isUnreadNotification(notification);
+  const { notification, recipients, unread } = group;
   const date = new Date(notification.timestamp);
   const { type, sender_id: senderId, text, timestamp } = notification;
 
@@ -156,13 +204,22 @@ const NotificationRow = memo(function NotificationRow({
       <Box pos="relative" className={classes.icon}>
         {/* Decorative: the title beside it names the type. */}
         <NotificationTypeIcon type={type} width={40} height={40} alt="" />
-        {showRecipient && notification.subjectId !== undefined && (
-          <CharacterAvatar
-            characterId={notification.subjectId}
-            size={20}
-            radius="sm"
-            className={classes.recipient}
-          />
+        {showRecipient && recipients.length > 0 && (
+          <Avatar.Group spacing={8} className={classes.recipient}>
+            {recipients.slice(0, MAX_RECIPIENT_AVATARS).map((characterId) => (
+              <CharacterAvatar
+                key={characterId}
+                characterId={characterId}
+                size={20}
+                radius="sm"
+              />
+            ))}
+            {recipients.length > MAX_RECIPIENT_AVATARS && (
+              <Avatar size={20} radius="sm">
+                +{recipients.length - MAX_RECIPIENT_AVATARS}
+              </Avatar>
+            )}
+          </Avatar.Group>
         )}
       </Box>
       <Stack gap={2} miw={0} style={{ flex: 1 }}>
@@ -189,7 +246,12 @@ const NotificationRow = memo(function NotificationRow({
           />
         </Box>
       </Stack>
-      {unread && <Box className={classes.unreadDot} aria-label="Unread" />}
+      {unread && (
+        <>
+          <Box className={classes.unreadDot} aria-hidden />
+          <VisuallyHidden>Unread</VisuallyHidden>
+        </>
+      )}
     </Group>
   );
 
@@ -276,7 +338,8 @@ function RowFrame({
   } as const;
   return href ? (
     <Box
-      component={Link}
+      // Prefetch on intent: a full feed would otherwise prefetch every row.
+      component={HoverPrefetchLink}
       href={href}
       onClick={onNavigate}
       data-link

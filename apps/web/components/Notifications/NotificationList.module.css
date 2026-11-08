@@ -18,12 +18,12 @@
   line-height: 0;
 }
 
-/* The recipient's portrait, tucked into the icon's corner. */
+/* The recipients' portraits, tucked into the icon's corner. Avatar.Group
+   outlines each one, so they stay legible over the icon. */
 .recipient {
   position: absolute;
   right: -4px;
   bottom: -4px;
-  border: 1px solid var(--mantine-color-body);
 }
 
 .unreadDot {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActionIcon,
   Button,
@@ -13,11 +13,11 @@ import {
   ScrollArea,
   Text,
 } from "@mantine/core";
-import { IconRss } from "@tabler/icons-react";
 
+import { SystemBellIcon } from "@jitaspace/eve-icons";
 import { useMultipleCharacterNotifications } from "@jitaspace/hooks";
 
-import { isUnreadNotification, NotificationList } from "./NotificationList";
+import { groupNotifications, NotificationList } from "./NotificationList";
 
 /**
  * How many notifications the feed lists at first, and how many more each
@@ -38,10 +38,15 @@ export function NotificationFeedButton() {
     useMultipleCharacterNotifications();
   const [limit, setLimit] = useState(FEED_PAGE);
   const [opened, setOpened] = useState(false);
+  // Stable, so the list's memoised rows don't all re-render with the button.
+  const close = useCallback(() => setOpened(false), []);
+  // One event sent to several of the user's characters counts once, as the
+  // list shows it once.
+  const groups = useMemo(() => groupNotifications(data), [data]);
 
   if (subjectIds.length === 0) return null;
 
-  const unread = data.filter(isUnreadNotification).length;
+  const unread = groups.filter((group) => group.unread).length;
   const label = unread > 0 ? `${unread} unread notifications` : "Notifications";
 
   return (
@@ -73,7 +78,7 @@ export function NotificationFeedButton() {
             aria-label={label}
             title={label}
           >
-            <IconRss size={22} />
+            <SystemBellIcon size={20} color="currentColor" alt="" />
           </ActionIcon>
         </Indicator>
       </Popover.Target>
@@ -97,11 +102,11 @@ export function NotificationFeedButton() {
               notifications={data}
               showRecipient={subjectIds.length > 1}
               limit={limit}
-              onNavigate={() => setOpened(false)}
+              onNavigate={close}
             />
           </ScrollArea.Autosize>
         )}
-        {(errors.length > 0 || data.length > limit) && (
+        {(errors.length > 0 || groups.length > limit) && (
           <>
             <Divider />
             <Group justify="space-between" px="sm" py="xs" gap="xs">
@@ -113,7 +118,7 @@ export function NotificationFeedButton() {
               ) : (
                 <span />
               )}
-              {data.length > limit && (
+              {groups.length > limit && (
                 <Button
                   variant="subtle"
                   size="compact-xs"

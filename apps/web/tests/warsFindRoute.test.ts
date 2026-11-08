@@ -52,16 +52,18 @@ describe("GET /api/wars/find", () => {
           },
           // An hour of slack for the notification arriving before ESI's date.
           { declaredDate: { lte: new Date("2026-10-08T13:00:00Z") } },
+          // Not over by then: a war that ended weeks earlier isn't the one
+          // meant, even when it is the latest the database has.
+          {
+            OR: [
+              { finishedDate: null },
+              { finishedDate: { gte: new Date("2026-10-07T12:00:00Z") } },
+            ],
+          },
         ],
       },
       orderBy: { declaredDate: "desc" },
     });
-  });
-
-  it("matches on the declarer alone when the defender is unknown", async () => {
-    await GET("aggressor=99005338&at=2026-10-08T12:00:00Z");
-    const args = findFirst.mock.calls[0]?.[0] as { where: { AND: unknown[] } };
-    expect(args.where.AND).toHaveLength(2);
   });
 
   it("matches the sides either way round when asked", async () => {
@@ -77,7 +79,9 @@ describe("GET /api/wars/find", () => {
 
   it("answers 404, cached briefly, when we have no such war", async () => {
     findFirst.mockResolvedValueOnce(null);
-    const response = await GET("aggressor=99005338&at=2026-10-08T12:00:00Z");
+    const response = await GET(
+      "aggressor=99005338&defender=98000001&at=2026-10-08T12:00:00Z",
+    );
     expect(response.status).toBe(404);
     expect(response.headers.get("Cache-Control")).toContain("s-maxage=300");
   });
@@ -86,12 +90,11 @@ describe("GET /api/wars/find", () => {
     ["no aggressor", "at=2026-10-08T12:00:00Z"],
     ["a bad aggressor", "aggressor=abc&at=2026-10-08T12:00:00Z"],
     ["a bad defender", "aggressor=1&defender=-5&at=2026-10-08T12:00:00Z"],
-    ["no time", "aggressor=1"],
-    ["a bad time", "aggressor=1&at=yesterday"],
-    [
-      "either way without a defender",
-      "aggressor=1&either=1&at=2026-10-08T12:00:00Z",
-    ],
+    // One side alone would match any of its wars: a guess, not an answer.
+    ["no defender", "aggressor=1&at=2026-10-08T12:00:00Z"],
+    ["no defender, either way", "aggressor=1&either=1&at=2026-10-08T12:00:00Z"],
+    ["no time", "aggressor=1&defender=2"],
+    ["a bad time", "aggressor=1&defender=2&at=yesterday"],
   ])("rejects %s without querying", async (_, query) => {
     const response = await GET(query);
     expect(response.status).toBe(400);
@@ -101,7 +104,7 @@ describe("GET /api/wars/find", () => {
   it("lets a database failure throw", async () => {
     findFirst.mockRejectedValueOnce(new Error("database unreachable"));
     await expect(
-      GET("aggressor=99005338&at=2026-10-08T12:00:00Z"),
+      GET("aggressor=99005338&defender=98000001&at=2026-10-08T12:00:00Z"),
     ).rejects.toThrow("database unreachable");
   });
 });

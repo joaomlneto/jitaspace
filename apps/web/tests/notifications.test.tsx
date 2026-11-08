@@ -77,6 +77,7 @@ jest.mock("@jitaspace/eve-icons", () => {
     "VotesIcon",
     "WalletIcon",
     "WarsIcon",
+    "SystemBellIcon",
   ];
   return Object.fromEntries(
     names.map((name) => {
@@ -87,22 +88,22 @@ jest.mock("@jitaspace/eve-icons", () => {
   );
 });
 
-jest.mock("@tabler/icons-react", () => ({
-  IconRss: () => <span>rss</span>,
-}));
-
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
     href,
     children,
+    prefetch,
     ...props
   }: {
     href: string;
     children?: ReactNode;
+    prefetch?: boolean | null;
     [prop: string]: unknown;
   }) => (
-    <a href={href} {...props}>
+    // Records the prefetch setting, so a test can tell an eager link from
+    // one that waits for intent.
+    <a href={href} data-prefetch={String(prefetch)} {...props}>
       {children}
     </a>
   ),
@@ -117,7 +118,11 @@ const notification = (
   notification_id: 1,
   sender_id: 1000125,
   sender_type: "corporation",
-  timestamp: "2026-10-01T12:00:00Z",
+  // One minute apart per id, so notifications with different ids are
+  // different events rather than copies of one (see groupNotifications).
+  timestamp: new Date(
+    Date.UTC(2026, 9, 1, 12) + (overrides.notification_id ?? 1) * 60_000,
+  ).toISOString(),
   type: "CorpAppInvitedMsg",
   ...overrides,
 });
@@ -252,7 +257,8 @@ describe("NotificationList", () => {
         ]}
       />,
     );
-    expect(screen.getAllByLabelText("Unread")).toHaveLength(2);
+    // Announced as text, not as an aria-label on a plain div.
+    expect(screen.getAllByText("Unread")).toHaveLength(2);
   });
 
   it("shows recipients only when asked, and caps the list at the limit", () => {
@@ -271,19 +277,62 @@ describe("NotificationList", () => {
     expect(screen.getAllByText(/Recipient/)).toHaveLength(2);
   });
 
-  it("keeps the same notification id apart across recipients", () => {
+  it("merges one event delivered to several characters into one row", () => {
     const { NotificationList } = load();
+    const copy = { type: "StructureUnderAttack", is_read: true } as const;
     renderWithMantine(
       <NotificationList
         notifications={[
-          notification({ notification_id: 7, subjectId: 1 }),
-          notification({ notification_id: 7, subjectId: 2 }),
+          notification({ ...copy, notification_id: 7, subjectId: 1 }),
+          // Same event, another recipient: ESI may give it another id.
+          notification({
+            ...copy,
+            notification_id: 8,
+            subjectId: 2,
+            timestamp: notification({ notification_id: 7 }).timestamp,
+            is_read: false,
+          }),
+          notification({ ...copy, notification_id: 9, subjectId: 3 }),
         ]}
         showRecipient
       />,
     );
+    // Two rows: the merged pair and the third notification.
+    expect(screen.getAllByText(/^Ago /)).toHaveLength(2);
     expect(screen.getByText("Recipient 1")).toBeInTheDocument();
     expect(screen.getByText("Recipient 2")).toBeInTheDocument();
+    // Unread by one recipient is unread.
+    expect(screen.getAllByText("Unread")).toHaveLength(1);
+  });
+
+  it("shows at most three recipients and counts the rest", () => {
+    const { NotificationList } = load();
+    const at = "2026-10-01T12:00:00Z";
+    renderWithMantine(
+      <NotificationList
+        notifications={[1, 2, 3, 4, 5].map((id) =>
+          notification({ notification_id: id, subjectId: id, timestamp: at }),
+        )}
+        showRecipient
+      />,
+    );
+    expect(screen.getAllByText(/^Recipient /)).toHaveLength(3);
+    expect(screen.getByText("+2")).toBeInTheDocument();
+  });
+
+  it("prefetches a row's page only once the visitor shows intent", () => {
+    const { NotificationList } = load();
+    renderWithMantine(
+      <NotificationList
+        notifications={[
+          notification({ type: "KillReportVictim", text: "killMailID: 42\n" }),
+        ]}
+      />,
+    );
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("data-prefetch", "false");
+    fireEvent.mouseEnter(link);
+    expect(link).toHaveAttribute("data-prefetch", "null");
   });
 
   it("gives the exact time in EVE time on hover", () => {
@@ -346,7 +395,7 @@ describe("NotificationList", () => {
       "/war/712345",
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/wars/find?aggressor=99005338&at=2026-10-08T12%3A00%3A00Z&defender=98000001",
+      "/api/wars/find?aggressor=99005338&defender=98000001&at=2026-10-08T12%3A00%3A00Z",
     );
   });
 
@@ -479,6 +528,23 @@ describe("NotificationFeedButton", () => {
       screen.getByRole("button", { name: "2 unread notifications" }),
     ).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
+  });
+
+  it("counts an event delivered to several characters once", () => {
+    const at = "2026-10-01T12:00:00Z";
+    mockUseMultipleCharacterNotifications.mockReturnValue(
+      envelope({
+        subjectIds: [1, 2, 3],
+        data: [1, 2, 3].map((id) =>
+          notification({ notification_id: id, subjectId: id, timestamp: at }),
+        ),
+      }),
+    );
+    const { NotificationFeedButton } = load();
+    renderWithMantine(<NotificationFeedButton />);
+    expect(
+      screen.getByRole("button", { name: "1 unread notifications" }),
+    ).toBeInTheDocument();
   });
 
   it("caps the badge at 99+", () => {
