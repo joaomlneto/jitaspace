@@ -1,75 +1,77 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   Alert,
   Badge,
   Button,
   Center,
   Group,
-  Loader,
   Pagination,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import type { ContractView } from "./ContractList";
-import type { PublicContractsPage } from "./data";
+import type { OpenContracts } from "./useOpenContracts";
 import type { ContractFilters } from "~/components/Contracts/filters";
-import {
-  contractFiltersQuery,
-  PUBLIC_CONTRACTS_PAGE_SIZE,
-} from "~/components/Contracts/filters";
+import { filterOpenContracts } from "~/components/Contracts/clientFilter";
+import { PUBLIC_CONTRACTS_PAGE_SIZE } from "~/components/Contracts/filters";
 import { ContractList, ContractListSkeleton } from "./ContractList";
 
-async function fetchPublicContracts(
-  query: string,
-  signal: AbortSignal,
-): Promise<PublicContractsPage> {
-  const response = await fetch(`/api/contracts${query ? `?${query}` : ""}`, {
-    signal,
-  });
-  if (!response.ok) {
-    throw new Error(`Contracts request failed with HTTP ${response.status}`);
-  }
-  return (await response.json()) as PublicContractsPage;
-}
-
+/**
+ * The open public contracts the filters match, a page at a time. All of them
+ * are in the browser (`useOpenContracts`), so filtering, sorting and paging
+ * never wait on the server.
+ */
 export function PublicContracts({
+  open,
   filters,
   view,
   onPageChange,
 }: Readonly<{
+  open: OpenContracts;
   filters: ContractFilters;
   view: ContractView;
   onPageChange: (page: number) => void;
 }>) {
-  const query = contractFiltersQuery(filters);
-  const { data, isFetching, isError, isPlaceholderData } = useQuery({
-    queryKey: ["public-contracts", query],
-    queryFn: ({ signal }) => fetchPublicContracts(query, signal),
-    // Keep the previous page on screen while the next loads, rather than
-    // collapsing the grid to skeletons on every filter change.
-    placeholderData: keepPreviousData,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { type, regionId, q, minPrice, maxPrice, sort } = filters;
+  const matching = useMemo(
+    () =>
+      filterOpenContracts(open.contracts, {
+        type,
+        regionId,
+        q,
+        minPrice,
+        maxPrice,
+        sort,
+      }),
+    [open.contracts, type, regionId, q, minPrice, maxPrice, sort],
+  );
 
-  const pageCount = data ? Math.ceil(data.total / data.pageSize) : 0;
+  const pageCount = Math.ceil(matching.length / PUBLIC_CONTRACTS_PAGE_SIZE);
+  const page = matching.slice(
+    (filters.page - 1) * PUBLIC_CONTRACTS_PAGE_SIZE,
+    filters.page * PUBLIC_CONTRACTS_PAGE_SIZE,
+  );
+  const isLoaded = !open.isPending && !open.isError;
 
   let content;
-  if (data === undefined) {
-    content = isError ? (
+  if (open.isError) {
+    content = (
       <Alert color="red" variant="light">
         Public contracts could not be loaded. Try again in a moment.
       </Alert>
-    ) : (
+    );
+  } else if (open.isPending) {
+    content = (
       <ContractListSkeleton
         view={view}
         count={PUBLIC_CONTRACTS_PAGE_SIZE / 4}
       />
     );
-  } else if (data.contracts.length === 0 && data.total > 0) {
+  } else if (page.length === 0 && matching.length > 0) {
     // A shared or old link to a page past the end: contracts have closed
     // since, so the filters still match, just not this many pages.
     content = (
@@ -82,18 +84,14 @@ export function PublicContracts({
         </Button>
       </Group>
     );
-  } else if (data.contracts.length === 0) {
+  } else if (matching.length === 0) {
     content = (
       <Text size="sm" c="dimmed">
         No public contracts match these filters.
       </Text>
     );
   } else {
-    content = (
-      <div style={{ opacity: isPlaceholderData ? 0.6 : 1 }}>
-        <ContractList contracts={data.contracts} view={view} />
-      </div>
-    );
+    content = <ContractList contracts={page} view={view} />;
   }
 
   return (
@@ -102,21 +100,22 @@ export function PublicContracts({
         <Title order={2} size="h3">
           Public contracts
         </Title>
-        {data && (
+        {isLoaded && (
           <Badge variant="light" color="gray">
-            {data.total.toLocaleString()}
+            {matching.length === open.contracts.length
+              ? matching.length.toLocaleString()
+              : `${matching.length.toLocaleString()} of ${open.contracts.length.toLocaleString()}`}
           </Badge>
         )}
-        {isFetching && data && <Loader size="xs" />}
       </Group>
       {content}
-      {pageCount > 1 && (
+      {isLoaded && pageCount > 1 && (
         <Center mt="md">
           <Pagination
             total={pageCount}
             value={Math.min(filters.page, pageCount)}
-            onChange={(page) => {
-              onPageChange(page);
+            onChange={(next) => {
+              onPageChange(next);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
             siblings={1}

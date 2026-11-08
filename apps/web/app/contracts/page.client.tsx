@@ -1,15 +1,18 @@
 "use client";
 
+import { useMemo } from "react";
 import { Alert, Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import { ContractsIcon, SystemArrowRotateLeftIcon } from "@jitaspace/eve-icons";
 
-import type { OpenContractsOverview } from "./data";
+import type { OpenContracts } from "./useOpenContracts";
+import { regionFacets } from "~/components/Contracts/clientFilter";
 import { useContractView } from "./ContractList";
 import { FiltersBar } from "./FiltersBar";
 import { MyContracts } from "./MyContracts";
 import { PublicContracts } from "./PublicContracts";
 import { useContractFilters } from "./useContractFilters";
+import { useOpenContracts } from "./useOpenContracts";
 
 function formatSnapshot(iso: string): string {
   return `${iso.slice(0, 16).replace("T", " ")} EVE time`;
@@ -22,7 +25,7 @@ function formatSnapshot(iso: string): string {
 function SnapshotNotice({
   snapshotAt,
   isBackfilling,
-}: Readonly<Pick<OpenContractsOverview, "snapshotAt" | "isBackfilling">>) {
+}: Readonly<Pick<OpenContracts, "snapshotAt" | "isBackfilling">>) {
   if (snapshotAt === null) return null;
   if (!isBackfilling) {
     return (
@@ -46,11 +49,27 @@ function SnapshotNotice({
   );
 }
 
-export default function ContractsPage({
-  overview,
-}: Readonly<{ overview: OpenContractsOverview }>) {
+export default function ContractsPage() {
   const { filters, update, reset } = useContractFilters();
   const [view, setView] = useContractView();
+  const open = useOpenContracts();
+
+  const { type, q, minPrice, maxPrice } = filters;
+  const regions = useMemo(
+    () =>
+      regionFacets(open.contracts, {
+        type,
+        regionId: null,
+        q,
+        minPrice,
+        maxPrice,
+      }),
+    [open.contracts, type, q, minPrice, maxPrice],
+  );
+  const regionCount = useMemo(
+    () => new Set(open.contracts.map(({ contract }) => contract.regionId)).size,
+    [open.contracts],
+  );
 
   return (
     <Container size="xl">
@@ -61,17 +80,18 @@ export default function ContractsPage({
             <Title>Contracts</Title>
           </Group>
           <Text c="dimmed">
-            {overview.total.toLocaleString()} open public contracts across{" "}
-            {overview.regions.length.toLocaleString()} regions, and your own.
+            {open.contracts.length > 0
+              ? `${open.contracts.length.toLocaleString()} open public contracts across ${regionCount.toLocaleString()} regions, and your own.`
+              : "Open public contracts across New Eden, and your own."}
           </Text>
         </Stack>
         <SnapshotNotice
-          snapshotAt={overview.snapshotAt}
-          isBackfilling={overview.isBackfilling}
+          snapshotAt={open.snapshotAt}
+          isBackfilling={open.isBackfilling}
         />
         <FiltersBar
           filters={filters}
-          regions={overview.regions}
+          regions={regions}
           update={update}
           reset={reset}
           view={view}
@@ -79,6 +99,7 @@ export default function ContractsPage({
         />
         <MyContracts filters={filters} view={view} />
         <PublicContracts
+          open={open}
           filters={filters}
           view={view}
           onPageChange={(page) => update({ page })}

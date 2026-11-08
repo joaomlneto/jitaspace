@@ -37,6 +37,20 @@ const ALLIANCE_ID = 99000001;
 const NOW = Date.parse("2026-10-05T12:00:00Z");
 const day = (offset: number) => new Date(NOW + offset * 24 * 3600 * 1000);
 
+const allianceRow = () => ({
+  allianceId: ALLIANCE_ID,
+  name: "Test Alliance",
+  ticker: "TEST",
+  dateFounded: new Date("2010-05-01T10:00:00Z"),
+  isDeleted: false,
+  creatorCorporationId: 98000001,
+  creatorCorporation: { name: "Founders" },
+  executorCorporationId: 98000002,
+  executorCorporation: { name: "Exec Corp" },
+  factionId: null,
+  faction: null,
+});
+
 const rawWar = (overrides: Record<string, unknown>) => ({
   warId: 1,
   aggressorAllianceId: null,
@@ -111,19 +125,7 @@ describe("readAllianceProfile", () => {
   });
 
   it("assembles members, sovereignty and wars into a serializable profile", async () => {
-    mockPrisma.alliance.findUnique.mockResolvedValue({
-      allianceId: ALLIANCE_ID,
-      name: "Test Alliance",
-      ticker: "TEST",
-      dateFounded: new Date("2010-05-01T10:00:00Z"),
-      isDeleted: false,
-      creatorCorporationId: 98000001,
-      creatorCorporation: { name: "Founders" },
-      executorCorporationId: 98000002,
-      executorCorporation: { name: "Exec Corp" },
-      factionId: null,
-      faction: null,
-    });
+    mockPrisma.alliance.findUnique.mockResolvedValue(allianceRow());
     mockPrisma.corporation.findMany.mockResolvedValue([
       {
         corporationId: 98000002,
@@ -185,16 +187,27 @@ describe("readAllianceProfile", () => {
         },
       },
     ]);
-    mockPrisma.war.findMany.mockResolvedValue([
-      rawWar({ warId: 1, aggressorAllianceId: ALLIANCE_ID }),
-      rawWar({ warId: 2, defenderAllianceId: ALLIANCE_ID }),
-      rawWar({
-        warId: 3,
-        defenderAllianceId: 1,
-        finishedDate: day(-1),
-        startedDate: null,
-      }),
-    ]);
+    // One list per role (aggressor, defender, ally), each newest first.
+    mockPrisma.war.findMany
+      .mockResolvedValueOnce([
+        rawWar({ warId: 1, aggressorAllianceId: ALLIANCE_ID }),
+      ])
+      .mockResolvedValueOnce([
+        rawWar({
+          warId: 2,
+          defenderAllianceId: ALLIANCE_ID,
+          declaredDate: day(-11),
+        }),
+      ])
+      .mockResolvedValueOnce([
+        rawWar({
+          warId: 3,
+          defenderAllianceId: 1,
+          declaredDate: day(-12),
+          finishedDate: day(-1),
+          startedDate: null,
+        }),
+      ]);
     mockPrisma.war.aggregate
       // As aggressor: we killed 5 ships worth 50, lost 1 worth 10.
       .mockResolvedValueOnce(
@@ -273,6 +286,40 @@ describe("readAllianceProfile", () => {
     expect(mockPrisma.war.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ take: WAR_LIST_LIMIT }),
     );
+  });
+
+  it("merges the role lists newest first, without repeats, up to the limit", async () => {
+    mockPrisma.alliance.findUnique.mockResolvedValue(allianceRow());
+    mockPrisma.corporation.findMany.mockResolvedValue([]);
+    mockPrisma.solarSystemSovereignty.findMany.mockResolvedValue([]);
+    // Each role's list is full; the newest overall are spread across them.
+    const list = (first: number, role: Record<string, number>) =>
+      Array.from({ length: WAR_LIST_LIMIT }, (_, i) =>
+        rawWar({
+          warId: first + i * 3,
+          declaredDate: day(-(first + i * 3)),
+          ...role,
+        }),
+      );
+    const aggressor = list(1, { aggressorAllianceId: ALLIANCE_ID });
+    mockPrisma.war.findMany
+      .mockResolvedValueOnce(aggressor)
+      .mockResolvedValueOnce(list(2, { defenderAllianceId: ALLIANCE_ID }))
+      // An ally row repeating an aggressor war must not show twice.
+      .mockResolvedValueOnce([aggressor[0], ...list(3, {})]);
+    mockPrisma.war.aggregate.mockResolvedValue(totals(0, {}));
+    mockPrisma.war.count.mockResolvedValue(0);
+
+    const wars = (await loadData().readAllianceProfile(ALLIANCE_ID))?.wars;
+
+    expect(wars).toHaveLength(WAR_LIST_LIMIT);
+    expect(wars?.slice(0, 4).map((war) => [war.warId, war.role])).toEqual([
+      [1, "aggressor"],
+      [2, "defender"],
+      [3, "ally"],
+      [4, "aggressor"],
+    ]);
+    expect(new Set(wars?.map((war) => war.warId)).size).toBe(WAR_LIST_LIMIT);
   });
 });
 
