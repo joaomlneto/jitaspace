@@ -124,7 +124,7 @@ export function NotificationList({
   limit,
   emptyState = "No notifications",
   onNavigate,
-}: NotificationListProps) {
+}: Readonly<NotificationListProps>) {
   const typeNames = useNotificationTypeNames();
 
   const sorted = useMemo(
