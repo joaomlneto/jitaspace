@@ -1,5 +1,4 @@
 import type { ContractSummary } from "./contract";
-import { positiveInt } from "./filters";
 
 /**
  * The Contracts tab of character, corporation and type pages: which contracts
@@ -25,6 +24,16 @@ export interface ContractHistoryPage {
   contracts: ContractSummary[];
   /** Pass as `before` for the next page; null on the last. */
   nextBefore: number | null;
+}
+
+/** Contract, character, corporation and type ids are Postgres `integer`s. */
+const INT4_MAX = 2_147_483_647;
+
+/** A canonical positive integer that fits an `integer` column, or null. */
+function positiveInt(raw: string | null): number | null {
+  if (raw === null || !/^[1-9]\d{0,9}$/.test(raw)) return null;
+  const value = Number(raw);
+  return value <= INT4_MAX ? value : null;
 }
 
 export const CONTRACT_HISTORY_PAGE_SIZE = 50;

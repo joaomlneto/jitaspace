@@ -1676,10 +1676,11 @@ model War {
   isDeleted              Boolean              @default(false)
   killmails              Killmail[]           @relation("WarKillmails")
 
-  @@index([aggressorAllianceId])
-  @@index([aggressorCorporationId])
-  @@index([defenderAllianceId])
-  @@index([defenderCorporationId])
+  /// A party's wars by role, most recently declared first (`readWarRecord`).
+  @@index([aggressorAllianceId, declaredDate])
+  @@index([aggressorCorporationId, declaredDate])
+  @@index([defenderAllianceId, declaredDate])
+  @@index([defenderCorporationId, declaredDate])
   @@index([finishedDate])
 }
 
@@ -1904,6 +1905,8 @@ model AllianceWarAlly {
   isDeleted  Boolean  @default(false)
 
   @@id([warId, allianceId])
+  /// The wars an alliance joined as an ally; the primary key leads with warId.
+  @@index([allianceId])
 }
 
 model CorporationWarAlly {
@@ -1919,6 +1922,8 @@ model CorporationWarAlly {
   isDeleted     Boolean     @default(false)
 
   @@id([warId, corporationId])
+  /// The wars a corporation joined as an ally; the primary key leads with warId.
+  @@index([corporationId])
 }
 
 /// A public contract, as listed by ESI's public contracts endpoint (and captured

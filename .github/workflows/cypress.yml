@@ -89,12 +89,12 @@ jobs:
           timeout 120 bash -c 'until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done'
           docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS eve_builds;"
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         with:
           version: 11.3.0
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.15.0
           cache: pnpm
@@ -105,7 +105,7 @@ jobs:
       # a `pnpm update` resolves a new cypress.
       - name: Cache Cypress binary
         id: cypress-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}

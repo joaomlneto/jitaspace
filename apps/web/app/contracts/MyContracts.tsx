@@ -13,12 +13,12 @@ import {
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import type { ContractView } from "./ContractList";
-import type { ContractSummary } from "~/components/Contracts/contract";
 import type { ContractFilters } from "~/components/Contracts/filters";
 import {
-  contractHeadlineIsk,
-  fromEsiContract,
-} from "~/components/Contracts/contract";
+  compareContracts,
+  matchesContractFilters,
+} from "~/components/Contracts/clientFilter";
+import { fromEsiContract } from "~/components/Contracts/contract";
 import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 import { ContractList, ContractListSkeleton } from "./ContractList";
 
@@ -44,54 +44,6 @@ function isOwnOpenContract(
     contract.for_corporation &&
     corporationIds.has(contract.issuer_corporation_id)
   );
-}
-
-/** The page's filters, applied in the browser to what ESI returned. */
-function matchesFilters(
-  contract: ContractSummary,
-  filters: ContractFilters,
-): boolean {
-  if (filters.type !== "all" && contract.type !== filters.type) return false;
-  if (
-    filters.q &&
-    !contract.title.toLowerCase().includes(filters.q.toLowerCase())
-  ) {
-    return false;
-  }
-  if (filters.minPrice !== null || filters.maxPrice !== null) {
-    // The amount the row shows, as the public list filters on: a "want to
-    // buy" exchange is listed at its reward, its price being 0.
-    const { amount } = contractHeadlineIsk(contract);
-    if (amount === null) return false;
-    if (filters.minPrice !== null && amount < filters.minPrice) return false;
-    if (filters.maxPrice !== null && amount > filters.maxPrice) return false;
-  }
-  return true;
-}
-
-function compare(
-  a: ContractSummary,
-  b: ContractSummary,
-  sort: ContractFilters["sort"],
-): number {
-  switch (sort) {
-    case "oldest":
-      return a.dateIssued.localeCompare(b.dateIssued);
-    case "expiring":
-      return a.dateExpired.localeCompare(b.dateExpired);
-    case "price-desc":
-      return (
-        (contractHeadlineIsk(b).amount ?? -1) -
-        (contractHeadlineIsk(a).amount ?? -1)
-      );
-    case "price-asc":
-      return (
-        (contractHeadlineIsk(a).amount ?? Infinity) -
-        (contractHeadlineIsk(b).amount ?? Infinity)
-      );
-    case "newest":
-      return b.dateIssued.localeCompare(a.dateIssued);
-  }
 }
 
 function SignInPrompt({ hasCharacter }: Readonly<{ hasCharacter: boolean }>) {
@@ -138,8 +90,12 @@ export function MyContracts({
   const shown = useMemo(
     () =>
       own
-        .filter((contract) => matchesFilters(contract, filters))
-        .sort((a, b) => compare(a, b, filters.sort)),
+        // ESI does not list these contracts' regions or items, so the region
+        // filter is the public list's alone, and the search matches titles.
+        .filter((contract) =>
+          matchesContractFilters(contract, { ...filters, regionId: null }),
+        )
+        .sort((a, b) => compareContracts(a, b, filters.sort)),
     [own, filters],
   );
 

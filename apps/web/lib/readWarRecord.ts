@@ -82,6 +82,22 @@ const tallies = {
 } as const;
 
 /**
+ * The {@link WAR_LIST_LIMIT} most recently declared of the given lists, each
+ * a role's most recent wars, without repeats.
+ */
+function mostRecentlyDeclared(lists: RawWar[][]): RawWar[] {
+  const byId = new Map<number, RawWar>();
+  for (const war of lists.flat()) byId.set(war.warId, war);
+  return [...byId.values()]
+    .sort(
+      (a, b) =>
+        b.declaredDate.getTime() - a.declaredDate.getTime() ||
+        b.warId - a.warId,
+    )
+    .slice(0, WAR_LIST_LIMIT);
+}
+
+/**
  * A party's wars: the most recently declared {@link WAR_LIST_LIMIT}, and
  * totals over all of them. Not cached itself; call it from the page's
  * `"use cache"` read. It throws on a database failure.
@@ -95,34 +111,52 @@ export async function readWarRecord(
     OR: [{ finishedDate: null }, { finishedDate: { gt: new Date(now) } }],
   };
 
-  const [wars, aggressorTotals, defenderTotals, allyCount, ongoing] =
-    await Promise.all([
-      prisma.war.findMany({
-        select: warSelect,
-        where: { OR: [asAggressor, asDefender, asAlly] },
-        orderBy: { declaredDate: "desc" },
-        take: WAR_LIST_LIMIT,
-      }),
-      prisma.war.aggregate({
-        where: asAggressor,
-        _count: { warId: true },
-        _sum: tallies,
-      }),
-      prisma.war.aggregate({
-        where: asDefender,
-        _count: { warId: true },
-        _sum: tallies,
-      }),
-      prisma.war.count({ where: asAlly }),
-      prisma.war.count({
-        where: {
-          AND: [{ OR: [asAggressor, asDefender, asAlly] }, unfinished],
-        },
-      }),
-    ]);
+  // One query per role, merged here, rather than one `OR` across the three:
+  // the ally branch is an EXISTS, which no index can serve inside an OR, so
+  // Postgres scanned every war (~760k rows, ~0.5 s) for each page. Apart, each
+  // walks its own (party, declaredDate) index and stops at the limit.
+  const recentWars = (where: Prisma.WarWhereInput) =>
+    prisma.war.findMany({
+      select: warSelect,
+      where,
+      orderBy: { declaredDate: "desc" },
+      take: WAR_LIST_LIMIT,
+    });
+
+  const [
+    aggressorWars,
+    defenderWars,
+    allyWars,
+    aggressorTotals,
+    defenderTotals,
+    allyCount,
+    ongoing,
+  ] = await Promise.all([
+    recentWars(asAggressor),
+    recentWars(asDefender),
+    recentWars(asAlly),
+    prisma.war.aggregate({
+      where: asAggressor,
+      _count: { warId: true },
+      _sum: tallies,
+    }),
+    prisma.war.aggregate({
+      where: asDefender,
+      _count: { warId: true },
+      _sum: tallies,
+    }),
+    prisma.war.count({ where: asAlly }),
+    prisma.war.count({
+      where: {
+        AND: [{ OR: [asAggressor, asDefender, asAlly] }, unfinished],
+      },
+    }),
+  ]);
 
   return {
-    wars: wars.map((war) => toEntityWar(war, party, now)),
+    wars: mostRecentlyDeclared([aggressorWars, defenderWars, allyWars]).map(
+      (war) => toEntityWar(war, party, now),
+    ),
     summary: {
       total:
         aggressorTotals._count.warId + defenderTotals._count.warId + allyCount,

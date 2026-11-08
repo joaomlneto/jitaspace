@@ -4,7 +4,7 @@ import type { AuthenticatedContract } from "@jitaspace/hooks";
  * One contract, in the shape every contract view renders.
  *
  * Contracts reach the site two ways: public ones from our database (the
- * snapshots `/api/contracts` serves) and the authenticated characters' own
+ * snapshots `/api/contracts/open/[shard]` serves) and the authenticated characters' own
  * from ESI (`useAuthenticatedContracts`). Both are turned into this before
  * anything renders them, so a card or a row never needs to know which. Fields
  * only one source carries are optional, and names the database already knows

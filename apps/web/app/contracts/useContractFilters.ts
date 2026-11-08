@@ -17,8 +17,7 @@ import {
 
 /**
  * The contracts browser's filters, kept in the URL so a filtered view can be
- * shared. The names match what `/api/contracts` reads (`parseContractFilters`),
- * so the page forwards its own query string's meaning unchanged.
+ * shared, and sanitised here: a hand-edited URL falls back to the defaults.
  */
 const parsers = {
   type: parseAsStringLiteral(CONTRACT_TYPE_FILTERS).withDefault("all"),

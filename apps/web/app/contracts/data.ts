@@ -1,25 +1,21 @@
-import { cacheLife } from "next/cache";
-
 import type {
   ContractKind,
   ContractLocation,
   ContractSummary,
 } from "~/components/Contracts/contract";
-import type { ContractFilters } from "~/components/Contracts/filters";
+import type { Prisma } from "~/lib/db";
 import {
   BLUEPRINT_CATEGORY_ID,
   locationKind,
   typeImageVariation,
 } from "~/components/Contracts/contract";
-import { PUBLIC_CONTRACTS_PAGE_SIZE } from "~/components/Contracts/filters";
-import { Prisma, prisma } from "~/lib/db";
+import { prisma } from "~/lib/db";
 
 /**
- * Public contracts, read from the snapshots the background jobs store.
- *
- * "Open" means the latest snapshot still listed it (`isDeleted = false`), which
- * is only as current as the ingest: the archive backfill works forward in time,
- * so `readOpenContractsOverview().snapshotAt` says how far it has got.
+ * Public contracts as the snapshots the background jobs store them, in the
+ * shape the views render: the contract page, and the Contracts tabs of
+ * character, corporation and type pages (`history.ts`). The open contracts
+ * the browser lists travel in a compact form of their own (`snapshot.ts`).
  */
 
 const KIND: Record<string, ContractKind> = {
@@ -29,12 +25,6 @@ const KIND: Record<string, ContractKind> = {
   Loan: "loan",
   Unknown: "unknown",
 };
-
-const DB_TYPE = {
-  item_exchange: "ItemExchange",
-  auction: "Auction",
-  courier: "Courier",
-} as const;
 
 export const contractSummarySelect = {
   contractId: true,
@@ -66,7 +56,7 @@ export const contractSummarySelect = {
   endReason: true,
   // No `_count` here: Prisma counts a relation by grouping the whole related
   // table before joining it, which took 27 s over ContractItem's millions of
-  // historical rows. `readPageExtras` counts only the page's contracts.
+  // historical rows. `readPageExtras` counts only a page's contracts.
   // The first offered item names a contract that has no title, as in game.
   items: {
     where: { isIncluded: true },
@@ -102,7 +92,7 @@ type StationNames = Map<
   }
 >;
 
-/** What a summary needs beyond its own row, read for a page of rows at once. */
+/** What a summary needs beyond its own row. */
 export interface ContractPageExtras {
   endStations: StationNames;
   itemCounts: Map<number, number>;
@@ -267,185 +257,5 @@ export function toContractSummary(
     lastSeenAt: row.lastSeenAt?.toISOString() ?? null,
     isOpen: !row.isDeleted,
     endReason: row.endReason,
-  };
-}
-
-/** Each listed type's enum value, as a SQL literal Postgres can compare. */
-const LISTED_TYPES = ["ItemExchange", "Auction", "Courier"] as const;
-
-const enumValue = (type: string) => Prisma.sql`CAST(${type} AS "ContractType")`;
-
-/**
- * The amount a contract is listed at, as its card shows it
- * (`contractHeadlineIsk`): a courier's reward, a "want to buy" exchange's
- * reward (its price is 0), everyone else's price. ESI reports unused amounts
- * as 0, hence the NULLIFs. Sorting and the price filter use this, so a sort
- * by price does not open with every courier's 0.
- */
-// A function, not a constant: building it at import would touch Prisma before
-// anything runs, which pages' tests (which stub the client) cannot load.
-const headlineIsk = () => Prisma.sql`COALESCE(
-  NULLIF(CASE WHEN c."type" = 'Courier' THEN c."reward" ELSE c."price" END, 0),
-  NULLIF(c."reward", 0)
-)`;
-
-/** A title search means `%` and `_` literally; LIKE escapes them with a backslash. */
-function likeContaining(text: string): string {
-  return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
-}
-
-function whereFor(filters: ContractFilters): Prisma.Sql {
-  // Loans have not been offered since 2019, and "unknown" is a placeholder;
-  // neither is listed.
-  const types = filters.type === "all" ? LISTED_TYPES : [DB_TYPE[filters.type]];
-  const conditions = [
-    Prisma.sql`c."isDeleted" = false`,
-    Prisma.sql`c."type" IN (${Prisma.join(types.map(enumValue))})`,
-  ];
-  if (filters.regionId !== null) {
-    conditions.push(Prisma.sql`c."regionId" = ${filters.regionId}`);
-  }
-  if (filters.q) {
-    conditions.push(Prisma.sql`c."title" ILIKE ${likeContaining(filters.q)}`);
-  }
-  if (filters.minPrice !== null) {
-    conditions.push(Prisma.sql`${headlineIsk()} >= ${filters.minPrice}`);
-  }
-  if (filters.maxPrice !== null) {
-    conditions.push(Prisma.sql`${headlineIsk()} <= ${filters.maxPrice}`);
-  }
-  return Prisma.join(conditions, " AND ");
-}
-
-function orderFor(filters: ContractFilters): Prisma.Sql {
-  switch (filters.sort) {
-    case "oldest":
-      return Prisma.sql`c."dateIssued" ASC, c."contractId" ASC`;
-    case "expiring":
-      return Prisma.sql`c."dateExpired" ASC, c."contractId" ASC`;
-    case "price-desc":
-      return Prisma.sql`${headlineIsk()} DESC NULLS LAST, c."contractId" ASC`;
-    case "price-asc":
-      return Prisma.sql`${headlineIsk()} ASC NULLS LAST, c."contractId" ASC`;
-    case "newest":
-      return Prisma.sql`c."dateIssued" DESC, c."contractId" DESC`;
-  }
-}
-
-export interface PublicContractsPage {
-  contracts: ContractSummary[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
-/**
- * One page of open public contracts matching `filters`.
- *
- * Not cached here: `/api/contracts` serves it behind CDN cache headers, which
- * share one read per filter combination across every visitor.
- */
-export async function readPublicContracts(
-  filters: ContractFilters,
-): Promise<PublicContractsPage> {
-  // Raw SQL for the page's ids, so the order and the price filter can use
-  // headlineIsk(); Prisma's query builder cannot order by an expression. The
-  // rows themselves still come through the typed select.
-  const where = whereFor(filters);
-  const [page, [{ total }]] = await Promise.all([
-    prisma.$queryRaw<{ contractId: number }[]>`
-      SELECT c."contractId" FROM "Contract" c
-      WHERE ${where}
-      ORDER BY ${orderFor(filters)}
-      LIMIT ${PUBLIC_CONTRACTS_PAGE_SIZE}
-      OFFSET ${(filters.page - 1) * PUBLIC_CONTRACTS_PAGE_SIZE}`,
-    prisma.$queryRaw<[{ total: number }]>`
-      SELECT count(*)::int AS total FROM "Contract" c WHERE ${where}`,
-  ]);
-  const ids = page.map((row) => row.contractId);
-  const found = await prisma.contract.findMany({
-    where: { contractId: { in: ids } },
-    select: contractSummarySelect,
-  });
-  const byId = new Map(found.map((row) => [row.contractId, row]));
-  const rows = ids.flatMap((id) => byId.get(id) ?? []);
-  const extras = await readPageExtras(rows);
-  return {
-    contracts: rows.map((row) => toContractSummary(row, extras)),
-    total,
-    page: filters.page,
-    pageSize: PUBLIC_CONTRACTS_PAGE_SIZE,
-  };
-}
-
-/** Older than this, the public snapshot is a backfill still catching up. */
-const BACKFILL_LAG_MS = 2 * 24 * 60 * 60 * 1000;
-
-export interface ContractRegionFacet {
-  regionId: number;
-  name: string;
-  count: number;
-}
-
-export interface OpenContractsOverview {
-  /** Regions with open contracts, busiest first. */
-  regions: ContractRegionFacet[];
-  total: number;
-  /** The latest snapshot the open contracts come from, or null when empty. */
-  snapshotAt: string | null;
-  /**
-   * The snapshot is over two days old as of this read, so the contracts are
-   * still being imported. Decided here, inside the cached read, so the page
-   * renders the same notice on the server as in the browser.
-   */
-  isBackfilling: boolean;
-}
-
-/**
- * What the page shell shows before any filter: which regions have open
- * contracts, how many, and how current the snapshot is. Hourly, like the
- * ingest; uncaught, so a database failure throws rather than caching an empty
- * browser (apps/web/CLAUDE.md → "Never catch a database error inside a
- * `"use cache"` scope").
- */
-export async function readOpenContractsOverview(): Promise<OpenContractsOverview> {
-  "use cache";
-  cacheLife("hours");
-
-  const [groups, latest] = await Promise.all([
-    prisma.contract.groupBy({
-      by: ["regionId"],
-      where: {
-        isDeleted: false,
-        type: { in: ["ItemExchange", "Auction", "Courier"] },
-      },
-      _count: { _all: true },
-    }),
-    prisma.contract.aggregate({
-      where: { isDeleted: false },
-      _max: { lastSeenAt: true },
-    }),
-  ]);
-  const regions = await prisma.region.findMany({
-    where: { regionId: { in: groups.map((group) => group.regionId) } },
-    select: { regionId: true, name: true },
-  });
-  const names = new Map(
-    regions.map((region) => [region.regionId, region.name]),
-  );
-
-  return {
-    regions: groups
-      .map((group) => ({
-        regionId: group.regionId,
-        name: names.get(group.regionId) ?? `Region ${group.regionId}`,
-        count: group._count._all,
-      }))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)),
-    total: groups.reduce((sum, group) => sum + group._count._all, 0),
-    snapshotAt: latest._max.lastSeenAt?.toISOString() ?? null,
-    isBackfilling:
-      latest._max.lastSeenAt !== null &&
-      Date.now() - latest._max.lastSeenAt.getTime() > BACKFILL_LAG_MS,
   };
 }

@@ -4,5 +4,6 @@ export * from "./useAccessToken";
 export * from "./useAuthenticatedCharacter";
 export * from "./useSelectedCharacter";
 export * from "./useEsiSubjects";
+export * from "./useCharactersWithoutScopes";
 export * from "./useAuthStoreHasHydrated";
 export * from "./characterHasAcceptedRole";

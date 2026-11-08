@@ -25,11 +25,13 @@ import {
 const mockColonies = jest.fn();
 const mockLayouts = jest.fn();
 const mockLogin = jest.fn();
+const mockWithoutPlanets = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   PLANETS_SCOPE: "esi-planets.manage_planets.v1",
   useMultipleCharacterPlanets: () => mockColonies(),
   useCharacterPlanetLayouts: (refs: unknown) => mockLayouts(refs),
+  useCharactersWithoutScopes: () => mockWithoutPlanets(),
   useSelectedCharacter: () => ({
     accessTokenPayload: { scp: ["publicData"] },
   }),
@@ -102,7 +104,7 @@ const layouts = (
 function renderPage(searchParams = "") {
   const Page = require("~/app/planetary-interaction/page.client").default;
   return render(
-    <MantineProvider>
+    <MantineProvider env="test">
       <Page catalog={CATALOG} />
     </MantineProvider>,
     { wrapper: withNuqsTestingAdapter({ searchParams, hasMemory: true }) },
@@ -140,6 +142,7 @@ describe("Planetary Interaction page", () => {
     mockColonies.mockReset().mockReturnValue(envelope([], []));
     mockLayouts.mockReset().mockReturnValue(layouts({}));
     mockLogin.mockReset();
+    mockWithoutPlanets.mockReset().mockReturnValue([]);
   });
 
   it("lists every character's colonies with their status", () => {
@@ -287,6 +290,63 @@ describe("Planetary Interaction page", () => {
       "publicData",
       "esi-planets.manage_planets.v1",
     ]);
+  });
+
+  it("names a logged-in character it leaves out for not sharing its planets", async () => {
+    withTwoCharacters();
+    mockWithoutPlanets.mockReturnValue([
+      {
+        characterId: 90000003,
+        name: "Joao Neto",
+        grantedScopes: ["publicData", "esi-skills.read_skills.v1"],
+        sessionExpired: false,
+      },
+    ]);
+    renderPage();
+
+    expect(
+      screen.getByText("2 colonies across 2 characters"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Planets not shared by Joao Neto."),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Sign in…" }));
+    await userEvent.click(
+      await screen.findByRole("menuitem", { name: "Sign in as Joao Neto" }),
+    );
+    // What that character had, plus the planets: signing in again must not
+    // take away what it already shared.
+    expect(mockLogin).toHaveBeenCalledWith([
+      "publicData",
+      "esi-skills.read_skills.v1",
+      "esi-planets.manage_planets.v1",
+    ]);
+  });
+
+  it("says which characters to sign in as when none has shared its planets", async () => {
+    mockWithoutPlanets.mockReturnValue([
+      {
+        characterId: 90000003,
+        name: "Joao Neto",
+        grantedScopes: ["publicData"],
+        sessionExpired: true,
+      },
+    ]);
+    renderPage();
+
+    expect(
+      screen.getByText("Planets not shared by Joao Neto."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Sign in with EVE Online" }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Sign in…" }));
+    expect(
+      await screen.findByRole("menuitem", {
+        name: "Sign in as Joao Neto again",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("does not ask for access while the characters are still loading", () => {

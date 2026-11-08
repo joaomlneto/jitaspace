@@ -49,6 +49,12 @@ export default function LoginCompletePage() {
             });
             posthog.capture("user_logged_in", { character_id: characterId });
           }
+        } else {
+          // The callback redirects here only after a successful exchange, so a
+          // missing result means the hand-off cookie never arrived — as when
+          // it outgrew the browser's cookie size limit and was dropped without
+          // a trace. Report it: the user just lands back where they were.
+          posthog.capture("login_result_missing");
         }
         router.replace(returnTo);
       } catch (error) {
