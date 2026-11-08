@@ -1,21 +1,32 @@
+/* In the page's flow (not fixed): MainLayout puts it after the page content
+   and lets the content grow, so it sits at the bottom of the viewport on short
+   pages and after the content on long ones. It keeps the bar's own background
+   so it stays readable over a theme's wallpaper. */
 .footer {
-    border-top: rem(1px) solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+  margin-top: var(--mantine-spacing-xl);
+  border-top: rem(1px) solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+  background-color: var(--mantine-color-body);
+  /* Clear a landscape notch, as the header does in the installed app. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: var(--mantine-spacing-md);
-    padding-bottom: var(--mantine-spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  padding-top: var(--mantine-spacing-md);
+  padding-bottom: var(--mantine-spacing-md);
 
-    @media (max-width: $mantine-breakpoint-xs) {
-        flex-direction: column-reverse;
-    }
+  @media (max-width: $mantine-breakpoint-sm) {
+    flex-direction: column-reverse;
+    gap: var(--mantine-spacing-sm);
+    text-align: center;
+  }
 }
 
 .links {
-    @media (max-width: $mantine-breakpoint-xs) {
-        margin-bottom: var(--mantine-spacing-xs);
-    }
+  justify-content: center;
 }

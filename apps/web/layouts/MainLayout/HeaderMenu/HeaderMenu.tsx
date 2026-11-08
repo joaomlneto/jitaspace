@@ -18,6 +18,7 @@ import { DesktopNavMenu } from "./DesktopNavMenu";
 import classes from "./HeaderMenu.module.css";
 import { HeaderSearchButton } from "./HeaderSearchButton";
 import { MobileNavDrawer } from "./MobileNavDrawer";
+import { SiteLinksMenu } from "./SiteLinksMenu";
 
 /**
  * The nav group that owns the current route, chosen by the longest matching app
@@ -92,8 +93,8 @@ function ActiveDesktopNavGroup() {
 /**
  * Top navigation header for the MainLayout. Labelled "mega menu"-style
  * dropdowns (Character / Universe) replace the older
- * icon-only triggers, alongside a Spotlight-backed search box and the character
- * menu. Responsive: trigger labels and the full search box appear on wider
+ * icon-only triggers, alongside a Spotlight-backed search box, the JitaSpace
+ * menu (About / Support / Status / Discord) and the character menu. Responsive: trigger labels and the full search box appear on wider
  * screens, and it collapses to the character avatar (opening the same character
  * menu) plus a burger + full-screen drawer below `sm`.
  */
@@ -129,6 +130,7 @@ export function HeaderMenu() {
 
             <Group gap="xs" visibleFrom="sm" wrap="nowrap">
               <HeaderSearchButton />
+              <SiteLinksMenu />
               {characterIds.length > 0 && <UserButton />}
               {characterIds.length === 0 && (
                 <LoginWithEveOnlineButton
@@ -147,6 +149,7 @@ export function HeaderMenu() {
             </Group>
 
             <Group gap="xs" hiddenFrom="sm" wrap="nowrap">
+              <SiteLinksMenu />
               {characterIds.length > 0 && <UserButton compact />}
               <Burger
                 className={classes.burger}
