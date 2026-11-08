@@ -49,8 +49,11 @@ export const CharacterButton = memo(
             </Group>
           </UnstyledButton>
         </Popover.Target>
-        <Popover.Dropdown>
-          {characterId && <CharacterCard characterId={characterId} />}
+        {/* The card brings its own frame, so the dropdown adds none. */}
+        <Popover.Dropdown p={0} bd={0} bg="transparent">
+          {characterId && (
+            <CharacterCard characterId={characterId} variant="compact" />
+          )}
         </Popover.Dropdown>
       </Popover>
     );

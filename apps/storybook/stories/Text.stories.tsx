@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Table } from "@mantine/core";
+import { Stack, Table } from "@mantine/core";
 
 import {
   AsteroidBeltName,
@@ -40,21 +40,22 @@ export const ISKMagnitudes: Story = {
   render: (args) => (
     <Table w="auto" withRowBorders={false}>
       <Table.Tbody>
-        {[0, 950, 12_500, 4_200_000, 1_234_567_890, 2.5e12, -350_000_000].map(
-          (amount) => (
-            <Table.Tr key={amount}>
-              <Table.Td>
-                <code>{amount}</code>
-              </Table.Td>
-              <Table.Td>
-                <ISKAmount {...args} amount={amount} />
-              </Table.Td>
-              <Table.Td>
-                <ISKAmount {...args} amount={amount} showFullAmount />
-              </Table.Td>
-            </Table.Tr>
-          ),
-        )}
+        {[
+          0, 0.5, 950, 999.96, 12_500, 999_950, 4_200_000, 1_234_567_890,
+          999_999_999, 2.5e12, -350_000_000,
+        ].map((amount) => (
+          <Table.Tr key={amount}>
+            <Table.Td>
+              <code>{amount}</code>
+            </Table.Td>
+            <Table.Td>
+              <ISKAmount {...args} amount={amount} />
+            </Table.Td>
+            <Table.Td>
+              <ISKAmount {...args} amount={amount} showFullAmount />
+            </Table.Td>
+          </Table.Tr>
+        ))}
       </Table.Tbody>
     </Table>
   ),
@@ -199,5 +200,11 @@ export const Position3D: Story = {
 
 /** The ISK CONCORD charges to send mail to a character with CSPA set. */
 export const CSPACost: Story = {
-  render: () => <CSPACostText cost={250_000} />,
+  render: () => (
+    <Stack gap={4}>
+      <CSPACostText cost={250_000} />
+      <CSPACostText cost={0} />
+      <CSPACostText />
+    </Stack>
+  ),
 };

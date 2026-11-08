@@ -16,6 +16,10 @@ import React from "react";
 // loads fine here, and the layout tests assert its prefetch behaviour.
 export { HoverPrefetchLink } from "../../../../packages/ui/Link/HoverPrefetchLink";
 
+// The corporation palette is real too: it needs only React and Mantine, and the
+// corporation page tests assert its stripe and swatches from real palette data.
+export * from "../../../../packages/ui/CorporationPalette";
+
 // Entity anchors render a real <a> so tests can assert the destination. The
 // href is omitted while the id is nullish, mirroring the real components —
 // emitting `/race/undefined` is precisely the bug these stubs must not hide.

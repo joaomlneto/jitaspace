@@ -31,9 +31,14 @@ const LIGHT_SECURITY_TIERS = new Set(["0.5", "0.6", "0.7", "0.8"]);
 /**
  * Round a raw security status to its displayed tier (one decimal, clamped at
  * 0.0 — EVE never shows a negative security number with a distinct colour).
+ *
+ * Any positive status is low-sec, so one below 0.05 is shown as 0.1 rather
+ * than rounding down to null-sec's 0.0, matching `securityStatusBand`.
  */
-export const roundSecurityStatus = (securityStatus: number): number =>
-  Math.round(Math.max(securityStatus, 0) * 10) / 10;
+export const roundSecurityStatus = (securityStatus: number): number => {
+  if (securityStatus > 0 && securityStatus < 0.05) return 0.1;
+  return Math.round(Math.max(securityStatus, 0) * 10) / 10;
+};
 
 /** Displayed security value, e.g. `0.9`, `0.0`. */
 export const formatSecurityStatus = (securityStatus: number): string =>

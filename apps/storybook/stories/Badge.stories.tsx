@@ -63,6 +63,51 @@ export const Standings: Story = {
   ),
 };
 
+/** Raw values on the left; each badge is coloured by the value it shows. */
+const RawValues = ({
+  values,
+  render,
+}: {
+  values: number[];
+  render: (value: number) => React.ReactNode;
+}) => (
+  <Stack gap={6}>
+    {values.map((value) => (
+      <Group key={value} gap="xs">
+        <Text size="sm" ff="monospace" w={60}>
+          {value}
+        </Text>
+        {render(value)}
+      </Group>
+    ))}
+  </Stack>
+);
+
+/**
+ * Rounding edges: a barely-positive status is low-sec, so it shows 0.1, never
+ * null-sec's 0.0; negative statuses show as 0.0.
+ */
+export const SecurityStatusRounding: Story = {
+  render: () => (
+    <RawValues
+      values={[0.45, 0.449, 0.05, 0.04, 0.001, 0, -0.4]}
+      render={(value) => (
+        <SolarSystemSecurityStatusBadge securityStatus={value} />
+      )}
+    />
+  ),
+};
+
+/** The colour follows the displayed value, so 0.04 reads 0.0 in neutral grey. */
+export const StandingsRounding: Story = {
+  render: () => (
+    <RawValues
+      values={[5.04, 5, 0.04, -0.04, -5.04]}
+      render={(value) => <StandingsBadge standing={value} />}
+    />
+  ),
+};
+
 export const CalendarEventResponses: Story = {
   render: () => (
     <Group gap="xs">

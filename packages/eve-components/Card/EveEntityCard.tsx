@@ -14,19 +14,25 @@ import { useEsiName } from "@jitaspace/hooks";
 import { EveEntityAvatar } from "../Avatar";
 import { AllianceCard } from "./AllianceCard";
 import { CharacterCard } from "./CharacterCard";
+import { CorporationCard } from "./CorporationCard";
 
 interface EveEntityCardProps {
   entityId: string | number;
 }
 
+/**
+ * The card for any entity id: the alliance, corporation or character card once
+ * its category is known, else its avatar and name.
+ */
 export const EveEntityCard = memo(({ entityId }: EveEntityCardProps) => {
   const { name, category } = useEsiName(entityId);
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
+  const id = Number(entityId);
 
-  if (category === "alliance") return <AllianceCard allianceId={entityId} />;
-  if (category === "character")
-    return <CharacterCard characterId={Number(entityId)} />;
+  if (category === "alliance") return <AllianceCard allianceId={id} />;
+  if (category === "corporation") return <CorporationCard corporationId={id} />;
+  if (category === "character") return <CharacterCard characterId={id} />;
 
   return (
     <Paper

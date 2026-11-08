@@ -92,13 +92,19 @@ const entityStub = () =>
   );
 jest.mock("@jitaspace/ui", () => {
   const stub = entityStub();
+  // The corporation palette is real: these tests assert its stripe and swatches.
+  const palette = jest.requireActual<Record<string | symbol, unknown>>(
+    "../../../packages/ui/CorporationPalette",
+  );
   return new Proxy(
     {},
     {
-      get: (_, name) =>
-        name === "ISKAmount"
-          ? ({ amount }: { amount?: number }) => <span>{amount} ISK</span>
-          : (stub as Record<string | symbol, unknown>)[name],
+      get: (_, name) => {
+        if (name === "ISKAmount")
+          return ({ amount }: { amount?: number }) => <span>{amount} ISK</span>;
+        if (name in palette) return palette[name];
+        return (stub as Record<string | symbol, unknown>)[name];
+      },
     },
   );
 });

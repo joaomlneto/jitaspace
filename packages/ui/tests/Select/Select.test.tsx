@@ -8,12 +8,6 @@ import userEvent from "@testing-library/user-event";
 import type * as CalendarEventAttendanceSelectModule from "../../Select/CalendarEventAttendanceSelect";
 import type * as MailLabelColorSelectModule from "../../Select/MailLabelColorSelect";
 
-// Capture the confirm-modal config so we can drive onConfirm manually.
-const mockOpenConfirmModal = jest.fn();
-jest.mock("@mantine/modals", () => ({
-  openConfirmModal: (...args: unknown[]) => mockOpenConfirmModal(...args),
-}));
-
 // Make the "random" colour deterministic for MailLabelColorSelect.
 const mockGetRandomArrayEntry = jest.fn();
 jest.mock("@jitaspace/utils", () => ({
@@ -32,9 +26,13 @@ const renderWithMantine = (ui: React.ReactElement) =>
 // CalendarEventAttendanceSelect
 // ---------------------------------------------------------------------------
 describe("CalendarEventAttendanceSelect", () => {
-  beforeEach(() => {
-    mockOpenConfirmModal.mockReset();
-  });
+  /** Opens the dropdown and picks `label`. */
+  const pick = async (label: string) => {
+    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.click(
+      screen.getByRole("option", { name: label, hidden: true }),
+    );
+  };
 
   it("renders the 'Not responded' placeholder by default", () => {
     renderWithMantine(<CalendarEventAttendanceSelect canRespond />);
@@ -63,73 +61,68 @@ describe("CalendarEventAttendanceSelect", () => {
     expect(screen.getByRole("combobox")).toHaveValue("Accepted");
   });
 
-  it("opens a confirmation modal when a new response is selected", async () => {
-    renderWithMantine(
-      <CalendarEventAttendanceSelect canRespond eventTitle="Fleet Op" />,
-    );
-    await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(
-      screen.getByRole("option", { name: "Accepted", hidden: true }),
-    );
-
-    expect(mockOpenConfirmModal).toHaveBeenCalledTimes(1);
-    const config = mockOpenConfirmModal.mock.calls[0]![0] as {
-      title: string;
-      children: string;
-    };
-    expect(config.title).toBe("Are you sure?");
-    expect(config.children).toContain("Fleet Op");
-    expect(config.children).toContain("accepted");
-  });
-
-  it("invokes onRespond with the chosen response once the modal is confirmed", async () => {
+  it("applies a pick at once when no confirmation is asked for", async () => {
     const onRespond = jest.fn();
     renderWithMantine(
       <CalendarEventAttendanceSelect canRespond onRespond={onRespond} />,
     );
-    await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(
-      screen.getByRole("option", { name: "Declined", hidden: true }),
-    );
-
-    // The callback only fires once the user confirms the modal.
-    expect(onRespond).not.toHaveBeenCalled();
-    const config = mockOpenConfirmModal.mock.calls[0]![0] as {
-      onConfirm: () => void;
-    };
-    act(() => {
-      config.onConfirm();
-    });
-
+    await pick("Declined");
     expect(onRespond).toHaveBeenCalledWith("declined");
+    expect(screen.getByRole("combobox")).toHaveValue("Declined");
   });
 
-  it("reflects the confirmed response in the input value", async () => {
-    renderWithMantine(<CalendarEventAttendanceSelect canRespond />);
-    await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(
-      screen.getByRole("option", { name: "Tentative", hidden: true }),
+  it("asks confirmResponse first, and applies only once it calls apply", async () => {
+    const onRespond = jest.fn();
+    const confirmResponse =
+      jest.fn<(response: string, apply: () => void) => void>();
+    renderWithMantine(
+      <CalendarEventAttendanceSelect
+        canRespond
+        confirmResponse={confirmResponse}
+        onRespond={onRespond}
+      />,
     );
+    await pick("Tentative");
 
-    // Value is committed only after confirming. onConfirm triggers a state
-    // update, so run it inside act() to flush React.
-    const config = mockOpenConfirmModal.mock.calls[0]![0] as {
-      onConfirm: () => void;
-    };
-    act(() => {
-      config.onConfirm();
-    });
+    expect(confirmResponse).toHaveBeenCalledTimes(1);
+    expect(confirmResponse.mock.calls[0]?.[0]).toBe("tentative");
+    expect(onRespond).not.toHaveBeenCalled();
+    expect(screen.getByRole("combobox")).not.toHaveValue("Tentative");
 
+    act(() => confirmResponse.mock.calls[0]?.[1]());
+
+    expect(onRespond).toHaveBeenCalledWith("tentative");
     expect(screen.getByRole("combobox")).toHaveValue("Tentative");
   });
 
-  it("does not open a confirmation modal when responses are read-only", async () => {
-    renderWithMantine(<CalendarEventAttendanceSelect canRespond={false} />);
+  it("leaves the response as it was when confirmation never applies", async () => {
+    const onRespond = jest.fn();
+    renderWithMantine(
+      <CalendarEventAttendanceSelect
+        canRespond
+        initialResponse="accepted"
+        confirmResponse={() => undefined}
+        onRespond={onRespond}
+      />,
+    );
+    await pick("Declined");
+    expect(onRespond).not.toHaveBeenCalled();
+    expect(screen.getByRole("combobox")).toHaveValue("Accepted");
+  });
+
+  it("does not respond when responses are read-only", async () => {
+    const confirmResponse = jest.fn();
+    renderWithMantine(
+      <CalendarEventAttendanceSelect
+        canRespond={false}
+        confirmResponse={confirmResponse}
+      />,
+    );
     const input = screen.getByRole("combobox");
     // A read-only Select does not open its dropdown
     await userEvent.click(input);
     expect(input).toHaveAttribute("readonly");
-    expect(mockOpenConfirmModal).not.toHaveBeenCalled();
+    expect(confirmResponse).not.toHaveBeenCalled();
   });
 
   it("shows a loader in the right section while loading", () => {
@@ -139,26 +132,24 @@ describe("CalendarEventAttendanceSelect", () => {
     expect(container.querySelector(".mantine-Loader-root")).toBeInTheDocument();
   });
 
-  it("does not let a caller-supplied onChange bypass the confirmation flow", async () => {
+  it("does not let a caller-supplied onChange bypass the confirmation", async () => {
     // Regression: otherProps is spread BEFORE the internal onChange, so a
-    // caller's onChange cannot override the confirm-modal logic.
+    // caller's onChange cannot override the confirmation logic.
     const callerOnChange = jest.fn();
+    const confirmResponse =
+      jest.fn<(response: string, apply: () => void) => void>();
     renderWithMantine(
-      <CalendarEventAttendanceSelect canRespond onChange={callerOnChange} />,
+      <CalendarEventAttendanceSelect
+        canRespond
+        confirmResponse={confirmResponse}
+        onChange={callerOnChange}
+      />,
     );
-    await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(
-      screen.getByRole("option", { name: "Accepted", hidden: true }),
-    );
-    // Internal logic still runs (modal opens); caller's onChange is only
-    // invoked once confirmed, not in place of the modal.
-    expect(mockOpenConfirmModal).toHaveBeenCalledTimes(1);
+    await pick("Accepted");
+    expect(confirmResponse).toHaveBeenCalledTimes(1);
     expect(callerOnChange).not.toHaveBeenCalled();
-    const config = mockOpenConfirmModal.mock.calls[0]![0] as {
-      onConfirm: () => void;
-    };
-    act(() => config.onConfirm());
-    expect(callerOnChange.mock.calls[0]?.[0]).toBe("accepted");
+    act(() => confirmResponse.mock.calls[0]?.[1]());
+    expect(callerOnChange).toHaveBeenCalledWith("accepted", expect.anything());
   });
 });
 

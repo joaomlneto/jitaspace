@@ -120,7 +120,9 @@ const preview: Preview = {
     },
     nextjs: { appDirectory: true },
     options: {
-      storySort: { order: ["Introduction", "Foundations", "Components"] },
+      storySort: {
+        order: ["Introduction", "Foundations", "Cards", "Components"],
+      },
     },
     a11y: { test: "todo" },
   },

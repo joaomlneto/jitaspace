@@ -1,17 +1,35 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+
+import type * as AllianceCardModule from "../../Card/AllianceCard";
+import type * as CharacterCardModule from "../../Card/CharacterCard";
+import type * as CorporationCardModule from "../../Card/CorporationCard";
+import type * as EveEntityCardModule from "../../Card/EveEntityCard";
+import type * as EveMailSenderCardModule from "../../Card/EveMailSenderCard";
+import type * as KillmailCardModule from "../../Card/KillmailCard";
+import type * as TypeCardModule from "../../Card/TypeCard";
+import type * as WarCardModule from "../../Card/WarCard";
 
 // ---------------------------------------------------------------------------
-// Hook mocks — every Card pulls its data from @jitaspace/hooks.
+// Hook mocks. The cards render the real @jitaspace/ui card displays; only the
+// data comes from these.
 // ---------------------------------------------------------------------------
 const mockUseEsiAllianceInformation = jest.fn();
 const mockUseEsiAllianceMemberCorporations = jest.fn();
 const mockUseCharacter = jest.fn();
+const mockUseCorporation = jest.fn();
+const mockUseWar = jest.fn();
+const mockUseType = jest.fn();
+const mockUseGroup = jest.fn();
+const mockUseCategory = jest.fn();
+const mockUseMarketPrices = jest.fn();
+const mockUseKillmail = jest.fn();
+const mockUseSolarSystem = jest.fn();
 const mockUseEsiName = jest.fn();
+const mockUseEsiNameLookup = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   useEsiAllianceInformation: (...a: unknown[]) =>
@@ -19,43 +37,16 @@ jest.mock("@jitaspace/hooks", () => ({
   useEsiAllianceMemberCorporations: (...a: unknown[]) =>
     mockUseEsiAllianceMemberCorporations(...a),
   useCharacter: (...a: unknown[]) => mockUseCharacter(...a),
+  useCorporation: (...a: unknown[]) => mockUseCorporation(...a),
+  useWar: (...a: unknown[]) => mockUseWar(...a),
+  useType: (...a: unknown[]) => mockUseType(...a),
+  useGroup: (...a: unknown[]) => mockUseGroup(...a),
+  useCategory: (...a: unknown[]) => mockUseCategory(...a),
+  useMarketPrices: (...a: unknown[]) => mockUseMarketPrices(...a),
+  useKillmail: (...a: unknown[]) => mockUseKillmail(...a),
+  useSolarSystem: (...a: unknown[]) => mockUseSolarSystem(...a),
   useEsiName: (...a: unknown[]) => mockUseEsiName(...a),
-}));
-
-// ---------------------------------------------------------------------------
-// Lightweight stand-ins for the leaf presentational packages so we don't drag
-// in the full ESI name-resolution / image-server machinery.
-// ---------------------------------------------------------------------------
-// Pure leaves (avatars + FormattedDateText) live in @jitaspace/ui; the smart
-// Card components import them from there. Keep every other real ui export
-// (Card, Badge, AllianceAnchor, CorporationAnchor, …) and only stub the few
-// the assertions rely on. The moved leaves (CharacterAnchor, *Name,
-// EveEntityAvatar) are imported relatively and stubbed via the relative mocks
-// below.
-jest.mock("@jitaspace/ui", () => ({
-  ...jest.requireActual<typeof import("@jitaspace/ui")>("@jitaspace/ui"),
-  AllianceAvatar: ({ allianceId }: { allianceId: number | string }) => (
-    <span data-testid="alliance-avatar">{`AllianceAvatar ${allianceId}`}</span>
-  ),
-  CharacterAvatar: ({ characterId }: { characterId: number | string }) => (
-    <span data-testid="character-avatar">{`CharacterAvatar ${characterId}`}</span>
-  ),
-  CorporationAvatar: ({
-    corporationId,
-  }: {
-    corporationId: number | string;
-  }) => (
-    <span data-testid="corporation-avatar">{`CorporationAvatar ${corporationId}`}</span>
-  ),
-  FormattedDateText: ({ date }: { date: Date }) => (
-    <span>{`Date ${date.toISOString()}`}</span>
-  ),
-}));
-
-jest.mock("../../Anchor", () => ({
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#character">{children}</a>
-  ),
+  useEsiNameLookup: (...a: unknown[]) => mockUseEsiNameLookup(...a),
 }));
 
 jest.mock("../../Avatar", () => ({
@@ -64,210 +55,334 @@ jest.mock("../../Avatar", () => ({
   ),
 }));
 
-jest.mock("../../Text", () => ({
-  AllianceName: ({ allianceId }: { allianceId: number | string }) => (
-    <span>{`Alliance ${allianceId}`}</span>
-  ),
-  CharacterName: ({ characterId }: { characterId: number | string }) => (
-    <span>{`Character ${characterId}`}</span>
-  ),
-  CorporationName: ({ corporationId }: { corporationId: number | string }) => (
-    <span>{`Corporation ${corporationId}`}</span>
-  ),
-}));
-
 const { AllianceCard } =
-  require("../../Card/AllianceCard") as typeof import("../../Card/AllianceCard");
+  require("../../Card/AllianceCard") as typeof AllianceCardModule;
 const { CharacterCard } =
-  require("../../Card/CharacterCard") as typeof import("../../Card/CharacterCard");
+  require("../../Card/CharacterCard") as typeof CharacterCardModule;
+const { CorporationCard } =
+  require("../../Card/CorporationCard") as typeof CorporationCardModule;
 const { EveEntityCard } =
-  require("../../Card/EveEntityCard") as typeof import("../../Card/EveEntityCard");
+  require("../../Card/EveEntityCard") as typeof EveEntityCardModule;
 const { EveMailSenderCard } =
-  require("../../Card/EveMailSenderCard") as typeof import("../../Card/EveMailSenderCard");
+  require("../../Card/EveMailSenderCard") as typeof EveMailSenderCardModule;
+const { KillmailCard } =
+  require("../../Card/KillmailCard") as typeof KillmailCardModule;
+const { TypeCard } = require("../../Card/TypeCard") as typeof TypeCardModule;
+const { WarCard } = require("../../Card/WarCard") as typeof WarCardModule;
 
 const renderWithMantine = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
 
+/** Every id resolves to "Name <id>" through the name lookup. */
+const resolveAllNames = () =>
+  mockUseEsiNameLookup.mockImplementation((entries: unknown) =>
+    Object.fromEntries(
+      (entries as { id: number }[]).map(({ id }) => [
+        id.toString(),
+        { status: "success", value: { name: `Name ${id}` } },
+      ]),
+    ),
+  );
+
+const linkTo = (name: string) =>
+  screen.getAllByText(name)[0]?.closest("a")?.getAttribute("href");
+
+const statRow = (label: string) => {
+  const row = screen.getByText(label).parentElement;
+  if (!row) throw new Error(`no row for ${label}`);
+  return within(row);
+};
+
 beforeEach(() => {
-  mockUseEsiAllianceInformation.mockReturnValue({ data: undefined });
-  mockUseEsiAllianceMemberCorporations.mockReturnValue({ data: undefined });
-  mockUseCharacter.mockReturnValue({ data: undefined });
+  for (const mock of [
+    mockUseEsiAllianceInformation,
+    mockUseEsiAllianceMemberCorporations,
+    mockUseCharacter,
+    mockUseCorporation,
+    mockUseWar,
+    mockUseType,
+    mockUseGroup,
+    mockUseCategory,
+    mockUseKillmail,
+    mockUseSolarSystem,
+  ])
+    mock.mockReturnValue({ data: undefined });
+  mockUseMarketPrices.mockReturnValue({ data: {} });
   mockUseEsiName.mockReturnValue({ name: "Some Entity", category: undefined });
+  resolveAllNames();
 });
 
-// ---------------------------------------------------------------------------
-// AllianceCard
-// ---------------------------------------------------------------------------
 describe("AllianceCard", () => {
-  it("renders a rich alliance card with all metadata populated", () => {
+  it("fills the alliance card from ESI and resolves every name", () => {
     mockUseEsiAllianceInformation.mockReturnValue({
       data: {
         data: {
-          ticker: "TEST",
-          creator_id: 91000001,
-          creator_corporation_id: 98000001,
-          executor_corporation_id: 98000002,
-          date_founded: "2010-01-01T00:00:00Z",
+          name: "Goonswarm Federation",
+          ticker: "CONDI",
+          date_founded: "2010-06-01T05:36:00Z",
+          executor_corporation_id: 1344654522,
+          creator_corporation_id: 459299583,
+          creator_id: 240070320,
         },
       },
     });
     mockUseEsiAllianceMemberCorporations.mockReturnValue({
-      data: { data: [98000002, 98000003, 98000004] },
+      data: { data: Array.from({ length: 30 }, (_, i) => 98000000 + i) },
     });
 
-    renderWithMantine(<AllianceCard allianceId={99000001} />);
+    renderWithMantine(<AllianceCard allianceId={1354830081} />);
 
-    expect(mockUseEsiAllianceInformation).toHaveBeenCalledWith(99000001);
-    expect(mockUseEsiAllianceMemberCorporations).toHaveBeenCalledWith(99000001);
-
-    expect(screen.getByText("Alliance 99000001")).toBeInTheDocument();
-    expect(screen.getByText("TEST")).toBeInTheDocument();
-    expect(screen.getByText("Creator:")).toBeInTheDocument();
-    expect(screen.getByText("Executor:")).toBeInTheDocument();
-    expect(screen.getByText("Founded")).toBeInTheDocument();
-    expect(
-      screen.getByText("Date 2010-01-01T00:00:00.000Z"),
-    ).toBeInTheDocument();
-    // Three member corporations -> count shown plus the member list section
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("Member corporation list")).toBeInTheDocument();
+    expect(mockUseEsiAllianceInformation).toHaveBeenCalledWith(1354830081);
+    expect(linkTo("Goonswarm Federation")).toBe("/alliance/1354830081");
+    expect(linkTo("Name 1344654522")).toBe("/corporation/1344654522");
+    expect(linkTo("Name 240070320")).toBe("/character/240070320");
+    expect(statRow("Member corporations").getByText("30")).toBeInTheDocument();
+    expect(screen.getByText("+6 more")).toBeInTheDocument();
   });
 
-  it("shows N/A placeholders and hides optional blocks when data is sparse", () => {
+  it("resolves only the member corporations the card lists", () => {
     mockUseEsiAllianceInformation.mockReturnValue({
-      data: { data: {} },
+      data: {
+        data: { name: "Big", ticker: "BIG", date_founded: "2010-01-01" },
+      },
     });
     mockUseEsiAllianceMemberCorporations.mockReturnValue({
-      data: { data: [] },
+      data: { data: Array.from({ length: 800 }, (_, i) => 98000000 + i) },
     });
 
     renderWithMantine(<AllianceCard allianceId={1} />);
 
-    // Ticker badge plus several metadata rows all fall back to "N/A"
-    expect(screen.getAllByText("N/A").length).toBeGreaterThanOrEqual(2);
-    expect(screen.queryByText("Creator:")).not.toBeInTheDocument();
-    expect(screen.queryByText("Executor:")).not.toBeInTheDocument();
+    const entries = mockUseEsiNameLookup.mock.calls.at(-1)?.[0] as {
+      id: number;
+    }[];
+    expect(entries).toHaveLength(24);
+  });
+
+  it("renders skeletons until ESI answers", () => {
+    const { container } = renderWithMantine(<AllianceCard allianceId={1} />);
     expect(
-      screen.queryByText("Member corporation list"),
-    ).not.toBeInTheDocument();
+      container.querySelectorAll(".mantine-Skeleton-root").length,
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("CorporationCard", () => {
+  const corporation = {
+    name: "EVE University",
+    ticker: "E-UNI",
+    alliance_id: 937872513,
+    ceo_id: 91541581,
+    creator_id: 540496093,
+    date_founded: "2004-03-15T14:33:00Z",
+    description:
+      '<font size="16"><b>EVE University - EVE\'s premier teaching organization</b></font>',
+    member_count: 5716,
+    shares: 1000,
+    tax_rates: { isk: 10, loyalty_point: 5.6 },
+    url: "https://www.eveuniversity.org",
+    war_eligible: false,
+  };
+
+  it("fills the corporation card, stripping the description's markup", () => {
+    mockUseCorporation.mockReturnValue({ data: { data: corporation } });
+
+    renderWithMantine(<CorporationCard corporationId={917701062} />);
+
+    expect(linkTo("EVE University")).toBe("/corporation/917701062");
+    expect(linkTo("Name 937872513")).toBe("/alliance/937872513");
+    expect(linkTo("Name 91541581")).toBe("/character/91541581");
+    expect(statRow("Tax rate").getByText("10.0%")).toBeInTheDocument();
+    expect(
+      screen.getByText("EVE University - EVE's premier teaching organization"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/<font/i)).not.toBeInTheDocument();
   });
 
-  it("renders a header right section when provided", () => {
-    mockUseEsiAllianceInformation.mockReturnValue({ data: { data: {} } });
-    mockUseEsiAllianceMemberCorporations.mockReturnValue({
-      data: { data: [] },
+  it("reads N/A rather than throwing when tax_rates arrives without isk", () => {
+    mockUseCorporation.mockReturnValue({
+      data: { data: { ...corporation, tax_rates: { loyalty_point: 5 } } },
     });
-
-    renderWithMantine(
-      <AllianceCard
-        allianceId={1}
-        headerRightSection={<button type="button">Menu</button>}
-      />,
-    );
-    expect(screen.getByRole("button", { name: "Menu" })).toBeInTheDocument();
+    renderWithMantine(<CorporationCard corporationId={1} />);
+    expect(statRow("Tax rate").getByText("N/A")).toBeInTheDocument();
   });
 
-  it("accepts a string allianceId and coerces it for the hooks", () => {
-    mockUseEsiAllianceInformation.mockReturnValue({ data: { data: {} } });
-    mockUseEsiAllianceMemberCorporations.mockReturnValue({
-      data: { data: [] },
-    });
-
-    renderWithMantine(<AllianceCard allianceId="42" />);
-    expect(mockUseEsiAllianceInformation).toHaveBeenCalledWith(42);
-  });
-
-  it("in compact mode renders only the header section", () => {
-    mockUseEsiAllianceInformation.mockReturnValue({
+  it("dresses the card in the corporation's palette", () => {
+    mockUseCorporation.mockReturnValue({
       data: {
         data: {
-          ticker: "TEST",
-          creator_id: 91000001,
-          executor_corporation_id: 98000002,
-          date_founded: "2010-01-01T00:00:00Z",
+          ...corporation,
+          palette: { main_color: "#0029ff", secondary_color: "#009cff" },
         },
       },
     });
-    mockUseEsiAllianceMemberCorporations.mockReturnValue({
-      data: { data: [98000002, 98000003, 98000004] },
-    });
-
-    renderWithMantine(<AllianceCard allianceId={99000001} compact />);
-
-    // Header is still rendered.
-    expect(screen.getByText("Alliance 99000001")).toBeInTheDocument();
-    expect(screen.getByText("TEST")).toBeInTheDocument();
-    expect(screen.getByText("Creator:")).toBeInTheDocument();
-    expect(screen.getByText("Executor:")).toBeInTheDocument();
-
-    // The metadata and member-list sections are hidden in compact mode.
-    expect(screen.queryByText("Founded")).not.toBeInTheDocument();
-    expect(screen.queryByText("Member corporations")).not.toBeInTheDocument();
+    renderWithMantine(<CorporationCard corporationId={1} />);
     expect(
-      screen.queryByText("Member corporation list"),
-    ).not.toBeInTheDocument();
+      screen.getByTestId("corporation-palette-stripe").children,
+    ).toHaveLength(2);
   });
 });
 
-// ---------------------------------------------------------------------------
-// CharacterCard
-// ---------------------------------------------------------------------------
 describe("CharacterCard", () => {
-  it("renders the character name and avatar", () => {
-    mockUseCharacter.mockReturnValue({ data: undefined });
-    renderWithMantine(<CharacterCard characterId={123} />);
-    expect(mockUseCharacter).toHaveBeenCalledWith(123);
-    expect(screen.getByText("Character 123")).toBeInTheDocument();
-    expect(screen.getByTestId("character-avatar")).toBeInTheDocument();
-  });
-
-  it("renders the corporation block once character data resolves", () => {
+  it("fills the character card from useCharacter", () => {
     mockUseCharacter.mockReturnValue({
-      data: { corporationId: 98000001 },
+      data: {
+        name: "Chribba",
+        corporationId: 1164409536,
+        allianceId: 159826257,
+        birthday: new Date("2003-06-10T17:47:00Z"),
+        securityStatus: 5.1,
+      },
     });
-    renderWithMantine(<CharacterCard characterId={123} />);
-    expect(screen.getByText("Corporation 98000001")).toBeInTheDocument();
-    expect(screen.getByTestId("corporation-avatar")).toBeInTheDocument();
-  });
 
-  it("renders the alliance block when the character belongs to one", () => {
-    mockUseCharacter.mockReturnValue({
-      data: { corporationId: 98000001, allianceId: 99000001 },
-    });
-    renderWithMantine(<CharacterCard characterId={123} />);
-    expect(screen.getByText("Alliance 99000001")).toBeInTheDocument();
-    expect(screen.getByTestId("alliance-avatar")).toBeInTheDocument();
-  });
+    renderWithMantine(<CharacterCard characterId={196379789} />);
 
-  it("omits the alliance block when the character has no alliance", () => {
-    mockUseCharacter.mockReturnValue({
-      data: { corporationId: 98000001 },
-    });
-    renderWithMantine(<CharacterCard characterId={123} />);
-    expect(screen.queryByTestId("alliance-avatar")).not.toBeInTheDocument();
+    expect(mockUseCharacter).toHaveBeenCalledWith(196379789);
+    expect(linkTo("Chribba")).toBe("/character/196379789");
+    expect(linkTo("Name 1164409536")).toBe("/corporation/1164409536");
+    expect(linkTo("Name 159826257")).toBe("/alliance/159826257");
+    expect(statRow("Security status").getByText("5.1")).toBeInTheDocument();
   });
 });
 
-// ---------------------------------------------------------------------------
-// EveEntityCard
-// ---------------------------------------------------------------------------
+describe("WarCard", () => {
+  it("fills the war card, naming both sides and deriving its status", () => {
+    mockUseWar.mockReturnValue({
+      data: {
+        data: {
+          id: 739773,
+          aggressor: {
+            alliance_id: 131511956,
+            isk_destroyed: 5_100_346_700,
+            ships_killed: 74,
+          },
+          defender: {
+            corporation_id: 98580276,
+            isk_destroyed: 0,
+            ships_killed: 0,
+          },
+          allies: [{ alliance_id: 99000001 }],
+          declared: "2024-03-20T20:09:00Z",
+          started: "2024-03-21T20:09:00Z",
+          finished: "2024-03-28T20:25:00Z",
+          mutual: false,
+          open_for_allies: true,
+        },
+      },
+    });
+
+    renderWithMantine(<WarCard warId={739773} />);
+
+    expect(linkTo("War 739773")).toBe("/war/739773");
+    expect(linkTo("Name 131511956")).toBe("/alliance/131511956");
+    expect(linkTo("Name 98580276")).toBe("/corporation/98580276");
+    expect(linkTo("Name 99000001")).toBe("/alliance/99000001");
+    expect(screen.getByText("Finished")).toBeInTheDocument();
+    expect(screen.getByText("74 ships killed")).toBeInTheDocument();
+  });
+});
+
+describe("TypeCard", () => {
+  it("fills the type card from the type, its group, category and price", () => {
+    mockUseType.mockReturnValue({
+      data: {
+        data: {
+          name: "Rifter",
+          group_id: 25,
+          volume: 27289,
+          packaged_volume: 2500,
+          mass: 1_067_000,
+          capacity: 140,
+          published: true,
+          description: "A <b>frigate</b>.",
+        },
+      },
+    });
+    mockUseGroup.mockReturnValue({
+      data: { data: { name: "Frigate", category_id: 6 } },
+    });
+    mockUseCategory.mockReturnValue({ data: { data: { name: "Ship" } } });
+    mockUseMarketPrices.mockReturnValue({
+      data: { 587: { average_price: 284_513.53 } },
+    });
+
+    renderWithMantine(<TypeCard typeId={587} />);
+
+    expect(mockUseGroup).toHaveBeenCalledWith(25);
+    expect(mockUseCategory).toHaveBeenCalledWith(6);
+    expect(linkTo("Frigate")).toBe("/group/25");
+    expect(linkTo("Ship")).toBe("/category/6");
+    expect(statRow("Volume").getByText("2,500 m³")).toBeInTheDocument();
+    expect(screen.getByText("284.5K ISK")).toBeInTheDocument();
+    expect(screen.getByText("A frigate .")).toBeInTheDocument();
+  });
+
+  it("reads N/A for the capacity of items that hold nothing", () => {
+    mockUseType.mockReturnValue({
+      data: {
+        data: { name: "Tritanium", group_id: 18, capacity: 0, published: true },
+      },
+    });
+    renderWithMantine(<TypeCard typeId={34} />);
+    expect(statRow("Capacity").getByText("N/A")).toBeInTheDocument();
+  });
+});
+
+describe("KillmailCard", () => {
+  it("fills the killmail card from the killmail and its system", () => {
+    mockUseKillmail.mockReturnValue({
+      data: {
+        data: {
+          killmail_id: 116421364,
+          killmail_time: "2024-03-21T20:32:49Z",
+          solar_system_id: 30000872,
+          victim: {
+            character_id: 1239356440,
+            corporation_id: 98012419,
+            ship_type_id: 11393,
+            damage_taken: 5759,
+          },
+          attackers: [
+            { character_id: 1, final_blow: false },
+            { character_id: 2121551136, final_blow: true, ship_type_id: 12023 },
+          ],
+        },
+      },
+    });
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: { security_status: -0.776 } },
+    });
+
+    renderWithMantine(
+      <KillmailCard killmailId={116421364} killmailHash="abc" />,
+    );
+
+    expect(mockUseKillmail).toHaveBeenCalledWith("abc", 116421364);
+    expect(mockUseSolarSystem).toHaveBeenCalledWith(30000872);
+    expect(linkTo("Name 11393")).toBe("/kill/116421364");
+    expect(linkTo("Name 1239356440")).toBe("/character/1239356440");
+    expect(linkTo("Name 2121551136")).toBe("/character/2121551136");
+    expect(linkTo("Name 30000872")).toBe("/system/30000872");
+    expect(statRow("Attackers").getByText("2")).toBeInTheDocument();
+  });
+});
+
 describe("EveEntityCard", () => {
   it("delegates to AllianceCard for alliance entities", () => {
     mockUseEsiName.mockReturnValue({
       name: "Some Alliance",
       category: "alliance",
     });
-    mockUseEsiAllianceInformation.mockReturnValue({
-      data: { data: { ticker: "X" } },
-    });
-    mockUseEsiAllianceMemberCorporations.mockReturnValue({
-      data: { data: [] },
-    });
-
     renderWithMantine(<EveEntityCard entityId={99000001} />);
-    // AllianceCard renders an AllianceName for the same id
-    expect(screen.getByText("Alliance 99000001")).toBeInTheDocument();
-    expect(screen.getByText("Founded")).toBeInTheDocument();
+    expect(mockUseEsiAllianceInformation).toHaveBeenCalledWith(99000001);
+  });
+
+  it("delegates to CorporationCard for corporation entities", () => {
+    mockUseEsiName.mockReturnValue({
+      name: "Some Corp",
+      category: "corporation",
+    });
+    renderWithMantine(<EveEntityCard entityId="98000001" />);
+    expect(mockUseCorporation).toHaveBeenCalledWith(98000001);
   });
 
   it("delegates to CharacterCard for character entities", () => {
@@ -275,27 +390,18 @@ describe("EveEntityCard", () => {
       name: "Some Pilot",
       category: "character",
     });
-    mockUseCharacter.mockReturnValue({ data: undefined });
-
     renderWithMantine(<EveEntityCard entityId={123} />);
-    expect(screen.getByText("Character 123")).toBeInTheDocument();
+    expect(mockUseCharacter).toHaveBeenCalledWith(123);
   });
 
   it("renders a generic entity paper for other categories", () => {
-    mockUseEsiName.mockReturnValue({
-      name: "The Forge",
-      category: "region",
-    });
-
+    mockUseEsiName.mockReturnValue({ name: "The Forge", category: "region" });
     renderWithMantine(<EveEntityCard entityId={10000002} />);
     expect(screen.getByText("The Forge")).toBeInTheDocument();
     expect(screen.getByTestId("entity-avatar")).toBeInTheDocument();
   });
 });
 
-// ---------------------------------------------------------------------------
-// EveMailSenderCard
-// ---------------------------------------------------------------------------
 describe("EveMailSenderCard", () => {
   it("renders 'Unknown' when no senderId is supplied", () => {
     renderWithMantine(<EveMailSenderCard />);

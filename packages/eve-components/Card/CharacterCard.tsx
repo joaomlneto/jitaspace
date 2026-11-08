@@ -1,55 +1,51 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { memo } from "react";
-import { Group, Stack } from "@mantine/core";
 
+import type { EntityCardVariant } from "@jitaspace/ui";
 import { useCharacter } from "@jitaspace/hooks";
-import {
-  AllianceAnchor,
-  AllianceAvatar,
-  CharacterAvatar,
-  CorporationAnchor,
-  CorporationAvatar,
-} from "@jitaspace/ui";
+import { CharacterCardDisplay } from "@jitaspace/ui";
 
-import { CharacterAnchor } from "../Anchor";
-import { AllianceName, CharacterName, CorporationName } from "../Text";
+import { useEntityRefs } from "./useEntityRefs";
 
-interface CharacterCardProps {
+export interface CharacterCardProps {
   characterId: number;
+  variant?: EntityCardVariant;
+  headerRightSection?: ReactNode;
 }
 
-export const CharacterCard = memo(({ characterId }: CharacterCardProps) => {
-  const { data } = useCharacter(characterId);
-  return (
-    <Stack gap="xs">
-      <Group>
-        <Stack>
-          <CharacterAvatar characterId={characterId} size="lg" />
-        </Stack>
-        <Stack gap="xs">
-          <CharacterAnchor characterId={characterId}>
-            <CharacterName size="md" characterId={characterId} fw={700} />
-          </CharacterAnchor>
-          {data !== undefined && (
-            <Group gap="xs">
-              <CorporationAvatar size="xs" corporationId={data.corporationId} />
-              <CorporationAnchor corporationId={data.corporationId}>
-                <CorporationName size="xs" corporationId={data.corporationId} />
-              </CorporationAnchor>
-            </Group>
-          )}
-          {data?.allianceId && (
-            <Group gap="xs">
-              <AllianceAvatar size="xs" allianceId={data.allianceId} />
-              <AllianceAnchor allianceId={data.allianceId}>
-                <AllianceName size="xs" allianceId={data.allianceId} />
-              </AllianceAnchor>
-            </Group>
-          )}
-        </Stack>
-      </Group>
-    </Stack>
-  );
-});
+/** `CharacterCardDisplay`, filled from ESI. */
+export const CharacterCard = memo(
+  ({
+    characterId,
+    variant = "full",
+    headerRightSection,
+  }: CharacterCardProps) => {
+    const { data: character } = useCharacter(characterId);
+    const ref = useEntityRefs([
+      character?.corporationId,
+      character?.allianceId,
+      character?.factionId,
+    ]);
+
+    return (
+      <CharacterCardDisplay
+        characterId={characterId}
+        variant={variant}
+        headerRightSection={headerRightSection}
+        character={
+          character && {
+            name: character.name,
+            corporation: ref(character.corporationId),
+            alliance: ref(character.allianceId),
+            faction: ref(character.factionId),
+            birthday: character.birthday ?? undefined,
+            securityStatus: character.securityStatus,
+          }
+        }
+      />
+    );
+  },
+);
 CharacterCard.displayName = "CharacterCard";

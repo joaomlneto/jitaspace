@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Group, Stack, Table, Text } from "@mantine/core";
+import { Anchor, Group, Stack, Table, Text } from "@mantine/core";
 import { fn } from "storybook/test";
 
 import {
@@ -16,6 +16,7 @@ import {
   EveEntityAnchorDisplay,
   EveEntityNameDisplay,
   GroupAnchor,
+  HoverPrefetchLink,
   MarketGroupAnchor,
   MissionAnchor,
   OpenInformationWindowAnchor,
@@ -196,16 +197,37 @@ export const WithoutId: Story = {
   ),
 };
 
-/** Asks the EVE client to open its information window; no navigation. */
+/**
+ * Asks the EVE client to open its information window; no navigation, so it is
+ * a button styled as a link. Disabled, it stays focusable but inert.
+ */
 export const OpenInformationWindow: Story = {
   render: () => (
     <Group>
       <OpenInformationWindowAnchor onOpen={fn()}>
         Show info in game
       </OpenInformationWindowAnchor>
-      <OpenInformationWindowAnchor onOpen={fn()} disabled c="dimmed">
+      <OpenInformationWindowAnchor onOpen={fn()} disabled>
         Disabled
       </OpenInformationWindowAnchor>
+    </Group>
+  ),
+};
+
+/**
+ * The `next/link` every anchor above renders. It prefetches its destination
+ * only on hover, touch or focus, not as soon as it scrolls into view, so links
+ * repeated on every page do not each cost requests on every page view.
+ */
+export const HoverPrefetch: Story = {
+  render: () => (
+    <Group>
+      <Anchor component={HoverPrefetchLink} href="/categories">
+        Inventory
+      </Anchor>
+      <Anchor component={HoverPrefetchLink} href="/category/6" prefetch={false}>
+        Never prefetched (explicit prefetch wins)
+      </Anchor>
     </Group>
   ),
 };

@@ -7,7 +7,7 @@ Shared React UI component library for JitaSpace, built on [Mantine](https://mant
 Provides presentational React components used across the JitaSpace web app, built
 on top of Mantine. These components are **dependency-light**: they render
 already-resolved data passed in via props and do not fetch from ESI themselves,
-Its runtime dependencies are Mantine (`core`, `hooks`, `modals`), `next` for
+Its runtime dependencies are Mantine (`core`, `hooks`), `next` for
 `next/link` and `next/image`, `date-fns` and `humanize-duration` for formatting,
 the two icon sets, and `@jitaspace/utils`.
 
@@ -30,14 +30,16 @@ import { CharacterAvatar, ISKAmount, SkillLevelBar } from "@jitaspace/ui";
 
 ## Component Categories
 
-| Category      | Examples                                                 |
-| ------------- | -------------------------------------------------------- |
-| Identity      | `CharacterAvatar`, `CorporationAvatar`, `AllianceAvatar` |
-| Items         | `TypeAvatar`, `CategoryName`, `MarketGroupName`          |
-| Display twins | `EveEntityNameDisplay`, `EveEntityAnchorDisplay`         |
-| Skills        | `SkillLevelBar`                                          |
-| Text          | `DateText`, `DurationText`, `ISKAmount`                  |
-| Inputs        | `Select`, `MultiSelect`                                  |
+| Category      | Examples                                                    |
+| ------------- | ----------------------------------------------------------- |
+| Identity      | `CharacterAvatar`, `CorporationAvatar`, `AllianceAvatar`    |
+| Items         | `TypeAvatar`, `CategoryName`, `MarketGroupName`             |
+| Display twins | `EveEntityNameDisplay`, `EveEntityAnchorDisplay`            |
+| Skills        | `SkillLevelBar`                                             |
+| Text          | `DateText`, `DurationText`, `ISKAmount`                     |
+| Inputs        | `Select`, `MultiSelect`                                     |
+| Cards         | `EntityCard`, `AllianceCardDisplay`, `WarCardDisplay`, …    |
+| Palette       | `CorporationTickerPaletteBadge`, `CorporationPaletteStripe` |
 
 ## Dependencies
 
@@ -46,5 +48,4 @@ import { CharacterAvatar, ISKAmount, SkillLevelBar } from "@jitaspace/ui";
 - `@jitaspace/utils` — Shared helpers
 - `@tabler/icons-react` — General-purpose icons
 - `next` — `next/link` for anchors and breadcrumbs, `next/image` for the login button and standing indicator
-- `@mantine/modals` — the calendar attendance select's confirmation modal
 - `date-fns` / `humanize-duration` — Date and duration formatting

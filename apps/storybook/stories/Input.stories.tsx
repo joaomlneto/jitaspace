@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useState } from "react";
 import { Stack } from "@mantine/core";
+import { openConfirmModal } from "@mantine/modals";
 import { fn } from "storybook/test";
 
 import {
@@ -16,7 +17,14 @@ const meta = {
   component: CalendarEventAttendanceSelect,
   args: {
     label: "Your response",
-    eventTitle: "Saturday home defence fleet",
+    // What the web app passes: confirm in a modal, then apply.
+    confirmResponse: (response, apply) =>
+      openConfirmModal({
+        title: "Are you sure?",
+        children: `This will mark event Saturday home defence fleet as ${response}.`,
+        labels: { confirm: "Confirm", cancel: "Cancel" },
+        onConfirm: apply,
+      }),
     initialResponse: "tentative",
     canRespond: true,
     isLoading: false,
@@ -28,8 +36,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Changing the response asks for confirmation in a modal first. */
+/**
+ * With `confirmResponse`, a new pick waits for confirmation; here a modal, as
+ * on the site.
+ */
 export const CalendarEventAttendance: Story = {};
+
+/** Without `confirmResponse`, a pick applies at once. */
+export const CalendarEventAttendanceUnconfirmed: Story = {
+  args: { confirmResponse: undefined },
+};
 
 export const CalendarEventAttendanceReadOnly: Story = {
   args: { canRespond: false, initialResponse: "accepted" },

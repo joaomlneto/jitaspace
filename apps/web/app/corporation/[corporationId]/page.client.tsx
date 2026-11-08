@@ -52,23 +52,21 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAnchor,
   CorporationAvatar,
+  CorporationPaletteStripe,
+  corporationPaletteStyles,
+  CorporationPaletteSwatches,
+  CorporationTickerPaletteBadge,
+  getCorporationPaletteSlots,
   ISKAmount,
   RaceAnchor,
   SolarSystemSecurityStatusBadge,
+  useCorporationPaletteVars,
 } from "@jitaspace/ui";
 
 import type { CorporationPageTab } from "./tabs";
 import type { CorporationPageData } from "./types";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
-import {
-  corporationPaletteClasses,
-  CorporationPaletteStripe,
-  CorporationPaletteSwatches,
-  CorporationTickerPaletteBadge,
-  getCorporationPaletteSlots,
-  useCorporationPaletteVars,
-} from "~/components/CorporationPalette";
 import {
   AllianceLine,
   CharacterLine,
@@ -415,7 +413,7 @@ export default function CorporationPage({
               corporationId={corporationId}
               size={128}
               radius="sm"
-              className={corporationPaletteClasses.logoBacking}
+              style={corporationPaletteStyles.logoBacking}
             />
           }
           banner={
@@ -424,9 +422,7 @@ export default function CorporationPage({
             ) : undefined
           }
           style={paletteVars}
-          contentClassName={
-            hasPalette ? corporationPaletteClasses.wash : undefined
-          }
+          contentStyle={hasPalette ? corporationPaletteStyles.wash : undefined}
         >
           <Breadcrumbs fz="sm">
             {identity.alliance && (

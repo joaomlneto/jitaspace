@@ -4,10 +4,10 @@ import type { ReactNode } from "react";
 import { Burger, Container, SimpleGrid, Stack } from "@mantine/core";
 import { useShallow } from "zustand/shallow";
 
-import { AllianceCard } from "@jitaspace/eve-components";
+import { AllianceCard, CorporationCard } from "@jitaspace/eve-components";
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
 
-import { AuthenticatedCharacterCard, CorporationCard } from "~/components/Card";
+import { AuthenticatedCharacterCard } from "~/components/Card";
 import { DevelopmentModeAlert } from "~/components/debug";
 import { AddPilotCard, AppCard, SectionHeader } from "~/components/Home";
 import { AllianceMenu, CorporationMenu } from "~/components/Menu";
@@ -93,7 +93,7 @@ export default function HomePage({ newsCarousel }: Readonly<HomePageProps>) {
                 <CorporationCard
                   corporationId={corporationId}
                   key={corporationId}
-                  compact
+                  variant="compact"
                   headerRightSection={
                     <CorporationMenu corporationId={corporationId}>
                       <Burger size="sm" />
@@ -116,7 +116,7 @@ export default function HomePage({ newsCarousel }: Readonly<HomePageProps>) {
                 <AllianceCard
                   allianceId={allianceId}
                   key={allianceId}
-                  compact
+                  variant="compact"
                   headerRightSection={
                     <AllianceMenu allianceId={allianceId}>
                       <Burger size="sm" />

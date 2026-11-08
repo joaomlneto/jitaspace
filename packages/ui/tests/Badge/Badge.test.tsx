@@ -15,7 +15,10 @@ import { AllianceTickerBadge } from "../../Badge/AllianceTickerBadge";
 import { CalendarEventResponseBadge } from "../../Badge/CalendarEventResponseBadge";
 import { CorporationTickerBadge } from "../../Badge/CorporationTickerBadge";
 import { MailLabelBadge } from "../../Badge/MailLabelBadge";
-import { securityStatusBand } from "../../Badge/securityStatus";
+import {
+  securityStatusBand,
+  securityStatusColor,
+} from "../../Badge/securityStatus";
 import { SolarSystemSecurityStatusBadge } from "../../Badge/SolarSystemSecurityStatusBadge";
 import { StandingsBadge } from "../../Badge/StandingsBadge";
 import { WarAggressorTickerBadge } from "../../Badge/WarAggressorTickerBadge";
@@ -117,6 +120,9 @@ describe("SolarSystemSecurityStatusBadge", () => {
     [0.5, "0.5"],
     [0.34, "0.3"],
     [0.1, "0.1"],
+    // Positive means low-sec: never round down into null-sec's 0.0.
+    [0.04, "0.1"],
+    [0.001, "0.1"],
     [0, "0.0"],
     [-0.4, "0.0"], // negative is clamped to 0 before rounding
   ])("renders rounded security status %p as %s", (securityStatus, expected) => {
@@ -162,5 +168,12 @@ describe("securityStatusBand", () => {
     [-0.5, "Null-Sec"],
   ])("classifies %p as %s", (securityStatus, expected) => {
     expect(securityStatusBand(securityStatus)).toBe(expected);
+  });
+});
+
+describe("securityStatusColor", () => {
+  it("gives a barely-positive (low-sec) status the 0.1 colour, not null-sec's", () => {
+    expect(securityStatusColor(0.04)).toBe(securityStatusColor(0.1));
+    expect(securityStatusColor(0.04)).not.toBe(securityStatusColor(0));
   });
 });
