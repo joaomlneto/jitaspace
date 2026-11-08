@@ -2,8 +2,9 @@ import type { AppTheme } from "~/lib/preferences";
 
 /**
  * The season the Default theme is dressed for (`themes.default`), and when it
- * ends. From `endsAt` on, Default shows `fallback` instead, so an event theme
- * never outlives its event even if nobody ships the next season in time.
+ * runs. Outside `[startsAt, endsAt)` Default shows `fallback` instead, so a
+ * season can ship before its release and never outlives its event even if
+ * nobody ships the next one in time. `endsAt: null` runs it until replaced.
  *
  * Decided in the browser, never on the server: pages are prerendered and
  * cached, so a server-side check would freeze whichever theme the page was
@@ -14,19 +15,45 @@ import type { AppTheme } from "~/lib/preferences";
  * script reads it on the server.
  */
 export const DEFAULT_THEME_SEASON = {
-  name: "Crimson Harvest",
-  // The event ends at downtime (11:00 UTC) on 3 November 2026.
-  endsAt: "2026-11-03T11:00:00Z",
+  name: "Fractured Skies",
+  // The expansion releases at downtime (11:00 UTC) on Tuesday 10 November
+  // 2026. An expansion, not an event: it runs until the next season.
+  startsAt: "2026-11-10T11:00:00Z",
+  endsAt: null,
   fallback: "eve",
 } as const satisfies {
   name: string;
-  endsAt: string;
+  startsAt: string;
+  endsAt: string | null;
   fallback: Exclude<AppTheme, "default">;
 };
 
-/** Epoch milliseconds at which the season ends. */
-export const DEFAULT_THEME_SEASON_END = Date.parse(DEFAULT_THEME_SEASON.endsAt);
+const parse = (value: string | null) =>
+  value === null ? null : Date.parse(value);
 
-/** Whether the Default theme's season is over at `now` (epoch ms). */
-export const isDefaultThemeSeasonOver = (now: number) =>
-  now >= DEFAULT_THEME_SEASON_END;
+/** Epoch milliseconds at which the season starts. */
+export const DEFAULT_THEME_SEASON_START: number = Date.parse(
+  DEFAULT_THEME_SEASON.startsAt,
+);
+
+/** Epoch milliseconds at which the season ends, or null if it does not. */
+export const DEFAULT_THEME_SEASON_END: number | null = parse(
+  DEFAULT_THEME_SEASON.endsAt,
+);
+
+/** Whether the Default theme shows its season at `now` (epoch ms). */
+export const isDefaultThemeInSeason = (now: number) =>
+  now >= DEFAULT_THEME_SEASON_START &&
+  (DEFAULT_THEME_SEASON_END === null || now < DEFAULT_THEME_SEASON_END);
+
+/**
+ * The next time after `now` at which the Default theme switches between its
+ * season and its fallback, or null if it never does again.
+ */
+export const nextDefaultThemeSeasonChange = (now: number) => {
+  if (now < DEFAULT_THEME_SEASON_START) return DEFAULT_THEME_SEASON_START;
+  if (DEFAULT_THEME_SEASON_END !== null && now < DEFAULT_THEME_SEASON_END) {
+    return DEFAULT_THEME_SEASON_END;
+  }
+  return null;
+};
