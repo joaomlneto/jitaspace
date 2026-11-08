@@ -271,7 +271,7 @@ describe("cssVariablesResolver", () => {
         mergeMantineTheme(DEFAULT_THEME, themes[name]),
       );
       expect(resolved.light["--mantine-color-dimmed"]).toBe(
-        "color-mix(in srgb, var(--mantine-color-gray-6), black 30%)",
+        "color-mix(in srgb, var(--mantine-color-gray-6), black 37%)",
       );
       expect(resolved.dark["--mantine-color-dimmed"]).toBe(
         "color-mix(in srgb, var(--mantine-color-dark-2), white 18%)",
