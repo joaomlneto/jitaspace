@@ -25,6 +25,7 @@ export default async function Page() {
   const corporationIds = (
     await prisma.loyaltyStoreOffer.groupBy({
       by: ["corporationId"],
+      where: { isDeleted: false },
     })
   ).map(({ corporationId }) => corporationId);
 
@@ -49,6 +50,8 @@ export default async function Page() {
       lpCost: true,
       iskCost: true,
     },
+    // Rows stay when CCP withdraws an offer, marked deleted by the scrape.
+    where: { isDeleted: false },
   });
 
   const requiredItems = await prisma.loyaltyStoreOfferRequiredItem.findMany({
@@ -58,6 +61,7 @@ export default async function Page() {
       offerId: true,
       corporationId: true,
     },
+    where: { isDeleted: false },
   });
 
   const offers: LPStoreAllPageProps["offers"] = offersWithoutRequiredItems.map(

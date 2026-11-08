@@ -15,16 +15,16 @@ import {
   Table,
   Text,
   Tooltip,
+  VisuallyHidden,
 } from "@mantine/core";
-import {
-  IconChevronDown,
-  IconChevronRight,
-  IconClockHour4,
-  IconTool,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 import { formatDistanceStrict } from "date-fns";
 
-import { WindowInfoIcon } from "@jitaspace/eve-icons";
+import {
+  SystemClockIcon,
+  WindowInfoIcon,
+  WindowRepairShopIcon,
+} from "@jitaspace/eve-icons";
 import { DateHoverCard, securityStatusBand } from "@jitaspace/ui";
 
 import type { HighSecSpawnOutlook } from "./math";
@@ -154,7 +154,12 @@ function SpawnOutlook({
       <Stack gap={6}>
         <Group justify="space-between" gap={4} wrap="wrap">
           <Group gap={6} wrap="nowrap">
-            <IconClockHour4 size={16} aria-hidden style={{ flexShrink: 0 }} />
+            <SystemClockIcon
+              size={16}
+              color="currentColor"
+              alt=""
+              style={{ flexShrink: 0 }}
+            />
             <Text size="sm" fw={600} style={{ whiteSpace: "nowrap" }}>
               Next high-sec incursion
             </Text>
@@ -332,7 +337,9 @@ function SystemsTable({
     <Table verticalSpacing={4} horizontalSpacing="xs" fz="sm">
       <Table.Thead>
         <Table.Tr>
-          <Table.Th w={28} />
+          <Table.Th w={28}>
+            <VisuallyHidden>Stations</VisuallyHidden>
+          </Table.Th>
           <Table.Th>System</Table.Th>
           <Table.Th ta="right">
             <Tooltip
@@ -418,10 +425,9 @@ function SystemsTable({
                           </Anchor>
                           {station.hasRepair && (
                             <Tooltip label="Repair facilities">
-                              <IconTool
+                              <WindowRepairShopIcon
                                 size={14}
-                                aria-label="Repair facilities"
-                                color="var(--mantine-color-dimmed)"
+                                alt="Repair facilities"
                               />
                             </Tooltip>
                           )}

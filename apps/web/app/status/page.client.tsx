@@ -13,22 +13,25 @@ import {
   Modal,
   SimpleGrid,
   Stack,
+  Tabs,
   Text,
   Title,
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconActivity,
-  IconCircleCheck,
-  IconCircleX,
-} from "@tabler/icons-react";
+import { IconApi, IconClockPlay, IconDatabase } from "@tabler/icons-react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import {
   getRateLimitBuildDate,
   useGetMetaCompatibilityDates,
   useGetMetaStatus,
 } from "@jitaspace/esi-client";
+import {
+  SystemBlockBanIcon,
+  SystemCircleCheckmarkIcon,
+  SystemSignalStrengthIcon,
+} from "@jitaspace/eve-icons";
 import { useServerStatus } from "@jitaspace/hooks";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
@@ -42,6 +45,11 @@ import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
 import { TriggerJobsDashboard } from "../../components/Status/TriggerJobsDashboard";
+import {
+  DEFAULT_STATUS_PAGE_TAB,
+  isStatusPageTab,
+  STATUS_PAGE_TABS,
+} from "./tabs";
 
 export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
@@ -60,6 +68,16 @@ export default function StatusPage({
   sdeIngestState,
 }: Readonly<PageProps>) {
   const { data: tqStatus } = useServerStatus();
+
+  // URL-synced so a tab can be linked to (`/status?tab=database`), as on the
+  // type page. parseAsStringLiteral rejects unknown values, falling back to
+  // the default.
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(STATUS_PAGE_TABS)
+      .withDefault(DEFAULT_STATUS_PAGE_TAB)
+      .withOptions({ history: "replace" }),
+  );
 
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -129,7 +147,9 @@ export default function StatusPage({
           {/* JitaSpace Section */}
           <Card withBorder padding="lg" shadow="sm" radius="md">
             <Stack gap="md">
-              <Title order={3}>JitaSpace</Title>
+              <Title order={2} size="h3">
+                JitaSpace
+              </Title>
               <Stack gap="xs">
                 <Group justify="space-between">
                   <Text size="sm" fw={500}>
@@ -167,13 +187,17 @@ export default function StatusPage({
                       latestCompatibilityDate &&
                       (buildDate >= latestCompatibilityDate ? (
                         <Tooltip label="ESI compatibility date is up to date!">
-                          <IconCircleCheck color="green" size={14} />
+                          <SystemCircleCheckmarkIcon
+                            size={14}
+                            color="green"
+                            alt=""
+                          />
                         </Tooltip>
                       ) : (
                         <Tooltip
                           label={`ESI compatibility date is outdated! Latest: ${latestCompatibilityDate}`}
                         >
-                          <IconCircleX color="red" size={14} />
+                          <SystemBlockBanIcon size={14} color="red" alt="" />
                         </Tooltip>
                       ))}
                   </Group>
@@ -198,13 +222,17 @@ export default function StatusPage({
                         <Tooltip
                           label={`Our SDE data is up to date (build ${ourSdeBuild})`}
                         >
-                          <IconCircleCheck color="green" size={14} />
+                          <SystemCircleCheckmarkIcon
+                            size={14}
+                            color="green"
+                            alt=""
+                          />
                         </Tooltip>
                       ) : (
                         <Tooltip
                           label={`Our SDE data is outdated (build ${ourSdeBuild}, latest ${latestSdeBuild})`}
                         >
-                          <IconCircleX color="red" size={14} />
+                          <SystemBlockBanIcon size={14} color="red" alt="" />
                         </Tooltip>
                       ))}
                   </Group>
@@ -217,7 +245,9 @@ export default function StatusPage({
           <Card withBorder padding="lg" shadow="sm" radius="md">
             <Stack gap="md">
               <Group justify="space-between" align="flex-start">
-                <Title order={3}>Tranquility</Title>
+                <Title order={2} size="h3">
+                  Tranquility
+                </Title>
                 {tqStatus ? (
                   <Badge color="green" variant="light">
                     Online
@@ -280,14 +310,20 @@ export default function StatusPage({
             <Stack gap="md">
               <Group justify="space-between" align="flex-start">
                 <Group gap="xs">
-                  <Title order={3}>ESI API</Title>
+                  <Title order={2} size="h3">
+                    ESI API
+                  </Title>
                   <ActionIcon
                     variant="subtle"
                     color="gray"
                     onClick={open}
                     title="View detailed status"
                   >
-                    <IconActivity size={20} />
+                    <SystemSignalStrengthIcon
+                      size={20}
+                      color="currentColor"
+                      alt=""
+                    />
                   </ActionIcon>
                 </Group>
                 {esiStatus ? (
@@ -325,11 +361,41 @@ export default function StatusPage({
           </Card>
         </SimpleGrid>
 
-        <TriggerJobsDashboard />
+        <Tabs
+          value={activeTab}
+          onChange={(value) => {
+            if (isStatusPageTab(value)) void setActiveTab(value);
+          }}
+          variant="outline"
+          keepMounted={false}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="esi" leftSection={<IconApi size={16} />}>
+              ESI Client
+            </Tabs.Tab>
+            <Tabs.Tab value="database" leftSection={<IconDatabase size={16} />}>
+              Database
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="background-jobs"
+              leftSection={<IconClockPlay size={16} />}
+            >
+              Background Jobs
+            </Tabs.Tab>
+          </Tabs.List>
 
-        <DatabaseDashboard />
+          <Tabs.Panel value="esi" pt="lg">
+            <EsiRateLimitDashboard />
+          </Tabs.Panel>
 
-        <EsiRateLimitDashboard />
+          <Tabs.Panel value="database" pt="lg">
+            <DatabaseDashboard />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="background-jobs" pt="lg">
+            <TriggerJobsDashboard />
+          </Tabs.Panel>
+        </Tabs>
       </Stack>
 
       <Modal

@@ -1,0 +1,24 @@
+/*
+ * Secondary text, in place of Mantine's `dimmed`. That is gray.6 in the light
+ * scheme, which reads 3.15:1 against the table's striped rows, short of WCAG
+ * AA's 4.5:1. The dark scheme's `dimmed` passes, so it is kept there.
+ */
+.secondary {
+  @mixin light {
+    color: var(--mantine-color-gray-7);
+  }
+
+  @mixin dark {
+    color: var(--mantine-color-dimmed);
+  }
+}
+
+/* An EVE timestamp reads as one value, so it does not break across lines. */
+.timestamp {
+  white-space: nowrap;
+}
+
+/* Keep a status whole: the column would otherwise shrink it to an ellipsis. */
+.status {
+  min-width: max-content;
+}

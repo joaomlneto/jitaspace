@@ -74,6 +74,7 @@ export function FooterWithLinks() {
               size="sm"
               variant="transparent"
               c="dimmed"
+              aria-label="JitaSpace on Discord"
             >
               <IconBrandDiscordFilled />
             </ActionIcon>

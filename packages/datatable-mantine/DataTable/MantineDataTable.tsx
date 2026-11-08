@@ -13,6 +13,7 @@ import type { ColumnFilterValue } from "@jitaspace/datatable-common";
 import {
   ColumnFilterControl,
   DataTableToolbar,
+  getPaginationControlProps,
   matchesColumnFilter,
   primitiveString,
   readColumnValue,
@@ -221,6 +222,7 @@ export function DataTable<TData extends object>({
       setPage(Math.floor(((page - 1) * pageSize) / size) + 1);
       setPageSize(size);
     },
+    getPaginationControlProps,
   });
 
   const skeletonRecords: SkeletonRecord[] = Array.from(

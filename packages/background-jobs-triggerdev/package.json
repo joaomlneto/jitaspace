@@ -18,19 +18,19 @@
   "dependencies": {
     "@jitaspace/background-jobs": "workspace:*",
     "@jitaspace/db": "workspace:*",
-    "@sentry/node": "^10.53.1",
-    "@trigger.dev/sdk": "^4.4.6"
+    "@sentry/node": "^10.78.0",
+    "@trigger.dev/sdk": "^4.8.3"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@sentry/esbuild-plugin": "^5.3.0",
-    "@trigger.dev/build": "^4.4.6",
+    "@trigger.dev/build": "^4.8.3",
     "@types/node": "^24.12.4",
     "eslint": "^9.39.4",
     "prettier": "^3.8.3",
-    "trigger.dev": "^4.4.6",
+    "trigger.dev": "^4.8.3",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"

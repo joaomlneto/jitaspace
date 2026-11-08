@@ -77,8 +77,8 @@ const ROUTES = [
     Page: require("~/app/constellation/[constellationId]/page").default,
   },
   {
-    name: "contract",
-    Page: require("~/app/contract/[contractId]/page").default,
+    name: "contracts",
+    Page: require("~/app/contracts/[contractId]/page").default,
   },
   {
     name: "corporation",

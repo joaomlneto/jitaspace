@@ -41,7 +41,15 @@ export const scrapeHoboleaksDogmaEffectCategories = defineJob<
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                // Ours, written by scripts/describe-dogma-effect-categories.ts:
+                // Hoboleaks has no such fields, so diffing them would mark
+                // every category as modified on every run.
+                "customName",
+                "customDescription",
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>

@@ -165,15 +165,15 @@ describe("renderEveHref", () => {
   });
 
   describe("contract links", () => {
-    it("converts contract:0//contractId to /contract/:contractId", () => {
+    it("converts contract:0//contractId to /contracts/:contractId", () => {
       expect(renderEveHref("contract:0//196428637")).toBe(
-        "/contract/196428637",
+        "/contracts/196428637",
       );
     });
 
     it("ignores the first segment — only the contract ID matters", () => {
       expect(renderEveHref("contract:98000001//987654321")).toBe(
-        "/contract/987654321",
+        "/contracts/987654321",
       );
     });
   });

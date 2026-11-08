@@ -88,6 +88,24 @@ describe("MarketGroupsNavigation", () => {
     expect(screen.queryByText("Frigates")).not.toBeInTheDocument();
   });
 
+  it("points each tab at a panel that exists", async () => {
+    mockFetch(jsonResponse(tree));
+    const { container } = renderNavigation();
+    await screen.findByText("Ammunition & Charges");
+
+    for (const tab of screen.getAllByRole("tab")) {
+      const panelId = tab.getAttribute("aria-controls");
+      expect(panelId).toBeTruthy();
+      const panel = container.querySelector(`[id="${panelId}"]`);
+      expect(panel).not.toBeNull();
+      // Only the open view renders: the closed panel is an empty element, so
+      // a search does not also rebuild the hidden view.
+      if (tab.getAttribute("aria-selected") !== "true") {
+        expect(panel?.childElementCount).toBe(0);
+      }
+    }
+  });
+
   it("filters to a matching item and opens the groups above it", async () => {
     mockFetch(jsonResponse(tree));
     renderNavigation();

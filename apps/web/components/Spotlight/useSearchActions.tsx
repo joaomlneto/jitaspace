@@ -18,12 +18,15 @@ export const CATEGORY_ROUTE_PREFIX: Partial<Record<EsiSearchCategory, string>> =
     alliance: "/alliance/",
     agent: "/character/",
     character: "/character/",
+    constellation: "/constellation/",
     corporation: "/corporation/",
     faction: "/faction/",
+    region: "/region/",
     // NB: the route is /system/, not /solar_system/ — the ESI category name and
     // the app's path differ. Keep this in step with the switch in
     // components/Anchor/EveEntityAnchor.tsx, which owns the same
-    // category-to-path mapping for entity links.
+    // category-to-path mapping for entity links;
+    // tests/searchRoutePrefixesMatchEntityAnchor.test.tsx fails if they drift.
     solar_system: "/system/",
     station: "/station/",
     structure: "/structure/",
@@ -104,7 +107,7 @@ export function useSearchActions(query: string): SearchActionGroups {
             label: app.name,
             description: app.description,
             group: `${groupName} Apps`,
-            leftSection: <app.Icon width={32} height={32} />,
+            leftSection: <app.Icon width={32} height={32} alt="" />,
             onClick: makeAppOnClick(app.url),
           })),
       ),

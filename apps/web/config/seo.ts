@@ -15,14 +15,19 @@
  * server-rendered pages, which kept them out of search for no benefit.
  */
 export const CRAWLER_DISALLOWED_PATHS = [
+  "/access-lists",
   "/assets",
   "/calendar",
   "/contacts",
   "/debug",
   "/fittings",
+  "/freelance/mine",
   "/login",
   "/mail",
+  "/mercenary-tactical-operations",
   "/notifications",
+  // The PI landing page and schematics are public; the offices are a corporation's.
+  "/planetary-interaction/customs-offices",
   "/settings",
   "/skills",
   "/wallet",
