@@ -235,13 +235,31 @@ const routeOperationMappings: RouteOperationMapping[] = Object.entries(
     return b.pathSegments.length - a.pathSegments.length;
   });
 
+const ESI_ORIGIN = "https://esi.evetech.net";
+
+/**
+ * The ESI route a request URL points at: its path, without the query. A
+ * relative URL is a path on ESI. An absolute one is ESI's only when its parsed
+ * origin is, so `https://esi.evetech.net.example.com/status` is not mistaken
+ * for `/status` (a string prefix check would be); any other URL keeps its
+ * whole text, which matches no route.
+ */
 const getRequestEndpoint = (url: string): string => {
-  let path = url.split("?")[0] ?? "";
-  if (path.startsWith("https://esi.evetech.net")) {
-    path = path.replace("https://esi.evetech.net", "");
+  const path = url.split("?")[0] ?? "";
+  if (!/^[a-z][a-z\d+.-]*:/i.test(path)) {
+    return normalizeRoutePath(path);
   }
 
-  return normalizeRoutePath(path || "/");
+  try {
+    const parsed = new URL(path);
+    if (parsed.origin === ESI_ORIGIN) {
+      return normalizeRoutePath(parsed.pathname);
+    }
+  } catch {
+    // Not a parseable URL: fall through and keep its text.
+  }
+
+  return normalizeRoutePath(path);
 };
 
 const getRouteOperationId = (
