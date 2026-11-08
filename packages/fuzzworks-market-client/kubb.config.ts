@@ -32,7 +32,7 @@ export default defineConfig(async () => {
           dataReturnType: "full",
         },
       }),
-      pluginZod({}),
+      pluginZod({ version: "4", importPath: "zod" }),
     ],
   };
 });

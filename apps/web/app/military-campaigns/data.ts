@@ -1,5 +1,5 @@
 import { prisma } from "~/lib/db";
-import { stripEveMarkup } from "~/lib/metadata";
+import { stripEveMarkup } from "~/lib/eveMarkup";
 import { cacheSdeRead } from "~/lib/sdeCache";
 
 /**
@@ -24,8 +24,8 @@ export interface MilitaryCampaignObjectiveSdeInfo {
   title: string;
   /**
    * Plain text, unlike the campaign's: it is shown in a tooltip, where a link
-   * could not be clicked. Stripped here, on the server: `stripEveMarkup` lives
-   * beside a `"use cache"` function, which a Client Component cannot import.
+   * could not be clicked. Stripped here, on the server, so the client receives
+   * text only.
    */
   subtitle: string | null;
   /**

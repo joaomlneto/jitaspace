@@ -5,6 +5,8 @@ import { useCallback, useMemo } from "react";
 import type { EntityRef } from "@jitaspace/ui";
 import { useEsiNameLookup } from "@jitaspace/hooks";
 
+import { stripEveMarkup } from "~/lib/eveMarkup";
+
 /**
  * Resolves the names of every entity a card refers to in one lookup, and
  * returns a function turning an id into the `EntityRef` the cards take: the id
@@ -30,13 +32,11 @@ export const useEntityRefs = (ids: readonly (number | null | undefined)[]) => {
   );
 };
 
-/** EVE's rich text (descriptions) as plain text for a card. */
+/**
+ * EVE's rich text (descriptions) as plain text for a card, as the game client
+ * shows it; `undefined` when nothing is left.
+ */
 export const plainText = (value?: string) => {
-  const text = value
-    // `[^<>]` rather than `[^>]`: a run of unclosed `<` would otherwise make
-    // every match attempt scan to the end of the text (quadratic backtracking).
-    ?.replace(/<[^<>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const text = value === undefined ? undefined : stripEveMarkup(value);
   return text === "" ? undefined : text;
 };

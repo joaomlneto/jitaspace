@@ -351,7 +351,7 @@ describe("TypeCard", () => {
     expect(linkTo("Ship")).toBe("/category/6");
     expect(statRow("Volume").getByText("2,500 m³")).toBeInTheDocument();
     expect(screen.getByText("284.5K ISK")).toBeInTheDocument();
-    expect(screen.getByText("A frigate .")).toBeInTheDocument();
+    expect(screen.getByText("A frigate.")).toBeInTheDocument();
   });
 
   it("reads N/A for the capacity of items that hold nothing", () => {
@@ -462,24 +462,20 @@ describe("plainText", () => {
   const { plainText } =
     require("~/components/Card/useEntityRefs") as typeof UseEntityRefsModule;
 
+  // The markup rules themselves are pinned in eveMarkup.test.ts; these cover
+  // what the cards rely on.
   it("drops EVE's markup and collapses whitespace", () => {
     expect(plainText('<font size="14">A <b>frigate</b></font>.\n')).toBe(
-      "A frigate .",
+      "A frigate.",
     );
   });
 
-  it("keeps a stray '<' that opens no tag", () => {
+  it("keeps a '<' that another '<' follows, as text", () => {
     expect(plainText("damage < 100 <b>ok</b>")).toBe("damage < 100 ok");
-  });
-
-  it("strips a long run of unclosed '<' in linear time", () => {
-    const text = "<".repeat(50_000);
-    const started = performance.now();
-    expect(plainText(text)).toBe(text);
-    expect(performance.now() - started).toBeLessThan(1000);
   });
 
   it("reads an empty description as none", () => {
     expect(plainText("<br>  <br>")).toBeUndefined();
+    expect(plainText(undefined)).toBeUndefined();
   });
 });

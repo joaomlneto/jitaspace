@@ -11,11 +11,11 @@ import type {
   FactionTables,
 } from "./types";
 import { prisma } from "~/lib/db";
+import { stripEveMarkup } from "~/lib/eveMarkup";
 import {
   factionSolarSystemsWhere,
   systemFactionId,
 } from "~/lib/factionTerritory";
-import { stripEveMarkup } from "~/lib/metadata";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
 import { ENLISTED_CORPORATIONS_SHOWN } from "./constants";
 
