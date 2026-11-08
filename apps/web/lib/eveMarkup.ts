@@ -23,14 +23,16 @@
  *   looks like one (a letter, `/`, `!` or `?` after the `<`): EVE cuts titles
  *   off at about 100 characters, often inside a tag (`Drone Master</color`),
  *   and authors leave them open (`</color<color=…>`).
- * - Any other `<` is text (`CEO <3`, `<-`) and is kept, unless only
- *   whitespace follows it (it is then the start of a tag cut off) or what ends
- *   up after it would make it open a tag (`<<b>script`).
+ * - Any other `<` is text (`CEO <3`, `<-`) and is kept, unless nothing but
+ *   whitespace and tags follows it (it is then the start of a tag cut off) or
+ *   what ends up after it would make it open a tag (`<<b>script`).
  *
  * Linear in the input: the result is built as an array and joined once.
  */
 export function stripEveMarkup(html: string): string {
-  const chars = Array.from(html);
+  // A lone surrogate becomes U+FFFD first: otherwise the halves of a pair
+  // split by a tag (`<\uD835<b>\uDC00`) would rejoin as a letter after a `<`.
+  const chars = Array.from(html.replace(/[\uD800-\uDFFF]/gu, "�"));
   const out: string[] = [];
   let i = 0;
   while (i < chars.length) {
@@ -42,7 +44,7 @@ export function stripEveMarkup(html: string): string {
       i++;
     }
   }
-  // A text `<` with only whitespace after it is a tag cut off.
+  // A text `<` with only whitespace and tags after it is a tag cut off.
   while (out.length > 0 && isTrailingJunk(out.at(-1))) out.pop();
   return out.join("").replace(/\s+/g, " ").trim();
 }

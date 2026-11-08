@@ -28,6 +28,9 @@ describe("stripEveMarkup", () => {
       ["x <<<</b>/script>", "x /script>"],
       ["<<<<b>!--", "!--"],
       ["<<<>a", "a"],
+      // Halves of a surrogate pair split by a tag must not rejoin as a letter.
+      ["<\uD835<b>\uDC00", "<\uFFFD\uFFFD"],
+      ["x<\uD835<i>\uDC9C", "x<\uFFFD\uFFFD"],
       ["a <b unterminated", "a"],
     ];
     for (const [input, expected] of cases) {
@@ -53,6 +56,7 @@ describe("stripEveMarkup", () => {
     expect(stripEveMarkup("team<\n")).toBe("team");
     expect(stripEveMarkup("<b>CEO</b> <color=0x")).toBe("CEO");
     expect(stripEveMarkup("<Босс")).toBe("");
+    expect(stripEveMarkup("Director < </color>")).toBe("Director");
     expect(
       stripEveMarkup("<color=0xFF8B0000>Witch </color<color=0xEF000000>Annis"),
     ).toBe("Witch Annis");
