@@ -33,9 +33,9 @@ const dayIndexSchema = z.object({
   files: z
     .array(
       z.object({
-        url: z.string().url(),
+        url: z.url(),
         etag: z.string(),
-        file_time: z.string().datetime(),
+        file_time: z.iso.datetime(),
       }),
     )
     .default([]),

@@ -46,8 +46,8 @@ importers:
   apps/cli:
     devDependencies:
       '@asteasolutions/zod-to-openapi':
-        specifier: ^4.8.0
-        version: 4.8.0(zod@3.25.76)
+        specifier: ^9.1.0
+        version: 9.1.0(zod@4.6.7)
       '@commander-js/extra-typings':
         specifier: ^15.0.0
         version: 15.0.0(commander@15.0.0)
@@ -142,8 +142,8 @@ importers:
         specifier: ^2.1.3
         version: 2.8.3
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
 
   apps/eve-icons-gallery:
     dependencies:
@@ -468,8 +468,8 @@ importers:
         specifier: ^0.184.0
         version: 0.184.0
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
       zustand:
         specifier: ^5.0.13
         version: 5.0.13(@types/react@19.2.15)(immer@11.1.21)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
@@ -571,8 +571,8 @@ importers:
         specifier: ^19.2.6
         version: 19.2.6(react@19.2.6)
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@jest/globals':
         specifier: ^30.4.1
@@ -652,7 +652,7 @@ importers:
         version: 3.8.3
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -696,12 +696,12 @@ importers:
         specifier: ^1.4.3
         version: 1.4.3
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@anthropic-ai/sdk':
         specifier: ^1.6.0
-        version: 1.6.0(zod@3.25.76)
+        version: 1.6.0(zod@4.6.7)
       '@jest/globals':
         specifier: ^30.4.1
         version: 30.4.1
@@ -761,7 +761,7 @@ importers:
         version: 10.78.0(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))
       '@trigger.dev/sdk':
         specifier: ^4.8.3
-        version: 4.8.3(react@19.2.6)(zod@4.5.4)
+        version: 4.8.3(react@19.2.6)(zod@4.6.7)
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: workspace:*
@@ -777,7 +777,7 @@ importers:
         version: 5.3.0
       '@trigger.dev/build':
         specifier: ^4.8.3
-        version: 4.8.3(magicast@0.3.5)(supports-color@10.2.2)(typescript@5.9.3)(zod@4.5.4)
+        version: 4.8.3(magicast@0.3.5)(typescript@5.9.3)(zod@4.6.7)
       '@types/node':
         specifier: ^24.12.4
         version: 24.12.4
@@ -798,13 +798,13 @@ importers:
     dependencies:
       '@chat-adapter/discord':
         specifier: ^4.29.0
-        version: 4.29.0(zod@4.5.4)
+        version: 4.29.0(zod@4.6.7)
       '@chat-adapter/state-redis':
         specifier: ^4.29.0
-        version: 4.29.0(zod@4.5.4)
+        version: 4.29.0(zod@4.6.7)
       chat:
         specifier: ^4.29.0
-        version: 4.29.0(zod@4.5.4)
+        version: 4.29.0(zod@4.6.7)
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -1166,7 +1166,7 @@ importers:
         version: 7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1183,8 +1183,8 @@ importers:
         specifier: ^19.2.6
         version: 19.2.6
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: workspace:*
@@ -1284,7 +1284,7 @@ importers:
         version: 3.8.3
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       tsx:
         specifier: ^4.22.3
         version: 4.22.3
@@ -1414,7 +1414,7 @@ importers:
         version: 3.8.3
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1480,7 +1480,7 @@ importers:
         version: 19.2.6(react@19.2.6)
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       tsx:
         specifier: ^4.22.3
         version: 4.22.3
@@ -1525,7 +1525,7 @@ importers:
         version: 3.8.3
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1542,8 +1542,8 @@ importers:
         specifier: ^19.2.6
         version: 19.2.6
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: workspace:*
@@ -1603,8 +1603,8 @@ importers:
         specifier: ^19.2.6
         version: 19.2.6
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: workspace:*
@@ -1664,8 +1664,8 @@ importers:
         specifier: ^19.2.6
         version: 19.2.6
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.6.7
+        version: 4.6.7
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: workspace:*
@@ -2048,7 +2048,7 @@ importers:
         version: 0.184.0
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -2124,7 +2124,7 @@ importers:
         version: 19.2.6
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
+        version: 8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -2366,10 +2366,10 @@ packages:
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
-  '@asteasolutions/zod-to-openapi@4.8.0':
-    resolution: {integrity: sha512-FQlBeHIhSoEhjddAWD1v2zbeBESfTdaAVQuUr0RY9t0rN8ogoEaGirv2Ne8kQQTAVGydJzUMAOIlPULEOQDoeA==}
+  '@asteasolutions/zod-to-openapi@9.1.0':
+    resolution: {integrity: sha512-pLMeRgRYS7/vZIgAAkOe2P6+XGTifR1MT9pqDoxZ11EmcJJ+DPmdPqLN8ZZF4U8R9KHCCQCS9c2wtuE8wSrfkw==}
     peerDependencies:
-      zod: ^3.20.2
+      zod: ^4.0.0
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -10319,8 +10319,8 @@ packages:
   openapi-types@12.1.3:
     resolution: {integrity: sha512-N4YtSYJqghVu4iek2ZUvcN/0aqH1kRDuNqzcycDxhOUpg7GdvLa2F3DgS6yBNhInhv2r/6I0Flkn7CqL8+nIcw==}
 
-  openapi3-ts@4.4.0:
-    resolution: {integrity: sha512-9asTNB9IkKEzWMcHmVZE7Ts3kC9G7AFHfs8i7caD8HbI76gEjdkId4z/AkP83xdZsH7PLAnnbl47qZkXuxpArw==}
+  openapi3-ts@4.6.2:
+    resolution: {integrity: sha512-gyyil3DweqhXiEhTqtAs9wwRLfWHmetwhI4kmM5Rn0d6gtmK863Ki7qqbQnp9+Wwlqoe3B1LFWj7kMp5ctE4rQ==}
 
   optimist@0.3.7:
     resolution: {integrity: sha512-TCx0dXQzVtSCg2OgY/bO9hjM9cV4XYx09TVK+s3+FhkjT6LovsLe+pPMzpWf+6yXK/hUizs2gUoTw3jHM0VaTQ==}
@@ -12654,6 +12654,11 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
+  yaml@2.9.1:
+    resolution: {integrity: sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
     engines: {node: '>=12'}
@@ -12723,11 +12728,11 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.5.4:
     resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
+
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
@@ -12776,13 +12781,13 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
 
-  '@anthropic-ai/sdk@1.6.0(zod@3.25.76)':
+  '@anthropic-ai/sdk@1.6.0(zod@4.6.7)':
     dependencies:
       '@opentelemetry/api': 1.9.1
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.6.7
 
   '@apidevtools/json-schema-ref-parser@14.2.1(@types/json-schema@7.0.15)':
     dependencies:
@@ -12804,10 +12809,10 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@asteasolutions/zod-to-openapi@4.8.0(zod@3.25.76)':
+  '@asteasolutions/zod-to-openapi@9.1.0(zod@4.6.7)':
     dependencies:
-      openapi3-ts: 4.4.0
-      zod: 3.25.76
+      openapi3-ts: 4.6.2
+      zod: 4.6.7
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -13335,10 +13340,10 @@ snapshots:
       human-id: 4.1.1
       prettier: 2.8.8
 
-  '@chat-adapter/discord@4.29.0(zod@4.5.4)':
+  '@chat-adapter/discord@4.29.0(zod@4.6.7)':
     dependencies:
-      '@chat-adapter/shared': 4.29.0(zod@4.5.4)
-      chat: 4.29.0(zod@4.5.4)
+      '@chat-adapter/shared': 4.29.0(zod@4.6.7)
+      chat: 4.29.0(zod@4.6.7)
       discord-api-types: 0.37.120
       discord-interactions: 4.4.0
       discord.js: 14.25.1
@@ -13349,17 +13354,17 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@chat-adapter/shared@4.29.0(zod@4.5.4)':
+  '@chat-adapter/shared@4.29.0(zod@4.6.7)':
     dependencies:
-      chat: 4.29.0(zod@4.5.4)
+      chat: 4.29.0(zod@4.6.7)
     transitivePeerDependencies:
       - ai
       - supports-color
       - zod
 
-  '@chat-adapter/state-redis@4.29.0(zod@4.5.4)':
+  '@chat-adapter/state-redis@4.29.0(zod@4.6.7)':
     dependencies:
-      chat: 4.29.0(zod@4.5.4)
+      chat: 4.29.0(zod@4.6.7)
       redis: 5.12.1(@opentelemetry/api@1.9.1)
     transitivePeerDependencies:
       - '@node-rs/xxhash'
@@ -16491,6 +16496,23 @@ snapshots:
       - utf-8-validate
       - zod
 
+  '@trigger.dev/build@4.8.3(magicast@0.3.5)(typescript@5.9.3)(zod@4.6.7)':
+    dependencies:
+      '@prisma/config': 6.19.3(magicast@0.3.5)
+      '@trigger.dev/core': 4.8.3(zod@4.6.7)
+      mlly: 1.8.2
+      pkg-types: 1.3.1
+      tinyglobby: 0.2.17
+      tsconfck: 3.1.3(typescript@5.9.3)
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - bufferutil
+      - magicast
+      - supports-color
+      - utf-8-validate
+      - zod
+
   '@trigger.dev/core@4.8.3(supports-color@10.2.2)(zod@4.5.4)':
     dependencies:
       '@bugsnag/cuid': 3.2.2
@@ -16529,6 +16551,44 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@trigger.dev/core@4.8.3(zod@4.6.7)':
+    dependencies:
+      '@bugsnag/cuid': 3.2.2
+      '@electric-sql/client': 1.0.14
+      '@google-cloud/precise-date': 4.0.0
+      '@jsonhero/path': 1.0.21
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/api-logs': 0.219.0
+      '@opentelemetry/core': 2.8.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-logs-otlp-http': 0.219.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-metrics-otlp-http': 0.219.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-trace-otlp-http': 0.219.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/host-metrics': 0.38.3(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation': 0.219.0(@opentelemetry/api@1.9.1)(supports-color@10.2.2)
+      '@opentelemetry/resources': 2.8.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-logs': 0.219.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-metrics': 2.8.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace-base': 2.8.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace-node': 2.8.0(@opentelemetry/api@1.9.1)
+      '@s2-dev/streamstore': 0.25.0(supports-color@10.2.2)
+      dequal: 2.0.3
+      eventsource: 3.0.7
+      eventsource-parser: 3.1.1
+      humanize-duration: 3.35.1
+      jose: 5.10.0
+      nanoid: 3.3.18
+      prom-client: 15.1.3
+      socket.io-client: 4.8.4(supports-color@10.2.2)
+      std-env: 3.10.0
+      tinyexec: 0.3.2
+      uncrypto: 0.1.3
+      zod: 4.6.7
+      zod-validation-error: 5.0.0(zod@4.6.7)
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+
   '@trigger.dev/schema-to-json@4.8.3(@sinclair/typebox@0.34.46)(supports-color@10.2.2)(valibot@1.2.0(typescript@5.9.3))(zod@4.5.4)':
     dependencies:
       '@sodaru/yup-to-json-schema': 2.0.1
@@ -16544,13 +16604,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@trigger.dev/sdk@4.8.3(react@19.2.6)(zod@4.5.4)':
+  '@trigger.dev/sdk@4.8.3(react@19.2.6)(zod@4.6.7)':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/semantic-conventions': 1.41.1
-      '@trigger.dev/core': 4.8.3(supports-color@10.2.2)(zod@4.5.4)
+      '@trigger.dev/core': 4.8.3(zod@4.6.7)
       uncrypto: 0.1.3
-      zod: 4.5.4
+      zod: 4.6.7
     optionalDependencies:
       react: 19.2.6
     transitivePeerDependencies:
@@ -17777,7 +17837,7 @@ snapshots:
     dependencies:
       '@kurkle/color': 0.3.4
 
-  chat@4.29.0(zod@4.5.4):
+  chat@4.29.0(zod@4.6.7):
     dependencies:
       '@workflow/serde': 4.1.0-beta.2
       mdast-util-to-string: 4.0.0
@@ -17787,7 +17847,7 @@ snapshots:
       remend: 1.2.1
       unified: 11.0.5
     optionalDependencies:
-      zod: 4.5.4
+      zod: 4.6.7
     transitivePeerDependencies:
       - supports-color
 
@@ -18943,8 +19003,8 @@ snapshots:
       '@babel/parser': 7.27.5
       eslint: 9.39.4(jiti@2.7.0)
       hermes-parser: 0.25.1
-      zod: 3.25.76
-      zod-validation-error: 4.0.2(zod@3.25.76)
+      zod: 4.5.4
+      zod-validation-error: 4.0.2(zod@4.5.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -22049,9 +22109,9 @@ snapshots:
 
   openapi-types@12.1.3: {}
 
-  openapi3-ts@4.4.0:
+  openapi3-ts@4.6.2:
     dependencies:
-      yaml: 2.8.3
+      yaml: 2.9.1
 
   optimist@0.3.7:
     dependencies:
@@ -22306,14 +22366,14 @@ snapshots:
       camelcase-css: 2.0.1
       postcss: 8.5.23
 
-  postcss-load-config@6.0.1(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(yaml@2.8.3):
+  postcss-load-config@6.0.1(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(yaml@2.9.1):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
       jiti: 2.7.0
       postcss: 8.5.23
       tsx: 4.22.3
-      yaml: 2.8.3
+      yaml: 2.9.1
 
   postcss-mixins@12.1.2(postcss@8.5.23):
     dependencies:
@@ -24039,7 +24099,7 @@ snapshots:
 
   tslib@2.9.1: {}
 
-  tsup@8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3):
+  tsup@8.5.1(@swc/core@1.15.40(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.1):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.27.2)
       cac: 6.7.14
@@ -24050,7 +24110,7 @@ snapshots:
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(yaml@2.8.3)
+      postcss-load-config: 6.0.1(jiti@2.7.0)(postcss@8.5.23)(tsx@4.22.3)(yaml@2.9.1)
       resolve-from: 5.0.0
       rollup: 4.60.4
       source-map: 0.7.6
@@ -24799,6 +24859,8 @@ snapshots:
 
   yaml@2.8.3: {}
 
+  yaml@2.9.1: {}
+
   yargs-parser@21.1.1: {}
 
   yargs-parser@22.0.0: {}
@@ -24865,17 +24927,21 @@ snapshots:
     dependencies:
       zod: 4.5.4
 
-  zod-validation-error@4.0.2(zod@3.25.76):
+  zod-validation-error@4.0.2(zod@4.5.4):
     dependencies:
-      zod: 3.25.76
+      zod: 4.5.4
 
   zod-validation-error@5.0.0(zod@4.5.4):
     dependencies:
       zod: 4.5.4
 
-  zod@3.25.76: {}
+  zod-validation-error@5.0.0(zod@4.6.7):
+    dependencies:
+      zod: 4.6.7
 
   zod@4.5.4: {}
+
+  zod@4.6.7: {}
 
   zustand@4.5.7(@types/react@19.2.15)(immer@11.1.21)(react@19.2.6):
     dependencies:
