@@ -15,7 +15,7 @@ const server = z.object({
 
   NEXTAUTH_SECRET: z.string().min(1),
 
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.url(),
   REDIS_URL: z.string(),
 
   /**
@@ -23,7 +23,7 @@ const server = z.object({
    * read by @jitaspace/db-builds. Optional so the rest of the app builds
    * without it; the /history pages need it set to return data.
    */
-  EVE_BUILDS_DATABASE_URL: z.string().url().optional(),
+  EVE_BUILDS_DATABASE_URL: z.url().optional(),
   EVE_BUILDS_DATABASE_SCHEMA: z.string().optional(),
 
   EVE_CLIENT_ID: z.string(),
@@ -36,7 +36,7 @@ const server = z.object({
    */
   TRIGGER_SECRET_KEY: z.string().optional(),
   /** Overrides the Trigger.dev API base URL (defaults to https://api.trigger.dev). */
-  TRIGGER_API_URL: z.string().url().optional(),
+  TRIGGER_API_URL: z.url().optional(),
   CRON_SECRET: z.string().min(16),
 
   // Optional: a diagnostic toggle surfaced on /debug that nothing branches
@@ -64,14 +64,14 @@ const client = z.object({
       ? z.string().min(1)
       : z.string().min(1).optional(),
 
-  NEXT_PUBLIC_DISCORD_INVITE_LINK: z.string().url(),
+  NEXT_PUBLIC_DISCORD_INVITE_LINK: z.url(),
   NEXT_PUBLIC_MODIFIED_DATE: z.string().optional(),
-  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SITE_URL: z.url().optional(),
 
   // Optional: when unset, PostHog analytics is simply not initialized. This
   // keeps local dev and preview deploys working without a PostHog project.
   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
-  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.url().optional(),
 });
 
 /**
@@ -104,7 +104,7 @@ const processEnv = {
 // Don't touch the part below
 // --------------------------
 
-const merged = server.merge(client);
+const merged = server.extend(client.shape);
 
 let env = process.env as unknown as z.infer<typeof merged>;
 
@@ -118,7 +118,7 @@ if (!!process.env.SKIP_ENV_VALIDATION === false) {
   if (parsed.success === false) {
     console.error(
       "❌ Invalid environment variables:",
-      parsed.error.flatten().fieldErrors,
+      z.flattenError<Record<string, unknown>>(parsed.error).fieldErrors,
     );
     throw new Error("Invalid environment variables");
   }
