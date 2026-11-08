@@ -278,4 +278,16 @@ describe("cssVariablesResolver", () => {
       );
     },
   );
+
+  it.each(["minimal", "excel"] as const)(
+    "leaves light-scheme dimmed text as gray.6 in %s, which is not built on EVE",
+    (name) => {
+      const resolved = cssVariablesResolver(
+        mergeMantineTheme(DEFAULT_THEME, themes[name]),
+      );
+      expect(resolved.light["--mantine-color-dimmed"]).toBe(
+        "var(--mantine-color-gray-6)",
+      );
+    },
+  );
 });
