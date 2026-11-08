@@ -90,6 +90,17 @@ export interface OpenContract {
   typeIds: number[];
 }
 
+/**
+ * Reads the snapshot `/api/contracts/open` sends: a gzip file of its JSON
+ * (see the route for why it is not a gzip-encoded response).
+ */
+export async function inflateJson(gzipped: ArrayBuffer): Promise<unknown> {
+  const inflated = new Blob([gzipped])
+    .stream()
+    .pipeThrough(new DecompressionStream("gzip"));
+  return JSON.parse(await new Response(inflated).text()) as unknown;
+}
+
 const iso = (seconds: number) => new Date(seconds * 1000).toISOString();
 
 /** Turns the snapshot into contracts the views can render. */
