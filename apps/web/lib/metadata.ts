@@ -17,6 +17,7 @@ import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 
 import type { OgFact } from "./og";
+import { stripEveMarkup } from "./eveMarkup";
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "./og";
 
 export const SITE_NAME = "JitaSpace";
@@ -199,25 +200,6 @@ export async function resolveTypeImage(
  */
 export function withArticle(name: string): string {
   return /^the\s/i.test(name) ? name : `the ${name}`;
-}
-
-/**
- * EVE's rich text (descriptions are stored as in-game HTML) as plain text: tags
- * dropped, a line break kept as a space, and whitespace collapsed.
- */
-export function stripEveMarkup(html: string): string {
-  let out = "";
-  let tag: string | null = null;
-  for (const ch of html) {
-    if (ch === "<") tag = "";
-    else if (tag !== null && ch === ">") {
-      // `a<br>b` must not run the two words together.
-      if (/^br\b/i.test(tag)) out += " ";
-      tag = null;
-    } else if (tag !== null) tag += ch;
-    else out += ch;
-  }
-  return out.replace(/\s+/g, " ").trim();
 }
 
 /**
