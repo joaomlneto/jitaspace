@@ -18,7 +18,7 @@
   "dependencies": {
     "@jitaspace/background-jobs": "workspace:*",
     "@jitaspace/db": "workspace:*",
-    "@sentry/node": "^10.53.1",
+    "@sentry/node": "^10.78.0",
     "@trigger.dev/sdk": "^4.4.6"
   },
   "devDependencies": {
