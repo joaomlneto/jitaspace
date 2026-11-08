@@ -21,7 +21,7 @@ describe("cookie chunking", () => {
     const sealed = "Fe26.2*" + "a".repeat(9000);
     const name = getOAuthResultCookieName(true);
     const chunks = splitCookieValue(sealed);
-    expect(chunks.length).toBe(3);
+    expect(chunks).toHaveLength(3);
     chunks.forEach((chunk, index) =>
       expect(
         getCookieChunkName(name, index).length + chunk.length,
