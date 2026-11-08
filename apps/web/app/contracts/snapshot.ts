@@ -1,5 +1,5 @@
 import type {
-  OpenContractsShard,
+  OpenContractsSnapshot,
   SnapshotContract,
 } from "~/components/Contracts/snapshot";
 import {
@@ -9,18 +9,19 @@ import {
 import {
   ITEM_ASKED,
   ITEM_COPY,
-  OPEN_CONTRACT_SHARDS,
   SNAPSHOT_KINDS,
 } from "~/components/Contracts/snapshot";
 import { Prisma, prisma } from "~/lib/db";
 
 /**
- * One shard of the open public contracts (`components/Contracts/snapshot.ts`),
- * read from the snapshots the background jobs store.
+ * Every open public contract (`components/Contracts/snapshot.ts`), read from
+ * the snapshots the background jobs store.
  *
- * Not cached here: `/api/contracts/open/[shard]` serves it behind CDN cache
- * headers, so the database reads each shard about once per sync. A shard is
- * too large for a `"use cache"` entry (Vercel keeps at most 2 MB per item).
+ * One read, in one REPEATABLE READ transaction, so every query below sees the
+ * database at the same moment: the contracts, their items and the names agree.
+ * Not cached here: `/api/contracts/open` serves it behind CDN cache headers,
+ * so the database reads it about once per sync. It is too large for a
+ * `"use cache"` entry (Vercel keeps at most 2 MB per item).
  */
 
 /** Older than this, the public listing is an archive import still catching up. */
@@ -88,39 +89,48 @@ interface SystemRow {
   securityStatus: number;
 }
 
-/** The open public contracts in a shard. */
-const inShard = (shard: number) => Prisma.sql`"isDeleted" = false
-  AND "type" IN ('ItemExchange', 'Auction', 'Courier')
-  AND "contractId" % ${OPEN_CONTRACT_SHARDS} = ${shard}`;
+/** The open contracts of the kinds the public listing holds. */
+const isOpen = () => Prisma.sql`"isDeleted" = false
+  AND "type" IN ('ItemExchange', 'Auction', 'Courier')`;
 
 /**
- * The shard's contract ids, as a subquery for `= ANY(ARRAY(…))`. Not the ids
- * the first read returned, bound as an array: told it holds ~6k ids, the
- * planner leaves ContractItem's primary key for a plan that took 90 s, where
- * this one reads the primary key in 2 s.
+ * The open contracts' ids, as a subquery for `= ANY(ARRAY(…))`. Not the ids
+ * the first read returned, bound as an array: told it holds thousands of ids,
+ * the planner leaves ContractItem's primary key for a plan that took 90 s for
+ * an eighth of them, where this one reads the primary key in seconds.
  */
-const shardIds = (shard: number) =>
-  Prisma.sql`SELECT "contractId" FROM "Contract" WHERE ${inShard(shard)}`;
+const openIds = () =>
+  Prisma.sql`SELECT "contractId" FROM "Contract" WHERE ${isOpen()}`;
 
 /** ESI reports 0 for amounts a contract does not use; send them as absent. */
 const nonZero = (value: number | null) => (value === 0 ? null : value);
 const seconds = (date: Date) => Math.floor(date.getTime() / 1000);
 const distinct = <T>(values: Iterable<T>) => [...new Set(values)];
 
-export async function readOpenContractsShard(
-  shard: number,
-): Promise<OpenContractsShard> {
-  // Raw SQL for the shard's modulo, which Prisma's query builder cannot say.
+/** How long the read may take; a cold one is ~20 s on the ¼ vCPU. */
+const READ_TIMEOUT_MS = 120_000;
+
+export async function readOpenContracts(): Promise<OpenContractsSnapshot> {
+  return prisma.$transaction(readSnapshot, {
+    isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+    maxWait: 10_000,
+    timeout: READ_TIMEOUT_MS,
+  });
+}
+
+async function readSnapshot(
+  tx: Prisma.TransactionClient,
+): Promise<OpenContractsSnapshot> {
   // The names come in lookups by distinct id below: joining them here costs a
-  // random read into Character (22M rows) for every contract, ~5 s cold.
-  const rows = await prisma.$queryRaw<ContractRow[]>`
+  // random read into Character (22M rows) for every contract, ~20 s cold.
+  const rows = await tx.$queryRaw<ContractRow[]>`
     SELECT "contractId", "type"::text AS "type", "title", "issuerId",
       "issuerCorporationId", "forCorporation", "dateIssued", "dateExpired",
       "daysToComplete", "volume", "price", "reward", "collateral", "buyout",
       "regionId", "startLocationId", "endLocationId", "solarSystemId",
       "stationId", "lastSeenAt"
     FROM "Contract"
-    WHERE ${inShard(shard)}
+    WHERE ${isOpen()}
     ORDER BY "contractId"`;
 
   // The NPC stations a contract starts at (its own relation) or delivers to
@@ -135,41 +145,42 @@ export async function readOpenContractsShard(
     }),
   );
 
-  // Items and bids select the shard again (shardIds). The name lookups pass
+  // Items and bids select the open contracts again (openIds). Inside one
+  // transaction, they are the same contracts. The name lookups pass
   // their few thousand ids as one array parameter, where Prisma's `in` would
   // bind one parameter per id.
   const [items, bids, characters, corporations, regions, stations] =
     await Promise.all([
-      prisma.$queryRaw<ItemRow[]>`
+      tx.$queryRaw<ItemRow[]>`
         SELECT "contractId", "typeId", "quantity", "isIncluded", "isBlueprintCopy"
         FROM "ContractItem"
-        WHERE "contractId" = ANY(ARRAY(${shardIds(shard)}))
+        WHERE "contractId" = ANY(ARRAY(${openIds()}))
         ORDER BY "contractId", "recordId"`,
-      prisma.$queryRaw<BidRow[]>`
+      tx.$queryRaw<BidRow[]>`
         SELECT "contractId", max("amount") AS "highest", count(*)::int AS "count"
         FROM "ContractBid"
-        WHERE "contractId" = ANY(ARRAY(${shardIds(shard)}))
+        WHERE "contractId" = ANY(ARRAY(${openIds()}))
         GROUP BY "contractId"`,
-      prisma.$queryRaw<NameRow[]>`
+      tx.$queryRaw<NameRow[]>`
         SELECT "characterId" AS "id", "name" FROM "Character"
         WHERE "characterId" = ANY(${distinct(rows.map((r) => r.issuerId))}::int[])`,
-      prisma.$queryRaw<NameRow[]>`
+      tx.$queryRaw<NameRow[]>`
         SELECT "corporationId" AS "id", "name" FROM "Corporation"
         WHERE "corporationId" = ANY(${distinct(rows.map((r) => r.issuerCorporationId))}::int[])`,
-      prisma.$queryRaw<NameRow[]>`
+      tx.$queryRaw<NameRow[]>`
         SELECT "regionId" AS "id", "name" FROM "Region"
         WHERE "regionId" = ANY(${distinct(rows.map((r) => r.regionId))}::int[])`,
-      prisma.$queryRaw<StationRow[]>`
+      tx.$queryRaw<StationRow[]>`
         SELECT "stationId", "name", "solarSystemId" FROM "Station"
         WHERE "stationId" = ANY(${stationIds}::int[])`,
     ]);
 
   const [types, systems] = await Promise.all([
-    prisma.$queryRaw<TypeRow[]>`
+    tx.$queryRaw<TypeRow[]>`
       SELECT t."typeId", t."name", g."categoryId"
       FROM "Type" t JOIN "Group" g ON g."groupId" = t."groupId"
       WHERE t."typeId" = ANY(${distinct(items.map((item) => item.typeId))}::int[])`,
-    prisma.$queryRaw<SystemRow[]>`
+    tx.$queryRaw<SystemRow[]>`
       SELECT "solarSystemId", "name", "securityStatus"::float8 AS "securityStatus"
       FROM "SolarSystem"
       WHERE "solarSystemId" = ANY(${distinct([
@@ -231,7 +242,6 @@ export async function readOpenContractsShard(
   );
 
   return {
-    shard,
     snapshotAt: latest?.toISOString() ?? null,
     isBackfilling:
       latest !== null && Date.now() - latest.getTime() > BACKFILL_LAG_MS,

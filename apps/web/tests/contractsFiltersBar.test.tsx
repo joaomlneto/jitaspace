@@ -364,7 +364,6 @@ describe("ContractsPage", () => {
       open(3, 10000002, "The Forge", "courier"),
       open(4, 10000043, "Domain", "courier"),
     ],
-    loaded: 8,
     isPending: false,
     isError: false,
     snapshotAt: "2026-11-04T10:30:00.000Z",
@@ -415,9 +414,7 @@ describe("ContractsPage", () => {
   });
 
   it("describes the listing in general until it has loaded", () => {
-    renderPage(
-      snapshot({ contracts: [], loaded: 2, isPending: true, snapshotAt: null }),
-    );
+    renderPage(snapshot({ contracts: [], isPending: true, snapshotAt: null }));
     expect(
       screen.getByText("Open public contracts across New Eden, and your own."),
     ).toBeInTheDocument();

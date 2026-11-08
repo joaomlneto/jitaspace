@@ -8,7 +8,6 @@ import {
   Center,
   Group,
   Pagination,
-  Progress,
   Stack,
   Text,
   Title,
@@ -19,7 +18,6 @@ import type { OpenContracts } from "./useOpenContracts";
 import type { ContractFilters } from "~/components/Contracts/filters";
 import { filterOpenContracts } from "~/components/Contracts/clientFilter";
 import { PUBLIC_CONTRACTS_PAGE_SIZE } from "~/components/Contracts/filters";
-import { OPEN_CONTRACT_SHARDS } from "~/components/Contracts/snapshot";
 import { ContractList, ContractListSkeleton } from "./ContractList";
 
 /**
@@ -68,17 +66,10 @@ export function PublicContracts({
     );
   } else if (open.isPending) {
     content = (
-      <Stack gap="xs">
-        <Progress
-          value={(open.loaded / OPEN_CONTRACT_SHARDS) * 100}
-          size="xs"
-          aria-label="Loading public contracts"
-        />
-        <ContractListSkeleton
-          view={view}
-          count={PUBLIC_CONTRACTS_PAGE_SIZE / 4}
-        />
-      </Stack>
+      <ContractListSkeleton
+        view={view}
+        count={PUBLIC_CONTRACTS_PAGE_SIZE / 4}
+      />
     );
   } else if (page.length === 0 && matching.length > 0) {
     // A shared or old link to a page past the end: contracts have closed

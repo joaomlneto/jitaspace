@@ -102,7 +102,6 @@ function record(
 function loaded(contracts: OpenContract[]): OpenContracts {
   return {
     contracts,
-    loaded: 8,
     isPending: false,
     isError: false,
     snapshotAt: "2026-11-08T20:00:00.000Z",
@@ -112,7 +111,6 @@ function loaded(contracts: OpenContract[]): OpenContracts {
 
 const PENDING: OpenContracts = {
   contracts: [],
-  loaded: 3,
   isPending: true,
   isError: false,
   snapshotAt: null,
@@ -160,14 +158,11 @@ function renderPublic(
 }
 
 describe("PublicContracts", () => {
-  it("shows the shards' progress and a skeleton while they load", () => {
+  it("shows a skeleton while the contracts load", () => {
     const { container } = renderPublic(PENDING);
-    expect(
-      screen.getByRole("progressbar", { name: "Loading public contracts" }),
-    ).toHaveAttribute("aria-valuenow", "37.5");
     expect(container.querySelector(".mantine-Skeleton-root")).not.toBeNull();
     expect(listedTitles()).toEqual([]);
-    // No count until every shard is in.
+    // No count until they are in.
     expect(screen.queryByText("0")).toBeNull();
   });
 

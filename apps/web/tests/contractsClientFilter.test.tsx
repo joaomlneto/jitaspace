@@ -14,7 +14,7 @@ import type { ContractSummary } from "~/components/Contracts/contract";
 import type { ContractFilters } from "~/components/Contracts/filters";
 import type {
   OpenContract,
-  OpenContractsShard,
+  OpenContractsSnapshot,
 } from "~/components/Contracts/snapshot";
 import {
   compareContracts,
@@ -22,7 +22,6 @@ import {
   matchesContractFilters,
   regionFacets,
 } from "~/components/Contracts/clientFilter";
-import { OPEN_CONTRACT_SHARDS } from "~/components/Contracts/snapshot";
 
 // The contracts browser's filters and sorts, run in the browser, and the hook
 // that loads the open contracts they run over.
@@ -197,15 +196,14 @@ describe("regionFacets", () => {
 
 describe("useOpenContracts", () => {
   const mockFetch = jest.fn<typeof fetch>();
-  const shardBody = (shard: number): OpenContractsShard => ({
-    shard,
-    snapshotAt: `2026-11-08T1${shard}:00:00.000Z`,
-    isBackfilling: shard === 3,
+  const snapshot: OpenContractsSnapshot = {
+    snapshotAt: "2026-11-08T21:00:00.000Z",
+    isBackfilling: true,
     contracts: [
       [
-        shard + 100,
+        100,
         0,
-        `Shard ${shard}`,
+        "Only contract",
         1,
         2,
         0,
@@ -232,7 +230,7 @@ describe("useOpenContracts", () => {
     types: {},
     systems: {},
     stations: {},
-  });
+  };
   // jsdom has no fetch Response; the hook reads only these three members.
   const respond = (body: unknown, status = 200) =>
     Promise.resolve({
@@ -260,38 +258,37 @@ describe("useOpenContracts", () => {
     });
   };
 
-  it("joins every shard once all have loaded", async () => {
-    mockFetch.mockImplementation((url) =>
-      respond(shardBody(Number((url as string).split("/").at(-1)))),
-    );
+  it("loads the snapshot in one request, and decodes it", async () => {
+    mockFetch.mockImplementation(() => respond(snapshot));
     const { result } = render();
     expect(result.current).toMatchObject({
       contracts: [],
       isPending: true,
       isError: false,
+      snapshotAt: null,
+      isBackfilling: false,
     });
 
     await waitFor(() => expect(result.current.isPending).toBe(false));
-    expect(mockFetch).toHaveBeenCalledTimes(OPEN_CONTRACT_SHARDS);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch.mock.calls[0]?.[0]).toBe("/api/contracts/open");
     expect(
       result.current.contracts.map(({ contract: c }) => c.contractId),
-    ).toEqual(
-      Array.from({ length: OPEN_CONTRACT_SHARDS }, (_, shard) => shard + 100),
-    );
-    expect(result.current.loaded).toBe(OPEN_CONTRACT_SHARDS);
-    // The newest listing of any shard, and backfilling if any shard is.
-    expect(result.current.snapshotAt).toBe(
-      `2026-11-08T1${OPEN_CONTRACT_SHARDS - 1}:00:00.000Z`,
-    );
+    ).toEqual([100]);
+    expect(result.current.snapshotAt).toBe("2026-11-08T21:00:00.000Z");
     expect(result.current.isBackfilling).toBe(true);
   });
 
-  it("shows nothing, and an error, when a shard fails", async () => {
-    mockFetch.mockImplementation((url) =>
-      (url as string).endsWith("/2")
-        ? respond({ error: "x" }, 500)
-        : respond(shardBody(0)),
-    );
+  it("keeps one empty list while loading, so memos do not rerun", () => {
+    mockFetch.mockImplementation(() => new Promise<Response>(() => undefined));
+    const { result, rerender } = render();
+    const first = result.current.contracts;
+    rerender();
+    expect(result.current.contracts).toBe(first);
+  });
+
+  it("shows nothing, and an error, when the request fails", async () => {
+    mockFetch.mockImplementation(() => respond({ error: "x" }, 500));
     const { result } = render();
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.isPending).toBe(false);

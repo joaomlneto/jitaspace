@@ -1,30 +1,41 @@
 /**
  * @jest-environment node
  */
+import { randomBytes } from "node:crypto";
+import { gunzipSync } from "node:zlib";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type * as DbModule from "@jitaspace/db";
 
-import type * as RouteModule from "../app/api/contracts/open/[shard]/route";
+import type * as RouteModule from "../app/api/contracts/open/route";
 import type * as SnapshotModule from "../app/contracts/snapshot";
 import type {
-  OpenContractsShard,
+  OpenContractsSnapshot,
   SnapshotContract,
 } from "~/components/Contracts/snapshot";
 import {
-  decodeOpenContractsShard,
+  decodeOpenContracts,
   ITEM_ASKED,
   ITEM_COPY,
-  OPEN_CONTRACT_SHARDS,
 } from "~/components/Contracts/snapshot";
 
-// The open contracts snapshot: how a shard is read from the database, how
-// the route serves it, and how the browser turns it back into contracts.
+// The open contracts snapshot: how it is read from the database, how the
+// route serves it, and how the browser turns it back into contracts.
 
 type Fn = ReturnType<typeof jest.fn<(...args: unknown[]) => Promise<unknown>>>;
 const mockQueryRaw: Fn = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockTransactionOptions = jest.fn();
+// Every query runs on the transaction's client.
 jest.mock("~/lib/db", () => ({
-  prisma: { $queryRaw: (...args: unknown[]) => mockQueryRaw(...args) },
+  prisma: {
+    $transaction: (
+      run: (tx: unknown) => Promise<unknown>,
+      options: unknown,
+    ) => {
+      mockTransactionOptions(options);
+      return run({ $queryRaw: (...args: unknown[]) => mockQueryRaw(...args) });
+    },
+  },
   Prisma: jest.requireActual<typeof DbModule>("@jitaspace/db").Prisma,
 }));
 
@@ -33,8 +44,7 @@ const { Prisma } = jest.requireActual<typeof DbModule>("@jitaspace/db");
 const loadSnapshot = () =>
   require("../app/contracts/snapshot") as typeof SnapshotModule;
 const loadGET = () =>
-  (require("../app/api/contracts/open/[shard]/route") as typeof RouteModule)
-    .GET;
+  (require("../app/api/contracts/open/route") as typeof RouteModule).GET;
 
 /** Each raw query's SQL, with Postgres placeholders, and its values. */
 const queries = () =>
@@ -119,33 +129,37 @@ function stubDatabase({
 
 beforeEach(() => {
   mockQueryRaw.mockReset();
+  mockTransactionOptions.mockReset();
   jest.spyOn(Date, "now").mockReturnValue(NOW);
 });
 
-describe("readOpenContractsShard", () => {
-  it("reads one shard of the open listed contracts, by contract id", async () => {
+describe("readOpenContracts", () => {
+  it("reads every open listed contract, in one REPEATABLE READ transaction", async () => {
     stubDatabase();
-    await loadSnapshot().readOpenContractsShard(3);
+    await loadSnapshot().readOpenContracts();
 
+    expect(mockTransactionOptions).toHaveBeenCalledWith(
+      expect.objectContaining({ isolationLevel: "RepeatableRead" }),
+    );
     const [contracts] = queries();
     expect(contracts?.text).toContain(`"isDeleted" = false`);
     expect(contracts?.text).toContain(
       `"type" IN ('ItemExchange', 'Auction', 'Courier')`,
     );
-    expect(contracts?.text).toContain(`"contractId" % $1 = $2`);
-    expect(contracts?.values).toEqual([OPEN_CONTRACT_SHARDS, 3]);
+    expect(contracts?.text).toContain(`ORDER BY "contractId"`);
+    expect(contracts?.values).toEqual([]);
   });
 
-  it("selects the shard again for its items and bids, not a bound id list", async () => {
+  it("selects the open contracts again for items and bids, not a bound id list", async () => {
     stubDatabase();
-    await loadSnapshot().readOpenContractsShard(1);
+    await loadSnapshot().readOpenContracts();
 
     for (const table of ["ContractItem", "ContractBid"]) {
       const query = queries().find((q) => q.text.includes(`FROM "${table}"`));
       expect(query?.text).toMatch(
         /"contractId" = ANY\(ARRAY\(SELECT "contractId" FROM "Contract" WHERE/,
       );
-      expect(query?.values).toEqual([OPEN_CONTRACT_SHARDS, 1]);
+      expect(query?.values).toEqual([]);
     }
   });
 
@@ -153,7 +167,7 @@ describe("readOpenContractsShard", () => {
     stubDatabase({
       contracts: [contractRow(), contractRow({ contractId: 24 })],
     });
-    await loadSnapshot().readOpenContractsShard(0);
+    await loadSnapshot().readOpenContracts();
 
     const characters = queries().find((q) =>
       q.text.includes(`FROM "Character"`),
@@ -213,7 +227,7 @@ describe("readOpenContractsShard", () => {
       ],
       bids: [{ contractId: 40, highest: 7_500_000, count: 3 }],
     });
-    const shard = await loadSnapshot().readOpenContractsShard(0);
+    const shard = await loadSnapshot().readOpenContracts();
 
     expect(shard.contracts[0]).toEqual([
       16,
@@ -276,16 +290,12 @@ describe("readOpenContractsShard", () => {
         contractRow({ lastSeenAt: new Date(NOW - 3 * 24 * 60 * 60 * 1000) }),
       ],
     });
-    expect((await loadSnapshot().readOpenContractsShard(0)).isBackfilling).toBe(
-      true,
-    );
+    expect((await loadSnapshot().readOpenContracts()).isBackfilling).toBe(true);
   });
 
-  it("is empty, not backfilling, for a shard with nothing open", async () => {
+  it("is empty, not backfilling, when nothing is open", async () => {
     stubDatabase({ contracts: [] });
-    const shard = await loadSnapshot().readOpenContractsShard(5);
-    expect(shard).toMatchObject({
-      shard: 5,
+    expect(await loadSnapshot().readOpenContracts()).toMatchObject({
       contracts: [],
       snapshotAt: null,
       isBackfilling: false,
@@ -293,59 +303,52 @@ describe("readOpenContractsShard", () => {
   });
 });
 
-describe("GET /api/contracts/open/[shard]", () => {
-  const get = (shard: string) =>
-    loadGET()(
-      new Request(`https://www.jita.space/api/contracts/open/${shard}`),
-      {
-        params: Promise.resolve({ shard }),
-      },
-    );
+describe("GET /api/contracts/open", () => {
+  /** The response's body, inflated and parsed. */
+  const body = async (response: Response) =>
+    JSON.parse(
+      gunzipSync(Buffer.from(await response.arrayBuffer())).toString(),
+    ) as OpenContractsSnapshot;
 
-  it("serves a shard, cached at the CDN for a sync", async () => {
+  it("serves the snapshot gzipped, cached at the CDN for a sync", async () => {
     stubDatabase();
-    const response = await get("2");
+    const response = await loadGET()();
     expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Encoding")).toBe("gzip");
+    expect(response.headers.get("Content-Type")).toBe("application/json");
     expect(response.headers.get("Cache-Control")).toBe(
       "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400",
     );
-    const body = (await response.json()) as OpenContractsShard;
-    expect(body.shard).toBe(2);
-    expect(body.contracts).toHaveLength(1);
+    expect((await body(response)).contracts).toHaveLength(1);
   });
 
-  it.each(["8", "-1", "1.5", "abc", "01x"])(
-    "404s shard %s without a query",
-    async (shard) => {
-      const response = await get(shard);
-      expect(response.status).toBe(404);
-      expect(mockQueryRaw).not.toHaveBeenCalled();
-    },
-  );
-
-  it("warns when a shard grows towards the response limit", async () => {
+  it("warns when the gzipped snapshot nears the response limit", async () => {
     const warn = jest
       .spyOn(console, "warn")
       .mockImplementation(() => undefined);
+    // Random titles, which gzip cannot shrink much.
     stubDatabase({
       contracts: Array.from({ length: 2 }, (_, index) =>
-        contractRow({ contractId: index * 8, title: "x".repeat(1_800_000) }),
+        contractRow({
+          contractId: index,
+          title: randomBytes(2_000_000).toString("base64"),
+        }),
       ),
     });
-    await get("0");
+    await loadGET()();
     expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining("raise OPEN_CONTRACT_SHARDS"),
+      expect.stringContaining("nearing Vercel's 4.5 MB response limit"),
     );
     warn.mockRestore();
   });
 
   it("lets a database failure throw, so nothing is cached", async () => {
     mockQueryRaw.mockRejectedValue(new Error("db down"));
-    await expect(get("0")).rejects.toThrow("db down");
+    await expect(loadGET()()).rejects.toThrow("db down");
   });
 });
 
-describe("decodeOpenContractsShard", () => {
+describe("decodeOpenContracts", () => {
   const tuple = (
     overrides: Partial<Record<number, unknown>> = {},
   ): SnapshotContract => {
@@ -377,8 +380,7 @@ describe("decodeOpenContractsShard", () => {
     }
     return base;
   };
-  const shard = (contracts: SnapshotContract[]): OpenContractsShard => ({
-    shard: 0,
+  const snapshot = (contracts: SnapshotContract[]): OpenContractsSnapshot => ({
     snapshotAt: null,
     isBackfilling: false,
     contracts,
@@ -398,7 +400,7 @@ describe("decodeOpenContractsShard", () => {
   });
 
   it("restores the summary every view renders", () => {
-    const [open] = decodeOpenContractsShard(shard([tuple()]));
+    const [open] = decodeOpenContracts(snapshot([tuple()]));
     expect(open?.contract).toEqual({
       contractId: 16,
       type: "item_exchange",
@@ -447,8 +449,8 @@ describe("decodeOpenContractsShard", () => {
   });
 
   it("names a courier's end station and leaves a structure unnamed", () => {
-    const [courier, structure] = decodeOpenContractsShard(
-      shard([
+    const [courier, structure] = decodeOpenContracts(
+      snapshot([
         tuple({ 1: 2, 17: 60008494, 20: [] }),
         tuple({
           0: 24,
@@ -483,8 +485,8 @@ describe("decodeOpenContractsShard", () => {
   });
 
   it("names a contract by its first offered item, a copy's image included", () => {
-    const [open] = decodeOpenContractsShard(
-      shard([
+    const [open] = decodeOpenContracts(
+      snapshot([
         tuple({
           1: 1,
           18: 7_500_000,
@@ -515,8 +517,8 @@ describe("decodeOpenContractsShard", () => {
   });
 
   it("reads a kind it does not know, and missing names, as absent", () => {
-    const [open] = decodeOpenContractsShard({
-      ...shard([tuple({ 1: 9, 3: 1, 4: 2, 14: 3, 16: 1 })]),
+    const [open] = decodeOpenContracts({
+      ...snapshot([tuple({ 1: 9, 3: 1, 4: 2, 14: 3, 16: 1 })]),
     });
     expect(open?.contract).toMatchObject({
       type: "unknown",

@@ -6,18 +6,19 @@ import type {
 import { locationKind, typeImageVariation } from "./contract";
 
 /**
- * Every open public contract, as `/api/contracts/open/[shard]` sends them and
- * the contracts browser filters, sorts and searches them in the browser.
+ * Every open public contract, as `/api/contracts/open` sends them and the
+ * contracts browser filters, sorts and searches them in the browser.
  *
- * About 50k contracts and 350k item lines are open at a time. Sent whole they
- * would pass Vercel's limits (a function answers at most 4.5 MB, the CDN
- * caches at most 10 MB), so they travel in `OPEN_CONTRACT_SHARDS` shards by
- * contract id. Each contract is one tuple, and the names its ids need travel
- * once per shard in dictionaries: a shard is ~1.6 MB of JSON (~350 kB
- * gzipped), well under the function limit as the listing grows.
+ * About 50k contracts and 350k item lines are open at a time. Each contract
+ * is one tuple, and the names its ids need travel once, in dictionaries: ~12
+ * MB of JSON. Vercel lets a function answer at most 4.5 MB and its CDN cache
+ * at most 10 MB, so the route sends it gzipped (~2.5 MB), and the browser
+ * inflates it as it would any gzipped response.
+ *
+ * It is one response rather than shards on purpose: shards would be read and
+ * cached at different times, so a page could join contracts from different
+ * syncs. One response is one read, in one transaction, cached once.
  */
-
-export const OPEN_CONTRACT_SHARDS = 8;
 
 /** The kinds the public listing holds, in tuple order. */
 export const SNAPSHOT_KINDS = [
@@ -60,8 +61,7 @@ export type SnapshotContract = [
   items: number[],
 ];
 
-export interface OpenContractsShard {
-  shard: number;
+export interface OpenContractsSnapshot {
   /** The latest public listing these contracts come from, or null if none. */
   snapshotAt: string | null;
   /**
@@ -92,15 +92,15 @@ export interface OpenContract {
 
 const iso = (seconds: number) => new Date(seconds * 1000).toISOString();
 
-/** Turns one shard into contracts the views can render. */
-export function decodeOpenContractsShard(
-  shard: OpenContractsShard,
+/** Turns the snapshot into contracts the views can render. */
+export function decodeOpenContracts(
+  snapshot: OpenContractsSnapshot,
 ): OpenContract[] {
   const system = (systemId: number | null | undefined) => {
     const entry =
       systemId === null || systemId === undefined
         ? undefined
-        : shard.systems[systemId];
+        : snapshot.systems[systemId];
     return {
       solarSystemId: systemId ?? null,
       solarSystemName: entry?.[0] ?? null,
@@ -108,7 +108,7 @@ export function decodeOpenContractsShard(
     };
   };
 
-  return shard.contracts.map((row) => {
+  return snapshot.contracts.map((row) => {
     const [
       contractId,
       kind,
@@ -139,7 +139,7 @@ export function decodeOpenContractsShard(
         : {
             locationId: startId,
             kind: locationKind(startId),
-            name: shard.stations[startId]?.[0] ?? null,
+            name: snapshot.stations[startId]?.[0] ?? null,
             ...system(startSystemId),
           };
     let end: ContractLocation | null = null;
@@ -147,7 +147,7 @@ export function decodeOpenContractsShard(
       if (endId === startId) {
         end = start;
       } else {
-        const station = shard.stations[endId];
+        const station = snapshot.stations[endId];
         end = {
           locationId: endId,
           kind: locationKind(endId),
@@ -164,7 +164,7 @@ export function decodeOpenContractsShard(
       const typeId = items[index] ?? 0;
       const quantity = items[index + 1] ?? 0;
       const flags = items[index + 2] ?? 0;
-      const type = shard.types[typeId];
+      const type = snapshot.types[typeId];
       typeIds.push(typeId);
       if (type) names.push(type[0].toLowerCase());
       if (flags & ITEM_ASKED) continue;
@@ -185,9 +185,9 @@ export function decodeOpenContractsShard(
       type: SNAPSHOT_KINDS[kind] ?? "unknown",
       title,
       issuerId,
-      issuerName: shard.characters[issuerId] ?? null,
+      issuerName: snapshot.characters[issuerId] ?? null,
       issuerCorporationId,
-      issuerCorporationName: shard.corporations[issuerCorporationId] ?? null,
+      issuerCorporationName: snapshot.corporations[issuerCorporationId] ?? null,
       forCorporation: forCorporation === 1,
       dateIssued: iso(issued),
       dateExpired: iso(expires),
@@ -200,7 +200,7 @@ export function decodeOpenContractsShard(
       start,
       end,
       regionId,
-      regionName: shard.regions[regionId] ?? null,
+      regionName: snapshot.regions[regionId] ?? null,
       items: { count: offered, first },
       bidCount,
       highestBid,
