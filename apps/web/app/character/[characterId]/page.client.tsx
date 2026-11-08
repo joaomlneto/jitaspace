@@ -96,6 +96,7 @@ import {
   KillboardTab,
   useZkillboardStats,
 } from "~/components/Zkillboard";
+import { stripEveMarkup } from "~/lib/eveMarkup";
 import {
   formatAge,
   formatDate,
@@ -502,7 +503,7 @@ export default function CharacterPage({
           {identity.title && (
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
               {/* Titles are EVE markup; show the text. */}
-              {identity.title.replace(/<[^<>]*>/g, "").trim()}
+              {stripEveMarkup(identity.title)}
             </Text>
           )}
           <Group gap="sm" align="center">
