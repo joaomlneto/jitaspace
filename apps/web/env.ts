@@ -106,7 +106,12 @@ const processEnv = {
 
 const merged = server.extend(client.shape);
 
-let env = process.env as unknown as z.infer<typeof merged>;
+// Unvalidated (SKIP_ENV_VALIDATION) runs read `processEnv`, not `process.env`.
+// Next inlines only literal `process.env.X` expressions, so `NEXT_PUBLIC_*`
+// values defined in next.config.mjs's `env` block (e.g. MODIFIED_DATE) are
+// absent from the runtime `process.env` on the server but present in the
+// browser — the two renders differed and the page failed to hydrate.
+let env = processEnv as unknown as z.infer<typeof merged>;
 
 if (!!process.env.SKIP_ENV_VALIDATION === false) {
   const isServer = typeof window === "undefined";

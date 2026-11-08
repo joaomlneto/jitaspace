@@ -18,8 +18,8 @@ import { IconFilterOff } from "@tabler/icons-react";
 import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import type { ContractView } from "./ContractList";
-import type { ContractRegionFacet } from "./data";
 import type { ContractFilterUpdate } from "./useContractFilters";
+import type { ContractRegionFacet } from "~/components/Contracts/clientFilter";
 import type { ContractFilters } from "~/components/Contracts/filters";
 import { CONTRACT_KIND_LABEL } from "~/components/Contracts/contract";
 import {
@@ -162,8 +162,8 @@ export function FiltersBar({
         <Group gap="sm" wrap="wrap" align="flex-start">
           <TextInput
             style={{ flex: 2, minWidth: 220 }}
-            aria-label="Search contract titles"
-            placeholder="Search titles"
+            aria-label="Search contracts"
+            placeholder="Search titles and items"
             leftSection={
               <SystemSearchIcon size={16} color="currentColor" alt="" />
             }
