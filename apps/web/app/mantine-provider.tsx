@@ -83,7 +83,9 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
 
   // A tab left open across the season's start or end switches when it does.
   // setTimeout overflows past ~24.8 days (2^31 - 1 ms), so a later change is
-  // left to the next page load.
+  // left to the next page load. The timer sets the state at the boundary
+  // itself, not at the clock's reading when it fires, so a timer that fires a
+  // little early cannot leave the tab unswitched with no timer left.
   useEffect(() => {
     const now = Date.now();
     const next = nextDefaultThemeSeasonChange(now);
@@ -91,7 +93,7 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
     const delay = next - now;
     if (delay > 2 ** 31 - 1) return;
     const timer = setTimeout(
-      () => setInSeason(isDefaultThemeInSeason(Date.now())),
+      () => setInSeason(isDefaultThemeInSeason(next)),
       delay,
     );
     return () => clearTimeout(timer);
