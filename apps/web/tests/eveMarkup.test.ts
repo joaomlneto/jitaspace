@@ -82,6 +82,53 @@ describe("stripEveMarkup", () => {
     });
   });
 
+  describe("decodes character references after parsing tags", () => {
+    it("shows the brackets and ampersands authors escaped", () => {
+      // Production character titles (2026-11-08).
+      const cases: [string, string][] = [
+        ["&lt;3", "<3"],
+        ["&lt;CEO&gt;", "<CEO>"],
+        ["Squad Member, Rank: &lt;Ensign&gt;", "Squad Member, Rank: <Ensign>"],
+        ["&lt;&lt;Founder&gt;&gt;", "<<Founder>>"],
+        ["&lt;b&gt;Smokin'&lt;/b&gt;", "<b>Smokin'</b>"],
+        [
+          "Assistant Dress Maker &amp; Silver Polisher",
+          "Assistant Dress Maker & Silver Polisher",
+        ],
+        [
+          "[18:36:54] Tarmo theGreat &gt; you are a great leader",
+          "[18:36:54] Tarmo theGreat > you are a great leader",
+        ],
+      ];
+      for (const [input, expected] of cases) {
+        expect(stripEveMarkup(input)).toBe(expected);
+      }
+    });
+
+    it("decodes once, and numeric references too", () => {
+      expect(stripEveMarkup("&amp;lt;")).toBe("&lt;");
+      expect(stripEveMarkup("&#60;&#x3C;&#X3c;")).toBe("<<<");
+      expect(stripEveMarkup("&quot;Ace&quot; &apos;s")).toBe('"Ace" \'s');
+      expect(stripEveMarkup("a&nbsp;&nbsp;b")).toBe("a b");
+      expect(stripEveMarkup("&#0;&#xD800;&#1114112;")).toBe("���");
+    });
+
+    it("leaves what is not a reference as written", () => {
+      expect(stripEveMarkup("R&D")).toBe("R&D");
+      expect(stripEveMarkup("Fish &chips; and &amp")).toBe(
+        "Fish &chips; and &amp",
+      );
+      expect(stripEveMarkup("&constructor; &toString;")).toBe(
+        "&constructor; &toString;",
+      );
+      expect(stripEveMarkup("&#12345678901234;")).toBe("&#12345678901234;");
+    });
+
+    it("drops references inside tags with the tag", () => {
+      expect(stripEveMarkup('<font color="&quot;red">x</font>')).toBe("x");
+    });
+  });
+
   describe("never lets a tag form in its result", () => {
     it("drops a text `<` that would open one", () => {
       expect(
@@ -102,6 +149,9 @@ describe("stripEveMarkup", () => {
         ["x <<<</b>/script>", "x /script>"],
         ["<<<<b>!--", "!--"],
         ["<<<>a", "a"],
+        // Nor when the letter after it is a character reference.
+        ["<<b>&#115;cript>alert(1)", "script>alert(1)"],
+        ["<<b>&#x2F;script>", "/script>"],
         ["a <b unterminated", "a"],
       ];
       for (const [input, expected] of cases) {
