@@ -13,11 +13,14 @@ import {
   Modal,
   SimpleGrid,
   Stack,
+  Tabs,
   Text,
   Title,
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconApi, IconClockPlay, IconDatabase } from "@tabler/icons-react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import {
   getRateLimitBuildDate,
@@ -42,6 +45,11 @@ import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
 import { TriggerJobsDashboard } from "../../components/Status/TriggerJobsDashboard";
+import {
+  DEFAULT_STATUS_PAGE_TAB,
+  isStatusPageTab,
+  STATUS_PAGE_TABS,
+} from "./tabs";
 
 export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
@@ -60,6 +68,16 @@ export default function StatusPage({
   sdeIngestState,
 }: Readonly<PageProps>) {
   const { data: tqStatus } = useServerStatus();
+
+  // URL-synced so a tab can be linked to (`/status?tab=database`), as on the
+  // type page. parseAsStringLiteral rejects unknown values, falling back to
+  // the default.
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(STATUS_PAGE_TABS)
+      .withDefault(DEFAULT_STATUS_PAGE_TAB)
+      .withOptions({ history: "replace" }),
+  );
 
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -343,11 +361,41 @@ export default function StatusPage({
           </Card>
         </SimpleGrid>
 
-        <TriggerJobsDashboard />
+        <Tabs
+          value={activeTab}
+          onChange={(value) => {
+            if (isStatusPageTab(value)) void setActiveTab(value);
+          }}
+          variant="outline"
+          keepMounted={false}
+        >
+          <Tabs.List>
+            <Tabs.Tab value="esi" leftSection={<IconApi size={16} />}>
+              ESI Client
+            </Tabs.Tab>
+            <Tabs.Tab value="database" leftSection={<IconDatabase size={16} />}>
+              Database
+            </Tabs.Tab>
+            <Tabs.Tab
+              value="background-jobs"
+              leftSection={<IconClockPlay size={16} />}
+            >
+              Background Jobs
+            </Tabs.Tab>
+          </Tabs.List>
 
-        <DatabaseDashboard />
+          <Tabs.Panel value="esi" pt="lg">
+            <EsiRateLimitDashboard />
+          </Tabs.Panel>
 
-        <EsiRateLimitDashboard />
+          <Tabs.Panel value="database" pt="lg">
+            <DatabaseDashboard />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="background-jobs" pt="lg">
+            <TriggerJobsDashboard />
+          </Tabs.Panel>
+        </Tabs>
       </Stack>
 
       <Modal

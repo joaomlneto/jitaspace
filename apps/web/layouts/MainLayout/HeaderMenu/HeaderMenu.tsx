@@ -92,7 +92,7 @@ function ActiveDesktopNavGroup() {
 
 /**
  * Top navigation header for the MainLayout. Labelled "mega menu"-style
- * dropdowns (Character / Universe) replace the older
+ * dropdowns (Character / Universe / About) replace the older
  * icon-only triggers, alongside a Spotlight-backed search box and the character
  * menu. Responsive: trigger labels and the full search box appear on wider
  * screens, and it collapses to the character avatar (opening the same character

@@ -11,18 +11,22 @@ import {
   AttributesIcon,
   CalendarIcon,
   CharacterSheetIcon,
+  ChatChannelsIcon,
   ContactsIcon,
   ContractsIcon,
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
+  HelpIcon,
   IncursionsIcon,
+  InfoIcon,
   ItemsIcon,
   JournalIcon,
   LPStoreIcon,
   MapIcon,
   MarketIcon,
   PlanetsIcon,
+  ScopeNetworkIcon,
   ShipsIcon,
   SkillsIcon,
   SystemFreelanceProjectsIcon,
@@ -30,8 +34,11 @@ import {
   WalletIcon,
   WarReportIcon,
   WarsIcon,
+  WindowGiftIcon,
   WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
+
+import { env } from "~/env";
 
 /**
  * Everything "Your freelance jobs" can use. Corporation jobs are gated on the
@@ -282,6 +289,9 @@ export const characterApps: Record<string, JitaApp> = {
           scopes: ["esi-planets.manage_planets.v1"],
         },
       ],
+      // The corporation's customs offices are in extraJitaFeatures, not here
+      // as optional: getEnabledApps would then hide this app from every
+      // character that is not a Director.
     },
   },
   freelance: {
@@ -678,13 +688,73 @@ export const extraJitaFeatures: AppScopeSet[] = [
     reason: "Read where your Mercenary Dens are",
     scopes: ["esi-structures.read_character.v1"],
   },
+  {
+    // The Customs Offices corporation app needs this, but the login modal
+    // asks only for the character apps' scopes and these extra features.
+    // Not an optional scope of Planetary Interaction, for the same reason as
+    // the Mercenary Dens above.
+    reason: "Read your corporation's customs offices",
+    description:
+      "Only a corporation's Directors can read them, so your roles are read too.",
+    scopes: [
+      "esi-planets.read_customs_offices.v1",
+      "esi-characters.read_corporation_roles.v1",
+    ],
+  },
 ];
+
+/**
+ * The site's own pages and community: the header's "About" menu, the mobile
+ * drawer's section of the same name, and the footer's links. Discord is the
+ * one external URL (see isExternalUrl), so it opens in a new tab.
+ */
+export const jitaSpaceApps: Record<string, JitaApp> = {
+  about: {
+    name: "About JitaSpace",
+    description:
+      "What JitaSpace is, who builds it, how to get in touch, and the privacy policy.",
+    url: "/about",
+    Icon: (props) => <InfoIcon {...props} />,
+    scopes: {},
+  },
+  support: {
+    name: "Support",
+    description:
+      "Ways to support JitaSpace: creator code, sponsorship or ISK in-game.",
+    url: "/support",
+    Icon: (props) => <WindowGiftIcon {...props} />,
+    scopes: {},
+  },
+  status: {
+    name: "Status",
+    description:
+      "EVE Online Tranquility server status and JitaSpace service health.",
+    url: "/status",
+    Icon: (props) => <ScopeNetworkIcon {...props} />,
+    scopes: {},
+  },
+  discord: {
+    name: "Discord",
+    description:
+      "Join the JitaSpace community: questions, feedback and bug reports.",
+    url: env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
+    Icon: (props) => <ChatChannelsIcon {...props} />,
+    scopes: {},
+  },
+};
+
+/** Whether an app's URL leaves the site, so menus open it in a new tab. */
+export function isExternalUrl(url: string): boolean {
+  return /^https?:\/\//.test(url);
+}
 
 export const jitaApps: Record<
   string,
   {
     apps: Record<string, JitaApp>;
     name: string;
+    /** The group's heading in search. Defaults to "<name> Apps". */
+    searchGroup?: string;
     Icon: (props: EveIconProps) => React.ReactElement;
   }
 > = {
@@ -697,5 +767,11 @@ export const jitaApps: Record<
     apps: universeApps,
     name: "Universe",
     Icon: (props) => <MapIcon {...props} />,
+  },
+  about: {
+    apps: jitaSpaceApps,
+    name: "About",
+    searchGroup: "About",
+    Icon: (props) => <HelpIcon {...props} />,
   },
 };

@@ -173,18 +173,17 @@ describe("readCorporationProfile", () => {
       },
     });
     expect(profile?.wars[0]).toMatchObject({ role: "defender", allyCount: 1 });
-    // The corporation's own wars, not its alliance's.
-    expect(mockPrisma.war.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          OR: [
-            { aggressorCorporationId: 98000001 },
-            { defenderCorporationId: 98000001 },
-            { corporationAllies: { some: { corporationId: 98000001 } } },
-          ],
-        },
-      }),
-    );
+    // The corporation's own wars, not its alliance's: one query per role, so
+    // each can use its index (an OR with the ally EXISTS scans every war).
+    expect(
+      mockPrisma.war.findMany.mock.calls.map(
+        ([args]) => (args as { where: unknown }).where,
+      ),
+    ).toEqual([
+      { aggressorCorporationId: 98000001 },
+      { defenderCorporationId: 98000001 },
+      { corporationAllies: { some: { corporationId: 98000001 } } },
+    ]);
     expect(mockPrisma.station.findMany).not.toHaveBeenCalled();
     // Player corporations skip the NPC-only relations query entirely.
     expect(mockPrisma.corporation.findUniqueOrThrow).not.toHaveBeenCalled();

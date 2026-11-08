@@ -6,6 +6,9 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
 import type { ContractSummary } from "~/components/Contracts/contract";
+import type * as CardModule from "~/components/Contracts/ContractCard";
+import type * as PartsModule from "~/components/Contracts/ContractParts";
+import type * as RowModule from "~/components/Contracts/ContractRow";
 
 // The contract icons render as tagged images, so a test can tell which one
 // (and how many) a view drew. Every other EVE icon renders nothing.
@@ -70,11 +73,11 @@ jest.mock("@jitaspace/eve-components", () => {
 });
 
 const { ContractArtwork } =
-  require("~/components/Contracts/ContractParts") as typeof import("~/components/Contracts/ContractParts");
+  require("~/components/Contracts/ContractParts") as typeof PartsModule;
 const { ContractRow } =
-  require("~/components/Contracts/ContractRow") as typeof import("~/components/Contracts/ContractRow");
+  require("~/components/Contracts/ContractRow") as typeof RowModule;
 const { ContractCard } =
-  require("~/components/Contracts/ContractCard") as typeof import("~/components/Contracts/ContractCard");
+  require("~/components/Contracts/ContractCard") as typeof CardModule;
 
 const renderWithMantine = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);

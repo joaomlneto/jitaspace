@@ -3,10 +3,13 @@ import { after, NextResponse } from "next/server";
 
 import {
   completeLoginFlow,
+  getCookieChunkName,
   getOAuthFlowCookieName,
   getOAuthResultCookieName,
+  joinCookieChunks,
   OAUTH_RESULT_MAX_AGE_SECONDS,
   sealLoginResult,
+  splitCookieValue,
 } from "@jitaspace/auth";
 
 import { env } from "~/env";
@@ -82,13 +85,32 @@ export async function GET(req: NextRequest) {
       `${origin}/login/complete?returnTo=${encodeURIComponent(returnTo)}`,
     );
     clearFlowCookie(response);
-    response.cookies.set(getOAuthResultCookieName(secure), sealedResult, {
+    // Split across numbered cookies: the sealed result carries the access
+    // token, which outgrows the browser's 4096-byte per-cookie limit once
+    // enough scopes are granted — and a cookie over it is dropped silently.
+    const resultCookieName = getOAuthResultCookieName(secure);
+    const chunks = splitCookieValue(sealedResult);
+    const resultCookieOptions = {
       httpOnly: true,
       sameSite: "lax",
       secure,
       path: "/",
-      maxAge: OAUTH_RESULT_MAX_AGE_SECONDS,
-    });
+    } as const;
+    chunks.forEach((chunk, index) =>
+      response.cookies.set(getCookieChunkName(resultCookieName, index), chunk, {
+        ...resultCookieOptions,
+        maxAge: OAUTH_RESULT_MAX_AGE_SECONDS,
+      }),
+    );
+    // Expire chunks a previous, larger result left behind: reassembly joins
+    // every contiguous chunk, so a stale tail would corrupt this one.
+    for (const name of joinCookieChunks(req.cookies.getAll(), resultCookieName)
+      .names) {
+      const index = Number(name.slice(resultCookieName.length + 1));
+      if (index >= chunks.length) {
+        response.cookies.set(name, "", { ...resultCookieOptions, maxAge: 0 });
+      }
+    }
     return response;
   } catch (error) {
     console.error("EVE SSO callback failed", error);

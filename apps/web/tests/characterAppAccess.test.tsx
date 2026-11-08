@@ -68,6 +68,19 @@ describe("character app access", () => {
     expect(mercenaryApp?.scopes.optional).toBeUndefined();
   });
 
+  it("asks for the customs offices at login, without gating Planetary Interaction on them", () => {
+    // Only Directors can read customs offices, so a character with just the
+    // planets scope must still be offered the app.
+    expect(
+      getEnabledCharacterApps(["esi-planets.manage_planets.v1"]).map(
+        (app) => app.name,
+      ),
+    ).toContain("Planetary Interaction");
+    expect(extraJitaFeatures.flatMap((feature) => feature.scopes)).toContain(
+      "esi-planets.read_customs_offices.v1",
+    );
+  });
+
   it("disables optional-only apps when no optional scope is granted", () => {
     const enabledApps = getEnabledCharacterApps([]);
 

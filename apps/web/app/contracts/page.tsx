@@ -3,7 +3,6 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { pageMetadata } from "~/lib/metadata";
-import { readOpenContractsOverview } from "./data";
 import ContractsPage from "./page.client";
 
 export const metadata = pageMetadata({
@@ -14,18 +13,14 @@ export const metadata = pageMetadata({
   badge: "Contracts",
 });
 
-async function ContractsContent() {
-  // Uncaught: the overview is cached hourly, so a database failure must throw
-  // rather than store an empty browser. The contracts themselves load in the
-  // browser from `/api/contracts`.
-  const overview = await readOpenContractsOverview();
-
+function ContractsContent() {
   // nuqs's React adapter, not the app-wide Next one, so the filters stay in
   // this prerendered page's cached HTML (apps/web/CLAUDE.md → "URL-synced
-  // filter state").
+  // filter state"). The page reads no data on the server: the open contracts
+  // load in the browser from `/api/contracts/open/[shard]`.
   return (
     <NuqsAdapter>
-      <ContractsPage overview={overview} />
+      <ContractsPage />
     </NuqsAdapter>
   );
 }

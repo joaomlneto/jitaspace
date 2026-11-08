@@ -19,11 +19,18 @@ import {
  * WCAG AA minimum for body text, and dimmed text here is often 12px. Mixing
  * in 18% white lifts it past 4.5:1 on every dark surface the themes use while
  * keeping each theme's tint and dimmed text visibly quieter than normal text.
+ *
+ * The light scheme's is `gray.6`, which a theme can replace with
+ * `other.lightDimmed` where its pale panels need darker dimmed text (EVE).
  */
 export const cssVariablesResolver: CSSVariablesResolver = (theme) => {
   const resolved = v8CssVariablesResolver(theme);
+  const lightDimmed = theme.other.lightDimmed;
   return {
     ...resolved,
+    light: lightDimmed
+      ? { ...resolved.light, "--mantine-color-dimmed": lightDimmed }
+      : resolved.light,
     dark: {
       ...resolved.dark,
       "--mantine-color-dimmed":
