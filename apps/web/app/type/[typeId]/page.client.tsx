@@ -56,7 +56,6 @@ import type {
   TypeDogmaMeta,
 } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
-import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
@@ -100,7 +99,7 @@ import { TypeListMatchTable } from "~/components/TypeLists";
 import { groupByEffectCategory } from "~/lib/dogmaEffectCategory";
 import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
 import { isTypeListMember } from "~/lib/typeLists";
-import { StreamedEntityHistory } from "../../history/EntityHistory";
+import { FetchedEntityHistory } from "../../history/EntityHistory";
 import { InsuranceTab } from "./InsuranceTab";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
@@ -260,9 +259,6 @@ function TypeEffectCell({
   );
 }
 
-/** No history to show; one stable promise, so `use()` never sees a new one. */
-const NO_HISTORY: Promise<EntityHistoryData | null> = Promise.resolve(null);
-
 export default function TypePage({
   typeId,
   typeName,
@@ -270,7 +266,6 @@ export default function TypePage({
   dogmaMeta,
   variations = [],
   typeLists = [],
-  history = NO_HISTORY,
   npcStats = null,
   insurance = null,
 }: Readonly<
@@ -278,11 +273,6 @@ export default function TypePage({
     dogmaMeta: TypeDogmaMeta;
     variations?: ItemVariation[];
     typeLists?: NamedTypeListMatch[];
-    /**
-     * The item's change history, still being read when the page starts
-     * streaming (`loadEntityHistory`); null once resolved if that failed.
-     */
-    history?: Promise<EntityHistoryData | null>;
     /** An NPC's combat figures; null for anything else. */
     npcStats?: NpcStats | null;
     /** A ship's latest insurance prices; null for anything never insured. */
@@ -1162,9 +1152,9 @@ export default function TypePage({
             </Tabs.Panel>
           )}
 
-          {/* History — per-build change timeline, streamed with the page */}
+          {/* History — per-build change timeline, fetched when the tab opens */}
           <Tabs.Panel value="history" pt="lg">
-            <StreamedEntityHistory history={history} />
+            <FetchedEntityHistory entityType="type" entityId={typeId} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

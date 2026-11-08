@@ -5,7 +5,6 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { formatCountOf } from "~/lib/format";
-import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { readStation } from "./data";
@@ -69,12 +68,7 @@ async function PageContent({
 
   // Uncaught: this page is cached whole, so a database failure must throw
   // rather than store a 404. `null` is a station that genuinely does not exist.
-  // The history read runs alongside, not after: a cold one takes seconds, and
-  // `loadEntityHistory` never throws.
-  const [station, history] = await Promise.all([
-    readStation(id),
-    loadEntityHistory("npcStation", id),
-  ]);
+  const station = await readStation(id);
   if (!station) notFound();
 
   // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
@@ -82,7 +76,7 @@ async function PageContent({
   // React adapter reads `?tab=` after hydration instead.
   return (
     <NuqsAdapter>
-      <PageClient station={station} history={history} />
+      <PageClient station={station} />
     </NuqsAdapter>
   );
 }

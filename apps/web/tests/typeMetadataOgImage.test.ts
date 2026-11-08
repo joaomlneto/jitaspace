@@ -15,11 +15,11 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 type Row = Record<string, unknown>;
 
-const typeFindUniqueOrThrow = jest.fn<(args?: unknown) => Promise<Row>>();
+const typeFindUnique = jest.fn<(args?: unknown) => Promise<Row>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
-    type: { findUniqueOrThrow: (a?: unknown) => typeFindUniqueOrThrow(a) },
+    type: { findUnique: (a?: unknown) => typeFindUnique(a) },
     typeAttribute: { findMany: () => Promise.resolve([]) },
   },
 }));
@@ -31,6 +31,10 @@ jest.mock("next/cache", () => ({
   cacheTag: () => undefined,
 }));
 
+// A failed image lookup keeps the render out of the ISR cache.
+const connection = jest.fn(() => Promise.resolve());
+jest.mock("next/server", () => ({ connection: () => connection() }));
+
 jest.mock("~/app/type/[typeId]/page.client", () => ({ default: () => null }));
 jest.mock("~/components/PageSkeleton", () => ({ PageSkeleton: () => null }));
 
@@ -39,6 +43,7 @@ function mockImageService(variations: string[] | "not-found") {
   global.fetch = jest.fn(() =>
     Promise.resolve({
       status: variations === "not-found" ? 404 : 200,
+      ok: variations !== "not-found",
       json: () => Promise.resolve(variations === "not-found" ? [] : variations),
     }),
   ) as unknown as typeof fetch;
@@ -92,8 +97,8 @@ function cardArtwork(meta: {
 describe("type/[typeId] generateMetadata og:image", () => {
   beforeEach(() => {
     jest.resetModules();
-    typeFindUniqueOrThrow.mockReset();
-    typeFindUniqueOrThrow.mockResolvedValue({
+    typeFindUnique.mockReset();
+    typeFindUnique.mockResolvedValue({
       typeId: 34,
       name: "Tritanium",
       description: "The most common ore type in the known world.",
@@ -145,13 +150,34 @@ describe("type/[typeId] generateMetadata og:image", () => {
       }
     }
   });
+  // The page is cached whole (ISR): a CDN blip draws this render's card
+  // without artwork, but must not store that card as the item's.
+  it("draws no artwork when the image service fails, and keeps the render uncached", async () => {
+    connection.mockClear();
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ status: 503, ok: false }),
+    ) as unknown as typeof fetch;
+
+    const meta = await metadataFor(34);
+
+    expect(meta.openGraph?.images?.[0]?.url).toBeDefined();
+    expect(cardArtwork(meta)).toBeUndefined();
+    expect(connection).toHaveBeenCalled();
+  });
+
+  it("lets a database failure throw rather than store generic metadata", async () => {
+    mockImageService(["icon"]);
+    typeFindUnique.mockRejectedValue(new Error("connection lost"));
+
+    await expect(metadataFor(34)).rejects.toThrow("connection lost");
+  });
 });
 
 describe("type/[typeId] generateMetadata canonical", () => {
   beforeEach(() => {
     jest.resetModules();
-    typeFindUniqueOrThrow.mockReset();
-    typeFindUniqueOrThrow.mockResolvedValue({
+    typeFindUnique.mockReset();
+    typeFindUnique.mockResolvedValue({
       typeId: 587,
       name: "Rifter",
       description: "A frigate.",
@@ -171,7 +197,7 @@ describe("type/[typeId] generateMetadata canonical", () => {
     "returns no metadata for the non-canonical id %p",
     async (typeId) => {
       expect(await metadataFor(typeId)).toEqual({});
-      expect(typeFindUniqueOrThrow).not.toHaveBeenCalled();
+      expect(typeFindUnique).not.toHaveBeenCalled();
     },
   );
 });

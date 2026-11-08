@@ -69,8 +69,8 @@ const mockDogmaEffectFindUnique =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockCorporationFindFirst =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockLoyaltyStoreOfferCount =
-  jest.fn<(...args: unknown[]) => Promise<number>>();
+const mockLoyaltyStoreOfferFindMany =
+  jest.fn<(...args: unknown[]) => Promise<unknown[]>>();
 const mockTypeFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockSolarSystemFindUnique =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
@@ -92,9 +92,12 @@ jest.mock("~/lib/db", () => ({
       findFirst: (...a: unknown[]) => mockCorporationFindFirst(...a),
     },
     loyaltyStoreOffer: {
-      count: (...a: unknown[]) => mockLoyaltyStoreOfferCount(...a),
+      findMany: (...a: unknown[]) => mockLoyaltyStoreOfferFindMany(...a),
     },
-    type: { findUnique: (...a: unknown[]) => mockTypeFindUnique(...a) },
+    type: {
+      findUnique: (...a: unknown[]) => mockTypeFindUnique(...a),
+      findMany: () => Promise.resolve([]),
+    },
     solarSystem: {
       findUnique: (...a: unknown[]) => mockSolarSystemFindUnique(...a),
     },
@@ -1102,8 +1105,8 @@ describe("lp-store/[corporationId] generateMetadata", () => {
   beforeEach(() => {
     jest.resetModules();
     mockCorporationFindFirst.mockReset();
-    mockLoyaltyStoreOfferCount.mockReset();
-    mockLoyaltyStoreOfferCount.mockResolvedValue(0);
+    mockLoyaltyStoreOfferFindMany.mockReset();
+    mockLoyaltyStoreOfferFindMany.mockResolvedValue([]);
   });
 
   it("returns corporation LP store title", async () => {
@@ -1113,7 +1116,18 @@ describe("lp-store/[corporationId] generateMetadata", () => {
       ticker: "CN",
       loyaltyStoreOffers: [],
     });
-    mockLoyaltyStoreOfferCount.mockResolvedValue(42);
+    mockLoyaltyStoreOfferFindMany.mockResolvedValue(
+      Array.from({ length: 42 }, (_, offerId) => ({
+        offerId,
+        corporationId: 1000035,
+        typeId: 34,
+        quantity: 1,
+        akCost: null,
+        lpCost: 100,
+        iskCost: 1000,
+        requiredItems: [],
+      })),
+    );
     const { generateMetadata } =
       await import("~/app/lp-store/[corporationId]/page");
     const result = await generateMetadata({
@@ -1121,6 +1135,7 @@ describe("lp-store/[corporationId] generateMetadata", () => {
     });
     expect(result.title).toBe("Caldari Navy LP Store");
     expect(result.description).toContain("Caldari Navy");
+    expect(result.description).toContain("42 Loyalty Point offers");
   });
 
   it("returns empty when corporation not found", async () => {
@@ -1134,26 +1149,25 @@ describe("lp-store/[corporationId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  // "0" is not a corporation id, so it is tried as a name — and no
-  // corporation is called "0".
-  it("returns empty for id = 0", async () => {
-    mockCorporationFindFirst.mockResolvedValue(null);
+  // "0" is not a corporation id, and a name of digits names no store, so it
+  // is refused without a query (it is also the route's ISR placeholder).
+  it("returns empty for id = 0, without a query", async () => {
     const { generateMetadata } =
       await import("~/app/lp-store/[corporationId]/page");
     expect(
       await generateMetadata({ params: rp({ corporationId: "0" }) }),
     ).toEqual({});
-    expect(mockCorporationFindFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { name: "0" } }),
-    );
+    expect(mockCorporationFindFirst).not.toHaveBeenCalled();
   });
 
-  it("returns empty when Prisma throws", async () => {
+  // The page is cached whole (ISR), so a failure must not be stored as the
+  // store's metadata.
+  it("throws when Prisma throws", async () => {
     mockCorporationFindFirst.mockRejectedValue(new Error("db"));
     const { generateMetadata } =
       await import("~/app/lp-store/[corporationId]/page");
-    expect(
-      await generateMetadata({ params: rp({ corporationId: "1000035" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ corporationId: "1000035" }) }),
+    ).rejects.toThrow("db");
   });
 });

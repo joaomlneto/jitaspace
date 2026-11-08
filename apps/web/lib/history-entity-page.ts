@@ -1,5 +1,4 @@
 import { cacheLife, cacheTag } from "next/cache";
-import * as Sentry from "@sentry/nextjs";
 
 import type { EntityTimeline } from "~/lib/history";
 import type { EntityRef, HistoryLabels } from "~/lib/history-labels";
@@ -24,18 +23,33 @@ export interface EntityHistoryData {
 }
 
 /**
- * {@link EntityHistoryData} for one entity, read on the server so the history
- * pages and tabs arrive complete — the browser fetches nothing for them.
+ * {@link EntityHistoryData} for one entity: read on the server by the
+ * `/history` pages, and served to the History tabs of the item, race, faction,
+ * station, constellation, region, dungeon, mission and epic-arc pages by
+ * `/api/history/entity/[entityType]/[id]`, which those tabs fetch when they
+ * open. The host pages are cached whole and never read it themselves: inside an
+ * ISR page's background render, a history read that throws or stalls fails the
+ * render however the page catches it (measured 2026-11 under `next start`; the
+ * request waiting on the render got a 500).
  *
  * Cached per entity for a day, like the timeline it is built on
  * (`getCachedEntityTimeline`), and tagged `sde`: the labels come from our SDE
  * tables, so an ingest refreshes them. A `"use cache: remote"` entry, shared
- * across instances: the item page renders per request and streams this into its
- * History tab, so a per-instance entry would seldom be hit again and each view
- * would re-read seconds of history. An entry over the Runtime Cache's 2 MB cap
+ * across instances: the tabs' route renders per request, so a per-instance
+ * entry would seldom be hit again and each view would re-read seconds of
+ * history. An entry over the Runtime Cache's 2 MB cap
  * (the largest item measured is ~750 KB) is silently not stored, and is read
  * again next time. Throws on failure — nothing here catches — so an outage
  * fails the read instead of caching a wrong page.
+ *
+ * So does a read that takes over {@link HISTORY_READ_TIMEOUT_MS}, and the
+ * bound has to be in here, inside the cache scope. A render waits for every
+ * cache entry it starts to fill, and a history database that accepts
+ * connections but never answers held an ISR page's background render open
+ * with nothing to end it: under `next start` every later request for the page
+ * then waited on it, indefinitely (2026-11, measured on `/race/[raceId]` when
+ * it still read its History tab in-render). A timeout in the caller frees the
+ * request, not the render.
  */
 export async function getCachedEntityHistory(
   entityType: string,
@@ -45,6 +59,18 @@ export async function getCachedEntityHistory(
   cacheLife("days");
   cacheTag(SDE_CACHE_TAG);
 
+  return withTimeout(
+    readEntityHistory(entityType, entityId),
+    HISTORY_READ_TIMEOUT_MS,
+    `Entity history read took over ${HISTORY_READ_TIMEOUT_MS} ms`,
+  );
+}
+
+/** The uncached body of {@link getCachedEntityHistory}. */
+async function readEntityHistory(
+  entityType: string,
+  entityId: number,
+): Promise<EntityHistoryData> {
   const timeline = await getCachedEntityTimeline(entityType, entityId);
   // Names as of the entity's latest recorded build, for whatever our SDE
   // tables do not have yet.
@@ -65,47 +91,28 @@ export async function getCachedEntityHistory(
 }
 
 /**
- * {@link getCachedEntityHistory} for a page that renders fine without its
- * History tab (the item, race, faction, dungeon, mission and epic-arc pages). A
- * failure is reported and hides the tab, and `connection()` keeps that
- * degraded render out of the page's ISR cache, so the next request retries
- * instead of the cache serving the page without its history.
- *
- * So is a read that takes over {@link HISTORY_TIMEOUT_MS}: the item page
- * streams this into its tab, so a stalled history database would otherwise
- * hold the response open until the function timed out.
+ * How long the history read itself may run: room for a cold one (2–4 s; the
+ * largest entity measured is ~750 KB), and shorter than the 50 s Next allows a
+ * cache entry to fill while it prerenders.
  */
-export async function loadEntityHistory(
-  entityType: string,
-  entityId: number,
-): Promise<EntityHistoryData | null> {
+export const HISTORY_READ_TIMEOUT_MS = 20_000;
+
+/** `promise`, or a rejection with `message` once `ms` have passed. */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(
-      () =>
-        reject(new Error(`Entity history took over ${HISTORY_TIMEOUT_MS} ms`)),
-      HISTORY_TIMEOUT_MS,
-    );
+    timer = setTimeout(() => reject(new Error(message)), ms);
   });
   try {
-    return await Promise.race([
-      getCachedEntityHistory(entityType, entityId),
-      timeout,
-    ]);
-  } catch (error) {
-    Sentry.captureException(error, { tags: { area: "entity-history" } });
-    // Imported here, on the failure path only: `next/server` cannot load in the
-    // jsdom suites that import the six host pages.
-    const { connection } = await import("next/server");
-    await connection();
-    return null;
+    return await Promise.race([promise, timeout]);
   } finally {
     clearTimeout(timer);
   }
 }
-
-/** How long a host page waits for an entity's history before going without. */
-export const HISTORY_TIMEOUT_MS = 10_000;
 
 /** Whether `field` holds one of an entity's own name messages. */
 const isNameField = (field: string) =>

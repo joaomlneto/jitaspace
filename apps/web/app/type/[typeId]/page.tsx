@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
-import { HttpStatusCode } from "axios";
+import { NuqsAdapter } from "nuqs/adapters/react";
 
 import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
@@ -13,9 +13,12 @@ import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { resolveEffectDescription } from "~/lib/dogmaEffectDescription";
-import { loadEntityHistory } from "~/lib/history-entity-page";
 import { readLatestTypeInsurance } from "~/lib/insuranceData";
-import { pageMetadata, toDescription } from "~/lib/metadata";
+import {
+  pageMetadata,
+  readTypeImageVariations,
+  toDescription,
+} from "~/lib/metadata";
 import { hasCombatStats } from "~/lib/npcStats";
 import {
   COMBAT_STATS_CATEGORY_IDS,
@@ -40,11 +43,17 @@ type TypeData = PageProps & {
   categoryId?: number;
 };
 
-async function getTypeData(typeId: number): Promise<TypeData> {
+/**
+ * The item's own row, or null for an id the SDE does not have. `findUnique`,
+ * not `findUniqueOrThrow`: this page is cached whole, so a missing row (a 404,
+ * legitimately stored) must stay distinguishable from a failed query, which
+ * throws out of this scope and is never stored.
+ */
+async function readType(typeId: number) {
   "use cache";
   cacheSdeRead();
 
-  const type = await prisma.type.findUniqueOrThrow({
+  return prisma.type.findUnique({
     select: {
       typeId: true,
       name: true,
@@ -63,12 +72,42 @@ async function getTypeData(typeId: number): Promise<TypeData> {
       typeId,
     },
   });
+}
 
-  const typeImageVariations = (await fetch(
-    `https://images.evetech.net/types/${typeId}`,
-  ).then((res) => {
-    return res.status === Number(HttpStatusCode.NotFound) ? [] : res.json();
-  })) as string[];
+/**
+ * Keeps a render that went without one of its parts out of the page's ISR
+ * cache. The page is cached whole, so without this a database or CDN blip
+ * during a revalidation would be served as the item's page, missing that part,
+ * until the next one. `connection()` makes this render request-time instead,
+ * and the next request retries.
+ */
+async function renderUncached(): Promise<void> {
+  // Imported here, on the failure path only: `next/server` cannot load in the
+  // jsdom suites that import this page.
+  const { connection } = await import("next/server");
+  await connection();
+}
+
+/**
+ * Which images the image service has for this item. An item without any is
+ * still a page; a failed lookup leaves the image out of this render only.
+ */
+async function getTypeImageVariations(typeId: number): Promise<string[]> {
+  try {
+    return await readTypeImageVariations(typeId);
+  } catch {
+    await renderUncached();
+    return [];
+  }
+}
+
+/** The item's page data, or null for an item that does not exist. */
+async function getTypeData(typeId: number): Promise<TypeData | null> {
+  const [type, typeImageVariations] = await Promise.all([
+    readType(typeId),
+    getTypeImageVariations(typeId),
+  ]);
+  if (!type) return null;
 
   const variation: string | undefined = typeImageVariations.includes("icon")
     ? "icon"
@@ -214,12 +253,14 @@ async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
 
 /**
  * The page renders fine without this half, so a database failure degrades to
- * empty metadata instead of erroring the route.
+ * empty metadata instead of erroring the route, in a render kept out of the
+ * cache (`renderUncached`).
  */
 async function getTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   try {
     return await readTypeDogmaMeta(typeId);
   } catch {
+    await renderUncached();
     return emptyTypeDogmaMeta;
   }
 }
@@ -255,7 +296,7 @@ async function readTypeNpcStats(
 /**
  * Combat figures for NPCs and drones only: a player ship's damage comes from
  * its fitted modules, not from its own attributes. The page renders fine
- * without them, so a database failure just leaves the tab out.
+ * without them, so a database failure just leaves the tab out, uncached.
  */
 async function getTypeNpcStats(
   typeId: number,
@@ -266,6 +307,7 @@ async function getTypeNpcStats(
   try {
     return await readTypeNpcStats(typeId, categoryId);
   } catch {
+    await renderUncached();
     return null;
   }
 }
@@ -333,12 +375,13 @@ async function readTypeVariations(
 
 /**
  * The page renders fine without its Variations tab, so a database failure
- * hides the tab instead of erroring the route.
+ * hides the tab, uncached, instead of erroring the route.
  */
 async function getTypeVariations(baseTypeId: number): Promise<ItemVariation[]> {
   try {
     return await readTypeVariations(baseTypeId);
   } catch {
+    await renderUncached();
     return [];
   }
 }
@@ -399,7 +442,7 @@ async function readTypeTypeLists(
 
 /**
  * The page renders fine without its Type Lists tab, so a database failure
- * hides the tab instead of erroring the route.
+ * hides the tab, uncached, instead of erroring the route.
  */
 async function getTypeTypeLists(
   typeId: number,
@@ -410,13 +453,14 @@ async function getTypeTypeLists(
   try {
     return await readTypeTypeLists(typeId, groupId, categoryId);
   } catch {
+    await renderUncached();
     return [];
   }
 }
 
 /**
  * The ship's latest insurance prices, for its Insurance tab. The page renders
- * fine without them, so a database failure just leaves the tab out.
+ * fine without them, so a database failure just leaves the tab out, uncached.
  */
 async function getTypeInsurance(
   typeId: number,
@@ -424,6 +468,7 @@ async function getTypeInsurance(
   try {
     return await readLatestTypeInsurance(typeId);
   } catch {
+    await renderUncached();
     return null;
   }
 }
@@ -437,28 +482,38 @@ export async function generateMetadata({
   const typeId = parsePositiveEntityId(typeIdParam);
   if (typeId === null) return {};
 
-  try {
-    const { typeName, typeDescription, cardImageUrl, groupName, categoryName } =
-      await getTypeData(typeId);
-    if (!typeName) return {};
+  // Uncaught, like the page body: this route is cached whole, so a database
+  // failure must throw rather than store generic metadata.
+  const data = await getTypeData(typeId);
+  if (!data?.typeName) return {};
+  const { typeName, typeDescription, cardImageUrl, groupName, categoryName } =
+    data;
 
-    return pageMetadata({
-      title: typeName,
-      description: toDescription(
-        typeDescription,
-        `${typeName} in EVE Online — attributes, market prices, and where to buy it.`,
-      ),
-      path: `/type/${typeId}`,
-      badge: categoryName ?? "Item",
-      image: cardImageUrl,
-      facts: [
-        ...(groupName ? [{ label: "Group", value: groupName }] : []),
-        ...(categoryName ? [{ label: "Category", value: categoryName }] : []),
-      ],
-    });
-  } catch {
-    return {};
-  }
+  return pageMetadata({
+    title: typeName,
+    description: toDescription(
+      typeDescription,
+      `${typeName} in EVE Online — attributes, market prices, and where to buy it.`,
+    ),
+    path: `/type/${typeId}`,
+    badge: categoryName ?? "Item",
+    image: cardImageUrl,
+    facts: [
+      ...(groupName ? [{ label: "Group", value: groupName }] : []),
+      ...(categoryName ? [{ label: "Category", value: categoryName }] : []),
+    ],
+  });
+}
+
+// ISR per item: without `generateStaticParams` an unlisted id re-renders, and
+// re-runs every query below, on every request (see apps/web/CLAUDE.md → "ISR
+// for a dynamic `[param]` route"). The real ids live in the database, which
+// `next build` cannot reach in CI, and Cache Components rejects an empty list
+// — so this lists one id `parsePositiveEntityId` refuses, which prerenders as a
+// 404 without a query. The page then revalidates on its shortest read's
+// `cacheLife` (the insurance prices', hourly).
+export function generateStaticParams() {
+  return [{ typeId: "0" }];
 }
 
 async function PageContent({
@@ -472,12 +527,10 @@ async function PageContent({
     notFound();
   }
 
-  let data: TypeData;
-  try {
-    data = await getTypeData(typeId);
-  } catch {
-    notFound();
-  }
+  // Uncaught: this page is cached whole, so a database failure must throw
+  // rather than store a 404. `null` is an item that genuinely does not exist.
+  const data = await getTypeData(typeId);
+  if (!data) notFound();
   // Only the client component's own props cross the boundary; the extra fields
   // `getTypeData` returns exist for the OpenGraph card and stay on the server.
   const props: PageProps = {
@@ -486,9 +539,9 @@ async function PageContent({
     typeName: data.typeName,
     typeDescription: data.typeDescription,
   };
-  // Not awaited: the History tab streams it in after the rest of the page, so
-  // the item's first byte never waits on seconds of history reads.
-  const history = loadEntityHistory("type", typeId);
+  // No history read here: the History tab fetches it from
+  // `/api/history/entity/type/[typeId]` when it opens. Read inside this render, any
+  // history database outage failed the page's background revalidation.
   const [dogmaMeta, variations, typeLists, npcStats, insurance] =
     await Promise.all([
       getTypeDogmaMeta(typeId),
@@ -497,16 +550,20 @@ async function PageContent({
       getTypeNpcStats(typeId, data.categoryId),
       getTypeInsurance(typeId),
     ]);
+  // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
+  // `useSearchParams()`, which drops this subtree out of the cached render. The
+  // React adapter reads `?tab=` (and the Insurance tab's state) after hydration.
   return (
-    <TypePage
-      {...props}
-      dogmaMeta={dogmaMeta}
-      variations={variations}
-      typeLists={typeLists}
-      history={history}
-      npcStats={npcStats}
-      insurance={insurance}
-    />
+    <NuqsAdapter>
+      <TypePage
+        {...props}
+        dogmaMeta={dogmaMeta}
+        variations={variations}
+        typeLists={typeLists}
+        npcStats={npcStats}
+        insurance={insurance}
+      />
+    </NuqsAdapter>
   );
 }
 

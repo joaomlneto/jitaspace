@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 type Row = Record<string, unknown> | null;
 
 const solarSystemFindUnique = jest.fn<(args?: unknown) => Promise<Row>>();
-const typeFindUniqueOrThrow = jest.fn<(args?: unknown) => Promise<Row>>();
+const typeFindUnique = jest.fn<(args?: unknown) => Promise<Row>>();
 const typeAttributeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeFindMany =
@@ -34,7 +34,7 @@ jest.mock("~/lib/db", () => ({
   prisma: {
     solarSystem: { findUnique: (a?: unknown) => solarSystemFindUnique(a) },
     type: {
-      findUniqueOrThrow: (a?: unknown) => typeFindUniqueOrThrow(a),
+      findUnique: (a?: unknown) => typeFindUnique(a),
       findMany: (a?: unknown) => typeFindMany(a),
     },
     typeAttribute: { findMany: (a?: unknown) => typeAttributeFindMany(a) },
@@ -49,6 +49,8 @@ jest.mock("~/lib/db", () => ({
       findMany: (a?: unknown) => dogmaEffectCategoryFindMany(a),
     },
     dogmaAttribute: { findMany: (a?: unknown) => dogmaAttributeFindMany(a) },
+    // No insurance for any item here: a failing read would degrade the page.
+    insurancePrice: { findFirst: () => Promise.resolve(null) },
   },
 }));
 
@@ -59,12 +61,12 @@ jest.mock("next/cache", () => ({
   cacheTag: () => undefined,
 }));
 
-// The type route reads the item's change history from the history database;
-// stub that read, which this suite does not exercise.
-jest.mock("~/lib/history-entity-page", () => ({
-  loadEntityHistory: () => Promise.resolve(null),
-}));
 jest.mock("~/components/PageSkeleton", () => ({ PageSkeleton: () => null }));
+
+// A part the type page renders without keeps that render out of its ISR cache
+// with `connection()`.
+const connection = jest.fn(() => Promise.resolve());
+jest.mock("next/server", () => ({ connection: () => connection() }));
 
 // Each client page is replaced by a stub; the assertions read the props off the
 // element the server half produced, so the stub itself renders nothing.
@@ -100,13 +102,18 @@ async function runRoute(
   const resolved = await (child.type as (p: unknown) => Promise<ReactElement>)(
     child.props,
   );
-  // The resolved element is <Probe {...props} />; read the props straight off it.
-  return resolved.props as Record<string, unknown>;
+  // The resolved element is <Probe {...props} />, or the type page's
+  // <NuqsAdapter> around it; read the props straight off the probe.
+  const element =
+    resolved.type === probe
+      ? resolved
+      : (resolved.props as { children: ReactElement }).children;
+  return element.props as Record<string, unknown>;
 }
 
 beforeEach(() => {
   solarSystemFindUnique.mockReset();
-  typeFindUniqueOrThrow.mockReset();
+  typeFindUnique.mockReset();
   typeAttributeFindMany.mockReset().mockResolvedValue([]);
   typeFindMany.mockReset().mockResolvedValue([]);
   typeEffectFindMany.mockReset().mockResolvedValue([]);
@@ -116,8 +123,9 @@ beforeEach(() => {
   dogmaEffectCategoryFindMany.mockReset().mockResolvedValue([]);
   dogmaEffectModifierFindMany.mockReset().mockResolvedValue([]);
   dogmaAttributeFindMany.mockReset().mockResolvedValue([]);
+  connection.mockClear();
   globalThis.fetch = jest.fn(() =>
-    Promise.resolve({ status: 200, json: () => Promise.resolve([]) }),
+    Promise.resolve({ status: 200, ok: true, json: () => Promise.resolve([]) }),
   ) as unknown as typeof globalThis.fetch;
 });
 
@@ -227,7 +235,7 @@ describe("system route server data", () => {
 
 describe("type route dogma metadata", () => {
   beforeEach(() => {
-    typeFindUniqueOrThrow.mockResolvedValue({
+    typeFindUnique.mockResolvedValue({
       typeId: 587,
       name: "Rifter",
       description: "A frigate.",
@@ -423,6 +431,8 @@ describe("type route dogma metadata", () => {
       effects: {},
       effectCategories: {},
     });
+    // Served, but kept out of the ISR cache so the next request retries.
+    expect(connection).toHaveBeenCalled();
   });
 });
 
@@ -442,7 +452,7 @@ describe("type route variations", () => {
   ) => ({ typeId, name, metaGroupId, metaLevel, group: { categoryId: 7 } });
 
   it("lists the base item's family by meta level, with meta group names", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(3839));
+    typeFindUnique.mockResolvedValue(typeRow(3839));
     typeFindMany.mockResolvedValue([
       variationRow(31930, "Caldari Navy Large Shield Extender", 4, 8),
       variationRow(3841, "Large Shield Extender II", 2, 5),
@@ -505,7 +515,7 @@ describe("type route variations", () => {
   });
 
   it("treats an item without a parent as the base of its family", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(null));
+    typeFindUnique.mockResolvedValue(typeRow(null));
 
     await runRoute("~/app/type/[typeId]/page", { typeId: "3841" });
 
@@ -519,7 +529,7 @@ describe("type route variations", () => {
   });
 
   it("returns nothing, and skips the meta group lookup, for a lone item", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(null));
+    typeFindUnique.mockResolvedValue(typeRow(null));
     typeFindMany.mockResolvedValue([
       variationRow(3841, "Large Shield Extender II", 2, 5),
     ]);
@@ -533,7 +543,7 @@ describe("type route variations", () => {
   });
 
   it("hides the tab rather than failing the page when the query fails", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(3839));
+    typeFindUnique.mockResolvedValue(typeRow(3839));
     typeFindMany.mockRejectedValue(new Error("connection lost"));
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -542,6 +552,8 @@ describe("type route variations", () => {
 
     expect(props.variations).toEqual([]);
     expect(props.typeName).toBe("Large Shield Extender II");
+    // Served, but kept out of the ISR cache so the next request retries.
+    expect(connection).toHaveBeenCalled();
   });
 });
 
@@ -569,7 +581,7 @@ describe("type route type lists", () => {
   });
 
   it("looks up rules naming the type, its group or its category", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow);
+    typeFindUnique.mockResolvedValue(typeRow);
     typeListEntryFindMany.mockResolvedValue([
       rule(10, true, "category", 6, "KillreportEligable"),
       rule(41, true, "category", 6, "Ships only - NOT Capsules"),
@@ -614,7 +626,7 @@ describe("type route type lists", () => {
   });
 
   it("hides the tab rather than failing the page when the query fails", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow);
+    typeFindUnique.mockResolvedValue(typeRow);
     typeListEntryFindMany.mockRejectedValue(new Error("connection lost"));
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -623,6 +635,8 @@ describe("type route type lists", () => {
 
     expect(props.typeLists).toEqual([]);
     expect(props.typeName).toBe("Capsule");
+    // Served, but kept out of the ISR cache so the next request retries.
+    expect(connection).toHaveBeenCalled();
   });
 });
 
@@ -668,7 +682,7 @@ describe("type route NPC combat stats", () => {
     });
 
   it("computes an NPC's damage, with its missile's, and hit points", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(11));
+    typeFindUnique.mockResolvedValue(typeRow(11));
     mockAttributes();
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -689,7 +703,7 @@ describe("type route NPC combat stats", () => {
   });
 
   it("computes a drone's, with what its effects say it does", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue({
+    typeFindUnique.mockResolvedValue({
       ...typeRow(18),
       typeId: 23536,
       name: "Berserker SW-900",
@@ -732,7 +746,7 @@ describe("type route NPC combat stats", () => {
 
   it("leaves out a drone that neither shoots nor does anything else", async () => {
     // A mutated drone's template: hit points, but no weapon and no effect.
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(18));
+    typeFindUnique.mockResolvedValue(typeRow(18));
     typeAttributeFindMany.mockImplementation((args) => {
       const query = args as { select: Record<string, unknown> };
       return Promise.resolve(
@@ -750,7 +764,7 @@ describe("type route NPC combat stats", () => {
   });
 
   it("leaves anything that is not an NPC without combat stats", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(6));
+    typeFindUnique.mockResolvedValue(typeRow(6));
     mockAttributes();
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -761,7 +775,7 @@ describe("type route NPC combat stats", () => {
   });
 
   it("drops the combat stats when the query fails", async () => {
-    typeFindUniqueOrThrow.mockResolvedValue(typeRow(11));
+    typeFindUnique.mockResolvedValue(typeRow(11));
     typeAttributeFindMany.mockRejectedValue(new Error("connection lost"));
 
     const props = await runRoute("~/app/type/[typeId]/page", {
@@ -769,5 +783,59 @@ describe("type route NPC combat stats", () => {
     });
 
     expect(props.npcStats).toBeNull();
+    expect(connection).toHaveBeenCalled();
+  });
+});
+
+describe("type route item row", () => {
+  const rifter = {
+    typeId: 587,
+    name: "Rifter",
+    description: "A frigate.",
+    variationParentTypeId: null,
+    groupId: 25,
+    group: { name: "Frigate", categoryId: 6, category: { name: "Ship" } },
+  };
+
+  it("caches a complete render: nothing degraded, so no connection()", async () => {
+    typeFindUnique.mockResolvedValue(rifter);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "587",
+    });
+
+    expect(props.typeName).toBe("Rifter");
+    expect(connection).not.toHaveBeenCalled();
+  });
+
+  it("404s an item the SDE does not have", async () => {
+    typeFindUnique.mockResolvedValue(null);
+
+    await expect(
+      runRoute("~/app/type/[typeId]/page", { typeId: "587" }),
+    ).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");
+  });
+
+  // The page is cached whole (ISR), and a notFound() is stored like any page:
+  // the old catch would have served a 404 for as long as the cache kept it.
+  it("lets a query failure escape instead of treating it as a missing item", async () => {
+    typeFindUnique.mockRejectedValue(new Error("connection lost"));
+
+    await expect(
+      runRoute("~/app/type/[typeId]/page", { typeId: "587" }),
+    ).rejects.toThrow("connection lost");
+  });
+
+  it("lists a placeholder id that 404s without a query, for ISR", async () => {
+    const { generateStaticParams } = require("~/app/type/[typeId]/page") as {
+      generateStaticParams: () => { typeId: string }[];
+    };
+    const params = generateStaticParams();
+    expect(params).toEqual([{ typeId: "0" }]);
+
+    await expect(
+      runRoute("~/app/type/[typeId]/page", params[0]!),
+    ).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");
+    expect(typeFindUnique).not.toHaveBeenCalled();
   });
 });

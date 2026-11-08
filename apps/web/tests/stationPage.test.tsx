@@ -98,24 +98,16 @@ jest.mock("~/components/Agents", () => ({
   ),
 }));
 
-// The page reads the entity's change history on the server; stub that read
-// (it loads `next/server`, which jsdom cannot).
-const mockLoadEntityHistory = jest.fn<
-  (entityType: string, entityId: number) => Promise<unknown>
->(() => Promise.resolve(null));
-jest.mock("~/lib/history-entity-page", () => ({
-  loadEntityHistory: (entityType: string, entityId: number) =>
-    mockLoadEntityHistory(entityType, entityId),
-}));
+// The History tab fetches the history when it opens; stub the fetching tab.
 jest.mock("~/app/history/EntityHistory", () => ({
-  EmbeddedEntityHistory: ({
-    history,
+  FetchedEntityHistory: ({
+    entityType,
+    entityId,
   }: {
-    history: { entityId: number } | null;
+    entityType: string;
+    entityId: number;
   }) => (
-    <div data-testid="entity-history">
-      {history ? `history of ${history.entityId}` : "no history"}
-    </div>
+    <div data-testid="entity-history">{`history of ${entityType} ${entityId}`}</div>
   ),
 }));
 
@@ -233,7 +225,6 @@ beforeEach(() => {
   for (const model of Object.values(prismaMock))
     for (const mock of Object.values(model)) mock.mockReset();
   notFound.mockClear();
-  mockLoadEntityHistory.mockClear();
 });
 
 describe("readStation", () => {
@@ -419,9 +410,8 @@ async function resolvePageContent(stationId: string) {
 }
 
 describe("station page (server)", () => {
-  it("hands the client the station and its history, under nuqs's React adapter", async () => {
+  it("hands the client the station, under nuqs's React adapter", async () => {
     mockSdeReads();
-    mockLoadEntityHistory.mockResolvedValue({ entityId: JITA_44 });
 
     const tree = (await resolvePageContent(String(JITA_44))) as {
       props: { children: { props: Record<string, unknown> } };
@@ -429,8 +419,9 @@ describe("station page (server)", () => {
     const props = tree.props.children.props;
 
     expect(props.station).toMatchObject({ stationId: JITA_44 });
-    expect(props.history).toEqual({ entityId: JITA_44 });
-    expect(mockLoadEntityHistory).toHaveBeenCalledWith("npcStation", JITA_44);
+    // The History tab fetches its own history; the page never reads it, so a
+    // history database outage cannot fail the cached render.
+    expect(props).not.toHaveProperty("history");
   });
 
   it("renders the not-found page for a station id no row matches", async () => {
@@ -591,7 +582,7 @@ function renderClient(station: StationPageData, searchParams = "") {
   const Page = require("~/app/station/[stationId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page station={station} history={null} />
+      <Page station={station} />
     </MantineProvider>,
     { wrapper: withNuqsTestingAdapter({ searchParams }) },
   );
@@ -673,7 +664,7 @@ describe("station page (client)", () => {
   it("renders the change history on its tab", () => {
     renderClient(stationData(), "?tab=history");
     expect(screen.getByTestId("entity-history")).toHaveTextContent(
-      "no history",
+      `history of npcStation ${JITA_44}`,
     );
   });
 

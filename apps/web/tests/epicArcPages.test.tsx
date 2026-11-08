@@ -17,15 +17,16 @@ import { EpicArcStepsTable } from "~/components/Missions";
 // page's tabs, and the /epic-arcs index. The @jitaspace/* packages resolve to
 // their stubs in __mocks__.
 
+// The History tab fetches the history when it opens; stub the fetching tab.
 jest.mock("~/app/history/EntityHistory", () => ({
-  EmbeddedEntityHistory: ({
-    history,
+  FetchedEntityHistory: ({
+    entityType,
+    entityId,
   }: {
-    history: { entityId: number } | null;
+    entityType: string;
+    entityId: number;
   }) => (
-    <div data-testid="entity-history">
-      {history ? `history of ${history.entityId}` : "no history"}
-    </div>
+    <div data-testid="entity-history">{`history of ${entityType} ${entityId}`}</div>
   ),
 }));
 jest.mock("next/link", () => ({
@@ -167,7 +168,7 @@ describe("EpicArcStepsTable", () => {
 
 describe("epic arc page", () => {
   it("shows the arc's figures and where it starts, branches and ends", () => {
-    renderUi(<EpicArcPage arc={ARC} history={null} />);
+    renderUi(<EpicArcPage arc={ARC} />);
 
     expect(
       screen.getByRole("heading", { name: "The Blood-Stained Stars" }),
@@ -185,7 +186,7 @@ describe("epic arc page", () => {
   });
 
   it("opens the agents tab from the URL", () => {
-    renderUi(<EpicArcPage arc={ARC} history={null} />, "?tab=agents");
+    renderUi(<EpicArcPage arc={ARC} />, "?tab=agents");
 
     const tevis = rowOf("Tevis Jak", 0);
     expect(tevis.getByText("1")).toBeInTheDocument();
@@ -198,10 +199,7 @@ describe("epic arc page", () => {
 
   it("says when an arc does not repeat on a timer", () => {
     renderUi(
-      <EpicArcPage
-        arc={{ ...ARC, faction: null, arcRestartInterval: 1 }}
-        history={null}
-      />,
+      <EpicArcPage arc={{ ...ARC, faction: null, arcRestartInterval: 1 }} />,
     );
     expect(screen.getByText("Not on a timer")).toBeInTheDocument();
   });
