@@ -23,7 +23,7 @@ overrides:
   # Caret, not an exact pin: an override replaces the importer's own specifier
   # outright, so pinning here would freeze the patch level this exists to raise
   # and a later manifest bump would install nothing.
-  "sharp": "^0.35.3"
+  "sharp": "^0.35.5"
 nodeLinker: hoisted
 publicHoistPattern:
   - "*prisma*"
