@@ -15,10 +15,9 @@ import {
   contractDisplayName,
   ContractIssuer,
   ContractLocationLine,
-  ContractStatusBadge,
+  ContractTiming,
   ContractTypeBadge,
   ContractTypeIcon,
-  ExpiryText,
   formatVolume,
   RelativeTime,
 } from "./ContractParts";
@@ -78,13 +77,7 @@ export const ContractCard = memo(function ContractCard({
               </Text>
             )}
           </Group>
-          {contract.status && contract.status !== "outstanding" ? (
-            <ContractStatusBadge status={contract.status} size="sm" />
-          ) : (
-            <Text size="xs" c="dimmed" ta="right">
-              <ExpiryText date={contract.dateExpired} />
-            </Text>
-          )}
+          <ContractTiming contract={contract} size="xs" ta="right" />
         </Group>
 
         <Group gap="sm" wrap="nowrap" align="flex-start">

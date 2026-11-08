@@ -29,6 +29,7 @@ import {
   CategoryCombatIcon,
   CategoryIskIcon,
   CategoryPowerIcon,
+  ContractsIcon,
   SystemArrowRotateLeftIcon,
   SystemBlockBanIcon,
   SystemDetailsViewIcon,
@@ -60,6 +61,7 @@ import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
+import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
   CategoryAnchor,
@@ -696,6 +698,13 @@ export default function TypePage({
                 Market
               </Tabs.Tab>
             )}
+            {/* Every type, published or not: the tab says when it has none. */}
+            <Tabs.Tab
+              value="contracts"
+              leftSection={<ContractsIcon size={16} alt="" />}
+            >
+              Contracts
+            </Tabs.Tab>
             {insurance && (
               <Tabs.Tab
                 value="insurance"
@@ -1085,6 +1094,11 @@ export default function TypePage({
               </Stack>
             </Tabs.Panel>
           )}
+
+          {/* Contracts — every public contract that listed this type */}
+          <Tabs.Panel value="contracts" pt="lg">
+            <ContractHistoryTab subject="type" id={typeId} />
+          </Tabs.Panel>
 
           {/* Insurance */}
           {insurance && (

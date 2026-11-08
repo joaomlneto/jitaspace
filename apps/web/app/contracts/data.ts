@@ -12,9 +12,10 @@ import {
 import { prisma } from "~/lib/db";
 
 /**
- * One public contract as the snapshots the background jobs store it, in the
- * shape the views render (the contract page). The open contracts the browser
- * lists travel in a compact form of their own (`snapshot.ts`).
+ * Public contracts as the snapshots the background jobs store them, in the
+ * shape the views render: the contract page, and the Contracts tabs of
+ * character, corporation and type pages (`history.ts`). The open contracts
+ * the browser lists travel in a compact form of their own (`snapshot.ts`).
  */
 
 const KIND: Record<string, ContractKind> = {
@@ -52,9 +53,10 @@ export const contractSummarySelect = {
   station: { select: { name: true } },
   lastSeenAt: true,
   isDeleted: true,
+  endReason: true,
   // No `_count` here: Prisma counts a relation by grouping the whole related
   // table before joining it, which took 27 s over ContractItem's millions of
-  // historical rows. The contract page counts its own items and bids.
+  // historical rows. `readPageExtras` counts only a page's contracts.
   // The first offered item names a contract that has no title, as in game.
   items: {
     where: { isIncluded: true },
@@ -145,6 +147,37 @@ export async function readEndStations(
   );
 }
 
+/** The counts and end stations a page of rows needs (`toContractSummary`). */
+export async function readPageExtras(
+  rows: ContractRow[],
+): Promise<ContractPageExtras> {
+  const contractId = { in: rows.map((row) => row.contractId) };
+  const [endStations, items, bids] = await Promise.all([
+    readEndStations(rows),
+    // Offered items only: the count says how many more a contract offers
+    // than the one that names it (contractDisplayName).
+    prisma.contractItem.groupBy({
+      by: ["contractId"],
+      where: { contractId, isIncluded: true },
+      _count: { _all: true },
+    }),
+    prisma.contractBid.groupBy({
+      by: ["contractId"],
+      where: { contractId },
+      _count: { _all: true },
+    }),
+  ]);
+  return {
+    endStations,
+    itemCounts: new Map(
+      items.map((group) => [group.contractId, group._count._all]),
+    ),
+    bidCounts: new Map(
+      bids.map((group) => [group.contractId, group._count._all]),
+    ),
+  };
+}
+
 /** ESI reports 0 for amounts a contract does not use; show them as absent. */
 function nonZero(value: number | null): number | null {
   return value === 0 ? null : value;
@@ -223,5 +256,6 @@ export function toContractSummary(
     highestBid: row.bids[0]?.amount ?? null,
     lastSeenAt: row.lastSeenAt?.toISOString() ?? null,
     isOpen: !row.isDeleted,
+    endReason: row.endReason,
   };
 }

@@ -25,8 +25,9 @@ export function MainLayout({
         offset: true,
       }}
       footer={{
-        // Below sm: the mobile tab bar. From sm: the footer links.
-        height: { base: 64, sm: 60 },
+        // The fixed footer is the mobile tab bar, so it is only there below
+        // sm. The page footer (FooterWithLinks) is not fixed: it ends the page.
+        height: { base: 64, sm: 0 },
         offset: true,
       }}
       {...otherProps}
@@ -49,17 +50,16 @@ export function MainLayout({
         // height is grown in globals.css but the layout offset isn't), so add
         // the top inset here to keep content clear of the notch.
         pt={`calc(${rem(60)} + var(--mantine-spacing-xs) + env(safe-area-inset-top))`}
-        pb={`calc(${rem(60)} + var(--mantine-spacing-xs))`}
+        // Clears the tab bar below sm (it is 0 from sm), including the
+        // home-indicator inset Mantine adds to the tab bar's height.
+        pb="calc(var(--app-shell-footer-offset, 0rem) + env(safe-area-inset-bottom))"
+        className={classes.main}
       >
-        {children}
+        <div className={classes.content}>{children}</div>
+        <FooterWithLinks />
       </AppShell.Main>
-      <AppShell.Footer>
-        <Box hiddenFrom="sm" h="100%">
-          <MobileTabBar />
-        </Box>
-        <Box visibleFrom="sm" h="100%">
-          <FooterWithLinks />
-        </Box>
+      <AppShell.Footer hiddenFrom="sm">
+        <MobileTabBar />
       </AppShell.Footer>
     </AppShell>
   );

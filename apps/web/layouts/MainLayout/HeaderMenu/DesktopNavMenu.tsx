@@ -4,11 +4,12 @@ import type React from "react";
 import { memo } from "react";
 import Link from "next/link";
 import { Box, Center, Menu, Tooltip, UnstyledButton } from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
+import { IconChevronDown, IconExternalLink } from "@tabler/icons-react";
 
 import type { EveIconProps } from "@jitaspace/eve-icons";
 
 import type { JitaApp } from "~/config/apps";
+import { isExternalUrl } from "~/config/apps";
 import classes from "./HeaderMenu.module.css";
 
 export interface DesktopNavMenuProps {
@@ -38,13 +39,26 @@ export const DesktopNavMenu = memo(
         w={240}
         events={{ hover: true, focus: true, touch: false }}
       >
-        <Menu.Item
-          component={Link}
-          href={app.url ?? "#"}
-          leftSection={<app.Icon width={20} alt="" />}
-        >
-          {app.name}
-        </Menu.Item>
+        {app.url && isExternalUrl(app.url) ? (
+          <Menu.Item
+            component="a"
+            href={app.url}
+            target="_blank"
+            rel="noreferrer"
+            leftSection={<app.Icon width={20} alt="" />}
+            rightSection={<IconExternalLink size={14} stroke={1.5} />}
+          >
+            {app.name}
+          </Menu.Item>
+        ) : (
+          <Menu.Item
+            component={Link}
+            href={app.url ?? "#"}
+            leftSection={<app.Icon width={20} alt="" />}
+          >
+            {app.name}
+          </Menu.Item>
+        )}
       </Tooltip>
     ));
 

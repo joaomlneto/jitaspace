@@ -32,6 +32,7 @@ import {
   CategoryLpIcon,
   CategoryOngoingConflictsIcon,
   CategorySkullIcon,
+  ContractsIcon,
   SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowEmploymentHistoryIcon,
@@ -55,6 +56,7 @@ import {
 
 import type { CorporationPageTab } from "./tabs";
 import type { CorporationPageData } from "./types";
+import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
 import {
@@ -199,6 +201,8 @@ function visibleTabsFor(
     agents: (profile?.counts.agents ?? 0) > 0,
     economy: hasEconomy,
     wars: (profile?.warSummary.total ?? 0) > 0,
+    // NPC corporations too: their members (the starter corporations') trade.
+    contracts: true,
     killboard: true,
   };
 }
@@ -654,6 +658,12 @@ export default function CorporationPage({
               </Tabs.Tab>
             )}
             <Tabs.Tab
+              value="contracts"
+              leftSection={<ContractsIcon size={16} alt="" />}
+            >
+              Contracts
+            </Tabs.Tab>
+            <Tabs.Tab
               value="killboard"
               leftSection={
                 <CategorySkullIcon size={16} color="currentColor" alt="" />
@@ -909,6 +919,10 @@ export default function CorporationPage({
               />
             </Tabs.Panel>
           )}
+
+          <Tabs.Panel value="contracts" pt="lg">
+            <ContractHistoryTab subject="corporation" id={corporationId} />
+          </Tabs.Panel>
 
           <Tabs.Panel value="killboard" pt="lg">
             <KillboardTab

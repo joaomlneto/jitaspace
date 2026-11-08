@@ -53,6 +53,12 @@ export interface ContractSummary {
   lastSeenAt?: string | null;
   /** Database only: false once the public listing stopped showing it. */
   isOpen?: boolean;
+  /**
+   * Database only: why the listing stopped showing it. The public data cannot
+   * tell an accepted, completed or deleted contract apart, so all three are
+   * "RemovedBeforeExpiry".
+   */
+  endReason?: "Expired" | "RemovedBeforeExpiry" | null;
 }
 
 export type ContractKind =

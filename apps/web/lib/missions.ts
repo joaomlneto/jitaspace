@@ -446,7 +446,8 @@ export function renderMissionText(
 /**
  * The same fill as {@link renderMissionText}, as text: values verbatim and
  * labels in brackets, with no markup added and nothing escaped. For contexts
- * that strip markup but never decode entities, such as a meta description.
+ * that want text, such as a meta description (which `toDescription` still
+ * strips of markup and decodes, so values must not be escaped here).
  */
 export function missionPlainText(
   text: string,
