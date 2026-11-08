@@ -9,7 +9,7 @@ overrides:
   "prosemirror-model": "1.25.7"
   "prosemirror-state": "1.4.4"
   "prosemirror-transform": "1.12.0"
-  "prosemirror-view": "1.41.8"
+  "prosemirror-view": "1.42.3"
   # Load-bearing, and not for the reason it looks like. next declares
   # optionalDependencies.sharp "^0.34.5", which is incompatible with apps/web's
   # "^0.35.3" — so under nodeLinker: hoisted pnpm HOISTS NEXT'S 0.34.5 to the root
