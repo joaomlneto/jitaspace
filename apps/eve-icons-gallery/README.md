@@ -19,8 +19,15 @@ The icons are © CCP hf. (Fenris Creations) and are not MIT-licensed; see the
 package's [LICENSE](../../packages/eve-icons/LICENSE). The footer carries the
 required notices.
 
-On Vercel (project `eve-icons-gallery`), `vercel.json`'s `ignoreCommand` skips
-the build unless the commit changes this app or a workspace it depends on
-(`turbo query affected`), measured from the last deployed commit on the branch.
-A change to `turbo.json`, the root `package.json` or the root of the lockfile
-counts as affecting every package, so those still build.
+On Vercel (project `eve-icons-gallery`), `vercel.json`'s `ignoreCommand` runs
+[`scripts/ignore-build.ts`](scripts/ignore-build.ts), which builds only when
+something that reaches `out/` changed since the branch's last successful
+deployment: a file of this app, `@jitaspace/eve-icons` or `@jitaspace/tsconfig`
+(docs, lint and test files aside), a non-tooling field of their `package.json`,
+the lockfile version of one of their direct dependencies, or `turbo.json`.
+ESLint, Prettier and Jest bumps do not count. If the gallery gains a workspace
+dependency, add it to `WORKSPACES` in that script. To see what it would decide:
+
+```bash
+node apps/eve-icons-gallery/scripts/ignore-build.ts <base> [<head>]
+```
