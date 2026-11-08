@@ -54,11 +54,23 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 jest.mock("~/config/apps", () => ({
+  isExternalUrl: (url: string) => /^https?:\/\//.test(url),
   jitaApps: {
     character: {
       name: "Character",
       Icon: () => null,
       apps: { mail: { name: "EveMail", url: "/mail", Icon: () => null } },
+    },
+    about: {
+      name: "About",
+      Icon: () => null,
+      apps: {
+        discord: {
+          name: "Discord",
+          url: "https://discord.gg/jitaspace",
+          Icon: () => null,
+        },
+      },
     },
   },
 }));
@@ -196,5 +208,28 @@ describe("MobileNavDrawer account section", () => {
         screen.getByText("EveMail"),
       ),
     ).toBe(true);
+  });
+});
+
+describe("MobileNavDrawer navigation", () => {
+  it("opens an external app in a new tab and leaves the drawer open", () => {
+    const close = jest.fn();
+    renderDrawer(close);
+
+    const discord = screen.getByRole("link", { name: "Discord" });
+    expect(discord).toHaveAttribute("href", "https://discord.gg/jitaspace");
+    expect(discord).toHaveAttribute("target", "_blank");
+    fireEvent.click(discord);
+    expect(close).not.toHaveBeenCalled();
+  });
+
+  it("closes the drawer when navigating within the site", () => {
+    const close = jest.fn();
+    renderDrawer(close);
+
+    const mail = screen.getByRole("link", { name: "EveMail" });
+    expect(mail).not.toHaveAttribute("target");
+    fireEvent.click(mail);
+    expect(close).toHaveBeenCalledTimes(1);
   });
 });
