@@ -13,9 +13,8 @@ import {
   contractDisplayName,
   ContractIssuer,
   ContractLocationLine,
-  ContractStatusBadge,
+  ContractTiming,
   ContractTypeIcon,
-  ExpiryText,
 } from "./ContractParts";
 import classes from "./ContractRow.module.css";
 
@@ -124,13 +123,7 @@ export const ContractRow = memo(function ContractRow({
       </div>
 
       <div className={classes.when}>
-        {contract.status && contract.status !== "outstanding" ? (
-          <ContractStatusBadge status={contract.status} size="xs" />
-        ) : (
-          <Text size="xs" c="dimmed">
-            <ExpiryText date={contract.dateExpired} />
-          </Text>
-        )}
+        <ContractTiming contract={contract} size="xs" />
       </div>
     </div>
   );

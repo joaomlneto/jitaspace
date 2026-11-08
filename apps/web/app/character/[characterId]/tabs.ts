@@ -4,6 +4,7 @@ export const CHARACTER_PAGE_TABS = [
   "biography",
   "history",
   "agent",
+  "contracts",
   "killboard",
 ] as const;
 
