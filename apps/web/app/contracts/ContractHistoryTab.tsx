@@ -63,7 +63,17 @@ export function ContractHistoryTab({
   if (query.data === undefined) {
     content = query.isError ? (
       <Alert color="red" variant="light">
-        Contracts could not be loaded. Try again in a moment.
+        <Group justify="space-between" gap="sm">
+          <Text size="sm">Contracts could not be loaded.</Text>
+          <Button
+            size="xs"
+            variant="default"
+            loading={query.isRefetching}
+            onClick={() => void query.refetch()}
+          >
+            Try again
+          </Button>
+        </Group>
       </Alert>
     ) : (
       <ContractListSkeleton view={view} count={8} />

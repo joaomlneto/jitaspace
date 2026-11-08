@@ -56,11 +56,12 @@ export function parseContractHistoryQuery(
   if (subject === undefined || named.length > 1) return null;
   const id = positiveInt(params.get(PARAM[subject]));
   if (id === null) return null;
-  return {
-    subject,
-    id,
-    before: positiveInt(params.get("before")),
-  };
+  // A cursor that is not a contract id is refused, not read as the first
+  // page: the route would cache page one under that URL.
+  const rawBefore = params.get("before");
+  const before = rawBefore === null ? null : positiveInt(rawBefore);
+  if (rawBefore !== null && before === null) return null;
+  return { subject, id, before };
 }
 
 /** The URL query for one page of a subject's history. */

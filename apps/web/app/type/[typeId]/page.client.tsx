@@ -508,8 +508,6 @@ export default function TypePage({
 
   const hasAttributes =
     sortedDogmaAttributes.length > 0 || sortedDogmaEffects.length > 0;
-  // Unpublished types never reach a player's hangar, so never a contract.
-  const isTradeable = typeData?.published !== false;
   const hasMarket =
     typeData?.market_group_id !== undefined ||
     marketPrice !== undefined ||
@@ -700,14 +698,13 @@ export default function TypePage({
                 Market
               </Tabs.Tab>
             )}
-            {isTradeable && (
-              <Tabs.Tab
-                value="contracts"
-                leftSection={<ContractsIcon size={16} alt="" />}
-              >
-                Contracts
-              </Tabs.Tab>
-            )}
+            {/* Every type, published or not: the tab says when it has none. */}
+            <Tabs.Tab
+              value="contracts"
+              leftSection={<ContractsIcon size={16} alt="" />}
+            >
+              Contracts
+            </Tabs.Tab>
             {insurance && (
               <Tabs.Tab
                 value="insurance"
@@ -1099,11 +1096,9 @@ export default function TypePage({
           )}
 
           {/* Contracts — every public contract that listed this type */}
-          {isTradeable && (
-            <Tabs.Panel value="contracts" pt="lg">
-              <ContractHistoryTab subject="type" id={typeId} />
-            </Tabs.Panel>
-          )}
+          <Tabs.Panel value="contracts" pt="lg">
+            <ContractHistoryTab subject="type" id={typeId} />
+          </Tabs.Panel>
 
           {/* Insurance */}
           {insurance && (

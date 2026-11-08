@@ -133,8 +133,10 @@ describe("parseContractHistoryQuery", () => {
     }
   });
 
-  it("ignores a cursor that is not an id", () => {
-    expect(parse("typeId=587&before=abc")?.before).toBeNull();
+  it("refuses a cursor that is not a contract id", () => {
+    for (const before of ["abc", "0", "-1", "1.5", "2147483648", ""]) {
+      expect(parse(`typeId=587&before=${before}`)).toBeNull();
+    }
   });
 
   it("round-trips the URL the tab sends", () => {

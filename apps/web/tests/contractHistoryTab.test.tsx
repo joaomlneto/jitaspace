@@ -155,14 +155,18 @@ describe("ContractHistoryTab", () => {
     expect(requested()).toEqual(["/api/contracts/history?typeId=587"]);
   });
 
-  it("says when the first page fails", async () => {
-    mockFetch.mockImplementation(() => respond({ error: "x" }, 500));
+  it("says when the first page fails, and tries again on request", async () => {
+    mockFetch.mockImplementationOnce(() => respond({ error: "x" }, 500));
     renderTab("character", 90000001);
     expect(
-      await screen.findByText(
-        "Contracts could not be loaded. Try again in a moment.",
-      ),
+      await screen.findByText("Contracts could not be loaded."),
     ).toBeInTheDocument();
+
+    mockFetch.mockImplementationOnce(() =>
+      respond(page([contract({ title: "Second time lucky" })])),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("Second time lucky")).toBeInTheDocument();
   });
 
   it("keeps what it has when an older page fails", async () => {

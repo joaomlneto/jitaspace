@@ -6,8 +6,8 @@ import { parseContractHistoryQuery } from "~/components/Contracts/history";
  * in (`?characterId=`, `?corporationId=` or `?typeId=`, plus `before=` for the
  * pages after the first), for the Contracts tab of their pages.
  *
- * Cached at the CDN like `/api/contracts`: the snapshots change at most every
- * half hour, and a page below a contract id only changes as its contracts end.
+ * Cached at the CDN: the snapshots change at most every half hour, and a page
+ * below a contract id only changes as its contracts end.
  */
 const CACHE_OK =
   "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400";
@@ -18,7 +18,7 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json(
       {
         error:
-          "Name one positive characterId, corporationId or typeId, and optionally a before contract id.",
+          "Name one positive characterId, corporationId or typeId, and optionally a positive before contract id.",
       },
       { status: 400 },
     );
