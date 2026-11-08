@@ -23,41 +23,66 @@
  *   looks like one (a letter, `/`, `!` or `?` after the `<`): EVE cuts titles
  *   off at about 100 characters, often inside a tag (`Drone Master</color`),
  *   and authors leave them open (`</color<color=…>`).
- * - Any other `<` is text (`CEO <3`, `<-`) and is kept, unless it ends the
- *   title (where it is the start of a tag cut off) or what ends up after it
- *   would make it open a tag (`<<b>script`).
+ * - Any other `<` is text (`CEO <3`, `<-`) and is kept, unless only
+ *   whitespace follows it (it is then the start of a tag cut off) or what ends
+ *   up after it would make it open a tag (`<<b>script`).
+ *
+ * Linear in the input: the result is built as an array and joined once.
  */
 export function stripEveMarkup(html: string): string {
   const chars = Array.from(html);
-  let out = "";
+  const out: string[] = [];
   let i = 0;
   while (i < chars.length) {
     const ch = chars[i] ?? "";
-    if (ch !== "<") {
-      // A text `<` must not end up opening a tag with what follows it.
-      if (out.endsWith("<") && looksLikeTag(ch)) out = out.slice(0, -1);
-      out += ch;
-      i++;
-      continue;
-    }
-    let end = i + 1;
-    while (end < chars.length && chars[end] !== "<" && chars[end] !== ">") {
-      end++;
-    }
-    if (chars[end] === ">") {
-      // `a<br>b` must not run the two words together.
-      if (/^br\b/i.test(chars.slice(i + 1, end).join(""))) out += " ";
-      i = end + 1;
-    } else if (looksLikeTag(chars[i + 1])) {
-      i = end;
+    if (ch === "<") {
+      i = readAngleBracket(chars, i, out);
     } else {
-      if (i + 1 < chars.length) out += "<";
+      appendText(out, ch);
       i++;
     }
   }
-  return out.replace(/\s+/g, " ").trim();
+  // A text `<` with only whitespace after it is a tag cut off.
+  while (out.length > 0 && isTrailingJunk(out.at(-1))) out.pop();
+  return out.join("").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Reads the `<` at `start` — a tag, an unclosed tag or a text `<` — writing
+ * whatever it contributes to `out`, and returns the index to continue from.
+ */
+function readAngleBracket(
+  chars: string[],
+  start: number,
+  out: string[],
+): number {
+  let end = start + 1;
+  while (end < chars.length && chars[end] !== "<" && chars[end] !== ">") {
+    end++;
+  }
+  if (chars[end] === ">") {
+    // `a<br>b` must not run the two words together.
+    if (/^br\b/i.test(chars.slice(start + 1, end).join(""))) out.push(" ");
+    return end + 1;
+  }
+  if (looksLikeTag(chars[start + 1])) return end;
+  out.push("<");
+  return start + 1;
+}
+
+function appendText(out: string[], ch: string): void {
+  // No text `<` may end up opening a tag with what follows it — however many
+  // of them precede it (`<<<b>script`).
+  if (looksLikeTag(ch)) {
+    while (out.at(-1) === "<") out.pop();
+  }
+  out.push(ch);
 }
 
 function looksLikeTag(next: string | undefined): boolean {
   return next !== undefined && /^[\p{L}/!?]$/u.test(next);
+}
+
+function isTrailingJunk(piece: string | undefined): boolean {
+  return piece === "<" || (piece !== undefined && /^\s$/u.test(piece));
 }

@@ -22,6 +22,12 @@ describe("stripEveMarkup", () => {
       ["<<script>script>alert(1)", "script>alert(1)"],
       ["<<b>script>alert(1)", "script>alert(1)"],
       ["<</b>/script>", "/script>"],
+      // However many text `<` precede the tag.
+      ["<<<b>script>alert(1)", "script>alert(1)"],
+      ["<<<i>img src=x onerror=alert(1)>", "img src=x onerror=alert(1)>"],
+      ["x <<<</b>/script>", "x /script>"],
+      ["<<<<b>!--", "!--"],
+      ["<<<>a", "a"],
       ["a <b unterminated", "a"],
     ];
     for (const [input, expected] of cases) {
@@ -41,7 +47,12 @@ describe("stripEveMarkup", () => {
     expect(stripEveMarkup("<color=green> Engineering team<")).toBe(
       "Engineering team",
     );
+    expect(stripEveMarkup("<color=green> Engineering team< ")).toBe(
+      "Engineering team",
+    );
+    expect(stripEveMarkup("team<\n")).toBe("team");
     expect(stripEveMarkup("<b>CEO</b> <color=0x")).toBe("CEO");
+    expect(stripEveMarkup("<Босс")).toBe("");
     expect(
       stripEveMarkup("<color=0xFF8B0000>Witch </color<color=0xEF000000>Annis"),
     ).toBe("Witch Annis");
@@ -56,14 +67,14 @@ describe("stripEveMarkup", () => {
       "Pirate",
     );
     expect(stripEveMarkup('< size="29"> 6666 </size>')).toBe("6666");
-    expect(stripEveMarkup("<Босс")).toBe("");
   });
 
   it("keeps a `<` that cannot open a tag as text", () => {
     expect(stripEveMarkup("CEO <3")).toBe("CEO <3");
     expect(stripEveMarkup("CEO < Director")).toBe("CEO < Director");
     expect(stripEveMarkup("-> Logistics <-")).toBe("-> Logistics <-");
-    expect(stripEveMarkup(">> sexy <<")).toBe(">> sexy <");
+    // Not at the very end, where it is the start of a tag cut off.
+    expect(stripEveMarkup(">> sexy <<")).toBe(">> sexy");
     expect(stripEveMarkup("1 < 2 <b>bold</b>")).toBe("1 < 2 bold");
     // `<Director>` is tag-shaped, so it goes, as it did under the old regex.
     expect(stripEveMarkup("<<Director>>")).toBe("<>");
@@ -81,5 +92,13 @@ describe("stripEveMarkup", () => {
     for (const [input, expected] of cases) {
       expect(stripEveMarkup(input)).toBe(expected);
     }
+  });
+
+  it("stays linear on long input", () => {
+    // Was quadratic: ~2 s for 100k characters of plain text.
+    const long = "word ".repeat(40_000) + "<b>bold</b> ".repeat(10_000);
+    const started = performance.now();
+    stripEveMarkup(long);
+    expect(performance.now() - started).toBeLessThan(1000);
   });
 });
