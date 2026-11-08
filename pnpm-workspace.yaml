@@ -24,6 +24,12 @@ overrides:
   # outright, so pinning here would freeze the patch level this exists to raise
   # and a later manifest bump would install nothing.
   "sharp": "^0.35.5"
+  # @sentry/nextjs 10.75 pulls @opentelemetry/core 2.12, which peers on
+  # @opentelemetry/api ">=1.x <1.10.0", but next's optional api peer resolves to
+  # the newest release (1.10.0, 2026-10-20) — failing `pnpm peers check` and every
+  # Renovate lockfile update under strictPeerDependencies. Nothing here requires
+  # api >=1.10 yet (otel core 3.x does), so hold the 1.9 line until Sentry moves.
+  "@opentelemetry/api": "~1.9.1"
 nodeLinker: hoisted
 publicHoistPattern:
   - "*prisma*"
