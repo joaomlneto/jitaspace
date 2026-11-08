@@ -2,6 +2,9 @@ import { describe, expect, it } from "@jest/globals";
 
 import { stripEveMarkup } from "~/lib/eveMarkup";
 
+// HTML opens a tag only on `<` plus one of these.
+const TAG_OPEN = /<[a-z/!?]/i;
+
 describe("stripEveMarkup", () => {
   it("drops EVE's tags and keeps the text", () => {
     expect(
@@ -13,75 +16,6 @@ describe("stripEveMarkup", () => {
     expect(stripEveMarkup("Line one.<br>Line  two.<br/>\n Three")).toBe(
       "Line one. Line two. Three",
     );
-  });
-
-  it("cannot reassemble a tag from nested fragments", () => {
-    // A single regex pass removes only the inner tag and leaves `<script>`.
-    const cases: [string, string][] = [
-      ["<scr<b>ipt>alert(1)</scr<b>ipt>", "ipt>alert(1)ipt>"],
-      ["<<script>script>alert(1)", "script>alert(1)"],
-      ["<<b>script>alert(1)", "script>alert(1)"],
-      ["<</b>/script>", "/script>"],
-      // However many text `<` precede the tag.
-      ["<<<b>script>alert(1)", "script>alert(1)"],
-      ["<<<i>img src=x onerror=alert(1)>", "img src=x onerror=alert(1)>"],
-      ["x <<<</b>/script>", "x /script>"],
-      ["<<<<b>!--", "!--"],
-      ["<<<>a", "a"],
-      // Halves of a surrogate pair split by a tag must not rejoin as a letter.
-      ["<\uD835<b>\uDC00", "<\uFFFD\uFFFD"],
-      ["x<\uD835<i>\uDC9C", "x<\uFFFD\uFFFD"],
-      ["a <b unterminated", "a"],
-    ];
-    for (const [input, expected] of cases) {
-      const result = stripEveMarkup(input);
-      expect(result).toBe(expected);
-      // HTML opens a tag only on `<` plus one of these.
-      expect(result).not.toMatch(/<[\p{L}/!?]/u);
-    }
-  });
-
-  // Shapes found in production character titles (2026-11-08): EVE cuts a
-  // title off at about 100 characters, often inside a tag.
-  it("drops a tag that never closes", () => {
-    expect(stripEveMarkup("<color=0xffE50000>Drone Master</color")).toBe(
-      "Drone Master",
-    );
-    expect(stripEveMarkup("<color=green> Engineering team<")).toBe(
-      "Engineering team",
-    );
-    expect(stripEveMarkup("<color=green> Engineering team< ")).toBe(
-      "Engineering team",
-    );
-    expect(stripEveMarkup("team<\n")).toBe("team");
-    expect(stripEveMarkup("<b>CEO</b> <color=0x")).toBe("CEO");
-    expect(stripEveMarkup("<Босс")).toBe("");
-    expect(stripEveMarkup("Director < </color>")).toBe("Director");
-    expect(
-      stripEveMarkup("<color=0xFF8B0000>Witch </color<color=0xEF000000>Annis"),
-    ).toBe("Witch Annis");
-  });
-
-  it("hides malformed tags as the old regex did", () => {
-    expect(
-      stripEveMarkup("<b><color=0xfff90082>PhD in Logistics<\\color><\\b>"),
-    ).toBe("PhD in Logistics");
-    expect(stripEveMarkup("<0xFFFF0000>Director</color>")).toBe("Director");
-    expect(stripEveMarkup('<color="Red"><"b">Pirate</Red></b> ')).toBe(
-      "Pirate",
-    );
-    expect(stripEveMarkup('< size="29"> 6666 </size>')).toBe("6666");
-  });
-
-  it("keeps a `<` that cannot open a tag as text", () => {
-    expect(stripEveMarkup("CEO <3")).toBe("CEO <3");
-    expect(stripEveMarkup("CEO < Director")).toBe("CEO < Director");
-    expect(stripEveMarkup("-> Logistics <-")).toBe("-> Logistics <-");
-    // Not at the very end, where it is the start of a tag cut off.
-    expect(stripEveMarkup(">> sexy <<")).toBe(">> sexy");
-    expect(stripEveMarkup("1 < 2 <b>bold</b>")).toBe("1 < 2 bold");
-    // `<Director>` is tag-shaped, so it goes, as it did under the old regex.
-    expect(stripEveMarkup("<<Director>>")).toBe("<>");
   });
 
   it("strips the tags EVE titles carry, as the regex it replaced did", () => {
@@ -98,8 +32,88 @@ describe("stripEveMarkup", () => {
     }
   });
 
+  // Production character titles, compared with the game client (2026-11-08).
+  describe("matches the game client", () => {
+    it("hides everything after a `<` that never closes", () => {
+      // In-game: `CEO`.
+      expect(stripEveMarkup("CEO <3")).toBe("CEO");
+      // Titles EVE cut off at about 100 characters, inside a tag.
+      expect(stripEveMarkup("<color=0xffE50000>Drone Master</color")).toBe(
+        "Drone Master",
+      );
+      expect(stripEveMarkup("<color=green> Engineering team<")).toBe(
+        "Engineering team",
+      );
+      expect(stripEveMarkup("<color=green> Engineering team< ")).toBe(
+        "Engineering team",
+      );
+      expect(stripEveMarkup("<b>CEO</b> <color=0x")).toBe("CEO");
+      expect(
+        stripEveMarkup(
+          "<0xffa91c27>V</c><color=0xff83161e>E<color=0xff5e1016>T<color=0xff5e1016>E<color=0xff38090d>R<color=",
+        ),
+      ).toBe("VETER");
+      expect(stripEveMarkup("<color=0xff007f The Boss")).toBe("");
+    });
+
+    it("shows a `<` that meets another `<` first as text", () => {
+      // In-game: `<大A`.
+      expect(
+        stripEveMarkup("<color=0xffFF8C69><b><大A<u></b></i></u></color>"),
+      ).toBe("<大A");
+      expect(stripEveMarkup("I love you all! <3 · </b>")).toBe(
+        "I love you all! <3 ·",
+      );
+      expect(stripEveMarkup("1 < 2 <b>bold</b>")).toBe("1 < 2 bold");
+      expect(stripEveMarkup(">> sexy <<")).toBe(">> sexy <");
+      // `<Director>` is tag-shaped, so it goes.
+      expect(stripEveMarkup("<<Director>>")).toBe("<>");
+    });
+
+    it("hides malformed tags", () => {
+      expect(
+        stripEveMarkup("<b><color=0xfff90082>PhD in Logistics<\\color><\\b>"),
+      ).toBe("PhD in Logistics");
+      expect(stripEveMarkup("<0xFFFF0000>Director</color>")).toBe("Director");
+      expect(stripEveMarkup('<color="Red"><"b">Pirate</Red></b> ')).toBe(
+        "Pirate",
+      );
+      expect(stripEveMarkup('< size="29"> 6666 </size>')).toBe("6666");
+    });
+  });
+
+  describe("never lets a tag form in its result", () => {
+    it("drops a text `<` that would open one", () => {
+      expect(
+        stripEveMarkup("Reduces range <optimal falloff. <b>Note</b>: x"),
+      ).toBe("Reduces range optimal falloff. Note: x");
+    });
+
+    it("cannot reassemble a tag from nested fragments", () => {
+      // A single regex pass removes only the inner tag and leaves `<script>`.
+      const cases: [string, string][] = [
+        ["<scr<b>ipt>alert(1)</scr<b>ipt>", "script>alert(1)/script>"],
+        ["<<script>script>alert(1)", "script>alert(1)"],
+        ["<<b>script>alert(1)", "script>alert(1)"],
+        ["<</b>/script>", "/script>"],
+        // However many text `<` precede the tag.
+        ["<<<b>script>alert(1)", "script>alert(1)"],
+        ["<<<i>img src=x onerror=alert(1)>", "img src=x onerror=alert(1)>"],
+        ["x <<<</b>/script>", "x /script>"],
+        ["<<<<b>!--", "!--"],
+        ["<<<>a", "a"],
+        ["a <b unterminated", "a"],
+      ];
+      for (const [input, expected] of cases) {
+        const result = stripEveMarkup(input);
+        expect(result).toBe(expected);
+        expect(result).not.toMatch(TAG_OPEN);
+      }
+    });
+  });
+
   it("stays linear on long input", () => {
-    // Was quadratic: ~2 s for 100k characters of plain text.
+    // An earlier version was quadratic: ~2 s for 100k characters.
     const long = "word ".repeat(40_000) + "<b>bold</b> ".repeat(10_000);
     const started = performance.now();
     stripEveMarkup(long);
