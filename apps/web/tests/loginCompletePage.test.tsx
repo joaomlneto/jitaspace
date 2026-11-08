@@ -120,6 +120,7 @@ describe("LoginCompletePage", () => {
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/"));
     expect(mockAddCharacter).not.toHaveBeenCalled();
+    expect(captureMock).toHaveBeenCalledWith("login_result_missing");
   });
 
   it("shows an error message when completion fails", async () => {
