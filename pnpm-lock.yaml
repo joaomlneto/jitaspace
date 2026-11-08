@@ -64,8 +64,8 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@openapi-contrib/json-schema-to-openapi-schema':
-        specifier: ^2.2.6
-        version: 2.2.6
+        specifier: ^4.3.4
+        version: 4.3.4(@types/json-schema@7.0.15)(openapi-types@12.1.3)
       '@types/async':
         specifier: ^3.2.25
         version: 3.2.25
@@ -2360,8 +2360,11 @@ packages:
     peerDependencies:
       '@types/json-schema': ^7.0.15
 
-  '@apidevtools/json-schema-ref-parser@9.1.2':
-    resolution: {integrity: sha512-r1w81DpR+KyRWd3f+rk6TNqMgedmAxZP5v5KWlXQWlgMUUtyEJch0DKEci1SorPMiSeM8XPl7MZ3miJ60JIpQg==}
+  '@apidevtools/json-schema-ref-parser@15.5.2':
+    resolution: {integrity: sha512-B+C9Ok0DF/rjANIUHgwcV5/d4C72MB7f2IbKFL8jDGcGq2qn3yr893s8vAn2kbhmyaelAin0JK8EKF9P1+y7aQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@types/json-schema': ^7.0.15
 
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
@@ -4140,9 +4143,6 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@jsdevtools/ono@7.1.3':
-    resolution: {integrity: sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==}
-
   '@jsep-plugin/assignment@1.3.0':
     resolution: {integrity: sha512-VVgV+CXrhbMI3aSusQyclHkenWSAm95WaiKrMxRFam3JSUiIaQjoMIw2sEs/OX4XifnqeQUN4DYbJjlA8EfktQ==}
     engines: {node: '>= 10.16.0'}
@@ -4492,10 +4492,12 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@openapi-contrib/json-schema-to-openapi-schema@2.2.6':
-    resolution: {integrity: sha512-C3yykGbsZCfF5JTJjB5M333vUaNSzDi/+ugFxgh9dwWPQmWpxqqt7/ceABekUqmp44jQIu+IIqF6Jwc+UaFDPw==}
-    engines: {node: '>=14'}
+  '@openapi-contrib/json-schema-to-openapi-schema@4.3.4':
+    resolution: {integrity: sha512-HgCXkh8EyhTMGdT9fvdI7EAgHs9/9KS5SOpWHuqoerr6cyzaVYxCk+9ZX/ipfGP7nF0vFGnEt75siJ0vgLjbDQ==}
+    engines: {node: '>=18'}
     hasBin: true
+    peerDependencies:
+      openapi-types: '*'
 
   '@opentelemetry/api-logs@0.219.0':
     resolution: {integrity: sha512-FFx7YnaYJlIjqWW/AG/yAZ0L/NEY724PipXXXQLdtZPbLwBGbUMTGL1i/esI56TWfTUXxhLfpgrnWJCG8aUJyg==}
@@ -6714,6 +6716,9 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
+  argparse@3.0.4:
+    resolution: {integrity: sha512-fwWK3Zq22l4XJJjx5mcBHGikIk+hJqO+32dPm0Jur7+rtG5x1scOjSfdT9ZKeWHPpsya/l0HHK4tDImBkTrtvA==}
+
   aria-query@5.3.0:
     resolution: {integrity: sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A==}
 
@@ -7240,10 +7245,6 @@ packages:
 
   clone@1.0.4:
     resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
-    engines: {node: '>=0.8'}
-
-  clone@2.1.2:
-    resolution: {integrity: sha512-3Pe/CF1Nn94hyhIYpjtiLhdCoEoz0DqQ+988E9gmeEdQZlojxnOb74wctFyuwWQHzqyf9X7C7MG8juUpqBJT8w==}
     engines: {node: '>=0.8'}
 
   clsx@2.1.1:
@@ -9399,6 +9400,10 @@ packages:
     resolution: {integrity: sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==}
     hasBin: true
 
+  js-yaml@5.5.0:
+    resolution: {integrity: sha512-paNr4LFIFPjeeSmwNYdrb8FafLLG/Cr2Af3GjbsHJ5CxIjH4r0c2emlmRdAtpPAieP1gRVzk6buBbVP5gBMGAg==}
+    hasBin: true
+
   js2schema@1.0.8:
     resolution: {integrity: sha512-rZUC96hWZS/mUCGtkiCRRXeScYUuG7n7/NeiTVd29XQ5+eKEmGnvBWb7YnjkKhJ5h8gY0cnI1gI/uM807rGYRA==}
 
@@ -9458,9 +9463,9 @@ packages:
   json-schema-typed@8.0.2:
     resolution: {integrity: sha512-fQhoXdcvc3V28x7C7BMs4P5+kNlgUURe2jmUT1T//oBRMDrqy1QPelJimwZGo7Hg9VPV3EQV5Bnq4hbFy2vetA==}
 
-  json-schema-walker@1.1.0:
-    resolution: {integrity: sha512-OOfRZoW1mDPokzdDoBEWgJiWnJo4XKA6bjDZQEfNiClgI4UaFEEW5C1vtWFJnTOQ6Uj8xppJUXjL4cGhXtOIUQ==}
-    engines: {node: '>=10'}
+  json-schema-walker@3.3.2:
+    resolution: {integrity: sha512-MdSCfzLRSsvAOcOHolCLpB09f308jGGC1/XP2DCtmRGZED53NTyvWOjYaZYohNmM3X0DbqRwlsAVt8C8J86bGQ==}
+    engines: {node: '>=17'}
 
   json-schema@0.4.0:
     resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
@@ -12133,6 +12138,10 @@ packages:
     resolution: {integrity: sha512-gBLkYIlEnSp8pFbT64yFgGE6UIB9tAkhukC23PmMDCe5Nd+cRqKxSjw5y54MK2AZMgZfJWMaNE4nYUHgi1XEOw==}
     engines: {node: '>=18.17'}
 
+  undici@6.29.1:
+    resolution: {integrity: sha512-EvRlUt/QqAEvXdQeRMYUfwOQsfzpDztykrG2owGEE/rBOBoYv9uF39ZzsNDh4lTFHhTr2XOZjKkYgueD12ZmGA==}
+    engines: {node: '>=18.17'}
+
   unenv@2.0.0-rc.24:
     resolution: {integrity: sha512-i7qRCmY42zmCwnYlh9H2SvLEypEFGye5iRmEMKjcGi7zk9UquigRjFtTLz0TYqr0ZGLZhaMHl/foy1bZR+Cwlw==}
 
@@ -12794,12 +12803,11 @@ snapshots:
       '@types/json-schema': 7.0.15
       js-yaml: 4.3.2
 
-  '@apidevtools/json-schema-ref-parser@9.1.2':
+  '@apidevtools/json-schema-ref-parser@15.5.2(@types/json-schema@7.0.15)':
     dependencies:
-      '@jsdevtools/ono': 7.1.3
       '@types/json-schema': 7.0.15
-      call-me-maybe: 1.0.2
-      js-yaml: 4.3.2
+      js-yaml: 5.5.0
+      undici: 6.29.1
 
   '@asamuzakjp/css-color@3.2.0':
     dependencies:
@@ -14659,8 +14667,6 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@jsdevtools/ono@7.1.3': {}
-
   '@jsep-plugin/assignment@1.3.0(jsep@1.4.0)':
     dependencies:
       jsep: 1.4.0
@@ -15079,12 +15085,14 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
-  '@openapi-contrib/json-schema-to-openapi-schema@2.2.6':
+  '@openapi-contrib/json-schema-to-openapi-schema@4.3.4(@types/json-schema@7.0.15)(openapi-types@12.1.3)':
     dependencies:
-      '@apidevtools/json-schema-ref-parser': 9.1.2
-      json-schema-walker: 1.1.0
+      '@apidevtools/json-schema-ref-parser': 15.5.2(@types/json-schema@7.0.15)
+      json-schema-walker: 3.3.2
       openapi-types: 12.1.3
-      yargs: 17.7.2
+      yargs: 18.2.0
+    transitivePeerDependencies:
+      - '@types/json-schema'
 
   '@opentelemetry/api-logs@0.219.0':
     dependencies:
@@ -17316,6 +17324,8 @@ snapshots:
 
   argparse@2.0.1: {}
 
+  argparse@3.0.4: {}
+
   aria-query@5.3.0:
     dependencies:
       dequal: 2.0.3
@@ -17945,8 +17955,6 @@ snapshots:
       wrap-ansi: 9.0.2
 
   clone@1.0.4: {}
-
-  clone@2.1.2: {}
 
   clsx@2.1.1: {}
 
@@ -20832,6 +20840,10 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
+  js-yaml@5.5.0:
+    dependencies:
+      argparse: 3.0.4
+
   js2schema@1.0.8:
     dependencies:
       generate-schema: 2.6.0
@@ -20905,10 +20917,10 @@ snapshots:
 
   json-schema-typed@8.0.2: {}
 
-  json-schema-walker@1.1.0:
+  json-schema-walker@3.3.2:
     dependencies:
-      '@apidevtools/json-schema-ref-parser': 9.1.2
-      clone: 2.1.2
+      '@apidevtools/json-schema-ref-parser': 15.5.2(@types/json-schema@7.0.15)
+      '@types/json-schema': 7.0.15
 
   json-schema@0.4.0: {}
 
@@ -24311,6 +24323,8 @@ snapshots:
   undici-types@7.24.6: {}
 
   undici@6.21.3: {}
+
+  undici@6.29.1: {}
 
   unenv@2.0.0-rc.24:
     dependencies:
