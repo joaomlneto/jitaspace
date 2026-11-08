@@ -161,14 +161,21 @@ export function NotificationList({
 }
 
 /** Text, with each id rendered as that entity's name. */
-function EntityText({ parts }: { parts: readonly SubjectPart[] }) {
-  return parts.map((part, index) =>
-    typeof part === "string" ? (
-      <Fragment key={index}>{part}</Fragment>
+function EntityText({ parts }: Readonly<{ parts: readonly SubjectPart[] }>) {
+  // Keyed by content, with a count for the rare repeat, so a key never
+  // depends on position alone.
+  const seen = new Map<string, number>();
+  return parts.map((part) => {
+    const base = typeof part === "string" ? `text:${part}` : `id:${part.id}`;
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    const key = `${base}#${count}`;
+    return typeof part === "string" ? (
+      <Fragment key={key}>{part}</Fragment>
     ) : (
-      <EveEntityName key={index} entityId={part.id} span inherit />
-    ),
-  );
+      <EveEntityName key={key} entityId={part.id} span inherit />
+    );
+  });
 }
 
 /** The most recipient portraits drawn in an icon's corner. */

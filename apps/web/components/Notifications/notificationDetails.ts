@@ -31,10 +31,11 @@ export function parseNotificationFields(
 ): NotificationFields {
   const fields = new Map<string, string>();
   for (const line of (text ?? "").split(/\r?\n/)) {
-    const match = /^([A-Za-z_]\w*):[ \t]*(.*)$/.exec(line);
+    const match = /^([A-Za-z_]\w*):(.*)$/.exec(line);
     if (!match?.[1]) continue;
     const value = scalarValue(
       (match[2] ?? "")
+        .trim()
         // An anchor or tag in front of the value: `&id001 123`, `!!python/long 5`.
         .replace(/^(?:(?:&\w+|!!\S+)\s+)+/, "")
         .trim(),
@@ -564,7 +565,7 @@ export function decodeHtmlEntities(text: string): string {
     (entity, body: string) => {
       if (body.startsWith("#")) {
         const hex = body[1] === "x" || body[1] === "X";
-        const code = parseInt(body.slice(hex ? 2 : 1), hex ? 16 : 10);
+        const code = Number.parseInt(body.slice(hex ? 2 : 1), hex ? 16 : 10);
         // fromCodePoint throws past U+10FFFF; leave a malformed entity as is.
         return code <= 0x10ffff ? String.fromCodePoint(code) : entity;
       }

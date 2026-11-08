@@ -113,11 +113,28 @@ export function NotificationTypeIcon({
  * "Corp App Invited", `NPCStandingsGained` reads "NPC Standings Gained".
  */
 export function humanizeNotificationType(type: string): string {
-  return type
-    .replace(/Msg\d*$/, "")
-    .replace(/([a-z\d])([A-Z])/g, "$1 $2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
-    .trim();
+  const name = type.replace(/Msg\d*$/, "");
+  const isUpper = (ch: string | undefined) => !!ch && ch >= "A" && ch <= "Z";
+  const isLower = (ch: string | undefined) => !!ch && ch >= "a" && ch <= "z";
+  const isDigit = (ch: string | undefined) => !!ch && ch >= "0" && ch <= "9";
+  let out = "";
+  for (let i = 0; i < name.length; i++) {
+    const ch = name[i];
+    const prev = name[i - 1];
+    // A word starts at a capital after a lower-case letter or digit
+    // ("CorpApp"), or at the last capital of an acronym ("NPCStandings").
+    if (
+      i > 0 &&
+      isUpper(ch) &&
+      (isLower(prev) ||
+        isDigit(prev) ||
+        (isUpper(prev) && isLower(name[i + 1])))
+    ) {
+      out += " ";
+    }
+    out += ch;
+  }
+  return out.trim();
 }
 
 /**
