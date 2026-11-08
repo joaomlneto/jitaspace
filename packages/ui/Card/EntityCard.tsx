@@ -8,7 +8,8 @@ import { Box, Card, Group, Skeleton, Stack, Text } from "@mantine/core";
 import type { EntityCardVariant } from "./types";
 
 export interface EntityCardStat {
-  label: ReactNode;
+  /** Unique within the card: it is also the row's key. */
+  label: string;
   /** `null`, `undefined` or `false` once loaded reads "N/A". */
   value: ReactNode;
 }
@@ -128,9 +129,9 @@ export const EntityCard = memo(
         {stats && stats.length > 0 && (
           <EntityCardSection>
             <Stack gap={6}>
-              {stats.map((stat, index) => (
+              {stats.map((stat) => (
                 <Group
-                  key={index}
+                  key={stat.label}
                   justify="space-between"
                   align="start"
                   wrap="nowrap"

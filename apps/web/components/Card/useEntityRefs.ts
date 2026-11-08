@@ -33,7 +33,9 @@ export const useEntityRefs = (ids: readonly (number | null | undefined)[]) => {
 /** EVE's rich text (descriptions) as plain text for a card. */
 export const plainText = (value?: string) => {
   const text = value
-    ?.replace(/<[^>]+>/g, " ")
+    // `[^<>]` rather than `[^>]`: a run of unclosed `<` would otherwise make
+    // every match attempt scan to the end of the text (quadratic backtracking).
+    ?.replace(/<[^<>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   return text === "" ? undefined : text;

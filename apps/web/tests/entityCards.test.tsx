@@ -11,6 +11,7 @@ import type * as EveEntityCardModule from "~/components/Card/EveEntityCard";
 import type * as EveMailSenderCardDisplayModule from "~/components/Card/EveMailSenderCardDisplay";
 import type * as KillmailCardModule from "~/components/Card/KillmailCard";
 import type * as TypeCardModule from "~/components/Card/TypeCard";
+import type * as UseEntityRefsModule from "~/components/Card/useEntityRefs";
 import type * as WarCardModule from "~/components/Card/WarCard";
 import type * as LinkModule from "~/components/Link";
 
@@ -454,5 +455,31 @@ describe("EveMailSenderCardDisplay", () => {
     mockUseEsiName.mockReturnValue({ name: "Sender Name", category: "region" });
     renderWithMantine(<EveMailSenderCardDisplay senderId={123} />);
     expect(screen.getByText("Sender Name")).toBeInTheDocument();
+  });
+});
+
+describe("plainText", () => {
+  const { plainText } =
+    require("~/components/Card/useEntityRefs") as typeof UseEntityRefsModule;
+
+  it("drops EVE's markup and collapses whitespace", () => {
+    expect(plainText('<font size="14">A <b>frigate</b></font>.\n')).toBe(
+      "A frigate .",
+    );
+  });
+
+  it("keeps a stray '<' that opens no tag", () => {
+    expect(plainText("damage < 100 <b>ok</b>")).toBe("damage < 100 ok");
+  });
+
+  it("strips a long run of unclosed '<' in linear time", () => {
+    const text = "<".repeat(50_000);
+    const started = performance.now();
+    expect(plainText(text)).toBe(text);
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+
+  it("reads an empty description as none", () => {
+    expect(plainText("<br>  <br>")).toBeUndefined();
   });
 });
