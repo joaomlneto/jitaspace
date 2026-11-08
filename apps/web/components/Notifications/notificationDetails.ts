@@ -9,6 +9,8 @@ import {
   stationRanges,
 } from "@jitaspace/esi-metadata";
 
+import { stripEveMarkup } from "~/lib/eveMarkup";
+
 /**
  * A notification's `text`, reduced to its top-level `key: value` pairs, keyed
  * by lower-cased key: CCP is inconsistent about casing (`solarSystemID` in sov
@@ -392,7 +394,11 @@ function textField(
 ): string | undefined {
   const value = fields.get(key.toLowerCase());
   if (value === undefined) return undefined;
-  const text = decodeHtmlEntities(value.replace(/<[^>]*>/g, "")).trim();
+  // As the client shows it: markup dropped, then entities decoded, so an
+  // encoded `&lt;` reads as a literal `<`. The result is only ever rendered as
+  // a text node. stripEveMarkup scans rather than running a one-pass tag regex,
+  // which would leave `<script>` behind in `<scr<b>ipt>`.
+  const text = decodeHtmlEntities(stripEveMarkup(value)).trim();
   return text === "" ? undefined : text;
 }
 

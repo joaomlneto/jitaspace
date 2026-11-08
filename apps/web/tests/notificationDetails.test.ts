@@ -358,6 +358,22 @@ describe("notificationSubject", () => {
     ).toEqual(["Stratios For the Grandmaster"]);
   });
 
+  it("drops markup, nested tags included, and shows entities as text", () => {
+    const subject = (text: string) =>
+      notificationSubject(
+        "CorpVoteMsg",
+        parseNotificationFields(`subject: '${text}'\n`),
+      );
+    // A one-pass tag regex would turn `<scr<b>ipt>` into `<script>`.
+    expect(
+      JSON.stringify(subject("<scr<b>ipt>alert(1)</script> hi")),
+    ).not.toMatch(/<[a-z/!?]/i);
+    // Encoded characters are text, as the game shows them (rendered as a text
+    // node, never as HTML).
+    expect(subject("Tax 5 &lt; 10")).toEqual(["Tax 5 < 10"]);
+    expect(subject("<b>Raise tax</b> &amp; buy")).toEqual(["Raise tax & buy"]);
+  });
+
   it("names the ally and its enemy, never the ally as a war side", () => {
     expect(
       subject("AcceptedAlly", "allyID: 99005338\nenemyID: 98000001\n"),
