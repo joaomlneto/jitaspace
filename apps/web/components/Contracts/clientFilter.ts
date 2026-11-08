@@ -44,7 +44,10 @@ export function matchesContractFilters(
  * ISO dates in one format order as strings. A plain comparison, because
  * `localeCompare` is slow enough to notice over 50k contracts.
  */
-const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+function byString(a: string, b: string): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
+}
 
 /** Orders two contracts as the sort says; contracts without an amount last. */
 export function compareContracts(
