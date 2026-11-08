@@ -5,7 +5,6 @@ import {
   Badge,
   Group,
   Loader,
-  ScrollArea,
   Stack,
   Table,
   Text,
@@ -39,7 +38,7 @@ export function DatabaseDashboard() {
             <Title order={3}>Database</Title>
           </Group>
           <Text size="xs" c="dimmed">
-            Estimated record counts for every table, from CockroachDB table
+            Estimated record counts for every table, from PostgreSQL table
             statistics · cached for {DATABASE_STATUS_STALE_MINUTES} minutes
           </Text>
         </Stack>
@@ -87,45 +86,42 @@ export function DatabaseDashboard() {
               No tables were reported by the database.
             </Alert>
           ) : (
-            <ScrollArea.Autosize mah={480}>
-              <Table
-                withTableBorder
-                striped
-                highlightOnHover
-                stickyHeader
-                verticalSpacing="xs"
-                fz="sm"
-              >
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Table</Table.Th>
-                    <Table.Th ta="right">Records</Table.Th>
+            <Table
+              withTableBorder
+              striped
+              highlightOnHover
+              verticalSpacing="xs"
+              fz="sm"
+            >
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Table</Table.Th>
+                  <Table.Th ta="right">Records</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {data.tables.map((table) => (
+                  <Table.Tr key={table.name}>
+                    <Table.Td>
+                      <Text size="sm" fw={600}>
+                        {table.label}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {table.name}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td ta="right">
+                      <Badge
+                        variant="light"
+                        color={table.rowCount > 0 ? "blue" : "gray"}
+                      >
+                        {table.rowCount.toLocaleString()}
+                      </Badge>
+                    </Table.Td>
                   </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {data.tables.map((table) => (
-                    <Table.Tr key={table.name}>
-                      <Table.Td>
-                        <Text size="sm" fw={600}>
-                          {table.label}
-                        </Text>
-                        <Text size="xs" c="dimmed">
-                          {table.name}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td ta="right">
-                        <Badge
-                          variant="light"
-                          color={table.rowCount > 0 ? "blue" : "gray"}
-                        >
-                          {table.rowCount.toLocaleString()}
-                        </Badge>
-                      </Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </ScrollArea.Autosize>
+                ))}
+              </Table.Tbody>
+            </Table>
           )}
 
           <Text size="xs" c="dimmed">

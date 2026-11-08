@@ -3,7 +3,8 @@ import "@testing-library/jest-dom/jest-globals";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 // ---------------------------------------------------------------------------
 // The status page pulls hooks from three different generated/client packages:
@@ -75,6 +76,8 @@ function renderPage(props?: {
   sdeLastModifiedData?: unknown;
   /** The SDE build our database holds, from the ingest marker in Redis. */
   sdeIngestState?: { buildNumber: number; completedAt: string | null } | null;
+  /** Query string the page is opened with, e.g. `?tab=database`. */
+  searchParams?: string;
 }) {
   const StatusPage = require("~/app/status/page.client").default;
   return render(
@@ -85,6 +88,12 @@ function renderPage(props?: {
         sdeIngestState={props?.sdeIngestState ?? null}
       />
     </MantineProvider>,
+    {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: props?.searchParams ?? "",
+        hasMemory: true,
+      }),
+    },
   );
 }
 
@@ -163,10 +172,12 @@ describe("Status Page", () => {
     expect(screen.getByText("All Systems Operational")).toBeInTheDocument();
     expect(screen.getByText("None")).toBeInTheDocument();
 
-    // Dashboards render
+    // Only the default (ESI Client) tab's dashboard is mounted
     expect(screen.getByText("Rate Limit Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Trigger Jobs Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Database Dashboard")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Trigger Jobs Dashboard"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Database Dashboard")).not.toBeInTheDocument();
   });
 
   it("renders outdated branches and partial ESI degradation", () => {
@@ -246,5 +257,41 @@ describe("Status Page", () => {
     // build date renders but no check/x icon because latestCompatibilityDate is null
     expect(screen.getByText("2025-12-16")).toBeInTheDocument();
     expect(screen.getByText("Server Status")).toBeInTheDocument();
+  });
+
+  describe("tabs", () => {
+    beforeEach(() => {
+      mockGetRateLimitBuildDate.mockReturnValue("2025-12-16");
+      mockUseGetMetaCompatibilityDates.mockReturnValue({});
+      mockUseGetMetaStatus.mockReturnValue({});
+      mockUseServerStatus.mockReturnValue({});
+    });
+
+    it.each([
+      ["?tab=esi", "Rate Limit Dashboard"],
+      ["?tab=database", "Database Dashboard"],
+      ["?tab=background-jobs", "Trigger Jobs Dashboard"],
+      // Unknown values fall back to the default tab.
+      ["?tab=bogus", "Rate Limit Dashboard"],
+    ])("opens %s on %s", (searchParams, dashboard) => {
+      renderPage({ searchParams });
+      expect(screen.getByText(dashboard)).toBeInTheDocument();
+    });
+
+    it("keeps the summary cards visible on every tab", () => {
+      renderPage({ searchParams: "?tab=database" });
+      expect(screen.getByText("JitaSpace")).toBeInTheDocument();
+      expect(screen.getByText("Tranquility")).toBeInTheDocument();
+      expect(screen.getByText("ESI API")).toBeInTheDocument();
+    });
+
+    it("switches the panel when another tab is clicked", () => {
+      renderPage();
+      fireEvent.click(screen.getByRole("tab", { name: "Background Jobs" }));
+      expect(screen.getByText("Trigger Jobs Dashboard")).toBeInTheDocument();
+      expect(
+        screen.queryByText("Rate Limit Dashboard"),
+      ).not.toBeInTheDocument();
+    });
   });
 });
