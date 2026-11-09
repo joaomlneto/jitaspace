@@ -90,13 +90,13 @@ jobs:
           docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS eve_builds;"
       - name: Checkout
         uses: actions/checkout@v7
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
-          version: 11.3.0
+          version: 11.28.11
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 24.15.0
+          node-version: 24.22.2
           cache: pnpm
       # Restored BEFORE install: cypress's postinstall downloads the binary, so
       # a cache restored afterwards never saved the fetch it exists to avoid.
@@ -161,7 +161,7 @@ jobs:
         # refused localhost connection raises ERR_SOCKET_CLOSED_BEFORE_CONNECTION, and
         # earlier versions' got@11 treated that as fatal, so `wait-on` failed in 25ms
         # instead of waiting for the server (cypress-io/github-action#1873).
-        uses: cypress-io/github-action@v7.4.6
+        uses: cypress-io/github-action@v7.4.9
         with:
           # Dependencies are already installed at monorepo root; skip action-level install
           # to avoid lockfile lookup in apps/web (pnpm lockfile is at repository root).
