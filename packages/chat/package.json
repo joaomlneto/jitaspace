@@ -30,7 +30,7 @@
     "@swc/core": "^1.15.40",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.20.0",
     "eslint": "^9.39.4",
     "jest": "^30.4.2",

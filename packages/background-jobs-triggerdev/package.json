@@ -27,7 +27,7 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@sentry/esbuild-plugin": "^5.3.0",
     "@trigger.dev/build": "^4.8.3",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.6",
     "eslint": "^9.39.4",
     "prettier": "^3.8.3",
     "trigger.dev": "^4.8.3",

@@ -43,7 +43,7 @@
     "@swc/jest": "^0.2.39",
     "@types/bull": "^4.10.4",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.6",
     "@types/tar-stream": "^3.1.4",
     "@types/unbzip2-stream": "^1.4.3",
     "eslint": "^9.39.4",

@@ -57,7 +57,7 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.20.0",
     "concurrently": "^10.0.7",
     "dotenv": "^17.4.2",

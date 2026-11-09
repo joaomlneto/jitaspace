@@ -23,7 +23,7 @@
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@types/bull": "^4.10.4",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.6",
     "concurrently": "^10.0.7",
     "eslint": "^9.39.4",
     "prettier": "^3.8.3",
