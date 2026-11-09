@@ -63,10 +63,7 @@ export const WALLPAPERS = {
   caldari: wallpaper(CRADLE_OF_WAR, "caldari_wallpaper", "jpg"),
   gallente: wallpaper(CRADLE_OF_WAR, "gallente_wallpaper", "jpg"),
   minmatar: wallpaper(CRADLE_OF_WAR, "minmatar_wallpaper", "jpg"),
-  // The 2026 Crimson Harvest event key art, without its logo.
-  crimsonHarvest: wallpaper(
-    "2026-crimson-harvest",
-    "crimson-harvest-nologo",
-    "webp",
-  ),
+  // The 2026 Fractured Skies expansion: a burning streak across a grey sky.
+  // 2000x1125, the size we have it at.
+  fracturedSkies: wallpaper("2026-fractured-skies", "fractured-skies", "jpg"),
 } as const;

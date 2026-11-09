@@ -28,13 +28,22 @@ import {
   usePreferencesStore,
 } from "~/lib/preferences";
 import { themes } from "~/themes";
-import { DEFAULT_THEME_SEASON_END } from "~/themes/season";
+import { DEFAULT_THEME_SEASON_START } from "~/themes/season";
 
 function ThemePrimaryColorText() {
   const theme = useMantineTheme();
 
-  return <Text data-testid="theme-primary-color">{theme.primaryColor}</Text>;
+  return (
+    <>
+      <Text data-testid="theme-primary-color">{theme.primaryColor}</Text>
+      {/* Default's season and its EVE fallback share a primary colour. */}
+      <Text data-testid="theme-background">{theme.other.appBackground}</Text>
+    </>
+  );
 }
+
+const background = (name: keyof typeof themes) =>
+  themes[name].other?.appBackground ?? "";
 
 /** Makes `matchMedia` report a coarse pointer, or not, for the next render. */
 const mockTouch = (touch: boolean) => {
@@ -55,9 +64,9 @@ describe("AppMantineProvider", () => {
       esiAcceptLanguage: "en",
       appTheme: "minimal",
     });
-    // Pinned inside the Default theme's season, so these hold after it ends.
+    // Pinned inside the Default theme's season.
     jest.useFakeTimers({
-      now: DEFAULT_THEME_SEASON_END - 24 * 60 * 60 * 1000,
+      now: DEFAULT_THEME_SEASON_START + 24 * 60 * 60 * 1000,
       doNotFake: ["queueMicrotask", "nextTick"],
     });
   });
@@ -88,9 +97,31 @@ describe("AppMantineProvider", () => {
     });
   });
 
+  it("shows Fractured Skies for Default during its season", async () => {
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ state: { appTheme: "default" }, version: 0 }),
+    );
+
+    render(
+      <AppMantineProvider>
+        <ThemePrimaryColorText />
+      </AppMantineProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("theme-background")).toHaveTextContent(
+        background("fractured_skies"),
+      );
+    });
+    expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
+      /^eve$/,
+    );
+  });
+
   it.each([
-    ["default", "crimson"],
     ["minimal", DEFAULT_THEME.primaryColor],
+    ["fractured_skies", "eve"],
   ])("applies the right theme for a stored %s", async (stored, primary) => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
@@ -110,8 +141,8 @@ describe("AppMantineProvider", () => {
     });
   });
 
-  it("shows EVE for Default once the season is over", async () => {
-    jest.setSystemTime(DEFAULT_THEME_SEASON_END);
+  it("shows EVE for Default before the season starts", async () => {
+    jest.setSystemTime(DEFAULT_THEME_SEASON_START - 1);
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({ state: { appTheme: "default" }, version: 0 }),
@@ -124,14 +155,14 @@ describe("AppMantineProvider", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
-        /^eve$/,
+      expect(screen.getByTestId("theme-background")).toHaveTextContent(
+        background("eve"),
       );
     });
   });
 
-  it("switches an open tab from the season to EVE when the season ends", async () => {
-    jest.setSystemTime(DEFAULT_THEME_SEASON_END - 1000);
+  it("switches an open tab from EVE to the season when the season starts", async () => {
+    jest.setSystemTime(DEFAULT_THEME_SEASON_START - 1000);
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({ state: { appTheme: "default" }, version: 0 }),
@@ -143,8 +174,8 @@ describe("AppMantineProvider", () => {
       </AppMantineProvider>,
     );
     await waitFor(() => {
-      expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
-        /^crimson$/,
+      expect(screen.getByTestId("theme-background")).toHaveTextContent(
+        background("eve"),
       );
     });
 
@@ -152,13 +183,13 @@ describe("AppMantineProvider", () => {
       jest.advanceTimersByTime(1000);
     });
 
-    expect(screen.getByTestId("theme-primary-color")).toHaveTextContent(
-      /^eve$/,
+    expect(screen.getByTestId("theme-background")).toHaveTextContent(
+      background("fractured_skies"),
     );
   });
 
-  it("leaves a chosen theme alone after the season", async () => {
-    jest.setSystemTime(DEFAULT_THEME_SEASON_END + 1000);
+  it("leaves a chosen theme alone before the season", async () => {
+    jest.setSystemTime(DEFAULT_THEME_SEASON_START - 1000);
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
       JSON.stringify({ state: { appTheme: "caldari" }, version: 0 }),
@@ -264,7 +295,14 @@ describe("cssVariablesResolver", () => {
     );
   });
 
-  it.each(["eve", "eve_compact", "default", "caldari", "whpd"] as const)(
+  it.each([
+    "eve",
+    "eve_compact",
+    "default",
+    "fractured_skies",
+    "caldari",
+    "whpd",
+  ] as const)(
     "darkens light-scheme dimmed text in %s, and leaves its dark scheme alone",
     (name) => {
       const resolved = cssVariablesResolver(
