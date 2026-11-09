@@ -8,7 +8,7 @@
   "types": "./src/index.ts",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=18.20.8"
   },
   "repository": {
     "type": "git",
@@ -49,17 +49,17 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@jest/globals": "^30.4.1",
+    "@jest/globals": "^30.5.2",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@swc/core": "^1.15.40",
+    "@swc/core": "^1.16.22",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.12.4",
-    "eslint": "^9.39.4",
-    "jest": "^30.4.2",
-    "prettier": "^3.8.3",
+    "@types/node": "^24.19.2",
+    "eslint": "^9.39.5",
+    "jest": "^30.5.2",
+    "prettier": "^3.9.10",
     "tsup": "^9.0.0",
     "typescript": "^5.9.3"
   },
