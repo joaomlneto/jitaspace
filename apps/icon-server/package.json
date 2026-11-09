@@ -24,7 +24,7 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.6",
     "eslint": "^9.39.4",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3"

@@ -32,7 +32,7 @@
     "@kubb/plugin-react-query": "^4.38.0",
     "@kubb/plugin-ts": "^4.38.0",
     "@kubb/plugin-zod": "^4.38.0",
-    "@types/node": "^24.12.4",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.1.6",
     "eslint": "^9.39.4",
     "prettier": "^3.8.3",

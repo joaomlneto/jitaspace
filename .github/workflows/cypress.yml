@@ -96,7 +96,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 24.15.0
+          node-version: 26.13.0
           cache: pnpm
       # Restored BEFORE install: cypress's postinstall downloads the binary, so
       # a cache restored afterwards never saved the fetch it exists to avoid.
