@@ -16,17 +16,17 @@
   "dependencies": {
     "@jitaspace/db": "workspace:*",
     "@jitaspace/eve-resources": "workspace:*",
-    "h3": "^1.15.1",
-    "nitropack": "^2.10.4",
-    "sharp": "^0.35.3"
+    "h3": "^1.15.11",
+    "nitropack": "^2.13.6",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^24.12.4",
-    "eslint": "^9.39.4",
-    "prettier": "^3.8.3",
+    "@types/node": "^24.19.2",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"

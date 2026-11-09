@@ -6,10 +6,10 @@ packages:
 overrides:
   "@types/react": 19.2.15
   "@types/react-dom": 19.2.3
-  "prosemirror-model": "1.25.7"
+  "prosemirror-model": "1.25.13"
   "prosemirror-state": "1.4.4"
-  "prosemirror-transform": "1.12.0"
-  "prosemirror-view": "1.42.3"
+  "prosemirror-transform": "1.12.5"
+  "prosemirror-view": "1.42.9"
   # Load-bearing, and not for the reason it looks like. next declares
   # optionalDependencies.sharp "^0.34.5", which is incompatible with apps/web's
   # "^0.35.3" — so under nodeLinker: hoisted pnpm HOISTS NEXT'S 0.34.5 to the root
@@ -35,7 +35,7 @@ overrides:
   # Caveat: overrides also rewrite peer ranges, so `pnpm peers check` cannot
   # catch an API conflict while this is here. Drop it once Sentry is on v11
   # (SDK v3) and @trigger.dev/core no longer pins api 1.9.1 / core 2.x.
-  "@opentelemetry/api": "~1.9.1"
+  "@opentelemetry/api": "~1.10.0"
 nodeLinker: hoisted
 publicHoistPattern:
   - "*prisma*"

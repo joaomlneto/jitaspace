@@ -31,19 +31,19 @@ jobs:
         with:
           # Disable shallow clone so SonarCloud gets full blame/history data
           fetch-depth: 0
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
-          version: 11.3.0
+          version: 11.28.11
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: 24.15.0
+          node-version: 24.22.2
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run tests with coverage
         run: pnpm test
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

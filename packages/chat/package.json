@@ -16,25 +16,25 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@chat-adapter/discord": "^4.29.0",
-    "@chat-adapter/state-redis": "^4.29.0",
-    "chat": "^4.29.0",
+    "@chat-adapter/discord": "^4.44.0",
+    "@chat-adapter/state-redis": "^4.44.0",
+    "chat": "^4.44.0",
     "dotenv": "^17.4.2",
-    "pg": "^8.21.0"
+    "pg": "^8.23.1"
   },
   "devDependencies": {
-    "@jest/globals": "^30.4.1",
+    "@jest/globals": "^30.5.2",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@swc/core": "^1.15.40",
+    "@swc/core": "^1.16.22",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.12.4",
-    "@types/pg": "^8.20.0",
-    "eslint": "^9.39.4",
-    "jest": "^30.4.2",
-    "prettier": "^3.8.3",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "eslint": "^9.39.5",
+    "jest": "^30.5.2",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"

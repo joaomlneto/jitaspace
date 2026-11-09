@@ -49,21 +49,21 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
-    "pg": "^8.21.0"
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^24.12.4",
-    "@types/pg": "^8.20.0",
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
     "concurrently": "^10.0.7",
     "dotenv": "^17.4.2",
-    "eslint": "^9.39.4",
-    "prettier": "^3.8.3",
-    "prisma": "^7.8.0",
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.10",
+    "prisma": "^7.10.1",
     "tsup": "^9.0.0",
     "typescript": "^5.9.3"
   },
