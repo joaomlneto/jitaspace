@@ -4,18 +4,22 @@ import * as Sentry from "@sentry/nextjs";
 import { buildsDb } from "@jitaspace/db-builds";
 
 import type { BuildServer } from "~/lib/history";
+import type { DeploymentRow } from "~/lib/history-build-placement";
+import { buildPlacement } from "~/lib/history-build-placement";
 import { buildDiffsUrl } from "~/lib/history-diff";
 
 /**
  * What `GET /api/history` reports: the servers the build history tracks, the
  * build each one is running now, and the newest build recorded for each.
  *
- * A build's `server` is whichever server's build pointer the upstream monitor
- * saw it on *first*, and it is never relabelled: a build tested on
- * Singularity before it reaches Tranquility stays `singularity`. So the
- * newest `tranquility` build in the database can trail what Tranquility runs.
- * That is why the live pointer is reported next to it, with the label the
- * live build was recorded under.
+ * A server's builds are the ones its build pointer has shown (a
+ * `BuildDeployment` row each), so a build tested on Singularity and then
+ * promoted counts for both. The upstream monitor records a promotion on its
+ * next poll, up to fifteen minutes after CCP's pointer moves, so the newest
+ * build recorded for a server can briefly trail what it runs. That is why the
+ * live pointer is reported next to it, with where the live build is placed
+ * (Tranquility once Tranquility has run it, else the server that showed it
+ * first).
  */
 
 export type TrackedServer = Exclude<BuildServer, null>;
@@ -49,16 +53,21 @@ export interface ServerMeta {
   /**
    * The build CCP's pointer names right now; null when the pointer could not
    * be read. `recorded` says whether the database has it yet, and
-   * `recordedAs` the server it was labelled with (null if not recorded).
+   * `recordedAs` where the history views place it: `tranquility` once
+   * Tranquility has run it, else the server that showed it first (null if
+   * not recorded).
    */
   live: {
     build: number;
     recorded: boolean;
     recordedAs: BuildServer;
   } | null;
-  /** The newest build labelled with this server; null when there is none. */
+  /**
+   * The newest build this server has run, dated when it got it; null when
+   * there is none.
+   */
   latest: RecordedBuild | null;
-  /** Number of builds labelled with this server. */
+  /** Number of builds this server has run. */
   buildCount: number;
 }
 
@@ -119,7 +128,7 @@ async function getCachedServerMeta(liveBuilds: readonly number[]): Promise<{
   "use cache";
   cacheLife("minutes");
 
-  const grouped = await buildsDb.build.groupBy({
+  const grouped = await buildsDb.buildDeployment.groupBy({
     by: ["server"],
     where: { server: { in: [...TRACKED_SERVERS] } },
     _count: true,
@@ -128,7 +137,6 @@ async function getCachedServerMeta(liveBuilds: readonly number[]): Promise<{
   const latestByServer = new Map<TrackedServer, number>();
   const counts: Partial<Record<TrackedServer, number>> = {};
   for (const g of grouped) {
-    if (g.server === null) continue;
     counts[g.server] = g._count;
     if (g._max.buildNumber !== null)
       latestByServer.set(g.server, g._max.buildNumber);
@@ -138,29 +146,36 @@ async function getCachedServerMeta(liveBuilds: readonly number[]): Promise<{
   const [builds, diffs] = await Promise.all([
     buildsDb.build.findMany({
       where: { buildNumber: { in: wanted } },
-      select: { buildNumber: true, releasedAt: true, server: true },
+      select: {
+        buildNumber: true,
+        deployments: { select: { server: true, firstSeenAt: true } },
+      },
     }),
     buildsDb.buildDiff.findMany({
       where: { toBuild: { in: wanted } },
       select: { toBuild: true, createdAt: true },
     }),
   ]);
-  const buildOf = new Map(builds.map((b) => [b.buildNumber, b]));
+  const deploymentsOf = new Map<number, DeploymentRow[]>(
+    builds.map((b) => [b.buildNumber, b.deployments]),
+  );
   const recordedAtOf = new Map(diffs.map((d) => [d.toBuild, d.createdAt]));
 
   const latest: Partial<Record<TrackedServer, RecordedBuild>> = {};
   for (const [server, build] of latestByServer)
     latest[server] = {
       build,
-      date: ymd(buildOf.get(build)?.releasedAt),
+      date: ymd(
+        deploymentsOf.get(build)?.find((d) => d.server === server)?.firstSeenAt,
+      ),
       recordedAt: iso(recordedAtOf.get(build)),
       url: buildDiffsUrl(build),
     };
 
   const recordedAs: Record<number, BuildServer> = {};
   for (const build of liveBuilds) {
-    const row = buildOf.get(build);
-    if (row) recordedAs[build] = row.server;
+    const deployments = deploymentsOf.get(build);
+    if (deployments) recordedAs[build] = buildPlacement(deployments).server;
   }
   return { counts, latest, recordedAs };
 }

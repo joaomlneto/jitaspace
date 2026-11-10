@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
+import type * as DeploymentsFixture from "./historyDeploymentsFixture";
 // Type-only import: erased at runtime, so it does NOT load the real
 // (Prisma-backed) module; used only to type the lazy require() below.
 import type * as BuildPageData from "~/app/history/build/[build]/data";
@@ -15,6 +16,11 @@ type Op = "added" | "modified" | "removed";
 let mockBuild: {
   releasedAt: Date | null;
   server: "tranquility" | "singularity" | null;
+  /** Overrides the single deployment `releasedAt` / `server` describe. */
+  deployments?: {
+    server: "tranquility" | "singularity";
+    firstSeenAt: Date | null;
+  }[];
 } | null = null;
 let mockEntityRows: {
   op: Op;
@@ -73,15 +79,33 @@ const rawQueryValues = (sqlPart: string) =>
   mockQueryRaw.mock.calls
     .find(([strings]) => strings.join("").includes(sqlPart))
     ?.slice(1)
-    .filter((v) => !(typeof v === "object" && v !== null && "raw" in v));
+    // Leave out raw identifiers and nested fragments (the scope filter).
+    .filter(
+      (v) =>
+        !(typeof v === "object" && v !== null && ("raw" in v || "sql" in v)),
+    );
 
 jest.mock("@jitaspace/db-builds", () => ({
   buildsSchema: "public",
-  Prisma: { raw: (sql: string) => ({ raw: sql }) },
+  Prisma: {
+    raw: (sql: string) => ({ raw: sql }),
+    sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({
+      sql: strings.join("?"),
+      values,
+    }),
+  },
   buildsDb: {
     $queryRaw: (strings: readonly string[], ...values: unknown[]) =>
       mockQueryRaw(strings, ...values),
-    build: { findUnique: () => Promise.resolve(mockBuild) },
+    build: {
+      findUnique: () =>
+        Promise.resolve(
+          mockBuild &&
+            (
+              require("./historyDeploymentsFixture") as typeof DeploymentsFixture
+            ).withDeployments(mockBuild),
+        ),
+    },
     // One findMany serves both change reads; they differ only in whether the
     // collection filter selects the `strings:*` collections or excludes them.
     change: {
@@ -137,6 +161,23 @@ describe("getCachedBuildPage", () => {
 
     mockBuild = { releasedAt: new Date("2026-06-02"), server: "singularity" };
     expect(await getCachedBuildPage(700001)).toBeNull();
+  });
+
+  it("serves a build promoted from Singularity, dated when Tranquility got it", async () => {
+    mockBuild = {
+      releasedAt: new Date("2026-11-09"),
+      server: "singularity", // the deprecated column says first-seen
+      deployments: [
+        { server: "singularity", firstSeenAt: new Date("2026-11-09") },
+        {
+          server: "tranquility",
+          firstSeenAt: new Date("2026-11-10T11:26:45Z"),
+        },
+      ],
+    };
+    const page = await getCachedBuildPage(3682781);
+    expect(page).not.toBeNull();
+    expect(page?.date).toBe("2026-11-10");
   });
 
   it("returns an empty page for an in-scope build with nothing recorded", async () => {

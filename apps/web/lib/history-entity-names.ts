@@ -3,7 +3,10 @@ import { buildsDb, Prisma } from "@jitaspace/db-builds";
 import type { EntityChangeRow, EntityNames } from "~/lib/history";
 import { prisma } from "~/lib/db";
 import { PRIMARY_COLLECTION } from "~/lib/history";
-import { historyTable } from "~/lib/history-sql";
+import { historyTable, notSingularityOnly } from "~/lib/history-sql";
+
+/** The diff's target build, for {@link notSingularityOnly}. */
+const TO_BUILD = Prisma.raw('d."toBuild"');
 
 /**
  * Display names for every entity among `changes`, by kind and id, read on the
@@ -565,11 +568,10 @@ export async function readHistoryNames(
       JOIN ${historyTable("Change")} c ON c."entityId" = e."id"
       JOIN ${historyTable("Collection")} col ON col."id" = c."collectionId"
       JOIN ${historyTable("BuildDiff")} d ON d."id" = c."diffId"
-      JOIN ${historyTable("Build")} b ON b."buildNumber" = d."toBuild"
       WHERE col."name" = ANY(${collections}::STRING[])
         AND col."entityKind" = e."kind"
         AND d."toBuild" <= ${atBuild}
-        AND b."server"::text IS DISTINCT FROM 'singularity'
+        AND ${notSingularityOnly(TO_BUILD)}
     ) named
     WHERE fields <> '{}'::JSONB
     ORDER BY build DESC
@@ -633,11 +635,10 @@ export async function readMessages(
     FROM ${historyTable("Entity")} e
     JOIN ${historyTable("Change")} c ON c."entityId" = e."id"
     JOIN ${historyTable("BuildDiff")} d ON d."id" = c."diffId"
-    JOIN ${historyTable("Build")} b ON b."buildNumber" = d."toBuild"
     WHERE e."kind" = 'string:en-us'
       AND e."eveId" = ANY(${ids}::INT8[])
       AND d."toBuild" <= ${atBuild}
-      AND b."server"::text IS DISTINCT FROM 'singularity'
+      AND ${notSingularityOnly(TO_BUILD)}
     ORDER BY e."eveId", d."toBuild" DESC
   `;
   const texts = new Map<number, string>();

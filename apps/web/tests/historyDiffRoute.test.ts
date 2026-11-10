@@ -3,6 +3,8 @@
  */
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
+import type * as DeploymentsFixture from "./historyDeploymentsFixture";
+
 // Exercises the build-diff API routes end to end through ~/lib/history-diff,
 // with @jitaspace/db-builds stubbed so the real Prisma client never loads.
 // `"use cache"` is inert under Jest, so every request reads the stub afresh.
@@ -33,7 +35,16 @@ jest.mock("next/cache", () => ({ cacheLife: () => undefined }));
 
 jest.mock("@jitaspace/db-builds", () => ({
   buildsDb: {
-    build: { findMany: () => Promise.resolve(mockBuilds) },
+    build: {
+      findMany: () =>
+        Promise.resolve(
+          mockBuilds.map(
+            (
+              require("./historyDeploymentsFixture") as typeof DeploymentsFixture
+            ).withDeployments,
+          ),
+        ),
+    },
     buildDiff: {
       // Honours the one filter the reader uses: genesis diffs excluded.
       findMany: () =>

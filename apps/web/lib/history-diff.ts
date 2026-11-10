@@ -3,6 +3,10 @@ import { cacheLife } from "next/cache";
 import { buildsDb } from "@jitaspace/db-builds";
 
 import type { BuildServer } from "~/lib/history";
+import {
+  BUILD_PLACEMENT_SELECT,
+  buildPlacement,
+} from "~/lib/history-build-placement";
 
 /**
  * Reads behind the public build-diff API (`app/api/history/diff/`).
@@ -109,7 +113,7 @@ export async function getCachedDiffGraph(): Promise<DiffGraph> {
       select: { id: true, fromBuild: true, toBuild: true },
     }),
     buildsDb.build.findMany({
-      select: { buildNumber: true, releasedAt: true, server: true },
+      select: { buildNumber: true, ...BUILD_PLACEMENT_SELECT },
     }),
   ]);
   return {
@@ -119,10 +123,10 @@ export async function getCachedDiffGraph(): Promise<DiffGraph> {
         : [{ id: d.id, fromBuild: d.fromBuild, toBuild: d.toBuild }],
     ),
     builds: Object.fromEntries(
-      builds.map((b) => [
-        b.buildNumber,
-        { date: ymd(b.releasedAt), server: b.server },
-      ]),
+      builds.map((b) => {
+        const { releasedAt, server } = buildPlacement(b.deployments);
+        return [b.buildNumber, { date: ymd(releasedAt), server }];
+      }),
     ),
   };
 }

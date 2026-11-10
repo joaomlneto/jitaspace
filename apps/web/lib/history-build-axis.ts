@@ -1,6 +1,10 @@
 import { buildsDb } from "@jitaspace/db-builds";
 
 import type { HistoryServer } from "~/lib/resource-pages";
+import {
+  BUILD_PLACEMENT_SELECT,
+  buildPlacement,
+} from "~/lib/history-build-placement";
 
 /** Where a diff sits on the timeline: the build it leads to. */
 export interface DiffBuild {
@@ -30,9 +34,11 @@ export async function readDiffBuilds(
   });
   const builds = await buildsDb.build.findMany({
     where: { buildNumber: { in: [...new Set(diffs.map((d) => d.toBuild))] } },
-    select: { buildNumber: true, releasedAt: true, server: true },
+    select: { buildNumber: true, ...BUILD_PLACEMENT_SELECT },
   });
-  const buildOf = new Map(builds.map((b) => [b.buildNumber, b]));
+  const buildOf = new Map(
+    builds.map((b) => [b.buildNumber, buildPlacement(b.deployments)]),
+  );
   return new Map(
     diffs.map((d) => {
       const build = buildOf.get(d.toBuild);
