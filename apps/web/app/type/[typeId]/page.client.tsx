@@ -29,6 +29,7 @@ import {
   CategoryCombatIcon,
   CategoryIskIcon,
   CategoryPowerIcon,
+  CategoryRiggingIcon,
   ContractsIcon,
   SystemArrowRotateLeftIcon,
   SystemBlockBanIcon,
@@ -60,6 +61,7 @@ import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
+import type { TypeSynchronizer } from "~/lib/synchronizer";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
@@ -101,9 +103,11 @@ import {
 import { TypeListMatchTable } from "~/components/TypeLists";
 import { groupByEffectCategory } from "~/lib/dogmaEffectCategory";
 import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
+import { emptyTypeSynchronizer, hasSynchronizer } from "~/lib/synchronizer";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
 import { InsuranceTab } from "./InsuranceTab";
+import { SynchronizerTab } from "./SynchronizerTab";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
@@ -275,6 +279,7 @@ export default function TypePage({
   history = NO_HISTORY,
   npcStats = null,
   insurance = null,
+  synchronizer = emptyTypeSynchronizer,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
@@ -289,6 +294,8 @@ export default function TypePage({
     npcStats?: NpcStats | null;
     /** A ship's latest insurance prices; null for anything never insured. */
     insurance?: InsurancePricePeriod | null;
+    /** A Synchronizer rig's scaling, or the rigs a module powers. */
+    synchronizer?: TypeSynchronizer;
   }
 >) {
   const character = useSelectedCharacter();
@@ -335,13 +342,15 @@ export default function TypePage({
     () => typeLists.filter((typeList) => !isTypeListMember(typeList)),
     [typeLists],
   );
+  const showSynchronizer = hasSynchronizer(synchronizer);
   // `?tab=type-lists` on an item no list matches (or `?tab=combat` on one
   // that is not an NPC) would select a tab that is not rendered, leaving the
   // page blank; show the overview instead.
   const selectedTab =
     (activeTab === "type-lists" && typeLists.length === 0) ||
     (activeTab === "combat" && !npcStats) ||
-    (activeTab === "insurance" && !insurance)
+    (activeTab === "insurance" && !insurance) ||
+    (activeTab === "synchronizer" && !showSynchronizer)
       ? DEFAULT_TYPE_PAGE_TAB
       : activeTab;
 
@@ -678,6 +687,16 @@ export default function TypePage({
                 Attributes
               </Tabs.Tab>
             )}
+            {showSynchronizer && (
+              <Tabs.Tab
+                value="synchronizer"
+                leftSection={
+                  <CategoryRiggingIcon size={16} color="currentColor" alt="" />
+                }
+              >
+                Synchronizer
+              </Tabs.Tab>
+            )}
             {hasVariations && (
               <Tabs.Tab
                 value="variations"
@@ -1009,6 +1028,13 @@ export default function TypePage({
                   </Stack>
                 )}
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Synchronizer — a rig's scaling, or the rigs a module powers */}
+          {showSynchronizer && (
+            <Tabs.Panel value="synchronizer" pt="lg">
+              <SynchronizerTab synchronizer={synchronizer} />
             </Tabs.Panel>
           )}
 

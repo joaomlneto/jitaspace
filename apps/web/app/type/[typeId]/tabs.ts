@@ -3,6 +3,7 @@ export const TYPE_PAGE_TABS = [
   "overview",
   "combat",
   "attributes",
+  "synchronizer",
   "variations",
   "market",
   "contracts",
