@@ -9,6 +9,7 @@ import type { TypeDogmaMeta } from "./types";
 import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
+import type { TypeSynchronizer } from "~/lib/synchronizer";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
@@ -25,6 +26,11 @@ import {
 import { readEffectCategories } from "~/lib/readEffectCategories";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
+import {
+  emptyTypeSynchronizer,
+  SYNCHRONIZER_CATEGORY_ID,
+} from "~/lib/synchronizer";
+import { readTypeSynchronizer } from "~/lib/synchronizerData";
 import { buildTypeListRuleIndex, matchTypeLists } from "~/lib/typeLists";
 import TypePage from "./page.client";
 import { emptyTypeDogmaMeta } from "./types";
@@ -415,6 +421,45 @@ async function getTypeTypeLists(
 }
 
 /**
+ * The item's place in the Synchronizer rig chain: a rig's scaling bonuses and
+ * the modules that feed them, or the rigs a module feeds.
+ *
+ * A failure throws rather than degrading here: the caller catches it, so a
+ * database blip is never what gets written into the cache entry. Not
+ * `cacheSdeRead()`: the effect descriptions include our own
+ * `customDescription`, which the SDE ingest does not write.
+ */
+async function readCachedTypeSynchronizer(
+  typeId: number,
+  groupId: number,
+): Promise<TypeSynchronizer> {
+  "use cache";
+  cacheLife("days");
+  cacheTag(SDE_CACHE_TAG);
+  return readTypeSynchronizer(typeId, groupId);
+}
+
+/**
+ * The page renders fine without its Synchronizer tab, so a database failure
+ * hides the tab instead of erroring the route. Only modules can be in the
+ * chain, so ships, skills and the rest skip the read.
+ */
+async function getTypeSynchronizer(
+  typeId: number,
+  groupId: number | undefined,
+  categoryId: number | undefined,
+): Promise<TypeSynchronizer> {
+  if (groupId === undefined || categoryId !== SYNCHRONIZER_CATEGORY_ID) {
+    return emptyTypeSynchronizer;
+  }
+  try {
+    return await readCachedTypeSynchronizer(typeId, groupId);
+  } catch {
+    return emptyTypeSynchronizer;
+  }
+}
+
+/**
  * The ship's latest insurance prices, for its Insurance tab. The page renders
  * fine without them, so a database failure just leaves the tab out.
  */
@@ -489,13 +534,14 @@ async function PageContent({
   // Not awaited: the History tab streams it in after the rest of the page, so
   // the item's first byte never waits on seconds of history reads.
   const history = loadEntityHistory("type", typeId);
-  const [dogmaMeta, variations, typeLists, npcStats, insurance] =
+  const [dogmaMeta, variations, typeLists, npcStats, insurance, synchronizer] =
     await Promise.all([
       getTypeDogmaMeta(typeId),
       getTypeVariations(data.variationBaseTypeId),
       getTypeTypeLists(typeId, data.groupId, data.categoryId),
       getTypeNpcStats(typeId, data.categoryId),
       getTypeInsurance(typeId),
+      getTypeSynchronizer(typeId, data.groupId, data.categoryId),
     ]);
   return (
     <TypePage
@@ -506,6 +552,7 @@ async function PageContent({
       history={history}
       npcStats={npcStats}
       insurance={insurance}
+      synchronizer={synchronizer}
     />
   );
 }

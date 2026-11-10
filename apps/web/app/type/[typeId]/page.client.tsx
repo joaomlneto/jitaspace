@@ -29,6 +29,7 @@ import {
   CategoryCombatIcon,
   CategoryIskIcon,
   CategoryPowerIcon,
+  CategoryRiggingIcon,
   ContractsIcon,
   SystemArrowRotateLeftIcon,
   SystemBlockBanIcon,
@@ -60,6 +61,7 @@ import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
+import type { TypeSynchronizer } from "~/lib/synchronizer";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
 import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
@@ -101,10 +103,17 @@ import {
 import { TypeListMatchTable } from "~/components/TypeLists";
 import { groupByEffectCategory } from "~/lib/dogmaEffectCategory";
 import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
+import { emptyTypeSynchronizer, hasSynchronizer } from "~/lib/synchronizer";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
 import { InsuranceTab } from "./InsuranceTab";
-import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
+import { SynchronizerTab } from "./SynchronizerTab";
+import {
+  DEFAULT_TYPE_PAGE_TAB,
+  isTypePageTab,
+  resolveTypePageTab,
+  TYPE_PAGE_TABS,
+} from "./tabs";
 
 export interface PageProps {
   typeId: number;
@@ -275,6 +284,7 @@ export default function TypePage({
   history = NO_HISTORY,
   npcStats = null,
   insurance = null,
+  synchronizer = emptyTypeSynchronizer,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
@@ -289,6 +299,8 @@ export default function TypePage({
     npcStats?: NpcStats | null;
     /** A ship's latest insurance prices; null for anything never insured. */
     insurance?: InsurancePricePeriod | null;
+    /** A Synchronizer rig's scaling, or the rigs a module powers. */
+    synchronizer?: TypeSynchronizer;
   }
 >) {
   const character = useSelectedCharacter();
@@ -335,15 +347,14 @@ export default function TypePage({
     () => typeLists.filter((typeList) => !isTypeListMember(typeList)),
     [typeLists],
   );
-  // `?tab=type-lists` on an item no list matches (or `?tab=combat` on one
-  // that is not an NPC) would select a tab that is not rendered, leaving the
-  // page blank; show the overview instead.
-  const selectedTab =
-    (activeTab === "type-lists" && typeLists.length === 0) ||
-    (activeTab === "combat" && !npcStats) ||
-    (activeTab === "insurance" && !insurance)
-      ? DEFAULT_TYPE_PAGE_TAB
-      : activeTab;
+  const showSynchronizer = hasSynchronizer(synchronizer);
+  // Which of the conditional tabs this item renders.
+  const selectedTab = resolveTypePageTab(activeTab, {
+    "type-lists": typeLists.length > 0,
+    combat: npcStats !== null,
+    insurance: insurance !== null,
+    synchronizer: showSynchronizer,
+  });
 
   // Determine the best image variation: prefer the 3D render (ships), then a
   // blueprint, otherwise fall back to the icon.
@@ -678,6 +689,16 @@ export default function TypePage({
                 Attributes
               </Tabs.Tab>
             )}
+            {showSynchronizer && (
+              <Tabs.Tab
+                value="synchronizer"
+                leftSection={
+                  <CategoryRiggingIcon size={16} color="currentColor" alt="" />
+                }
+              >
+                Synchronizer
+              </Tabs.Tab>
+            )}
             {hasVariations && (
               <Tabs.Tab
                 value="variations"
@@ -1009,6 +1030,13 @@ export default function TypePage({
                   </Stack>
                 )}
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Synchronizer — a rig's scaling, or the rigs a module powers */}
+          {showSynchronizer && (
+            <Tabs.Panel value="synchronizer" pt="lg">
+              <SynchronizerTab synchronizer={synchronizer} />
             </Tabs.Panel>
           )}
 
