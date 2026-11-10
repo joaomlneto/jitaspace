@@ -79,7 +79,6 @@
     "jwt-decode": "^4.0.0",
     "mantine-datatable": "^9.2.2",
     "next": "16.4.5",
-    "next-seo": "^6.8.0",
     "nextjs-cors": "^2.2.1",
     "nextjs-routes": "^2.2.5",
     "ngraph.graph": "^20.1.2",

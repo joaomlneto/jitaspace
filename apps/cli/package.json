@@ -40,7 +40,6 @@
     "commander": "^15.0.0",
     "eslint": "^9.39.4",
     "figlet": "^1.11.0",
-    "inquirer": "^14.2.5",
     "js-yaml": "^4.1.1",
     "js2schema": "^1.0.8",
     "node-fetch": "^2.7.0",
