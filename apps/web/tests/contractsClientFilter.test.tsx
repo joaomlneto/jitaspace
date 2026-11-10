@@ -26,6 +26,14 @@ import {
 // The contracts browser's filters and sorts, run in the browser, and the hook
 // that loads the open contracts they run over.
 
+// jsdom has no DecompressionStream: the hook's tests send the JSON's bytes
+// as they are, and inflateJson (tested in contractsSnapshot) just parses them.
+jest.mock("~/components/Contracts/snapshot", () => ({
+  ...jest.requireActual<object>("~/components/Contracts/snapshot"),
+  inflateJson: (bytes: ArrayBuffer) =>
+    Promise.resolve(JSON.parse(new TextDecoder().decode(bytes)) as unknown),
+}));
+
 const { useOpenContracts } =
   require("~/app/contracts/useOpenContracts") as typeof HookModule;
 
@@ -236,7 +244,8 @@ describe("useOpenContracts", () => {
     Promise.resolve({
       ok: status < 400,
       status,
-      json: () => Promise.resolve(body),
+      arrayBuffer: () =>
+        Promise.resolve(new TextEncoder().encode(JSON.stringify(body)).buffer),
     } as Response);
 
   beforeEach(() => {

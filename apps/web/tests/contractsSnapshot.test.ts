@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { randomBytes } from "node:crypto";
-import { gunzipSync } from "node:zlib";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type * as DbModule from "@jitaspace/db";
@@ -15,6 +15,7 @@ import type {
 } from "~/components/Contracts/snapshot";
 import {
   decodeOpenContracts,
+  inflateJson,
   ITEM_ASKED,
   ITEM_COPY,
 } from "~/components/Contracts/snapshot";
@@ -303,6 +304,27 @@ describe("readOpenContracts", () => {
   });
 });
 
+describe("inflateJson", () => {
+  it("reads back what the route gzipped", async () => {
+    const value = { contracts: [[1, "Ünïcode ✓"]], snapshotAt: null };
+    const gzipped = gzipSync(JSON.stringify(value));
+    expect(
+      await inflateJson(
+        gzipped.buffer.slice(
+          gzipped.byteOffset,
+          gzipped.byteOffset + gzipped.byteLength,
+        ),
+      ),
+    ).toEqual(value);
+  });
+
+  it("rejects bytes that are not gzip", async () => {
+    await expect(
+      inflateJson(new TextEncoder().encode("{}").buffer),
+    ).rejects.toThrow();
+  });
+});
+
 describe("GET /api/contracts/open", () => {
   /** The response's body, inflated and parsed. */
   const body = async (response: Response) =>
@@ -310,12 +332,14 @@ describe("GET /api/contracts/open", () => {
       gunzipSync(Buffer.from(await response.arrayBuffer())).toString(),
     ) as OpenContractsSnapshot;
 
-  it("serves the snapshot gzipped, cached at the CDN for a sync", async () => {
+  it("serves the snapshot as a gzip file, cached at the CDN for a sync", async () => {
     stubDatabase();
     const response = await loadGET()();
     expect(response.status).toBe(200);
-    expect(response.headers.get("Content-Encoding")).toBe("gzip");
-    expect(response.headers.get("Content-Type")).toBe("application/json");
+    // A gzip file, not a gzip-encoded response: the platform does not keep
+    // a function's Content-Encoding reliably.
+    expect(response.headers.get("Content-Encoding")).toBeNull();
+    expect(response.headers.get("Content-Type")).toBe("application/gzip");
     expect(response.headers.get("Cache-Control")).toBe(
       "public, max-age=300, s-maxage=1800, stale-while-revalidate=86400",
     );
