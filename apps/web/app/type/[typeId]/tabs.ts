@@ -24,3 +24,16 @@ export function isTypePageTab(
 ): value is TypePageTab {
   return value != null && (TYPE_PAGE_TABS as readonly string[]).includes(value);
 }
+
+/**
+ * The tab to show for the requested one. A tab only some items have (combat,
+ * insurance, type lists, synchronizer) falls back to the default when this
+ * item does not show it: `?tab=combat` on a ship would otherwise select a tab
+ * that is not rendered, leaving the page blank.
+ */
+export function resolveTypePageTab(
+  requested: TypePageTab,
+  shown: Readonly<Partial<Record<TypePageTab, boolean>>>,
+): TypePageTab {
+  return shown[requested] === false ? DEFAULT_TYPE_PAGE_TAB : requested;
+}

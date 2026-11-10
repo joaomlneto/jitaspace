@@ -108,7 +108,12 @@ import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
 import { InsuranceTab } from "./InsuranceTab";
 import { SynchronizerTab } from "./SynchronizerTab";
-import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
+import {
+  DEFAULT_TYPE_PAGE_TAB,
+  isTypePageTab,
+  resolveTypePageTab,
+  TYPE_PAGE_TABS,
+} from "./tabs";
 
 export interface PageProps {
   typeId: number;
@@ -343,16 +348,13 @@ export default function TypePage({
     [typeLists],
   );
   const showSynchronizer = hasSynchronizer(synchronizer);
-  // `?tab=type-lists` on an item no list matches (or `?tab=combat` on one
-  // that is not an NPC) would select a tab that is not rendered, leaving the
-  // page blank; show the overview instead.
-  const selectedTab =
-    (activeTab === "type-lists" && typeLists.length === 0) ||
-    (activeTab === "combat" && !npcStats) ||
-    (activeTab === "insurance" && !insurance) ||
-    (activeTab === "synchronizer" && !showSynchronizer)
-      ? DEFAULT_TYPE_PAGE_TAB
-      : activeTab;
+  // Which of the conditional tabs this item renders.
+  const selectedTab = resolveTypePageTab(activeTab, {
+    "type-lists": typeLists.length > 0,
+    combat: npcStats !== null,
+    insurance: insurance !== null,
+    synchronizer: showSynchronizer,
+  });
 
   // Determine the best image variation: prefer the 3D render (ships), then a
   // blueprint, otherwise fall back to the icon.
