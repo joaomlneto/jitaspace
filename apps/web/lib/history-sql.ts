@@ -19,3 +19,24 @@ const quote = (identifier: string) => `"${identifier.replaceAll('"', '""')}"`;
  */
 export const historyTable = (table: Prisma.ModelName) =>
   Prisma.raw(`${quote(buildsSchema)}.${quote(table)}`);
+
+/**
+ * A raw-SQL condition: the build in column `buildColumn` (e.g. `d."toBuild"`)
+ * is not a Singularity-only build. That is, Tranquility has run it, or no
+ * server has been recorded for it at all, the same rule
+ * `isBuildInHistoryScope` applies to `buildPlacement`'s server. A build tested
+ * on Singularity and then promoted passes.
+ *
+ * `::text` sidesteps enum-literal handling.
+ *
+ *     $queryRaw`… WHERE ${notSingularityOnly(Prisma.raw('d."toBuild"'))}`
+ */
+export const notSingularityOnly = (buildColumn: Prisma.Sql) => Prisma.sql`(
+  EXISTS (
+    SELECT 1 FROM ${historyTable("BuildDeployment")} tq
+     WHERE tq."buildNumber" = ${buildColumn} AND tq."server"::text = 'tranquility'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM ${historyTable("BuildDeployment")} sisi
+     WHERE sisi."buildNumber" = ${buildColumn} AND sisi."server"::text = 'singularity'
+  )
+)`;

@@ -206,6 +206,67 @@ export function ExpiryText({ date }: Readonly<{ date: string }>) {
   );
 }
 
+const END_LABEL: Record<
+  NonNullable<ContractSummary["endReason"]>,
+  { label: string; hint: string }
+> = {
+  Expired: { label: "Expired", hint: "Listed until it expired" },
+  RemovedBeforeExpiry: {
+    label: "Closed",
+    hint: "Left the public listing before it expired: accepted, completed or deleted",
+  },
+};
+
+/** How our snapshots saw a contract end, with the last day they listed it. */
+export function ContractEndBadge({
+  contract,
+  size,
+}: Readonly<{ contract: ContractSummary; size: "xs" | "sm" }>) {
+  const end = contract.endReason
+    ? END_LABEL[contract.endReason]
+    : { label: "Ended", hint: "No longer in the public listing" };
+  const lastListed = contract.lastSeenAt?.slice(0, 10);
+  return (
+    <Tooltip
+      label={
+        lastListed ? `${end.hint}. Last listed ${lastListed}.` : `${end.hint}.`
+      }
+    >
+      <Badge variant="dot" color="gray" radius="sm" size={size}>
+        {end.label}
+        {lastListed ? ` ${lastListed}` : ""}
+      </Badge>
+    </Tooltip>
+  );
+}
+
+/**
+ * Where a contract stands, for the list views: ESI's status once it is no
+ * longer outstanding, how it ended once the public listing dropped it, and
+ * otherwise when it expires.
+ */
+export function ContractTiming({
+  contract,
+  size,
+  ta,
+}: Readonly<{
+  contract: ContractSummary;
+  size: "xs" | "sm";
+  ta?: TextProps["ta"];
+}>) {
+  if (contract.status && contract.status !== "outstanding") {
+    return <ContractStatusBadge status={contract.status} size={size} />;
+  }
+  if (contract.isOpen === false) {
+    return <ContractEndBadge contract={contract} size={size} />;
+  }
+  return (
+    <Text size={size} c="dimmed" ta={ta} style={{ whiteSpace: "nowrap" }}>
+      <ExpiryText date={contract.dateExpired} />
+    </Text>
+  );
+}
+
 /**
  * Who issued the contract: the corporation when issued on its behalf, the
  * character otherwise, with names the database supplied or ESI resolves.

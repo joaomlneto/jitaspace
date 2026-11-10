@@ -3,6 +3,7 @@
  */
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
+import type * as DeploymentsFixture from "./historyDeploymentsFixture";
 import type * as FileData from "~/app/file/[...path]/data";
 import type * as StringData from "~/app/string/[stringId]/data";
 import type * as BuildAxis from "~/lib/history-build-axis";
@@ -23,7 +24,17 @@ jest.mock("@jitaspace/db-builds", () => ({
     change: { findMany: (a?: unknown) => changeFindMany(a) },
     fileChange: { findMany: (a?: unknown) => fileChangeFindMany(a) },
     buildDiff: { findMany: (a?: unknown) => buildDiffFindMany(a) },
-    build: { findMany: (a?: unknown) => buildFindMany(a) },
+    build: {
+      findMany: async (a?: unknown) =>
+        (
+          (await buildFindMany(a)) as Parameters<
+            typeof DeploymentsFixture.withDeployments
+          >[0][]
+        ).map(
+          (require("./historyDeploymentsFixture") as typeof DeploymentsFixture)
+            .withDeployments,
+        ),
+    },
   },
 }));
 

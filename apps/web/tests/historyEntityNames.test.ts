@@ -46,7 +46,13 @@ jest.mock("~/lib/db", () => ({
 const mockQueryRaw = jest.fn((..._args: unknown[]) => Promise.resolve([]));
 jest.mock("@jitaspace/db-builds", () => ({
   buildsSchema: "public",
-  Prisma: { raw: (sql: string) => ({ raw: sql }) },
+  Prisma: {
+    raw: (sql: string) => ({ raw: sql }),
+    sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({
+      sql: strings.join("?"),
+      values,
+    }),
+  },
   buildsDb: { $queryRaw: (...args: unknown[]) => mockQueryRaw(...args) },
 }));
 

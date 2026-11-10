@@ -110,7 +110,7 @@ export default defineConfig(
             },
           ],
         }),
-        pluginZod({}),
+        pluginZod({ version: "4", importPath: "zod" }),
       ],
     };
   },

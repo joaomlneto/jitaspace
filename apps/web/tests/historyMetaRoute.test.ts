@@ -10,6 +10,8 @@ import {
   jest,
 } from "@jest/globals";
 
+import type * as DeploymentsFixture from "./historyDeploymentsFixture";
+
 // Exercises GET /api/history through ~/lib/history-meta with the history DB
 // and CCP's build pointers stubbed. `"use cache"` is inert under Jest.
 
@@ -32,17 +34,25 @@ jest.mock("@sentry/nextjs", () => ({
 
 jest.mock("@jitaspace/db-builds", () => ({
   buildsDb: {
-    build: {
-      groupBy: (args: { where: { server: { in: Server[] } } }) => {
-        const out = new Map<Server, { count: number; max: number }>();
-        for (const b of mockBuilds) {
-          if (!args.where.server.in.includes(b.server)) continue;
-          const g = out.get(b.server) ?? { count: 0, max: 0 };
-          out.set(b.server, {
-            count: g.count + 1,
-            max: Math.max(g.max, b.buildNumber),
-          });
-        }
+    buildDeployment: {
+      // One row per (build, server) the fixture builds were shown on.
+      groupBy: (args: { where: { server: { in: NonNullable<Server>[] } } }) => {
+        const withDeployments = (
+          require("./historyDeploymentsFixture") as typeof DeploymentsFixture
+        ).withDeployments;
+        const out = new Map<
+          NonNullable<Server>,
+          { count: number; max: number }
+        >();
+        for (const b of mockBuilds)
+          for (const d of withDeployments(b).deployments) {
+            if (!args.where.server.in.includes(d.server)) continue;
+            const g = out.get(d.server) ?? { count: 0, max: 0 };
+            out.set(d.server, {
+              count: g.count + 1,
+              max: Math.max(g.max, b.buildNumber),
+            });
+          }
         return Promise.resolve(
           [...out].map(([server, g]) => ({
             server,
@@ -51,11 +61,17 @@ jest.mock("@jitaspace/db-builds", () => ({
           })),
         );
       },
+    },
+    build: {
       findMany: (args: { where: { buildNumber: { in: number[] } } }) =>
         Promise.resolve(
-          mockBuilds.filter((b) =>
-            args.where.buildNumber.in.includes(b.buildNumber),
-          ),
+          mockBuilds
+            .filter((b) => args.where.buildNumber.in.includes(b.buildNumber))
+            .map(
+              (
+                require("./historyDeploymentsFixture") as typeof DeploymentsFixture
+              ).withDeployments,
+            ),
         ),
     },
     buildDiff: {

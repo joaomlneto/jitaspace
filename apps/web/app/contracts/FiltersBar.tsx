@@ -134,19 +134,24 @@ export function FiltersBar({
               onChange={onViewChange}
               data={CONTRACT_VIEW_OPTIONS}
             />
-            <Select
-              size="xs"
-              w={180}
-              aria-label="Sort contracts"
-              value={filters.sort}
-              onChange={(value) => {
-                const sort = CONTRACT_SORTS.find((option) => option === value);
-                if (sort) update({ sort });
-              }}
-              data={SORT_OPTIONS}
-              allowDeselect={false}
-              checkIconPosition="right"
-            />
+            {/* A table sorts from its headers instead. */}
+            {view !== "table" && (
+              <Select
+                size="xs"
+                w={180}
+                aria-label="Sort contracts"
+                value={filters.sort}
+                onChange={(value) => {
+                  const sort = CONTRACT_SORTS.find(
+                    (option) => option === value,
+                  );
+                  if (sort) update({ sort });
+                }}
+                data={SORT_OPTIONS}
+                allowDeselect={false}
+                checkIconPosition="right"
+              />
+            )}
             {isFiltered && (
               <Button
                 size="xs"

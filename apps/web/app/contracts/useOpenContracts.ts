@@ -6,7 +6,10 @@ import type {
   OpenContract,
   OpenContractsSnapshot,
 } from "~/components/Contracts/snapshot";
-import { decodeOpenContracts } from "~/components/Contracts/snapshot";
+import {
+  decodeOpenContracts,
+  inflateJson,
+} from "~/components/Contracts/snapshot";
 
 export interface OpenContracts {
   /** Every open public contract; empty until they have loaded. */
@@ -26,12 +29,14 @@ interface DecodedSnapshot {
 async function fetchOpenContracts(
   signal: AbortSignal,
 ): Promise<DecodedSnapshot> {
-  // Sent gzipped; the browser inflates it before `json()` reads it.
   const response = await fetch("/api/contracts/open", { signal });
   if (!response.ok) {
     throw new Error(`Open contracts failed with HTTP ${response.status}`);
   }
-  const snapshot = (await response.json()) as OpenContractsSnapshot;
+  // A gzip file, not a gzip-encoded response: inflated here, not by the browser.
+  const snapshot = (await inflateJson(
+    await response.arrayBuffer(),
+  )) as OpenContractsSnapshot;
   return {
     contracts: decodeOpenContracts(snapshot),
     snapshotAt: snapshot.snapshotAt,

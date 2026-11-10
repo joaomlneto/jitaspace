@@ -5,6 +5,10 @@ import { buildsDb } from "@jitaspace/db-builds";
 import type { BuildPage, EntityChangeRow } from "~/lib/history";
 import type { FileDiff, StringChange } from "~/lib/resource-history";
 import { isBuildInHistoryScope } from "~/lib/history";
+import {
+  BUILD_PLACEMENT_SELECT,
+  buildPlacement,
+} from "~/lib/history-build-placement";
 import { readEntityNames } from "~/lib/history-entity-names";
 
 /**
@@ -44,10 +48,11 @@ export async function getCachedBuildPage(
   "use cache";
   cacheLife("days");
 
-  const b = await buildsDb.build.findUnique({
+  const row = await buildsDb.build.findUnique({
     where: { buildNumber: build },
-    select: { releasedAt: true, server: true },
+    select: BUILD_PLACEMENT_SELECT,
   });
+  const b = row ? buildPlacement(row.deployments) : null;
   if (!b || !isBuildInHistoryScope(b.releasedAt, b.server)) return null;
 
   const [{ changes, names }, files, strings] = await Promise.all([

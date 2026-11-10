@@ -43,4 +43,10 @@ describe("activeGroupName", () => {
     expect(activeGroupName("/assets/corporation")).toBe("Character");
     expect(activeGroupName("/")).toBeNull();
   });
+
+  it("gives the site's own pages to the About menu", () => {
+    expect(activeGroupName("/about")).toBe("About");
+    expect(activeGroupName("/support")).toBe("About");
+    expect(activeGroupName("/status")).toBe("About");
+  });
 });

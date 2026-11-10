@@ -31,6 +31,7 @@ import {
   CategoryCorporationIcon,
   CategoryResearchIcon,
   CategorySkullIcon,
+  ContractsIcon,
   SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowBiographyIcon,
@@ -61,6 +62,7 @@ import type {
   EsiCharacterCard,
   NamedRef,
 } from "./types";
+import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import {
   AllianceAnchor,
@@ -96,6 +98,7 @@ import {
   KillboardTab,
   useZkillboardStats,
 } from "~/components/Zkillboard";
+import { stripEveMarkup } from "~/lib/eveMarkup";
 import {
   formatAge,
   formatDate,
@@ -429,6 +432,8 @@ export default function CharacterPage({
     () => resolveIdentity(liveCharacter?.data, esi, record),
     [liveCharacter?.data, esi, record],
   );
+  // Titles are EVE markup; show the text, and nothing when none is left.
+  const titleText = identity.title ? stripEveMarkup(identity.title) : "";
   const stints = useMemo(
     () => toStints(history?.data ?? [], now),
     [history?.data, now],
@@ -450,6 +455,8 @@ export default function CharacterPage({
     biography: Boolean(identity.description),
     history: !isNpc,
     agent: agent !== null,
+    // NPCs and agents never issue contracts.
+    contracts: !isNpc,
     killboard: !isNpc,
   };
   const selectedTab = visibleTabs[activeTab]
@@ -499,10 +506,9 @@ export default function CharacterPage({
             )}
             <Text size="sm">{identity.name ?? characterId}</Text>
           </Breadcrumbs>
-          {identity.title && (
+          {titleText && (
             <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-              {/* Titles are EVE markup; show the text. */}
-              {identity.title.replace(/<[^<>]*>/g, "").trim()}
+              {titleText}
             </Text>
           )}
           <Group gap="sm" align="center">
@@ -618,6 +624,14 @@ export default function CharacterPage({
                 leftSection={<WindowAgentIcon size={16} alt="" />}
               >
                 Agent
+              </Tabs.Tab>
+            )}
+            {visibleTabs.contracts && (
+              <Tabs.Tab
+                value="contracts"
+                leftSection={<ContractsIcon size={16} alt="" />}
+              >
+                Contracts
               </Tabs.Tab>
             )}
             {visibleTabs.killboard && (
@@ -857,6 +871,12 @@ export default function CharacterPage({
           {visibleTabs.agent && agent && (
             <Tabs.Panel value="agent" pt="lg">
               <AgentPanel agent={agent} />
+            </Tabs.Panel>
+          )}
+
+          {visibleTabs.contracts && (
+            <Tabs.Panel value="contracts" pt="lg">
+              <ContractHistoryTab subject="character" id={characterId} />
             </Tabs.Panel>
           )}
 

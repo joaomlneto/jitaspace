@@ -4,6 +4,7 @@ import { lightDark } from "~/themes/lightDark";
 import {
   DEFAULT_THEME_SEASON,
   DEFAULT_THEME_SEASON_END,
+  DEFAULT_THEME_SEASON_START,
 } from "~/themes/season";
 import { EXCEL_GRID, WALLPAPERS } from "~/themes/wallpapers";
 
@@ -62,6 +63,7 @@ export const THEME_PRELOAD: Record<
   minimal: { body: lightDark("#fff", "#242424") },
   eve: preload("#101010", WALLPAPERS.cradleOfWar),
   eve_compact: preload("#101010", WALLPAPERS.cradleOfWar),
+  fractured_skies: preload("#101010", WALLPAPERS.fracturedSkies),
   amarr: preload("#101010", WALLPAPERS.amarr),
   caldari: preload("#101010", WALLPAPERS.caldari),
   gallente: preload("#101010", WALLPAPERS.gallente),
@@ -90,12 +92,13 @@ const json = (value: unknown) =>
 // Mirrors the persist middleware's storage format ({ state: { appTheme } })
 // and sanitizeAppTheme's normalisation: nothing stored, an unreadable value or
 // an unknown theme all mean Default, which the prerendered page already shows —
-// until its season ends (themes/season.ts), when Default shows the season's
+// during its season (themes/season.ts). Outside it, Default shows the season's
 // fallback and this paints that instead.
 const script = (
   key: string,
   themes: Record<string, ThemePreload>,
-  seasonEnd: number,
+  seasonStart: number,
+  seasonEnd: number | null,
   fallback: string,
 ) => `(() => {
   try {
@@ -109,7 +112,9 @@ const script = (
       }
     } catch {}
     if (theme === "default") {
-      if (Date.now() < ${json(seasonEnd)}) return;
+      const now = Date.now();
+      const end = ${json(seasonEnd)};
+      if (now >= ${json(seasonStart)} && (end === null || now < end)) return;
       theme = ${json(fallback)};
     }
     const html = document.documentElement;
@@ -128,6 +133,7 @@ const script = (
 export const THEME_PRELOAD_SCRIPT = script(
   PREFERENCES_STORAGE_KEY,
   THEME_PRELOAD,
+  DEFAULT_THEME_SEASON_START,
   DEFAULT_THEME_SEASON_END,
   DEFAULT_THEME_SEASON.fallback,
 );

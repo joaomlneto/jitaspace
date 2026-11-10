@@ -1,4 +1,5 @@
 import React from "react";
+import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
@@ -16,13 +17,16 @@ import {
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
+  HelpIcon,
   IncursionsIcon,
+  InfoIcon,
   ItemsIcon,
   JournalIcon,
   LPStoreIcon,
   MapIcon,
   MarketIcon,
   PlanetsIcon,
+  ScopeNetworkIcon,
   ShipsIcon,
   SkillsIcon,
   SystemFreelanceProjectsIcon,
@@ -30,8 +34,11 @@ import {
   WalletIcon,
   WarReportIcon,
   WarsIcon,
+  WindowGiftIcon,
   WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
+
+import { env } from "~/env";
 
 /**
  * Everything "Your freelance jobs" can use. Corporation jobs are gated on the
@@ -712,11 +719,87 @@ export const extraJitaFeatures: AppScopeSet[] = [
   },
 ];
 
+/**
+ * Discord's own logo, where the other entries show EVE icons. It is drawn in
+ * the text colour around it (white in the dark theme), like the footer's
+ * Discord button. Takes the same props and fills the same square box, so
+ * menus lay it out like the icons beside it.
+ *
+ * EVE's artwork covers only about two-thirds of its square (12.5px of a 20px
+ * icon), while Tabler's logo spans nearly all of it (17px), so the logo is
+ * drawn at three-quarters of the box to look the same size as its neighbours.
+ */
+function DiscordLogo({ size, width, height }: EveIconProps) {
+  const box = Number(size ?? width ?? height ?? 24);
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        width: box,
+        height: box,
+      }}
+    >
+      <IconBrandDiscordFilled size={box * 0.75} />
+    </span>
+  );
+}
+
+/**
+ * The site's own pages and community: the header's "About" menu, the mobile
+ * drawer's section of the same name, and the footer's links. Discord is the
+ * one external URL (see isExternalUrl), so it opens in a new tab.
+ */
+export const jitaSpaceApps: Record<string, JitaApp> = {
+  about: {
+    name: "About JitaSpace",
+    description:
+      "What JitaSpace is, who builds it, how to get in touch, and the privacy policy.",
+    url: "/about",
+    Icon: (props) => <InfoIcon {...props} />,
+    scopes: {},
+  },
+  support: {
+    name: "Support",
+    description:
+      "Ways to support JitaSpace: creator code, sponsorship or ISK in-game.",
+    url: "/support",
+    Icon: (props) => <WindowGiftIcon {...props} />,
+    scopes: {},
+  },
+  status: {
+    name: "Status",
+    description:
+      "EVE Online Tranquility server status and JitaSpace service health.",
+    url: "/status",
+    Icon: (props) => <ScopeNetworkIcon {...props} />,
+    scopes: {},
+  },
+  discord: {
+    name: "Discord",
+    description:
+      "Join the JitaSpace community: questions, feedback and bug reports.",
+    url: env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
+    Icon: (props) => <DiscordLogo {...props} />,
+    scopes: {},
+  },
+};
+
+/** Whether an app's URL leaves the site, so menus open it in a new tab. */
+export function isExternalUrl(url: string): boolean {
+  return /^https?:\/\//.test(url);
+}
+
 export const jitaApps: Record<
   string,
   {
     apps: Record<string, JitaApp>;
     name: string;
+    /** The group's heading in search. Defaults to "<name> Apps". */
+    searchGroup?: string;
     Icon: (props: EveIconProps) => React.ReactElement;
   }
 > = {
@@ -729,5 +812,11 @@ export const jitaApps: Record<
     apps: universeApps,
     name: "Universe",
     Icon: (props) => <MapIcon {...props} />,
+  },
+  about: {
+    apps: jitaSpaceApps,
+    name: "About",
+    searchGroup: "About",
+    Icon: (props) => <HelpIcon {...props} />,
   },
 };

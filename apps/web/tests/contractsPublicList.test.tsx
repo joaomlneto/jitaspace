@@ -6,6 +6,7 @@ import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import type * as ContractListModule from "~/app/contracts/ContractList";
+import type { ContractView } from "~/app/contracts/ContractList";
 import type * as PublicContractsModule from "~/app/contracts/PublicContracts";
 import type { OpenContracts } from "~/app/contracts/useOpenContracts";
 import type { ContractSummary } from "~/components/Contracts/contract";
@@ -144,13 +145,14 @@ function renderPublic(
   open: OpenContracts,
   filters: Partial<ContractFilters> = {},
   onPageChange: (page: number) => void = jest.fn(),
+  view: ContractView = "rows",
 ) {
   return render(
     <MantineProvider>
       <PublicContracts
         open={open}
         filters={{ ...FILTERS, ...filters }}
-        view="rows"
+        view={view}
         onPageChange={onPageChange}
       />
     </MantineProvider>,
@@ -298,6 +300,78 @@ describe("PublicContracts", () => {
       screen.getByRole("button", { name: "Go to the first page" }),
     );
     expect(onPageChange).toHaveBeenCalledWith(1);
+  });
+});
+
+describe("PublicContracts as a table", () => {
+  /** The column header with this text. */
+  const header = (name: string) => screen.getByText(name).closest("th")!;
+
+  it("hands the table every match, and the table pages them", () => {
+    const onPageChange = jest.fn();
+    renderPublic(loaded(many(120)), {}, onPageChange, "table");
+    expect(listedTitles()).toHaveLength(48);
+    expect(listedTitles()[0]).toBe("Contract 1");
+    // Newest first, as the Sort menu had it, and shown on the header.
+    expect(header("Issued")).toHaveAttribute("aria-sort", "descending");
+
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(listedTitles()[0]).toBe("Contract 49");
+    // The table's own pages: the URL's page is for rows and cards.
+    expect(onPageChange).not.toHaveBeenCalled();
+  });
+
+  it("sorts every match from a header, not just the page shown", () => {
+    const open = loaded(
+      many(120).map((entry, index) => ({
+        ...entry,
+        contract: { ...entry.contract, price: index === 99 ? 1 : 1_000_000 },
+      })),
+    );
+    renderPublic(open, { sort: "price-desc" }, jest.fn(), "table");
+    expect(header("Price")).toHaveAttribute("aria-sort", "descending");
+    fireEvent.click(header("Price"));
+    expect(header("Price")).toHaveAttribute("aria-sort", "ascending");
+    // The cheapest was on the second page by date; sorted, it leads.
+    expect(listedTitles()[0]).toBe("Contract 100");
+  });
+
+  it("keeps the table it loaded into, and the sort on its header", () => {
+    const { rerender } = renderPublic(
+      PENDING,
+      { sort: "expiring" },
+      jest.fn(),
+      "table",
+    );
+    rerender(
+      <MantineProvider>
+        <PublicContracts
+          open={loaded(many(3))}
+          filters={{ ...FILTERS, sort: "expiring" }}
+          view="table"
+          onPageChange={jest.fn()}
+        />
+      </MantineProvider>,
+    );
+    expect(header("Expires")).toHaveAttribute("aria-sort", "ascending");
+  });
+
+  it("draws a page of skeleton rows while loading", () => {
+    const { container } = renderPublic(PENDING, {}, jest.fn(), "table");
+    expect(container.querySelector(".mantine-Skeleton-root")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "Next page" })).toBeNull();
+  });
+
+  it("says when nothing matches", () => {
+    renderPublic(
+      loaded([record()]),
+      { q: "nothing like it" },
+      jest.fn(),
+      "table",
+    );
+    expect(
+      screen.getByText("No public contracts match these filters."),
+    ).toBeInTheDocument();
   });
 });
 

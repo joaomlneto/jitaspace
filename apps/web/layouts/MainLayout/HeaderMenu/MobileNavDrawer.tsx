@@ -22,7 +22,8 @@ import {
 } from "@jitaspace/eve-icons";
 import { CharacterAvatar, LoginWithEveOnlineButton } from "@jitaspace/ui";
 
-import { jitaApps } from "~/config/apps";
+import type { JitaApp } from "~/config/apps";
+import { isExternalUrl, jitaApps } from "~/config/apps";
 import { useAccountActions } from "~/layouts/MainLayout/useAccountActions";
 import classes from "./HeaderMenu.module.css";
 
@@ -32,6 +33,15 @@ export interface MobileNavDrawerProps {
 }
 
 type AccountActions = ReturnType<typeof useAccountActions>;
+
+function DrawerAppLabel({ app }: Readonly<{ app: JitaApp }>) {
+  return (
+    <Group gap="sm" wrap="nowrap">
+      <app.Icon width={24} alt="" />
+      <Text size="sm">{app.name}</Text>
+    </Group>
+  );
+}
 
 /**
  * The signed-in character, the others to switch to, and the account actions,
@@ -232,20 +242,32 @@ export const MobileNavDrawer = memo(
                 {group.name}
               </Text>
             </Group>
-            {Object.entries(group.apps).map(([key, app]) => (
-              <UnstyledButton
-                key={key}
-                component={Link}
-                href={app.url ?? "#"}
-                className={classes.link}
-                onClick={close}
-              >
-                <Group gap="sm" wrap="nowrap">
-                  <app.Icon width={24} alt="" />
-                  <Text size="sm">{app.name}</Text>
-                </Group>
-              </UnstyledButton>
-            ))}
+            {Object.entries(group.apps).map(([key, app]) =>
+              app.url && isExternalUrl(app.url) ? (
+                // Discord's invite leaves the site: a new tab, and the drawer
+                // stays as it was.
+                <UnstyledButton
+                  key={key}
+                  component="a"
+                  href={app.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={classes.link}
+                >
+                  <DrawerAppLabel app={app} />
+                </UnstyledButton>
+              ) : (
+                <UnstyledButton
+                  key={key}
+                  component={Link}
+                  href={app.url ?? "#"}
+                  className={classes.link}
+                  onClick={close}
+                >
+                  <DrawerAppLabel app={app} />
+                </UnstyledButton>
+              ),
+            )}
           </Stack>
         ))}
 

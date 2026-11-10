@@ -7,6 +7,7 @@ import {
   jest,
 } from "@jest/globals";
 
+import type * as DeploymentsFixture from "./historyDeploymentsFixture";
 // Type-only imports: erased at runtime, so they do NOT load the real (Prisma-
 // backed) modules; used only to type the lazy require()s below.
 import type * as HistoryActions from "~/lib/history-actions";
@@ -28,6 +29,11 @@ let mockBuilds: {
   buildNumber: number;
   releasedAt: Date | null;
   server?: ServerTag;
+  /** Overrides the single deployment `releasedAt` / `server` describe. */
+  deployments?: {
+    server: "tranquility" | "singularity";
+    firstSeenAt: Date | null;
+  }[];
 }[] = [];
 let mockCollections: { id: number; name: string }[] = [];
 // change.groupBy fixture (getCachedHistoryIndex's per-build change volume).
@@ -138,23 +144,37 @@ jest.mock("@jitaspace/db-builds", () => ({
   // What ~/lib/history-sql reads: the schema the history tables live in (not
   // `public`, as in production) and Prisma's `raw` fragment constructor.
   buildsSchema: "hist",
-  Prisma: { raw: (sql: string) => ({ raw: sql }) },
+  Prisma: {
+    raw: (sql: string) => ({ raw: sql }),
+    sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({
+      sql: strings.join("?"),
+      values,
+    }),
+  },
   buildsDb: {
     build: {
       findMany: () => {
         mockDbCalls++;
-        return Promise.resolve(mockBuilds);
+        return Promise.resolve(
+          mockBuilds.map(
+            (
+              require("./historyDeploymentsFixture") as typeof DeploymentsFixture
+            ).withDeployments,
+          ),
+        );
       },
       // Look the build up by number so readers that fetch two builds (from + to)
       // get distinct rows; fall back to the single mockBuildUnique fixture.
       findUnique: (args: { where: { buildNumber: number } }) => {
         mockDbCalls++;
         const bn = args.where.buildNumber;
+        const withDeployments = (
+          require("./historyDeploymentsFixture") as typeof DeploymentsFixture
+        ).withDeployments;
         if (mockBuildUnique?.buildNumber === bn)
-          return Promise.resolve(mockBuildUnique);
-        return Promise.resolve(
-          mockBuilds.find((b) => b.buildNumber === bn) ?? null,
-        );
+          return Promise.resolve(withDeployments(mockBuildUnique));
+        const row = mockBuilds.find((b) => b.buildNumber === bn);
+        return Promise.resolve(row ? withDeployments(row) : null);
       },
     },
     collection: {
@@ -371,6 +391,43 @@ describe("getCachedHistoryIndex", () => {
     expect(builds).not.toContain(700001);
     expect(builds).toEqual([700000, 700002]);
   });
+
+  it("keeps a Singularity-first build once Tranquility runs it, dated by the promotion", async () => {
+    // Build 3682781's shape: first seen on Singularity, then promoted.
+    mockBuilds = [
+      {
+        buildNumber: 3670638,
+        releasedAt: new Date("2026-11-04"),
+        server: "tranquility",
+      },
+      {
+        buildNumber: 3678022,
+        releasedAt: new Date("2026-11-06"),
+        server: "singularity", // never promoted — still hidden
+      },
+      {
+        buildNumber: 3682781,
+        releasedAt: new Date("2026-11-09"),
+        server: "singularity", // the deprecated column still says first-seen
+        deployments: [
+          { server: "singularity", firstSeenAt: new Date("2026-11-09") },
+          {
+            server: "tranquility",
+            firstSeenAt: new Date("2026-11-10T11:26:45Z"),
+          },
+        ],
+      },
+    ];
+    mockDiffs = [];
+    mockGrouped = [];
+
+    const index = await getCachedHistoryIndex();
+
+    expect(index.builds.map((b) => [b.build, b.date])).toEqual([
+      [3670638, "2026-11-04"],
+      [3682781, "2026-11-10"],
+    ]);
+  });
 });
 
 // The home page's banner summary: a "use cache: remote" entry that folds the
@@ -400,6 +457,42 @@ describe("getLatestChangedBuild", () => {
       build: 700001,
       date: "2024-06-08",
       changeCount: 7,
+    });
+  });
+
+  it("announces a build promoted from Singularity, dated when Tranquility got it", async () => {
+    mockBuilds = [
+      {
+        buildNumber: 3670638,
+        releasedAt: new Date("2026-11-04"),
+        server: "tranquility",
+      },
+      {
+        buildNumber: 3682781,
+        releasedAt: new Date("2026-11-09"),
+        server: "singularity",
+        deployments: [
+          { server: "singularity", firstSeenAt: new Date("2026-11-09") },
+          {
+            server: "tranquility",
+            firstSeenAt: new Date("2026-11-10T11:26:45Z"),
+          },
+        ],
+      },
+    ];
+    mockDiffs = [
+      { id: 3102, toBuild: 3670638 },
+      { id: 3104, toBuild: 3682781 },
+    ];
+    mockGrouped = [
+      { diffId: 3102, collectionId: 1, _count: 2 },
+      { diffId: 3104, collectionId: 1, _count: 28657 },
+    ];
+
+    await expect(getLatestChangedBuild()).resolves.toEqual({
+      build: 3682781,
+      date: "2026-11-10",
+      changeCount: 28657,
     });
   });
 
@@ -453,7 +546,7 @@ describe("getCachedEntityTimeline", () => {
         date: "2024-01-01",
         collection: "types",
         fromBuild: 97,
-        server: null,
+        server: "tranquility", // SDE-era: a Tranquility deployment
         provenance: "sde",
         v: 1,
         kind: "added",
@@ -507,7 +600,7 @@ describe("getCachedEntityTimeline", () => {
         date: "2024-06-01",
         collection: "types",
         fromBuild: 690000,
-        server: null,
+        server: "tranquility", // SDE-era: a Tranquility deployment
         provenance: "sde",
         v: 1,
         kind: "modified",
@@ -632,7 +725,7 @@ describe("getCachedEntityTimeline", () => {
         date: "2024-06-02",
         collection: "types",
         fromBuild: 700000,
-        server: null,
+        server: "tranquility", // SDE-era: a Tranquility deployment
         provenance: "sde",
         v: 1,
         kind: "added",
@@ -742,7 +835,6 @@ describe("getBuildRangeChanges", () => {
       expect(tables).toEqual([
         '"hist"."Change"',
         '"hist"."BuildDiff"',
-        '"hist"."Build"',
         '"hist"."Entity"',
         '"hist"."Collection"',
       ]);
@@ -834,7 +926,13 @@ describe("getBuildRangeChanges", () => {
         mockRawQueries
           .find((q) => q.strings.join("").includes(sqlPart))
           ?.values.filter(
-            (v) => !(typeof v === "object" && v !== null && "raw" in v),
+            // Leave out raw identifiers and nested fragments (the scope filter).
+            (v) =>
+              !(
+                typeof v === "object" &&
+                v !== null &&
+                ("raw" in v || "sql" in v)
+              ),
           );
       expect(values("unnest(")).toEqual([
         ["type", "type", "skin"],

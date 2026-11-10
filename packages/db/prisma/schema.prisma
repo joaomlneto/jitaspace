@@ -1995,8 +1995,11 @@ model Contract {
   /// True once ESI's public listing no longer shows the contract; endReason says why.
   isDeleted Boolean  @default(false)
 
-  @@index([issuerId])
-  @@index([issuerCorporationId])
+  /// A character's or corporation's contracts, newest first (contract ids rise
+  /// with issue time): the entity pages' Contracts tab reads them a page at a
+  /// time, and the id lets each page, the last one too, stop after its rows.
+  @@index([issuerId, contractId])
+  @@index([issuerCorporationId, contractId])
   @@index([regionId, type])
   @@index([dateIssued])
   /// "Outstanding at time T": firstSeenAt <= T AND lastSeenAt >= T.
@@ -2042,7 +2045,9 @@ model ContractItem {
   updatedAt          DateTime @updatedAt()
 
   @@id([contractId, recordId])
-  @@index([typeId])
+  /// Every contract that listed a type, newest first: the type page's Contracts
+  /// tab, a page at a time (see Contract's issuer indexes).
+  @@index([typeId, contractId])
   /// Finds every contract a specific item (e.g. a mutated one) was listed in.
   @@index([itemId])
 }

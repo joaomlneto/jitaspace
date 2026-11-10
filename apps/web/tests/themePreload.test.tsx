@@ -28,18 +28,19 @@ import {
   THEME_PRELOAD_SCRIPT,
 } from "~/lib/themePreload";
 import { themes } from "~/themes";
-import { DEFAULT_THEME_SEASON_END } from "~/themes/season";
+import { DEFAULT_THEME_SEASON_START } from "~/themes/season";
 
-// Records which theme was rendered last whenever the provider reveals the page.
-const revealedWith: string[] = [];
-let lastRenderedPrimary = "";
+// Records which theme was rendered last whenever the provider reveals the page,
+// by its wallpaper: Default's season and its EVE fallback share a primary.
+const revealedWith: (string | undefined)[] = [];
+let lastRenderedBackground: string | undefined;
 jest.mock("~/lib/themePreload", () => {
   const actual =
     jest.requireActual<typeof ThemePreloadModule>("~/lib/themePreload");
   return {
     ...actual,
     revealPrePaintTheme: () => {
-      revealedWith.push(lastRenderedPrimary);
+      revealedWith.push(lastRenderedBackground);
       actual.revealPrePaintTheme();
     },
   };
@@ -63,12 +64,14 @@ function runScript() {
 }
 
 // The clock the pre-paint script and the provider read. Pinned inside the
-// Default theme's season unless a test moves it past the end.
-let now = DEFAULT_THEME_SEASON_END - 24 * 60 * 60 * 1000;
+// Default theme's season unless a test moves it before the start.
+const IN_SEASON = DEFAULT_THEME_SEASON_START + 24 * 60 * 60 * 1000;
+const BEFORE_SEASON = DEFAULT_THEME_SEASON_START - 1;
+let now = IN_SEASON;
 jest.spyOn(Date, "now").mockImplementation(() => now);
 
 function reset() {
-  now = DEFAULT_THEME_SEASON_END - 24 * 60 * 60 * 1000;
+  now = IN_SEASON;
   localStorage.clear();
   html.removeAttribute(THEME_PENDING_ATTRIBUTE);
   html.removeAttribute("style");
@@ -158,8 +161,8 @@ describe("THEME_PRELOAD_SCRIPT", () => {
     ["Default", JSON.stringify({ state: { appTheme: "default" } })],
     ["an unknown theme", JSON.stringify({ state: { appTheme: "jove" } })],
     ["malformed JSON", "{not json"],
-  ])("paints EVE for %s once the season is over", (_, value) => {
-    now = DEFAULT_THEME_SEASON_END;
+  ])("paints EVE for %s before the season starts", (_, value) => {
+    now = BEFORE_SEASON;
     store(value);
     runScript();
     expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("eve");
@@ -168,8 +171,15 @@ describe("THEME_PRELOAD_SCRIPT", () => {
     );
   });
 
-  it("still paints a chosen theme after the season", () => {
-    now = DEFAULT_THEME_SEASON_END + 1000;
+  it("leaves Default to the prerendered page from the season's start", () => {
+    now = DEFAULT_THEME_SEASON_START;
+    store(JSON.stringify({ state: { appTheme: "default" } }));
+    runScript();
+    expect(html.hasAttribute(THEME_PENDING_ATTRIBUTE)).toBe(false);
+  });
+
+  it("still paints a chosen theme before the season", () => {
+    now = BEFORE_SEASON;
     store(JSON.stringify({ state: { appTheme: "caldari" } }));
     runScript();
     expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("caldari");
@@ -182,7 +192,7 @@ describe("THEME_PRELOAD_SCRIPT", () => {
 
 describe("AppMantineProvider", () => {
   function Probe() {
-    lastRenderedPrimary = useMantineTheme().primaryColor;
+    lastRenderedBackground = useMantineTheme().other.appBackground;
     return null;
   }
 
@@ -197,7 +207,7 @@ describe("AppMantineProvider", () => {
       </AppMantineProvider>,
     );
 
-    expect(revealedWith).toEqual([themes.eve.primaryColor]);
+    expect(revealedWith).toEqual([themes.eve.other?.appBackground]);
     expect(html.hasAttribute(THEME_PENDING_ATTRIBUTE)).toBe(false);
     expect(html.style.getPropertyValue("--app-pending-body")).toBe("");
     expect(html.style.getPropertyValue("--app-pending-background")).toBe("");
@@ -206,8 +216,8 @@ describe("AppMantineProvider", () => {
     );
   });
 
-  it("reveals Default as EVE, already themed, once the season is over", () => {
-    now = DEFAULT_THEME_SEASON_END;
+  it("reveals Default as EVE, already themed, before the season starts", () => {
+    now = BEFORE_SEASON;
     runScript();
     expect(html.getAttribute(THEME_PENDING_ATTRIBUTE)).toBe("eve");
 
@@ -217,7 +227,7 @@ describe("AppMantineProvider", () => {
       </AppMantineProvider>,
     );
 
-    expect(revealedWith).toEqual([themes.eve.primaryColor]);
+    expect(revealedWith).toEqual([themes.eve.other?.appBackground]);
     expect(html.hasAttribute(THEME_PENDING_ATTRIBUTE)).toBe(false);
   });
 
@@ -227,6 +237,8 @@ describe("AppMantineProvider", () => {
         <Probe />
       </AppMantineProvider>,
     );
-    expect(revealedWith).toEqual([themes[DEFAULT_APP_THEME].primaryColor]);
+    expect(revealedWith).toEqual([
+      themes[DEFAULT_APP_THEME].other?.appBackground,
+    ]);
   });
 });

@@ -31,7 +31,7 @@
     "p-limit": "^7.3.0",
     "tar-stream": "^3.2.0",
     "unbzip2-stream": "^1.4.3",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^1.6.0",

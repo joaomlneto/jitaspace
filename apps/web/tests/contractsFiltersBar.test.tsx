@@ -255,6 +255,25 @@ describe("FiltersBar", () => {
     );
     expect(update).toHaveBeenCalledWith({ sort: "expiring" });
   });
+
+  it("leaves sorting to a table's headers", () => {
+    const { rerender } = renderBar();
+    rerender(
+      <MantineProvider>
+        <FiltersBar
+          filters={FILTERS}
+          regions={REGIONS}
+          update={jest.fn()}
+          reset={jest.fn()}
+          view="table"
+          onViewChange={jest.fn()}
+        />
+      </MantineProvider>,
+    );
+    expect(
+      screen.queryByRole("combobox", { name: "Sort contracts" }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe("useContractFilters", () => {
@@ -475,13 +494,18 @@ describe("ContractsPage", () => {
     await urlBecomes("?type=courier&view=cards");
     expect(mine()).toMatchObject({ type: "courier" });
 
-    fireEvent.click(screen.getByRole("radio", { name: "Table" }));
-    await urlBecomes("?type=courier&view=table");
-    expect(mine()).toMatchObject({ view: "table" });
+    fireEvent.click(screen.getByRole("radio", { name: "Rows" }));
+    await urlBecomes("?type=courier&view=rows");
+    expect(mine()).toMatchObject({ view: "rows" });
 
     // A page change keeps the filters and the view.
     fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-    await urlBecomes("?type=courier&view=table&page=2");
-    expect(mine()).toMatchObject({ page: 2, type: "courier", view: "table" });
+    await urlBecomes("?type=courier&view=rows&page=2");
+    expect(mine()).toMatchObject({ page: 2, type: "courier", view: "rows" });
+
+    // The table is the default, so the URL drops it.
+    fireEvent.click(screen.getByRole("radio", { name: "Table" }));
+    await urlBecomes("?type=courier&page=2");
+    expect(mine()).toMatchObject({ view: "table" });
   });
 });

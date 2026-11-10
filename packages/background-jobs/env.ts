@@ -6,7 +6,7 @@ import { z } from "zod";
  */
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.url(),
   REDIS_URL: z.string(),
   DISCORD_BOT_TOKEN: z.string().optional(),
   DISCORD_UPDATES_CHANNEL_ID: z.string().optional(),
@@ -48,7 +48,7 @@ const processEnv = {
 // Don't touch the part below
 // --------------------------
 
-const merged = server.merge(client);
+const merged = server.extend(client.shape);
 
 let env = process.env as unknown as z.infer<typeof merged>;
 
@@ -62,7 +62,7 @@ if (!!process.env.SKIP_ENV_VALIDATION === false) {
   if (parsed.success === false) {
     console.error(
       "❌ Invalid environment variables:",
-      parsed.error.flatten().fieldErrors,
+      z.flattenError<Record<string, unknown>>(parsed.error).fieldErrors,
     );
     throw new Error("Invalid environment variables");
   }
