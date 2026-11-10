@@ -26,7 +26,10 @@ import {
 import { readEffectCategories } from "~/lib/readEffectCategories";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { cacheSdeRead, SDE_CACHE_TAG } from "~/lib/sdeCache";
-import { emptyTypeSynchronizer } from "~/lib/synchronizer";
+import {
+  emptyTypeSynchronizer,
+  SYNCHRONIZER_CATEGORY_ID,
+} from "~/lib/synchronizer";
 import { readTypeSynchronizer } from "~/lib/synchronizerData";
 import { buildTypeListRuleIndex, matchTypeLists } from "~/lib/typeLists";
 import TypePage from "./page.client";
@@ -438,13 +441,17 @@ async function readCachedTypeSynchronizer(
 
 /**
  * The page renders fine without its Synchronizer tab, so a database failure
- * hides the tab instead of erroring the route.
+ * hides the tab instead of erroring the route. Only modules can be in the
+ * chain, so ships, skills and the rest skip the read.
  */
 async function getTypeSynchronizer(
   typeId: number,
   groupId: number | undefined,
+  categoryId: number | undefined,
 ): Promise<TypeSynchronizer> {
-  if (groupId === undefined) return emptyTypeSynchronizer;
+  if (groupId === undefined || categoryId !== SYNCHRONIZER_CATEGORY_ID) {
+    return emptyTypeSynchronizer;
+  }
   try {
     return await readCachedTypeSynchronizer(typeId, groupId);
   } catch {
@@ -534,7 +541,7 @@ async function PageContent({
       getTypeTypeLists(typeId, data.groupId, data.categoryId),
       getTypeNpcStats(typeId, data.categoryId),
       getTypeInsurance(typeId),
-      getTypeSynchronizer(typeId, data.groupId),
+      getTypeSynchronizer(typeId, data.groupId, data.categoryId),
     ]);
   return (
     <TypePage

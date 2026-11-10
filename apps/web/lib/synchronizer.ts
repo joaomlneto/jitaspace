@@ -34,6 +34,12 @@ export const DOGMA_OPERATOR_MOD_SUB = 3;
 /** Dogma operator 6: raise the modified attribute by a percentage. */
 export const DOGMA_OPERATOR_POST_PERCENT = 6;
 
+/**
+ * The inventory category of the rigs and of every module that feeds them
+ * (Module). The page reads the chain only for items in it.
+ */
+export const SYNCHRONIZER_CATEGORY_ID = 7;
+
 /** The highest level any skill trains to. */
 export const MAX_SKILL_LEVEL = 5;
 
@@ -58,8 +64,12 @@ export interface SynchronizerAttribute {
   unitSymbol?: string;
   /** The rig's own value: what it gives with no matching module fitted. */
   base: number;
-  /** What the attribute does once applied, from the effect that reads it. */
-  appliesTo?: ResolvedEffectDescription;
+  /**
+   * What the attribute does once applied: one description per effect that
+   * reads it, in effect order. The Dread Guristas Hitpoint Bonus has three,
+   * one each for drones' shield, armor and structure.
+   */
+  appliesTo: ResolvedEffectDescription[];
   /** How the counter moves it; only set on the scaling attributes. */
   direction?: SynchronizerDirection;
   /** Skills that shrink it per level; only set on the fixed attributes. */

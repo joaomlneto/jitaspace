@@ -18,6 +18,7 @@ const percent = (attributeId: number, name: string, base: number) => ({
   unitId: 105,
   unitSymbol: "%",
   base,
+  appliesTo: [],
 });
 
 /** The Large Dread Guristas Synchronizer, as the data layer returns it. */
@@ -27,6 +28,15 @@ const dreadGuristas: SynchronizerRig = {
   counterBase: 0,
   scaling: [
     { ...percent(1255, "Drone Damage Bonus", 10), direction: 1 },
+    {
+      ...percent(327, "Hitpoint Bonus", 10),
+      direction: 1,
+      appliesTo: [
+        { text: "Increases drone shield.", source: "ai" },
+        { text: "Increases drone armor.", source: "ai" },
+        { text: "Increases drone structure.", source: "ai" },
+      ],
+    },
     { ...percent(984, "EM Damage Resistance Bonus", -5), direction: -1 },
   ],
   fixed: [
@@ -131,6 +141,15 @@ describe("SynchronizerTab on a rig", () => {
     expect(
       screen.getByRole("link", { name: "Dread Guristas Warp Disruptor" }),
     ).toHaveAttribute("href", "/type/14246");
+  });
+});
+
+describe("SynchronizerTab descriptions", () => {
+  it("shows every effect's description under a bonus", () => {
+    renderTab({ rig: dreadGuristas, countsTowards: [] });
+    for (const layer of ["shield", "armor", "structure"]) {
+      expect(screen.getByText(`Increases drone ${layer}.`)).toBeInTheDocument();
+    }
   });
 });
 

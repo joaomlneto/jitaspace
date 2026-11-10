@@ -66,14 +66,14 @@ function AttributeCell({
       <DogmaAttributeAnchor attributeId={attribute.attributeId}>
         {attribute.name}
       </DogmaAttributeAnchor>
-      {attribute.appliesTo && (
-        <Group gap={6} align="flex-start" wrap="nowrap">
+      {attribute.appliesTo.map((description) => (
+        <Group key={description.text} gap={6} align="flex-start" wrap="nowrap">
           <Text component="div" size="xs" c="dimmed">
             <MailMessageViewer
-              content={sanitizeFormattedEveString(attribute.appliesTo.text)}
+              content={sanitizeFormattedEveString(description.text)}
             />
           </Text>
-          {attribute.appliesTo.source === "ai" && (
+          {description.source === "ai" && (
             <Tooltip
               label="AI-generated from this effect's data, not written by CCP"
               withArrow
@@ -89,7 +89,7 @@ function AttributeCell({
             </Tooltip>
           )}
         </Group>
-      )}
+      ))}
     </Stack>
   );
 }

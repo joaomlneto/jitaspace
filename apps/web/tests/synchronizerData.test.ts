@@ -60,9 +60,38 @@ const dreadGuristasModifiers: TypeModifier[] = [
     mod(1318, "LocationRequiredSkillModifier", "shipID", 6, null, attr, 828),
   ),
   mod(1452, "LocationGroupModifier", "shipID", 6, 201, 54, 294, "ECM range."),
-  mod(2015, "OwnerRequiredSkillModifier", "charID", 6, null, 263, 327),
-  mod(2016, "OwnerRequiredSkillModifier", "charID", 6, null, 265, 327),
-  mod(2017, "OwnerRequiredSkillModifier", "charID", 6, null, 9, 327),
+  // The Hitpoint Bonus reaches drones' shield, armor and structure through
+  // three effects.
+  mod(
+    2015,
+    "OwnerRequiredSkillModifier",
+    "charID",
+    6,
+    null,
+    263,
+    327,
+    "Drone shield.",
+  ),
+  mod(
+    2016,
+    "OwnerRequiredSkillModifier",
+    "charID",
+    6,
+    null,
+    265,
+    327,
+    "Drone armor.",
+  ),
+  mod(
+    2017,
+    "OwnerRequiredSkillModifier",
+    "charID",
+    6,
+    null,
+    9,
+    327,
+    "Drone structure.",
+  ),
   mod(2713, "ItemModifier", "shipID", 6, null, 48, 1138, "Reduces CPU."),
   ...[271, 272, 273, 274].map((attr, i) =>
     mod(2795, "ItemModifier", "shipID", 6, null, attr, 984 + i),
@@ -270,11 +299,51 @@ describe("assembleRig", () => {
 
   it("describes each attribute from the effect that applies it", () => {
     const rig = assemble();
-    expect(rig.scaling[1]?.appliesTo).toEqual({
-      text: "ECM range.",
-      source: "ai",
-    });
-    expect(rig.fixed[0]?.appliesTo?.text).toBe("Reduces CPU.");
+    expect(rig.scaling[1]?.appliesTo).toEqual([
+      { text: "ECM range.", source: "ai" },
+    ]);
+    expect(rig.fixed[0]?.appliesTo.map((d) => d.text)).toEqual([
+      "Reduces CPU.",
+    ]);
+  });
+
+  it("describes every effect applying the drone Hitpoint Bonus, not just the first", () => {
+    // Expansion notes: "10% bonus to drone hitpoints" — all three layers.
+    const hitpoints = assemble().scaling.find(
+      (attribute) => attribute.name === "Hitpoint Bonus",
+    );
+    expect(hitpoints?.appliesTo.map((d) => d.text)).toEqual([
+      "Drone shield.",
+      "Drone armor.",
+      "Drone structure.",
+    ]);
+  });
+
+  it("describes an effect once when several of its modifiers read the attribute", () => {
+    // Give modifyShieldResonancePostPercentPassive (2795) a description, and a
+    // second modifier reading the EM resistance bonus.
+    const modifiers = dreadGuristasModifiers.flatMap((modifier) =>
+      modifier.effectId === 2795
+        ? [
+            {
+              ...modifier,
+              effect: {
+                description: "Shield resists.",
+                customDescription: null,
+              },
+            },
+          ]
+        : [modifier],
+    );
+    modifiers.push(
+      mod(2795, "ItemModifier", "shipID", 6, null, 271, 984, "Shield resists."),
+    );
+    const resistance = assemble({ modifiers }).scaling.find(
+      (attribute) => attribute.attributeId === 984,
+    );
+    expect(resistance?.appliesTo).toEqual([
+      { text: "Shield resists.", source: "ccp" },
+    ]);
   });
 
   it("names the counter and reads its starting value off the rig", () => {

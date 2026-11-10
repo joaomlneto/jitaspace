@@ -192,18 +192,24 @@ export function assembleRig(input: {
     rigAttributes.map((row) => [row.attributeId, row]),
   );
 
-  /** What an attribute does once applied: the first effect that reads it. */
+  /**
+   * What an attribute does once applied: every effect that reads it, once
+   * each. An effect with several modifiers reading it (a resistance bonus per
+   * damage type) is described once.
+   */
   const appliesTo = (attributeId: number) => {
-    for (const modifier of modifiers) {
-      if (isSelfCounterModifier(modifier)) continue;
-      if (modifier.modifyingAttributeId !== attributeId) continue;
+    const seen = new Set<number>();
+    return modifiers.flatMap((modifier) => {
+      if (isSelfCounterModifier(modifier)) return [];
+      if (modifier.modifyingAttributeId !== attributeId) return [];
+      if (seen.has(modifier.effectId)) return [];
+      seen.add(modifier.effectId);
       const description = resolveEffectDescription(
         modifier.effect.description,
         modifier.effect.customDescription,
       );
-      if (description) return description;
-    }
-    return undefined;
+      return description ? [description] : [];
+    });
   };
 
   const toAttribute = (
