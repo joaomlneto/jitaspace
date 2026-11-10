@@ -726,12 +726,7 @@ export const extraJitaFeatures: AppScopeSet[] = [
  * beside it.
  */
 function DiscordLogo({ size, width, height }: EveIconProps) {
-  return (
-    <IconBrandDiscordFilled
-      size={size ?? width ?? height}
-      aria-hidden
-    />
-  );
+  return <IconBrandDiscordFilled size={size ?? width ?? height} aria-hidden />;
 }
 
 /**
