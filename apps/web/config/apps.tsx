@@ -1,4 +1,5 @@
 import React from "react";
+import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
@@ -11,7 +12,6 @@ import {
   AttributesIcon,
   CalendarIcon,
   CharacterSheetIcon,
-  ChatChannelsIcon,
   ContactsIcon,
   ContractsIcon,
   EveMailIcon,
@@ -720,6 +720,20 @@ export const extraJitaFeatures: AppScopeSet[] = [
 ];
 
 /**
+ * Discord's own logo in its brand colour, where the other entries show EVE
+ * icons. Takes the same props, so menus size it like the icons beside it.
+ */
+function DiscordLogo({ size, width, height }: EveIconProps) {
+  return (
+    <IconBrandDiscordFilled
+      size={size ?? width ?? height}
+      color="#5865F2"
+      aria-hidden
+    />
+  );
+}
+
+/**
  * The site's own pages and community: the header's "About" menu, the mobile
  * drawer's section of the same name, and the footer's links. Discord is the
  * one external URL (see isExternalUrl), so it opens in a new tab.
@@ -754,7 +768,7 @@ export const jitaSpaceApps: Record<string, JitaApp> = {
     description:
       "Join the JitaSpace community: questions, feedback and bug reports.",
     url: env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
-    Icon: (props) => <ChatChannelsIcon {...props} />,
+    Icon: (props) => <DiscordLogo {...props} />,
     scopes: {},
   },
 };

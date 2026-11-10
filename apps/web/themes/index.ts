@@ -4,7 +4,6 @@ import type { MantineThemeOverride } from "@mantine/core";
 import { Avatar, createTheme, mergeThemeOverrides } from "@mantine/core";
 
 import { colors } from "./colors";
-import { crimsonHarvestTheme } from "./crimson-harvest";
 import { eveTheme } from "./eve";
 import { eveCompactControlsTheme, eveCompactTheme } from "./eve-compact";
 import { excelTheme } from "./excel";
@@ -46,14 +45,25 @@ const eve = mergeThemeOverrides(baseTheme, createTheme({ colors }), eveTheme);
 // EVE (compact) on a touchscreen: the tight spacing, but EVE's control sizes.
 const eveCompact = mergeThemeOverrides(eve, eveCompactTheme);
 
+// Fractured Skies: EVE over the expansion's wallpaper.
+const fracturedSkies = mergeThemeOverrides(
+  eve,
+  createTheme({
+    other: {
+      ...WALLPAPERS.fracturedSkies,
+    },
+  }),
+);
+
 export const themes = {
   // The seasonal theme everyone gets until they pick another: EVE, dressed for
-  // the current in-game event. Swap the override (and ./season.ts) when the
-  // season changes; once the season ends, `resolveAppTheme` shows its fallback.
-  default: mergeThemeOverrides(eve, crimsonHarvestTheme),
+  // the current expansion or in-game event. Swap it (and ./season.ts) when the
+  // season changes; outside the season, `resolveAppTheme` shows its fallback.
+  default: fracturedSkies,
   minimal: baseTheme,
   eve,
   eve_compact: mergeThemeOverrides(eveCompact, eveCompactControlsTheme),
+  fractured_skies: fracturedSkies,
   amarr: mergeThemeOverrides(
     eve,
     createTheme({
@@ -146,15 +156,15 @@ const touchThemes: Partial<Record<keyof typeof themes, MantineThemeOverride>> =
 
 /**
  * The Mantine theme for a theme preference: `themes[name]`, except that
- * Default shows its season's fallback (EVE) once the season is over, and a
+ * Default shows its season's fallback (EVE) outside the season, and a
  * touchscreen gets the theme's touch variant, if it has one.
  */
 export function resolveAppTheme(
   name: keyof typeof themes,
-  seasonOver: boolean,
+  inSeason: boolean,
   touch = false,
 ) {
   const resolved =
-    name === "default" && seasonOver ? DEFAULT_THEME_SEASON.fallback : name;
+    name === "default" && !inSeason ? DEFAULT_THEME_SEASON.fallback : name;
   return (touch ? touchThemes[resolved] : undefined) ?? themes[resolved];
 }

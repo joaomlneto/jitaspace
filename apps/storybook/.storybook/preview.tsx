@@ -10,7 +10,7 @@ import { cssVariablesResolver } from "~/app/mantine-provider";
 import { WebEntityLinksProvider } from "~/components/Link/EntityLinks";
 import { APP_THEME_OPTIONS } from "~/lib/preferences";
 import { resolveAppTheme } from "~/themes";
-import { isDefaultThemeSeasonOver } from "~/themes/season";
+import { isDefaultThemeInSeason } from "~/themes/season";
 
 /** The app's wallpaper, painted behind the story the way MainLayout does. */
 const Wallpaper = () => {
@@ -39,7 +39,7 @@ const withMantine: Decorator = (Story, context) => {
     "auto"
   >;
   const wallpaper = context.globals.wallpaper !== "off";
-  const theme = resolveAppTheme(appTheme, isDefaultThemeSeasonOver(Date.now()));
+  const theme = resolveAppTheme(appTheme, isDefaultThemeInSeason(Date.now()));
 
   return (
     <MantineProvider

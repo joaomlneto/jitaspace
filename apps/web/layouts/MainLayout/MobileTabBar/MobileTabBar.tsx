@@ -61,8 +61,8 @@ function TabBarLinks({ pathname }: Readonly<{ pathname: string | null }>) {
       aria-label="Primary"
       // The active label is 10px text, so it takes the primary colour's
       // text-safe shade (`-text`: lighter in dark mode) rather than the filled
-      // one, which is too dark to read on a dark bar (Crimson Harvest's
-      // crimson.6 on its near-black bar is 4.4:1).
+      // one, which is too dark to read on a dark bar (the retired Crimson
+      // Harvest theme's crimson.6 on its near-black bar was 4.4:1).
       style={
         {
           "--tab-active-color": `var(--mantine-color-${primaryColor}-text)`,
