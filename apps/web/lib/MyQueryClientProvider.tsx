@@ -26,6 +26,9 @@ import { shouldRetryQuery } from "~/lib/queryRetry";
 // different language pays for a second resolution, which is the whole point.
 setAcceptLanguage(DEFAULT_ESI_ACCEPT_LANGUAGE);
 
+/** How long ESI caches `GET /characters/{id}/notifications`. */
+const ESI_NOTIFICATIONS_CACHE_MS = 10 * 60 * 1000;
+
 type MyQueryClientProviderProps = PropsWithChildren<{
   esiUserAgent?: string;
   esiAcceptLanguage?: string;
@@ -37,12 +40,19 @@ export const MyQueryClientProvider = ({
 }: MyQueryClientProviderProps) => {
   // Built once: `useState(new QueryClient())` constructed — and discarded — a
   // new client, caches and all, on every render.
-  const [client] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: { queries: { retry: shouldRetryQuery } },
-      }),
-  );
+  const [client] = useState(() => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: shouldRetryQuery } },
+    });
+    // The header's notification feed reads every character's notifications on
+    // every page. ESI caches them for 10 minutes, so refetching on each window
+    // focus or remount only re-asks ESI for the answer it already gave.
+    queryClient.setQueryDefaults(
+      [{ url: "/characters/:character_id/notifications" }],
+      { staleTime: ESI_NOTIFICATIONS_CACHE_MS },
+    );
+    return queryClient;
+  });
 
   useEffect(() => {
     void (async () => {
