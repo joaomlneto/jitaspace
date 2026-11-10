@@ -42,7 +42,6 @@ import type {
   StationPageData,
   StationService,
 } from "./types";
-import type { EntityHistoryData } from "~/lib/history-entity-page";
 import {
   OpenInformationWindowActionIcon,
   SetAutopilotDestinationActionIcon,
@@ -69,7 +68,7 @@ import { RaceName } from "~/components/Text";
 import { formatCountOf, formatInteger, formatPercent } from "~/lib/format";
 import { lpStorePath } from "~/lib/lpStorePath";
 import { named } from "~/lib/namedRef";
-import { EmbeddedEntityHistory } from "../../history/EntityHistory";
+import { FetchedEntityHistory } from "../../history/EntityHistory";
 import { SERVICE, ServiceIcon } from "./serviceIcons";
 import {
   DEFAULT_STATION_PAGE_TAB,
@@ -79,8 +78,6 @@ import {
 
 export interface StationPageProps {
   station: StationPageData;
-  /** Null when the change history could not be read. */
-  history: EntityHistoryData | null;
 }
 
 const formatVolume = (m3: number) => `${formatInteger(m3)} m³`;
@@ -538,10 +535,7 @@ function ServicesPanel({
   );
 }
 
-export default function StationPage({
-  station,
-  history,
-}: Readonly<StationPageProps>) {
+export default function StationPage({ station }: Readonly<StationPageProps>) {
   const { stationId, location } = station;
   const selectedCharacter = useSelectedCharacter();
   const live = useLiveStation(station);
@@ -736,7 +730,10 @@ export default function StationPage({
           )}
 
           <Tabs.Panel value="history" pt="lg">
-            <EmbeddedEntityHistory history={history} />
+            <FetchedEntityHistory
+              entityType="npcStation"
+              entityId={stationId}
+            />
           </Tabs.Panel>
         </Tabs>
       </Stack>

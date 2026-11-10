@@ -32,7 +32,6 @@ import type {
   SystemsById,
   UniverseSystem,
 } from "~/components/UniversePage/types";
-import type { EntityHistoryData } from "~/lib/history-entity-page";
 import { EveTime, STATE_LABEL } from "~/app/incursions/parts";
 import { ConstellationAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
@@ -54,7 +53,7 @@ import {
   UniverseHeroStats,
 } from "~/components/UniversePage";
 import { formatInteger } from "~/lib/format";
-import { EmbeddedEntityHistory } from "../../history/EntityHistory";
+import { FetchedEntityHistory } from "../../history/EntityHistory";
 import {
   DEFAULT_REGION_PAGE_TAB,
   isRegionPageTab,
@@ -64,8 +63,6 @@ import {
 export interface RegionPageProps {
   region: RegionPageData;
   incursions: RegionIncursions;
-  /** Null when the change history could not be read. */
-  history: EntityHistoryData | null;
 }
 
 const dotlanName = (name: string) =>
@@ -236,7 +233,6 @@ function ConstellationsTable({
 export default function RegionPage({
   region,
   incursions,
-  history,
 }: Readonly<RegionPageProps>) {
   const { regionId, name, faction, systems, constellations } = region;
   const [activeTab, setActiveTab] = useQueryState(
@@ -458,7 +454,7 @@ export default function RegionPage({
           )}
 
           <Tabs.Panel value="history" pt="lg">
-            <EmbeddedEntityHistory history={history} />
+            <FetchedEntityHistory entityType="region" entityId={regionId} />
           </Tabs.Panel>
         </Tabs>
       </Stack>

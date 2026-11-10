@@ -25,11 +25,17 @@ interface PageProps {
   types: { typeId: number; name: string }[];
 }
 
-async function getGroupData(groupId: number): Promise<PageProps> {
+/**
+ * The group and its items, or null for an id the SDE does not have.
+ * `findUnique`, not `findUniqueOrThrow`: this page is cached whole, so a
+ * missing group (a 404, legitimately stored) must stay distinguishable from a
+ * failed query, which throws out of this scope and is never stored.
+ */
+async function getGroupData(groupId: number): Promise<PageProps | null> {
   "use cache";
   cacheSdeRead();
 
-  const group = await prisma.group.findUniqueOrThrow({
+  const group = await prisma.group.findUnique({
     select: {
       groupId: true,
       name: true,
@@ -44,6 +50,7 @@ async function getGroupData(groupId: number): Promise<PageProps> {
       groupId,
     },
   });
+  if (!group) return null;
 
   return {
     name: group.name,
@@ -66,21 +73,30 @@ export async function generateMetadata({
   // site title and no canonical.
   const groupId = parseEntityId(groupIdParam);
   if (groupId === null) return {};
-  try {
-    const { name, types } = await getGroupData(groupId);
-    if (!name) return {};
-    return pageMetadata({
-      title: name,
-      description: `Browse the ${types.length} EVE Online items in the ${name} group — attributes, market prices, and where to buy them.`,
-      path: `/group/${groupId}`,
-      badge: "Item Group",
-      // The first type in the group stands in as artwork for the whole group.
-      image: types[0] ? await resolveTypeImage(types[0].typeId) : undefined,
-      facts: [{ label: "Items", value: String(types.length) }],
-    });
-  } catch {
-    return {};
-  }
+  // Uncaught, like the page body: this route is cached whole, so a database
+  // failure must throw rather than store generic metadata.
+  const group = await getGroupData(groupId);
+  if (!group?.name) return {};
+  const { name, types } = group;
+  return pageMetadata({
+    title: name,
+    description: `Browse the ${types.length} EVE Online items in the ${name} group — attributes, market prices, and where to buy them.`,
+    path: `/group/${groupId}`,
+    badge: "Item Group",
+    // The first type in the group stands in as artwork for the whole group.
+    image: types[0] ? await resolveTypeImage(types[0].typeId) : undefined,
+    facts: [{ label: "Items", value: String(types.length) }],
+  });
+}
+
+// ISR per group: without `generateStaticParams` an unlisted id re-renders on
+// every request (see apps/web/CLAUDE.md → "ISR for a dynamic `[param]`
+// route"). The real ids live in the database, which `next build` cannot reach
+// in CI, and Cache Components rejects an empty list — so this lists one id
+// `parseEntityId` refuses, which prerenders as a 404 without a query. Not "0",
+// as the other entity routes use: group 0 is real.
+export function generateStaticParams() {
+  return [{ groupId: "-1" }];
 }
 
 async function PageContent({
@@ -95,16 +111,11 @@ async function PageContent({
     notFound();
   }
 
-  let name: PageProps["name"] = undefined;
-  let types: PageProps["types"] = [];
-
-  try {
-    const data = await getGroupData(groupId);
-    name = data.name;
-    types = data.types;
-  } catch {
-    notFound();
-  }
+  // Uncaught: this page is cached whole, so a database failure must throw
+  // rather than store a 404. `null` is a group that genuinely does not exist.
+  const data = await getGroupData(groupId);
+  if (!data) notFound();
+  const { name, types } = data;
 
   const sortedTypes = [...types].sort((a, b) => a.name.localeCompare(b.name));
 

@@ -7,13 +7,7 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-} from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type { BuildPage, EntityTimeline } from "~/lib/history";
@@ -528,26 +522,52 @@ describe("EntityHistory", () => {
     );
   });
 
-  it("streams a history the host page is still reading", async () => {
-    const { StreamedEntityHistory } =
+  // The item page is cached whole, so its History tab fetches the history
+  // from a CDN-cached route rather than reading it during the page's render.
+  it("fetches a history from the host page's route, with a loader until then", async () => {
+    const { FetchedEntityHistory } =
       await import("~/app/history/EntityHistory");
-    let resolve: (h: EntityHistoryData | null) => void = () => undefined;
-    const pending = new Promise<EntityHistoryData | null>((r) => {
-      resolve = r;
-    });
-    await act(async () => {
-      wrap(<StreamedEntityHistory history={pending} />);
-      await Promise.resolve();
-    });
-    // Suspended: the tab shows its loader until the server's read arrives.
+    mockUseQuery.mockReturnValue({ data: undefined, isError: false });
+    wrap(<FetchedEntityHistory entityType="type" entityId={587} />);
     expect(screen.queryByText("2025-01-01")).toBeNull();
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ["entity-history", "/api/history/entity/type/587"],
+      }),
+    );
 
-    await act(async () => {
-      resolve(ENTITY_HISTORY);
-      await pending;
-    });
-    expect(await screen.findByText("2025-01-01")).toBeTruthy();
-    expect(mockUseQuery).not.toHaveBeenCalled();
+    cleanup();
+    mockUseQuery.mockReturnValue({ data: ENTITY_HISTORY, isError: false });
+    wrap(<FetchedEntityHistory entityType="type" entityId={587} />);
+    expect(screen.getByText("2025-01-01")).toBeTruthy();
+
+    cleanup();
+    mockUseQuery.mockReturnValue({ data: undefined, isError: true });
+    wrap(<FetchedEntityHistory entityType="type" entityId={587} />);
+    expect(screen.getByText(/could not be loaded/)).toBeTruthy();
+  });
+
+  it("reads the history from the route, and fails the query on an error answer", async () => {
+    const { FetchedEntityHistory } =
+      await import("~/app/history/EntityHistory");
+    mockUseQuery.mockReturnValue({ data: undefined, isError: false });
+    wrap(<FetchedEntityHistory entityType="type" entityId={587} />);
+    const queryFn = mockUseQuery.mock.calls.at(-1)?.[0].queryFn;
+
+    const fetchMock = jest.fn((_url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(ENTITY_HISTORY),
+      }),
+    );
+    global.fetch = fetchMock as unknown as typeof fetch;
+    await expect(Promise.resolve(queryFn?.())).resolves.toEqual(ENTITY_HISTORY);
+    expect(fetchMock).toHaveBeenCalledWith("/api/history/entity/type/587");
+
+    fetchMock.mockImplementationOnce(() =>
+      Promise.resolve({ ok: false, status: 500 } as never),
+    );
+    await expect(Promise.resolve(queryFn?.())).rejects.toThrow("HTTP 500");
   });
 
   it("says when a host page could not load the history", async () => {
