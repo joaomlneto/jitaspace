@@ -29,7 +29,9 @@ import { DogmaAttributeAnchor, TypeAnchor } from "~/components/Anchor";
 import { SectionHeading } from "~/components/EntityPage";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
+  MAX_SKILL_LEVEL,
   perModuleAmount,
+  skillAdjustedValue,
   synchronizedValue,
   synchronizerCounter,
   synchronizerTrend,
@@ -97,7 +99,11 @@ function ScalingTable({
   moduleCount,
 }: Readonly<{ rig: SynchronizerRig; moduleCount: number }>) {
   const perModule = perModuleAmount(rig.modules);
-  const counter = synchronizerCounter(rig.modules, moduleCount);
+  const counter = synchronizerCounter(
+    rig.modules,
+    moduleCount,
+    rig.counterBase,
+  );
   return (
     <Table.ScrollContainer minWidth={560}>
       <Table verticalSpacing="sm" highlightOnHover>
@@ -172,6 +178,50 @@ function ScalingTable({
   );
 }
 
+/** The attribute at each trained level of the skills that shrink it. */
+function SkillLevels({
+  attribute,
+}: Readonly<{ attribute: SynchronizerAttribute }>) {
+  if (!attribute.skills?.length) {
+    return (
+      <Text span size="sm" c="dimmed">
+        —
+      </Text>
+    );
+  }
+  return (
+    <Stack gap={4}>
+      {attribute.skills.map((skill) => (
+        <Stack key={skill.typeId} gap={2}>
+          <TypeAnchor typeId={skill.typeId} size="sm">
+            {skill.name}
+          </TypeAnchor>
+          <Group gap="xs" wrap="wrap">
+            {Array.from({ length: MAX_SKILL_LEVEL }, (_, index) => {
+              const level = index + 1;
+              return (
+                <Text key={level} span size="xs" ff="monospace">
+                  <Text span c="dimmed" inherit>
+                    {level}:
+                  </Text>{" "}
+                  {formatValue(
+                    attribute,
+                    skillAdjustedValue(
+                      attribute.base,
+                      skill.percentPerLevel,
+                      level,
+                    ),
+                  )}
+                </Text>
+              );
+            })}
+          </Group>
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
 function FixedTable({ rig }: Readonly<{ rig: SynchronizerRig }>) {
   return (
     <Table.ScrollContainer minWidth={420}>
@@ -180,6 +230,7 @@ function FixedTable({ rig }: Readonly<{ rig: SynchronizerRig }>) {
           <Table.Tr>
             <Table.Th>Attribute</Table.Th>
             <Table.Th ta="right">Value</Table.Th>
+            <Table.Th>With skills</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -190,6 +241,9 @@ function FixedTable({ rig }: Readonly<{ rig: SynchronizerRig }>) {
               </Table.Td>
               <Table.Td ta="right" ff="monospace">
                 {formatValue(attribute, attribute.base)}
+              </Table.Td>
+              <Table.Td>
+                <SkillLevels attribute={attribute} />
               </Table.Td>
             </Table.Tr>
           ))}
@@ -262,7 +316,7 @@ function RigPanel({ rig }: Readonly<{ rig: SynchronizerRig }>) {
               step={1}
               marks={SLIDER_MARKS}
               label={(value) => `${value} module${value === 1 ? "" : "s"}`}
-              aria-label="Matching modules fitted"
+              thumbLabel="Matching modules fitted"
             />
           </Stack>
         </Paper>
@@ -278,7 +332,8 @@ function RigPanel({ rig }: Readonly<{ rig: SynchronizerRig }>) {
           </SectionHeading>
           <Text size="sm" c="dimmed">
             The rig&apos;s penalties and its CPU drawback stay the same however
-            many matching modules you fit.
+            many matching modules you fit. Where a skill reduces one, its value
+            at each trained level is listed.
           </Text>
           <FixedTable rig={rig} />
         </Stack>
@@ -309,8 +364,7 @@ function TargetsPanel({
       <Text size="sm">
         Fitting this module makes every bonus of a matching Synchronizer rig on
         the same ship {Math.abs(targets[0]?.amount ?? 1)} percentage point
-        {Math.abs(targets[0]?.amount ?? 1) === 1 ? "" : "s"} stronger, whether
-        the module is online or not.
+        {Math.abs(targets[0]?.amount ?? 1) === 1 ? "" : "s"} stronger.
       </Text>
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
         {targets.map((target) => (

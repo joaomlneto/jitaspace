@@ -17,13 +17,25 @@ import type { ResolvedEffectDescription } from "~/lib/dogmaEffectDescription";
  *   ordinary effects.
  *
  * So each bonus moves a flat percentage point per module, which the expansion
- * notes describe as "a flat 1% for every … module fitted".
+ * notes describe as "a flat 1% for every … module fitted". The modules that
+ * carry the effect are exactly the published modules named after the faction
+ * ("Caldari Navy …"), the notes' "module of the same name".
+ *
+ * The penalties do not scale. The CPU drawback shrinks with the Synchronization
+ * Rigging skill instead: the skill multiplies its own `rigDrawbackBonus` (-10)
+ * by its level and applies it to the rig's drawback as a PostPercent, the
+ * notes' "10% reduction in synchronizer rig CPU penalty" per level.
  */
 
 /** Dogma operator 2: add the modifying value to the modified attribute. */
 export const DOGMA_OPERATOR_MOD_ADD = 2;
 /** Dogma operator 3: subtract the modifying value from it. */
 export const DOGMA_OPERATOR_MOD_SUB = 3;
+/** Dogma operator 6: raise the modified attribute by a percentage. */
+export const DOGMA_OPERATOR_POST_PERCENT = 6;
+
+/** The highest level any skill trains to. */
+export const MAX_SKILL_LEVEL = 5;
 
 /** +1 for an attribute the counter is added to, -1 for one it is taken from. */
 export type SynchronizerDirection = 1 | -1;
@@ -50,6 +62,16 @@ export interface SynchronizerAttribute {
   appliesTo?: ResolvedEffectDescription;
   /** How the counter moves it; only set on the scaling attributes. */
   direction?: SynchronizerDirection;
+  /** Skills that shrink it per level; only set on the fixed attributes. */
+  skills?: SynchronizerSkill[];
+}
+
+/** A skill that changes a rig attribute by a percentage per trained level. */
+export interface SynchronizerSkill {
+  typeId: number;
+  name: string;
+  /** Applied per level as a PostPercent: -10 takes 10% off per level. */
+  percentPerLevel: number;
 }
 
 /** A module whose fitting adds to a synchronizer's counter. */
@@ -68,6 +90,8 @@ export interface SynchronizerRig {
   counterAttributeId: number;
   /** e.g. "Caldari Navy Modules Fitted". */
   counterName: string;
+  /** The counter's own value before any module adds to it (0 in the SDE). */
+  counterBase: number;
   /** Bonuses the counter is added to. */
   scaling: SynchronizerAttribute[];
   /** The rig's other applied attributes (its penalties, CPU drawback…). */
@@ -103,12 +127,25 @@ export function hasSynchronizer(value: TypeSynchronizer): boolean {
   return value.rig !== null || value.countsTowards.length > 0;
 }
 
-/** The counter value `moduleCount` matching modules add up to. */
+/** The rig's counter once `moduleCount` matching modules have added to it. */
 export function synchronizerCounter(
   modules: readonly Pick<SynchronizerModule, "amount">[],
   moduleCount: number,
+  counterBase = 0,
 ): number {
-  return moduleCount * perModuleAmount(modules);
+  return counterBase + moduleCount * perModuleAmount(modules);
+}
+
+/**
+ * An attribute after a skill's per-level PostPercent: the drawback of -10 at
+ * Synchronization Rigging V is -10 × (1 + (-10 × 5) / 100) = -5.
+ */
+export function skillAdjustedValue(
+  base: number,
+  percentPerLevel: number,
+  level: number,
+): number {
+  return base * (1 + (percentPerLevel * level) / 100);
 }
 
 /**
