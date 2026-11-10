@@ -17,6 +17,7 @@ import type { ContractView } from "./ContractList";
 import type { OpenContracts } from "./useOpenContracts";
 import type { ContractFilters } from "~/components/Contracts/filters";
 import { filterOpenContracts } from "~/components/Contracts/clientFilter";
+import { ContractTable } from "~/components/Contracts/ContractTable";
 import { PUBLIC_CONTRACTS_PAGE_SIZE } from "~/components/Contracts/filters";
 import { ContractList, ContractListSkeleton } from "./ContractList";
 
@@ -24,6 +25,9 @@ import { ContractList, ContractListSkeleton } from "./ContractList";
  * The open public contracts the filters match, a page at a time. All of them
  * are in the browser (`useOpenContracts`), so filtering, sorting and paging
  * never wait on the server.
+ *
+ * The table takes every match and pages them itself, so its headers sort and
+ * filter all of them; rows and cards are paged here, in the Sort menu's order.
  */
 export function PublicContracts({
   open,
@@ -50,7 +54,10 @@ export function PublicContracts({
     [open.contracts, type, regionId, q, minPrice, maxPrice, sort],
   );
 
-  const pageCount = Math.ceil(matching.length / PUBLIC_CONTRACTS_PAGE_SIZE);
+  const isTable = view === "table";
+  const pageCount = isTable
+    ? 1
+    : Math.ceil(matching.length / PUBLIC_CONTRACTS_PAGE_SIZE);
   const page = matching.slice(
     (filters.page - 1) * PUBLIC_CONTRACTS_PAGE_SIZE,
     filters.page * PUBLIC_CONTRACTS_PAGE_SIZE,
@@ -63,6 +70,18 @@ export function PublicContracts({
       <Alert color="red" variant="light">
         Public contracts could not be loaded. Try again in a moment.
       </Alert>
+    );
+  } else if (isTable) {
+    // One table from loading to loaded, and through a filter that matches
+    // nothing, so a sort picked from its headers stays put.
+    content = (
+      <ContractTable
+        contracts={matching}
+        isLoading={open.isPending}
+        pageSize={PUBLIC_CONTRACTS_PAGE_SIZE}
+        initialSort={sort}
+        emptyText="No public contracts match these filters."
+      />
     );
   } else if (open.isPending) {
     content = (
