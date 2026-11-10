@@ -249,8 +249,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/db
       '@jitaspace/db-builds':
-        specifier: ^0.1.0
-        version: 0.1.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
+        specifier: ^1.0.0
+        version: 1.0.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
       '@jitaspace/esi-client':
         specifier: workspace:*
         version: link:../../packages/esi-client
@@ -4110,8 +4110,8 @@ packages:
     resolution: {integrity: sha512-f1x/vJXIfjOlEmejYpbkbgw1gOqpPECwMvMEtBqe47j7H2Hg8h8w3o3ikhSXq3MI15kg+oQ0exWO0uCtTNJLoQ==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
 
-  '@jitaspace/db-builds@0.1.0':
-    resolution: {integrity: sha512-JneRxTdxbEr9UhMqJsXzmHAex0ltoOnMDy0dNqJp0yXaznhLmydqhKic9cXtcnPdMlbNMOhQjtyeLI6McBLYJg==}
+  '@jitaspace/db-builds@1.0.0':
+    resolution: {integrity: sha512-fvKl6PCMjb7Zx0/mrtL6MKG2cucTrDfF3AOV8QhMpP3n+rJPeiUrQoyrDOp8BPlGyc1bbqMMIl00ZSufuAZz6A==}
     engines: {node: ^20.19 || ^22.12 || >=24.0}
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -14413,7 +14413,7 @@ snapshots:
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
-  '@jitaspace/db-builds@0.1.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)':
+  '@jitaspace/db-builds@1.0.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
       '@prisma/adapter-pg': 7.8.0
       '@prisma/client': 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.5.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)

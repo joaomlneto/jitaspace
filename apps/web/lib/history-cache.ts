@@ -11,11 +11,14 @@ import type {
   LatestChangedBuild,
 } from "~/lib/history";
 import {
-  HISTORY_MIN_RELEASE_DATE,
   isBuildInHistoryScope,
   latestChangedBuild,
   netOp,
 } from "~/lib/history";
+import {
+  BUILD_PLACEMENT_SELECT,
+  buildPlacement,
+} from "~/lib/history-build-placement";
 import { readEntityNames } from "~/lib/history-entity-names";
 import { historyTable } from "~/lib/history-sql";
 
@@ -49,7 +52,7 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
     [
       buildsDb.build.findMany({
         orderBy: { buildNumber: "asc" },
-        select: { buildNumber: true, releasedAt: true, server: true },
+        select: { buildNumber: true, ...BUILD_PLACEMENT_SELECT },
       }),
       buildsDb.collection.findMany({
         where: notStr,
@@ -102,6 +105,10 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
   // sit in `perBuild` under its `toBuild` but are never read, since only the
   // surviving builds are mapped below.
   const buildsOut = builds
+    .map((b) => ({
+      buildNumber: b.buildNumber,
+      ...buildPlacement(b.deployments),
+    }))
     .filter((b) => isBuildInHistoryScope(b.releasedAt, b.server))
     .map((b) => {
       const byCollection = perBuild.get(b.buildNumber) ?? {};
@@ -164,7 +171,7 @@ export async function getLatestChangedBuild(): Promise<LatestChangedBuild | null
 export async function getCachedBuildAxis(): Promise<{
   /** `[diffId, fromBuild, toBuild]` */
   diffs: [number, number | null, number][];
-  /** `[buildNumber, releasedAt (ISO), server]` */
+  /** `[buildNumber, releasedAt (ISO), server]`, as `buildPlacement` places it. */
   builds: [number, string | null, BuildServer][];
   /**
    * Diffs that carry resource-file changes: they came from the resource server
@@ -182,17 +189,16 @@ export async function getCachedBuildAxis(): Promise<{
       select: { id: true, fromBuild: true, toBuild: true },
     }),
     buildsDb.build.findMany({
-      select: { buildNumber: true, releasedAt: true, server: true },
+      select: { buildNumber: true, ...BUILD_PLACEMENT_SELECT },
     }),
     buildsDb.fileChange.groupBy({ by: ["diffId"], _count: true }),
   ]);
   return {
     diffs: diffs.map((d) => [d.id, d.fromBuild, d.toBuild]),
-    builds: builds.map((b) => [
-      b.buildNumber,
-      b.releasedAt?.toISOString() ?? null,
-      b.server ?? null,
-    ]),
+    builds: builds.map((b) => {
+      const { releasedAt, server } = buildPlacement(b.deployments);
+      return [b.buildNumber, releasedAt?.toISOString() ?? null, server];
+    }),
     resfileDiffIds: resfileDiffs.map((g) => g.diffId),
   };
 }
@@ -294,9 +300,15 @@ export async function getCachedEntityTimeline(
  * JS timed out. Instead a single grouped query returns just one row per changed
  * `(entity, collection)` — the op at the earliest and latest in-scope build in
  * the range — which {@link netOp} folds to a net op. Out-of-scope intermediate
- * builds (Singularity / the pre-2012 baseline) are filtered in SQL, mirroring
- * {@link isBuildInHistoryScope}; `::text` sidesteps enum-literal handling and the
- * id is coerced because CockroachDB returns INT8 as a string.
+ * builds (Singularity-only builds / the pre-2012 baseline) are left out by
+ * passing the in-scope builds from {@link getCachedBuildAxis}, so the rule is
+ * {@link isBuildInHistoryScope} itself rather than a SQL copy of it. The id is
+ * coerced because CockroachDB returns INT8 as a string.
+ *
+ * One thing can still change a past pair's answer: a Singularity build
+ * promoted to Tranquility enters the scope. That only matters for a pair
+ * ending at the promoted build itself (a later Tranquility build cannot exist
+ * before the promotion), which answered `null` before it.
  *
  * Returns `null` for invalid input (a missing or out-of-scope endpoint, or
  * `from >= to`); an empty `changes` list means nothing changed between them.
@@ -311,21 +323,27 @@ export async function getCachedBuildRangeChanges(
   if (!Number.isInteger(from) || !Number.isInteger(to) || from >= to)
     return null;
 
-  const [fromB, toB] = await Promise.all([
-    buildsDb.build.findUnique({
-      where: { buildNumber: from },
-      select: { releasedAt: true, server: true },
-    }),
-    buildsDb.build.findUnique({
-      where: { buildNumber: to },
-      select: { releasedAt: true, server: true },
-    }),
-  ]);
-  if (!fromB || !isBuildInHistoryScope(fromB.releasedAt, fromB.server))
-    return null;
-  if (!toB || !isBuildInHistoryScope(toB.releasedAt, toB.server)) return null;
+  // Scope comes from the build axis's placements (`buildPlacement`), the same
+  // rule the index and timelines apply, rather than being re-derived in SQL.
+  const axis = await getCachedBuildAxis();
+  const placementOf = new Map(
+    axis.builds.map(([build, releasedAt, server]) => [
+      build,
+      { releasedAt, server },
+    ]),
+  );
+  const inScope = (build: number) => {
+    const p = placementOf.get(build);
+    return p !== undefined && isBuildInHistoryScope(p.releasedAt, p.server);
+  };
+  if (!inScope(from) || !inScope(to)) return null;
+  const fromB = placementOf.get(from);
+  const toB = placementOf.get(to);
+  // The in-scope builds the range's diffs may lead to.
+  const scoped = axis.builds
+    .map(([build]) => build)
+    .filter((b) => b > from && b <= to && inScope(b));
 
-  const floor = new Date(`${HISTORY_MIN_RELEASE_DATE}T00:00:00.000Z`);
   const rows = await buildsDb.$queryRaw<
     {
       entityType: string;
@@ -343,14 +361,12 @@ export async function getCachedBuildRangeChanges(
       (array_agg(c."op"::text ORDER BY d."toBuild" DESC))[1] AS "lastOp"
     FROM ${historyTable("Change")} c
     JOIN ${historyTable("BuildDiff")} d ON d."id" = c."diffId"
-    JOIN ${historyTable("Build")} b ON b."buildNumber" = d."toBuild"
     JOIN ${historyTable("Entity")} e ON e."id" = c."entityId"
     JOIN ${historyTable("Collection")} col ON col."id" = c."collectionId"
     WHERE d."toBuild" > ${from}
       AND d."toBuild" <= ${to}
+      AND d."toBuild" = ANY(${scoped}::INT8[])
       AND col."name" NOT LIKE 'strings:%'
-      AND b."server"::text IS DISTINCT FROM 'singularity'
-      AND (b."releasedAt" IS NULL OR b."releasedAt" >= ${floor})
     GROUP BY e."kind", e."eveId", col."name"
   `;
 
@@ -375,8 +391,8 @@ export async function getCachedBuildRangeChanges(
   return {
     from,
     to,
-    fromDate: ymd(fromB.releasedAt),
-    toDate: ymd(toB.releasedAt),
+    fromDate: fromB?.releasedAt?.slice(0, 10) ?? null,
+    toDate: toB?.releasedAt?.slice(0, 10) ?? null,
     changes,
   };
 }
