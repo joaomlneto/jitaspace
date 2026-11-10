@@ -720,14 +720,15 @@ export const extraJitaFeatures: AppScopeSet[] = [
 ];
 
 /**
- * Discord's own logo in its brand colour, where the other entries show EVE
- * icons. Takes the same props, so menus size it like the icons beside it.
+ * Discord's own logo, where the other entries show EVE icons. It is drawn in
+ * the text colour around it (white in the dark theme), like the footer's
+ * Discord button. Takes the same props, so menus size it like the icons
+ * beside it.
  */
 function DiscordLogo({ size, width, height }: EveIconProps) {
   return (
     <IconBrandDiscordFilled
       size={size ?? width ?? height}
-      color="#5865F2"
       aria-hidden
     />
   );
