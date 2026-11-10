@@ -26,6 +26,9 @@ export const CONTRACT_VIEW_OPTIONS: readonly {
   { value: "table", label: "Table" },
 ];
 
+/** The view a contracts list opens in: a table whose headers sort and filter. */
+export const DEFAULT_CONTRACT_VIEW: ContractView = "table";
+
 /**
  * How the page lays contracts out, kept in the URL like the filters but apart
  * from them: switching view keeps the page you are on.
@@ -34,7 +37,7 @@ export function useContractView() {
   const [view, setView] = useQueryState(
     "view",
     parseAsStringLiteral(CONTRACT_VIEWS)
-      .withDefault("rows")
+      .withDefault(DEFAULT_CONTRACT_VIEW)
       .withOptions({ history: "replace" }),
   );
   return [view, (next: ContractView) => void setView(next)] as const;

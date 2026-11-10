@@ -15,6 +15,7 @@ import {
   CONTRACT_VIEW_OPTIONS,
   ContractList,
   ContractListSkeleton,
+  DEFAULT_CONTRACT_VIEW,
 } from "./ContractList";
 
 const DESCRIPTION: Record<ContractHistorySubject, string> = {
@@ -44,7 +45,7 @@ export function ContractHistoryTab({
   subject,
   id,
 }: Readonly<{ subject: ContractHistorySubject; id: number }>) {
-  const [view, setView] = useState<ContractView>("rows");
+  const [view, setView] = useState<ContractView>(DEFAULT_CONTRACT_VIEW);
   const query = useInfiniteQuery({
     queryKey: ["contract-history", subject, id],
     queryFn: ({ pageParam, signal }) =>
