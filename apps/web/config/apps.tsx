@@ -722,11 +722,30 @@ export const extraJitaFeatures: AppScopeSet[] = [
 /**
  * Discord's own logo, where the other entries show EVE icons. It is drawn in
  * the text colour around it (white in the dark theme), like the footer's
- * Discord button. Takes the same props, so menus size it like the icons
- * beside it.
+ * Discord button. Takes the same props and fills the same square box, so
+ * menus lay it out like the icons beside it.
+ *
+ * EVE's artwork covers only about two-thirds of its square (12.5px of a 20px
+ * icon), while Tabler's logo spans nearly all of it (17px), so the logo is
+ * drawn at three-quarters of the box to look the same size as its neighbours.
  */
 function DiscordLogo({ size, width, height }: EveIconProps) {
-  return <IconBrandDiscordFilled size={size ?? width ?? height} aria-hidden />;
+  const box = Number(size ?? width ?? height ?? 24);
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        width: box,
+        height: box,
+      }}
+    >
+      <IconBrandDiscordFilled size={box * 0.75} />
+    </span>
+  );
 }
 
 /**
