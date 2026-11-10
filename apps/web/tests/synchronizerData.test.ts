@@ -481,3 +481,202 @@ describe("readTypeSynchronizer", () => {
     );
   });
 });
+
+/**
+ * A stand-in database holding the SDE rows above, answering each query the
+ * data layer makes by the shape of its `where`.
+ */
+function serveSde() {
+  type Where = Record<string, unknown>;
+  const whereOf = (args: unknown) => (args as { where: Where }).where;
+
+  mockPrisma.dogmaEffectModifier.findMany.mockImplementation((args) => {
+    const where = whereOf(args);
+    const typeId = (
+      where.effect as
+        | { TypeEffect?: { some?: { typeId?: number } } }
+        | undefined
+    )?.TypeEffect?.some?.typeId;
+    if (typeId === 96720) return Promise.resolve(dreadGuristasModifiers);
+    if (typeId === 15681) {
+      return Promise.resolve([
+        mod(12964, "LocationGroupModifier", "shipID", 2, 5140, 6317, 6313),
+      ]);
+    }
+    if (where.func === "LocationGroupModifier" && where.operator === 2) {
+      return Promise.resolve(feeders);
+    }
+    if (where.func === "LocationGroupModifier" && where.operator === 6) {
+      return Promise.resolve([
+        {
+          modifiedAttributeId: 1138,
+          modifyingAttributeId: 1139,
+          effect: {
+            TypeEffect: [
+              {
+                type: {
+                  typeId: SYNCHRONIZATION_RIGGING,
+                  name: "Synchronization Rigging",
+                },
+              },
+            ],
+          },
+        },
+      ]);
+    }
+    if (where.func === "ItemModifier" && where.operator === 0) {
+      return Promise.resolve([
+        {
+          modifiedAttributeId: 1139,
+          effect: { TypeEffect: [{ typeId: SYNCHRONIZATION_RIGGING }] },
+        },
+      ]);
+    }
+    if (where.func === "ItemModifier") {
+      return Promise.resolve([{ modifyingAttributeId: 6317 }]);
+    }
+    return Promise.resolve([]);
+  });
+
+  mockPrisma.typeAttribute.findMany.mockImplementation((args) => {
+    const where = whereOf(args);
+    if (where.typeId === 96720) return Promise.resolve(dreadGuristasAttributes);
+    if (where.typeId === 15681) {
+      return Promise.resolve([{ attributeId: 6313, value: 1 }]);
+    }
+    // Synchronization Rigging's per-level amount.
+    return Promise.resolve([
+      { typeId: SYNCHRONIZATION_RIGGING, attributeId: 1139, value: -10 },
+    ]);
+  });
+
+  const hardener = moduleRow(
+    13965,
+    "Dread Guristas EM Shield Hardener",
+    "Shield Hardener",
+    1,
+  );
+  mockPrisma.typeEffect.findMany.mockResolvedValue([
+    {
+      type: moduleRow(
+        14246,
+        "Dread Guristas Warp Disruptor",
+        "Warp Scrambler",
+        1,
+      ),
+    },
+    { type: hardener },
+    // A module carrying the feeder effect twice is still one module.
+    { type: hardener },
+  ]);
+  mockPrisma.dogmaAttribute.findMany.mockResolvedValue([
+    { attributeId: 6379, defaultValue: 0 },
+    { attributeId: 6374, defaultValue: 0 },
+    { attributeId: 6313, defaultValue: 0 },
+    { attributeId: 9999, defaultValue: null },
+  ]);
+  mockPrisma.type.findMany.mockResolvedValue(
+    [
+      [96139, "Small Caldari Navy Synchronizer"],
+      [96144, "Medium Caldari Navy Synchronizer"],
+      [96145, "Large Caldari Navy Synchronizer"],
+    ].map(([typeId, name]) => ({
+      typeId,
+      name,
+      groupId: SYNCHRONIZER_GROUP,
+      attributes: [
+        {
+          attributeId: 6317,
+          attribute: { displayName: "Caldari Navy Modules Fitted", name: null },
+        },
+      ],
+    })),
+  );
+}
+
+describe("readTypeSynchronizer against the SDE's rows", () => {
+  it("reads the Large Dread Guristas Synchronizer whole", async () => {
+    serveSde();
+    const { rig, countsTowards } = await load().readTypeSynchronizer(
+      96720,
+      SYNCHRONIZER_GROUP,
+    );
+    expect(countsTowards).toEqual([]);
+    expect(rig?.counterName).toBe("Dread Guristas Modules Fitted");
+    expect(rig?.counterBase).toBe(0);
+    expect(rig?.scaling).toHaveLength(8);
+    expect(rig?.fixed.map(({ name, skills }) => [name, skills])).toEqual([
+      ["Drawback", [skillRow.skill]],
+      ["Drone Maximum Control Range Penalty", undefined],
+    ]);
+    expect(rig?.modules.map((module) => module.typeId)).toEqual([13965, 14246]);
+  });
+
+  it("asks only for published, live modules carrying the rig's feeder", async () => {
+    serveSde();
+    await load().readTypeSynchronizer(96720, SYNCHRONIZER_GROUP);
+    expect(mockPrisma.typeEffect.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          effectId: { in: [12991] },
+          isDeleted: false,
+          type: { published: true, isDeleted: false },
+        },
+      }),
+    );
+  });
+
+  it("looks for skills on the rig group's fixed attributes only", async () => {
+    serveSde();
+    await load().readTypeSynchronizer(96720, SYNCHRONIZER_GROUP);
+    expect(mockPrisma.dogmaEffectModifier.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          func: "LocationGroupModifier",
+          groupId: SYNCHRONIZER_GROUP,
+          operator: 6,
+          modifiedAttributeId: { in: [1138, 6397] },
+        }),
+      }),
+    );
+  });
+
+  it("reads the rigs a Caldari Navy module powers", async () => {
+    serveSde();
+    const { rig, countsTowards } = await load().readTypeSynchronizer(
+      15681,
+      367,
+    );
+    expect(rig).toBeNull();
+    expect(countsTowards.map(({ name, amount }) => [name, amount])).toEqual([
+      ["Small Caldari Navy Synchronizer", 1],
+      ["Medium Caldari Navy Synchronizer", 1],
+      ["Large Caldari Navy Synchronizer", 1],
+    ]);
+  });
+
+  it("finds no rigs for a module whose group-wide add reaches none", async () => {
+    serveSde();
+    mockPrisma.type.findMany.mockResolvedValue([]);
+    await expect(load().readTypeSynchronizer(15681, 367)).resolves.toEqual({
+      rig: null,
+      countsTowards: [],
+    });
+  });
+
+  it("is not a rig when nothing feeds its counter", async () => {
+    serveSde();
+    const serve =
+      mockPrisma.dogmaEffectModifier.findMany.getMockImplementation();
+    mockPrisma.dogmaEffectModifier.findMany.mockImplementation((args) => {
+      const where = (args as { where: Record<string, unknown> }).where;
+      if (where.func === "LocationGroupModifier" && where.operator === 2) {
+        return Promise.resolve([]);
+      }
+      return serve ? serve(args) : Promise.resolve([]);
+    });
+    await expect(
+      load().readTypeSynchronizer(96720, SYNCHRONIZER_GROUP),
+    ).resolves.toEqual({ rig: null, countsTowards: [] });
+  });
+});
