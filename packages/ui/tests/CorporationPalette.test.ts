@@ -9,7 +9,7 @@ import {
   getPaletteTint,
   getReadableTextColor,
   tickerNeedsEdge,
-} from "~/components/CorporationPalette/corporationPalette";
+} from "../CorporationPalette/corporationPalette";
 
 const DARK_CARD = "#2e2e2e";
 const LIGHT_CARD = "#ffffff";

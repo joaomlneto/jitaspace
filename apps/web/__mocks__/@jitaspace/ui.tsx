@@ -16,6 +16,18 @@
  */
 import React from "react";
 
+// The corporation palette is real: it needs only React and Mantine, and the
+// corporation page tests assert its stripe and swatches from real palette data.
+export * from "../../../../packages/ui/CorporationPalette";
+
+// The cards' link provider passes its children through; the card displays are
+// stubbed per test where a test renders one.
+export const EntityLinksProvider = ({
+  children,
+}: {
+  children?: React.ReactNode;
+}) => <>{children}</>;
+
 // --- Dogma (the value formatter is pure, so the real one is used) ---
 export {
   dogmaAttributeDisplayValue,

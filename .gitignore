@@ -19,6 +19,9 @@ coverage
 out/
 next-env.d.ts
 
+# storybook
+storybook-static/
+
 # expo
 .expo/
 dist/

@@ -209,9 +209,12 @@ function CandidateCard({
       data-highlighted={highlighted || undefined}
     >
       <Stack gap="sm" h="100%">
+        {/* Compact and frameless: the candidate's own card is the frame. */}
         <CharacterCard
           characterId={candidate.characterId}
+          variant="compact"
           withCsmBadge={false}
+          cardProps={{ withBorder: false, p: 0, bg: "transparent" }}
         />
         <Text size="sm" className={classes.pitch} style={{ flexGrow: 1 }}>
           {candidate.pitch}

@@ -38,4 +38,4 @@ export const AllianceAnchor = memo(
     );
   },
 );
-AllianceAnchor.displayName = "AllianceNameAnchor";
+AllianceAnchor.displayName = "AllianceAnchor";

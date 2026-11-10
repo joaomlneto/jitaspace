@@ -94,6 +94,8 @@
         "dist/**",
         // apps/eve-icons-gallery is a static export, written to `out/`.
         "out/**",
+        // apps/storybook's static build.
+        "storybook-static/**",
         ".output/**",
         ".vercel/output/**"
       ]

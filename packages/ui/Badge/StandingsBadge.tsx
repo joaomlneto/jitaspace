@@ -44,16 +44,19 @@ export const StandingsBadge = memo(
       );
     }
 
-    const roundedStanding = (Math.round(standing * 10) / 10).toFixed(1);
+    // The tier is picked from the value the badge shows, so a 0.04 reads
+    // "0.0" in neutral grey rather than in the blue of a positive standing.
+    // `+ 0` turns -0 (from e.g. -0.04) into 0, so it never displays "-0.0".
+    const rounded = Math.round(standing * 10) / 10 + 0;
 
     let tier: (typeof tiers)[keyof typeof tiers];
-    if (standing > 5) {
+    if (rounded > 5) {
       tier = tiers.darkblue;
-    } else if (standing > 0) {
+    } else if (rounded > 0) {
       tier = tiers.lightblue;
-    } else if (standing == 0) {
+    } else if (rounded === 0) {
       tier = tiers.gray;
-    } else if (standing >= -5) {
+    } else if (rounded >= -5) {
       tier = tiers.orange;
     } else {
       tier = tiers.red;
@@ -61,7 +64,7 @@ export const StandingsBadge = memo(
 
     return (
       <Badge variant="filled" style={tier} {...otherProps}>
-        {roundedStanding}
+        {rounded.toFixed(1)}
       </Badge>
     );
   },

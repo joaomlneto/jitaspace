@@ -20,4 +20,4 @@ export const HumanDurationText = memo(
     return <Text {...otherProps}>{durationString}</Text>;
   },
 );
-HumanDurationText.displayName = "TimeAgoText";
+HumanDurationText.displayName = "HumanDurationText";

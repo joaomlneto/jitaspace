@@ -128,15 +128,26 @@ describe("LabelName / StarName / StargateName with empty name", () => {
 });
 
 describe("CSPACostText", () => {
-  it("renders the cost followed by ISK", () => {
+  it("renders the cost with thousands separators, followed by ISK", () => {
     renderWithMantine(<CSPACostText cost={2500} />);
-    expect(screen.getByText("2500 ISK")).toBeInTheDocument();
+    expect(screen.getByText("2,500 ISK")).toBeInTheDocument();
   });
 
-  it("renders without a cost", () => {
-    renderWithMantine(<CSPACostText data-testid="cspa" />);
-    expect(screen.getByTestId("cspa")).toHaveTextContent("ISK");
+  it("renders a free CSPA charge as 0 ISK", () => {
+    renderWithMantine(<CSPACostText cost={0} />);
+    expect(screen.getByText("0 ISK")).toBeInTheDocument();
   });
+
+  it.each([undefined, null])(
+    "renders a skeleton when the cost is %p",
+    (cost) => {
+      const { container } = renderWithMantine(
+        <CSPACostText cost={cost} data-testid="cspa" />,
+      );
+      expect(screen.getByTestId("cspa")).not.toHaveTextContent("ISK");
+      expect(container.querySelector(".mantine-Skeleton-root")).toBeTruthy();
+    },
+  );
 });
 
 describe("ISKAmount", () => {
@@ -150,7 +161,7 @@ describe("ISKAmount", () => {
     expect(screen.getByText("1,234 ISK")).toBeInTheDocument();
   });
 
-  it("renders 0 for amounts below the smallest lookup value", () => {
+  it("renders 0 as 0", () => {
     renderWithMantine(<ISKAmount amount={0} />);
     expect(screen.getByText("0 ISK")).toBeInTheDocument();
   });

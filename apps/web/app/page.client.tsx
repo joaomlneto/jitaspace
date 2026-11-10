@@ -108,7 +108,7 @@ export default function HomePage({ newsCarousel }: Readonly<HomePageProps>) {
                 <CorporationCard
                   corporationId={corporationId}
                   key={corporationId}
-                  compact
+                  variant="compact"
                   headerRightSection={
                     <CorporationMenu corporationId={corporationId}>
                       <Burger size="sm" />
@@ -131,7 +131,7 @@ export default function HomePage({ newsCarousel }: Readonly<HomePageProps>) {
                 <AllianceCard
                   allianceId={allianceId}
                   key={allianceId}
-                  compact
+                  variant="compact"
                   headerRightSection={
                     <AllianceMenu allianceId={allianceId}>
                       <Burger size="sm" />
