@@ -2,13 +2,13 @@
 
 import type React from "react";
 import { memo } from "react";
-import Link from "next/link";
 import { Box, Center, Menu, Tooltip, UnstyledButton } from "@mantine/core";
 import { IconChevronDown, IconExternalLink } from "@tabler/icons-react";
 
 import type { EveIconProps } from "@jitaspace/eve-icons";
 
 import type { JitaApp } from "~/config/apps";
+import { HoverPrefetchLink } from "~/components/Link";
 import { isExternalUrl } from "~/config/apps";
 import classes from "./HeaderMenu.module.css";
 
@@ -52,7 +52,7 @@ export const DesktopNavMenu = memo(
           </Menu.Item>
         ) : (
           <Menu.Item
-            component={Link}
+            component={HoverPrefetchLink}
             href={app.url ?? "#"}
             leftSection={<app.Icon width={20} alt="" />}
           >

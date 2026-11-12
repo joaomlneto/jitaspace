@@ -1,7 +1,6 @@
 "use client";
 
 import { memo } from "react";
-import Link from "next/link";
 import {
   Box,
   Divider,
@@ -23,6 +22,7 @@ import {
 import { CharacterAvatar, LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import type { JitaApp } from "~/config/apps";
+import { HoverPrefetchLink } from "~/components/Link";
 import { isExternalUrl, jitaApps } from "~/config/apps";
 import { useAccountActions } from "~/layouts/MainLayout/useAccountActions";
 import classes from "./HeaderMenu.module.css";
@@ -259,7 +259,7 @@ export const MobileNavDrawer = memo(
               ) : (
                 <UnstyledButton
                   key={key}
-                  component={Link}
+                  component={HoverPrefetchLink}
                   href={app.url ?? "#"}
                   className={classes.link}
                   onClick={close}

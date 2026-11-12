@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Alert,
   Anchor,
@@ -14,6 +13,7 @@ import {
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 
 import type { BuildPage } from "~/lib/history";
+import { HoverPrefetchLink } from "~/components/Link";
 import { collectionMeta } from "~/lib/history";
 import { EntityChangeSections } from "./_entity-sections";
 import { hasResourceChanges, ResourceChanges } from "./_resource-sections";
@@ -39,7 +39,7 @@ export default function BuildHistoryClient({
           <Title order={2}>Build {build}</Title>
           <Alert color="gray">
             No recorded changes for this build.{" "}
-            <Anchor component={Link} href="/history">
+            <Anchor component={HoverPrefetchLink} href="/history">
               Back to history
             </Anchor>
           </Alert>
@@ -90,7 +90,7 @@ export default function BuildHistoryClient({
                 </Group>
               </Chip.Group>
             )}
-            <Anchor component={Link} href="/history" size="sm">
+            <Anchor component={HoverPrefetchLink} href="/history" size="sm">
               all history
             </Anchor>
           </Group>

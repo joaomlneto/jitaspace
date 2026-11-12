@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { Card, Group, Text, Tooltip, UnstyledButton } from "@mantine/core";
 import { IconChevronRight } from "@tabler/icons-react";
 
 import type { JitaApp } from "~/config/apps";
+import { HoverPrefetchLink } from "~/components/Link";
 import classes from "./AppCard.module.css";
 
 export interface AppCardProps {
@@ -22,7 +22,7 @@ export function AppCard({ app }: Readonly<AppCardProps>) {
       position="bottom"
     >
       <UnstyledButton
-        component={Link}
+        component={HoverPrefetchLink}
         href={app.url ?? "#"}
         onClick={app.onClick}
         className={classes.button}

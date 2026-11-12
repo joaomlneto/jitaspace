@@ -17,4 +17,33 @@ export default defineConfig(
   reactConfig,
   nextjsConfig,
   restrictEnvAccess,
+  {
+    // A plain next/link prefetches its destination as soon as it scrolls into
+    // view, at several segment requests each. Links repeated across pages or
+    // lists made that the site's biggest source of CDN requests, so every link
+    // goes through HoverPrefetchLink, which waits for hover, touch or focus.
+    // `@typescript-eslint/` rather than the core rule, so this does not replace
+    // the base config's `process.env` restriction; type imports stay allowed.
+    files: ["**/*.ts", "**/*.tsx"],
+    ignores: [
+      "components/Link/HoverPrefetchLink.tsx",
+      "tests/**",
+      "__mocks__/**",
+    ],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "next/link",
+              allowTypeImports: true,
+              message:
+                "Use `HoverPrefetchLink` from `~/components/Link`: a plain next/link prefetches on sight, which costs CDN requests on every page view.",
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

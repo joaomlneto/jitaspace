@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -26,6 +25,7 @@ import type {
 } from "~/lib/resource-pages";
 import { MailMessageViewer } from "~/components/EveMail";
 import { TextDiff } from "~/components/History";
+import { HoverPrefetchLink } from "~/components/Link";
 import { LANGUAGE_LABEL } from "~/lib/resource-history";
 import { compareLanguages } from "~/lib/resource-pages";
 
@@ -127,7 +127,11 @@ function BuildLink({
     );
   }
   return (
-    <Anchor component={Link} href={`/history/build/${build}`} fw={600}>
+    <Anchor
+      component={HoverPrefetchLink}
+      href={`/history/build/${build}`}
+      fw={600}
+    >
       Build {build}
     </Anchor>
   );

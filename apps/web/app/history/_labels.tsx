@@ -1,9 +1,9 @@
 "use client";
 
 import type { TextProps } from "@mantine/core";
-import Link from "next/link";
 import { Anchor, Text } from "@mantine/core";
 
+import { HoverPrefetchLink } from "~/components/Link";
 import { useEntityName, useHistoryLabels } from "./_labels-context";
 import {
   CategoryAnchor,
@@ -274,7 +274,7 @@ export function SkinMaterialLabel({
 }: Readonly<{ id: number; size?: LabelSize }>) {
   return (
     <Anchor
-      component={Link}
+      component={HoverPrefetchLink}
       href={`/history/skinMaterial/${id}`}
       size={size}
       prefetch={false}
@@ -357,7 +357,12 @@ export function EntityLabel({
   const href = ENTITY_PAGE[kind]?.(id);
   if (!href) return <PlainLabel kind={kind} id={id} size={size} />;
   return (
-    <Anchor component={Link} href={href} size={size} prefetch={false}>
+    <Anchor
+      component={HoverPrefetchLink}
+      href={href}
+      size={size}
+      prefetch={false}
+    >
       <NameText kind={kind} id={id} size={size} />
     </Anchor>
   );
@@ -410,7 +415,7 @@ export function MessageLabel({
     );
   return (
     <Anchor
-      component={Link}
+      component={HoverPrefetchLink}
       href={`/string/${id}`}
       size={size}
       prefetch={false}

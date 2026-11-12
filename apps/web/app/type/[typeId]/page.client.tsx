@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -614,7 +613,7 @@ export default function TypePage({
               </Button>
             )}
             <Button
-              component={Link}
+              component={HoverPrefetchLink}
               href={`https://www.everef.net/type/${typeId}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -626,7 +625,7 @@ export default function TypePage({
               EVE Ref
             </Button>
             <Button
-              component={Link}
+              component={HoverPrefetchLink}
               href={`https://evetycoon.com/market/${typeId}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -639,7 +638,7 @@ export default function TypePage({
             </Button>
             {categoryId === SHIP_CATEGORY_ID && (
               <Button
-                component={Link}
+                component={HoverPrefetchLink}
                 href={`https://eveworkbench.com/fits?ship=${typeId}`}
                 target="_blank"
                 rel="noopener noreferrer"

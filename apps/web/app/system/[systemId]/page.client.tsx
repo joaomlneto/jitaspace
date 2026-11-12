@@ -2,7 +2,6 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Anchor,
@@ -71,6 +70,7 @@ import {
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
 import { SectionHeader } from "~/components/Home";
+import { HoverPrefetchLink } from "~/components/Link";
 import { SolarSystem3D } from "~/components/SolarSystem3D";
 import { PlanetName, StarName } from "~/components/Text";
 import classes from "./page.module.css";
@@ -181,7 +181,7 @@ function PlanetRow({
 }: Readonly<{ planetId: number; moons: number; belts: number }>) {
   return (
     <Anchor
-      component={Link}
+      component={HoverPrefetchLink}
       href={`/planet/${planetId}`}
       underline="never"
       c="inherit"
@@ -230,7 +230,7 @@ function StargateConnection({ stargateId }: Readonly<{ stargateId: number }>) {
 
   return (
     <Anchor
-      component={Link}
+      component={HoverPrefetchLink}
       href={destinationSystemId ? `/system/${destinationSystemId}` : "#"}
       underline="never"
       c="inherit"
@@ -648,7 +648,7 @@ export default function Page({
                 {EXTERNAL_TOOLS.map((tool) => (
                   <Button
                     key={tool.label}
-                    component={Link}
+                    component={HoverPrefetchLink}
                     href={tool.href(systemId)}
                     target="_blank"
                     size="xs"

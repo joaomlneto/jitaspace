@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Badge,
   Button,
@@ -165,7 +164,7 @@ export function WarHeader({
           {externalLinks(warId).map((link) => (
             <Button
               key={link.label}
-              component={Link}
+              component="a"
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"

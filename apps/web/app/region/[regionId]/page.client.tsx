@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Box,
@@ -311,7 +310,7 @@ export default function RegionPage({
             {externalLinks(regionId, name).map((link) => (
               <Button
                 key={link.label}
-                component={Link}
+                component={HoverPrefetchLink}
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Alert,
@@ -18,6 +17,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import type { BuildRangeChanges } from "~/lib/history";
+import { HoverPrefetchLink } from "~/components/Link";
 import { getBuildRangeChanges } from "~/lib/history-actions";
 import { EntityChangeSections } from "../build/[build]/_entity-sections";
 
@@ -107,7 +107,7 @@ export default function CompareBuildsClient({
           <Text c="dimmed" size="sm" mt={4}>
             Pick two builds to see how EVE Online static data changed between
             them.{" "}
-            <Anchor component={Link} href="/history" size="sm">
+            <Anchor component={HoverPrefetchLink} href="/history" size="sm">
               All history
             </Anchor>
           </Text>
