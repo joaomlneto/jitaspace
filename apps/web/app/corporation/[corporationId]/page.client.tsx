@@ -16,14 +16,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconBuildingWarehouse,
-  IconChartPie,
-  IconExternalLink,
-  IconFileText,
-  IconSwords,
-  IconWorld,
-} from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { CorporationsDetail } from "@jitaspace/esi-client";
@@ -34,12 +26,18 @@ import {
   StationName,
 } from "@jitaspace/eve-components";
 import {
+  CategoryCorporationIcon,
+  CategoryIskIcon,
   CategoryLpIcon,
   CategoryOngoingConflictsIcon,
   CategorySkullIcon,
+  ContractsIcon,
+  SystemOpenWindowIcon,
   WindowAgentIcon,
   WindowEmploymentHistoryIcon,
   WindowInfoIcon,
+  WindowNoteIcon,
+  WindowStationIcon,
 } from "@jitaspace/eve-icons";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -51,6 +49,7 @@ import {
 
 import type { CorporationPageTab } from "./tabs";
 import type { CorporationPageData } from "./types";
+import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { AgentsTable } from "~/components/Agents";
 import {
@@ -204,6 +203,8 @@ function visibleTabsFor(
     agents: (profile?.counts.agents ?? 0) > 0,
     economy: hasEconomy,
     wars: (profile?.warSummary.total ?? 0) > 0,
+    // NPC corporations too: their members (the starter corporations') trade.
+    contracts: true,
     killboard: true,
   };
 }
@@ -217,7 +218,9 @@ function NpcDetails({
 }>) {
   return (
     <Stack gap="sm">
-      <SectionHeading icon={<IconWorld size={18} />}>
+      <SectionHeading
+        icon={<CategoryCorporationIcon size={18} color="currentColor" alt="" />}
+      >
         NPC corporation
       </SectionHeading>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
@@ -449,7 +452,7 @@ export default function CorporationPage({
             <Text size="sm">{identity.name ?? corporationId}</Text>
           </Breadcrumbs>
           <Group gap="sm" align="center">
-            <Title order={2}>
+            <Title order={1} size="h2">
               {identity.name ?? `Corporation ${corporationId}`}
             </Title>
             {identity.ticker && (
@@ -567,7 +570,9 @@ export default function CorporationPage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>
@@ -606,7 +611,7 @@ export default function CorporationPage({
             {visibleTabs.description && (
               <Tabs.Tab
                 value="description"
-                leftSection={<IconFileText size={16} />}
+                leftSection={<WindowNoteIcon size={16} alt="" />}
               >
                 Description
               </Tabs.Tab>
@@ -622,7 +627,7 @@ export default function CorporationPage({
             {visibleTabs.stations && profile && (
               <Tabs.Tab
                 value="stations"
-                leftSection={<IconBuildingWarehouse size={16} />}
+                leftSection={<WindowStationIcon size={16} alt="" />}
               >
                 Stations ({formatInteger(profile.counts.stations)})
               </Tabs.Tab>
@@ -638,7 +643,9 @@ export default function CorporationPage({
             {visibleTabs.economy && (
               <Tabs.Tab
                 value="economy"
-                leftSection={<IconChartPie size={16} />}
+                leftSection={
+                  <CategoryIskIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Economy
               </Tabs.Tab>
@@ -657,6 +664,12 @@ export default function CorporationPage({
                 Wars ({formatInteger(warSummary.total)})
               </Tabs.Tab>
             )}
+            <Tabs.Tab
+              value="contracts"
+              leftSection={<ContractsIcon size={16} alt="" />}
+            >
+              Contracts
+            </Tabs.Tab>
             <Tabs.Tab
               value="killboard"
               leftSection={
@@ -813,7 +826,15 @@ export default function CorporationPage({
 
               {warSummary && warSummary.total > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSwords size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryOngoingConflictsIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     War record
                   </SectionHeading>
                   <WarSummaryCards summary={warSummary} />
@@ -905,6 +926,10 @@ export default function CorporationPage({
               />
             </Tabs.Panel>
           )}
+
+          <Tabs.Panel value="contracts" pt="lg">
+            <ContractHistoryTab subject="corporation" id={corporationId} />
+          </Tabs.Panel>
 
           <Tabs.Panel value="killboard" pt="lg">
             <KillboardTab

@@ -19,25 +19,28 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import {
-  IconArrowsDiff,
-  IconExternalLink,
-  IconFileText,
-  IconHistory,
-  IconListCheck,
-  IconListDetails,
-  IconSwords,
-  IconVersions,
-} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeName } from "@jitaspace/eve-components";
 import {
+  CategoryCombatIcon,
   CategoryIskIcon,
+  CategoryPowerIcon,
+  CategoryRiggingIcon,
+  ContractsIcon,
+  SystemArrowRotateLeftIcon,
+  SystemBlockBanIcon,
+  SystemDetailsViewIcon,
+  SystemNumberIcon,
+  SystemOpenWindowIcon,
+  SystemTuneIcon,
+  SystemVariationIcon,
+  WindowCompareToolIcon,
   WindowInfoIcon,
   WindowInsuranceIcon,
+  WindowNoteIcon,
 } from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
@@ -57,7 +60,9 @@ import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { InsurancePricePeriod } from "~/lib/insurance";
 import type { NpcStats } from "~/lib/npcStats";
+import type { TypeSynchronizer } from "~/lib/synchronizer";
 import type { NamedTypeListMatch } from "~/lib/typeLists";
+import { ContractHistoryTab } from "~/app/contracts/ContractHistoryTab";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
   CategoryAnchor,
@@ -73,6 +78,7 @@ import {
 } from "~/components/Breadcrumbs";
 import { COMPARABLE_CATEGORY_IDS } from "~/components/Compare/catalog";
 import { ItemVariations } from "~/components/Compare/ItemVariations";
+import { EffectCategoryHeading } from "~/components/Dogma";
 import {
   HeroCard,
   HeroStat,
@@ -94,11 +100,19 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { TypeListMatchTable } from "~/components/TypeLists";
+import { groupByEffectCategory } from "~/lib/dogmaEffectCategory";
 import { DRONE_CATEGORY_ID } from "~/lib/npcStats";
+import { emptyTypeSynchronizer, hasSynchronizer } from "~/lib/synchronizer";
 import { isTypeListMember } from "~/lib/typeLists";
 import { StreamedEntityHistory } from "../../history/EntityHistory";
 import { InsuranceTab } from "./InsuranceTab";
-import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
+import { SynchronizerTab } from "./SynchronizerTab";
+import {
+  DEFAULT_TYPE_PAGE_TAB,
+  isTypePageTab,
+  resolveTypePageTab,
+  TYPE_PAGE_TABS,
+} from "./tabs";
 
 export interface PageProps {
   typeId: number;
@@ -269,6 +283,7 @@ export default function TypePage({
   history = NO_HISTORY,
   npcStats = null,
   insurance = null,
+  synchronizer = emptyTypeSynchronizer,
 }: Readonly<
   PageProps & {
     dogmaMeta: TypeDogmaMeta;
@@ -283,6 +298,8 @@ export default function TypePage({
     npcStats?: NpcStats | null;
     /** A ship's latest insurance prices; null for anything never insured. */
     insurance?: InsurancePricePeriod | null;
+    /** A Synchronizer rig's scaling, or the rigs a module powers. */
+    synchronizer?: TypeSynchronizer;
   }
 >) {
   const character = useSelectedCharacter();
@@ -329,15 +346,14 @@ export default function TypePage({
     () => typeLists.filter((typeList) => !isTypeListMember(typeList)),
     [typeLists],
   );
-  // `?tab=type-lists` on an item no list matches (or `?tab=combat` on one
-  // that is not an NPC) would select a tab that is not rendered, leaving the
-  // page blank; show the overview instead.
-  const selectedTab =
-    (activeTab === "type-lists" && typeLists.length === 0) ||
-    (activeTab === "combat" && !npcStats) ||
-    (activeTab === "insurance" && !insurance)
-      ? DEFAULT_TYPE_PAGE_TAB
-      : activeTab;
+  const showSynchronizer = hasSynchronizer(synchronizer);
+  // Which of the conditional tabs this item renders.
+  const selectedTab = resolveTypePageTab(activeTab, {
+    "type-lists": typeLists.length > 0,
+    combat: npcStats !== null,
+    insurance: insurance !== null,
+    synchronizer: showSynchronizer,
+  });
 
   // Determine the best image variation: prefer the 3D render (ships), then a
   // blueprint, otherwise fall back to the icon.
@@ -466,6 +482,18 @@ export default function TypePage({
     [typeData?.dogma_effects],
   );
 
+  // By when they apply (Passive, Activated, Online, …), as the attributes are
+  // grouped by attribute category; effects we have no row for come last.
+  const groupedDogmaEffects = useMemo(
+    () =>
+      groupByEffectCategory(
+        sortedDogmaEffects,
+        (effect) => dogmaMeta.effects[effect.effect_id]?.categoryId,
+        dogmaMeta.effectCategories,
+      ),
+    [sortedDogmaEffects, dogmaMeta.effects, dogmaMeta.effectCategories],
+  );
+
   // Physical properties — only render the ones this type actually defines.
   const propertyItems = useMemo(() => {
     const items: { label: string; value: string }[] = [];
@@ -525,7 +553,9 @@ export default function TypePage({
         >
           <TypeInventoryBreadcrumbs typeId={typeId} fz="sm" />
           <Group gap="sm" align="center">
-            <Title order={2}>{name ?? notAvailableText}</Title>
+            <Title order={1} size="h2">
+              {name ?? notAvailableText}
+            </Title>
             {typeData?.published === false && (
               <Badge color="red" variant="light">
                 Unpublished
@@ -577,7 +607,7 @@ export default function TypePage({
                 href={`/compare?types=${typeId}`}
                 size="xs"
                 variant="light"
-                leftSection={<IconArrowsDiff size={14} />}
+                leftSection={<WindowCompareToolIcon size={14} alt="" />}
               >
                 Compare
               </Button>
@@ -588,7 +618,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Ref
             </Button>
@@ -598,7 +630,9 @@ export default function TypePage({
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               EVE Tycoon
             </Button>
@@ -609,7 +643,9 @@ export default function TypePage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 EVE Workbench
               </Button>
@@ -633,22 +669,41 @@ export default function TypePage({
               Overview
             </Tabs.Tab>
             {npcStats && (
-              <Tabs.Tab value="combat" leftSection={<IconSwords size={16} />}>
+              <Tabs.Tab
+                value="combat"
+                leftSection={
+                  <CategoryCombatIcon size={16} color="currentColor" alt="" />
+                }
+              >
                 Combat
               </Tabs.Tab>
             )}
             {hasAttributes && (
               <Tabs.Tab
                 value="attributes"
-                leftSection={<IconListDetails size={16} />}
+                leftSection={
+                  <SystemTuneIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Attributes
+              </Tabs.Tab>
+            )}
+            {showSynchronizer && (
+              <Tabs.Tab
+                value="synchronizer"
+                leftSection={
+                  <CategoryRiggingIcon size={16} color="currentColor" alt="" />
+                }
+              >
+                Synchronizer
               </Tabs.Tab>
             )}
             {hasVariations && (
               <Tabs.Tab
                 value="variations"
-                leftSection={<IconVersions size={16} />}
+                leftSection={
+                  <SystemVariationIcon size={16} color="currentColor" alt="" />
+                }
               >
                 Variations
               </Tabs.Tab>
@@ -663,6 +718,13 @@ export default function TypePage({
                 Market
               </Tabs.Tab>
             )}
+            {/* Every type, published or not: the tab says when it has none. */}
+            <Tabs.Tab
+              value="contracts"
+              leftSection={<ContractsIcon size={16} alt="" />}
+            >
+              Contracts
+            </Tabs.Tab>
             {insurance && (
               <Tabs.Tab
                 value="insurance"
@@ -674,7 +736,7 @@ export default function TypePage({
             {description && (
               <Tabs.Tab
                 value="description"
-                leftSection={<IconFileText size={16} />}
+                leftSection={<WindowNoteIcon size={16} alt="" />}
               >
                 Description
               </Tabs.Tab>
@@ -682,12 +744,27 @@ export default function TypePage({
             {typeLists.length > 0 && (
               <Tabs.Tab
                 value="type-lists"
-                leftSection={<IconListCheck size={16} />}
+                leftSection={
+                  <SystemDetailsViewIcon
+                    size={16}
+                    color="currentColor"
+                    alt=""
+                  />
+                }
               >
                 Type Lists
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>
@@ -753,7 +830,11 @@ export default function TypePage({
 
               {propertyItems.length > 0 && (
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconListDetails size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <SystemNumberIcon size={18} color="currentColor" alt="" />
+                    }
+                  >
                     Properties
                   </SectionHeading>
                   <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="sm">
@@ -775,7 +856,15 @@ export default function TypePage({
             <Tabs.Panel value="combat" pt="lg">
               <Stack gap="lg">
                 <Stack gap="sm">
-                  <SectionHeading icon={<IconSwords size={18} />}>
+                  <SectionHeading
+                    icon={
+                      <CategoryCombatIcon
+                        size={18}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
+                  >
                     Offense &amp; Defense
                   </SectionHeading>
                   <DamageTypeLegend />
@@ -790,7 +879,15 @@ export default function TypePage({
                 </Stack>
                 {npcStats.ewar.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconSwords size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <CategoryCombatIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Abilities
                     </SectionHeading>
                     <NpcEwarTable ewar={npcStats.ewar} />
@@ -806,7 +903,11 @@ export default function TypePage({
               <Stack gap="lg">
                 {sortedDogmaAttributes.length > 0 && (
                   <Stack gap="md">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemTuneIcon size={18} color="currentColor" alt="" />
+                      }
+                    >
                       Attributes
                     </SectionHeading>
                     {categorizedDogmaAttributes.map((category) => (
@@ -875,37 +976,66 @@ export default function TypePage({
 
                 {sortedDogmaEffects.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <CategoryPowerIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Effects
                     </SectionHeading>
-                    <Paper withBorder radius="md" p="sm">
-                      <Table highlightOnHover verticalSpacing="xs">
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th>Effect</Table.Th>
-                            <Table.Th ta="right">Default</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                          {sortedDogmaEffects.map((effect) => (
-                            <Table.Tr key={effect.effect_id}>
-                              <Table.Td>
-                                <TypeEffectCell
-                                  effectId={effect.effect_id}
-                                  meta={dogmaMeta.effects[effect.effect_id]}
-                                />
-                              </Table.Td>
-                              <Table.Td ta="right">
-                                {booleanBadge(effect.is_default)}
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    </Paper>
+                    {groupedDogmaEffects.map((group) => (
+                      <Paper
+                        key={group.category?.effectCategoryId ?? "other"}
+                        withBorder
+                        radius="md"
+                        p="sm"
+                      >
+                        <Stack gap="xs">
+                          {/* One uncategorized group means no category data, not a group worth naming. */}
+                          {(group.category !== null ||
+                            groupedDogmaEffects.length > 1) && (
+                            <EffectCategoryHeading category={group.category} />
+                          )}
+                          <Table highlightOnHover verticalSpacing="xs">
+                            <Table.Thead>
+                              <Table.Tr>
+                                <Table.Th>Effect</Table.Th>
+                                <Table.Th ta="right">Default</Table.Th>
+                              </Table.Tr>
+                            </Table.Thead>
+                            <Table.Tbody>
+                              {group.items.map((effect) => (
+                                <Table.Tr key={effect.effect_id}>
+                                  <Table.Td>
+                                    <TypeEffectCell
+                                      effectId={effect.effect_id}
+                                      meta={dogmaMeta.effects[effect.effect_id]}
+                                    />
+                                  </Table.Td>
+                                  <Table.Td ta="right">
+                                    {booleanBadge(effect.is_default)}
+                                  </Table.Td>
+                                </Table.Tr>
+                              ))}
+                            </Table.Tbody>
+                          </Table>
+                        </Stack>
+                      </Paper>
+                    ))}
                   </Stack>
                 )}
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Synchronizer — a rig's scaling, or the rigs a module powers */}
+          {showSynchronizer && (
+            <Tabs.Panel value="synchronizer" pt="lg">
+              <SynchronizerTab synchronizer={synchronizer} />
             </Tabs.Panel>
           )}
 
@@ -992,6 +1122,11 @@ export default function TypePage({
             </Tabs.Panel>
           )}
 
+          {/* Contracts — every public contract that listed this type */}
+          <Tabs.Panel value="contracts" pt="lg">
+            <ContractHistoryTab subject="type" id={typeId} />
+          </Tabs.Panel>
+
           {/* Insurance */}
           {insurance && (
             <Tabs.Panel value="insurance" pt="lg">
@@ -1028,7 +1163,15 @@ export default function TypePage({
                 </Text>
                 {memberTypeLists.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListCheck size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemDetailsViewIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Member of {memberTypeLists.length}{" "}
                       {memberTypeLists.length === 1 ? "list" : "lists"}
                     </SectionHeading>
@@ -1037,7 +1180,15 @@ export default function TypePage({
                 )}
                 {excludedTypeLists.length > 0 && (
                   <Stack gap="sm">
-                    <SectionHeading icon={<IconListDetails size={18} />}>
+                    <SectionHeading
+                      icon={
+                        <SystemBlockBanIcon
+                          size={18}
+                          color="currentColor"
+                          alt=""
+                        />
+                      }
+                    >
                       Excluded from {excludedTypeLists.length}{" "}
                       {excludedTypeLists.length === 1 ? "list" : "lists"}
                     </SectionHeading>

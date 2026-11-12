@@ -33,7 +33,7 @@ export default defineConfig(
           dataReturnType: "full",
         },
       }),*/
-        pluginZod({}),
+        pluginZod({ version: "4", importPath: "zod" }),
       ],
     };
   },

@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 
 import type * as TypeAvatarModule from "../../Avatar/TypeAvatar";
 
@@ -46,5 +46,27 @@ describe("TypeAvatar (presentational)", () => {
     } finally {
       global.fetch = previousFetch;
     }
+  });
+
+  it("shows the unknown-item glyph when the image fails", () => {
+    const { container, getByTestId } = renderWithMantine(
+      <TypeAvatar typeId={45000} />,
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(getByTestId("unknown-icon")).toBeTruthy();
+  });
+
+  it("shows the fallback instead, when one is given", () => {
+    // A SKIN has no image at all; the contracts browser shows the contract
+    // type's icon rather than a question mark.
+    const { container, getByTestId, queryByTestId } = renderWithMantine(
+      <TypeAvatar
+        typeId={45000}
+        fallback={<span data-testid="contract-icon" />}
+      />,
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(getByTestId("contract-icon")).toBeTruthy();
+    expect(queryByTestId("unknown-icon")).toBeNull();
   });
 });

@@ -16,15 +16,17 @@ import {
 import { modals } from "@mantine/modals";
 import {
   IconArrowsMove,
-  IconDots,
   IconFolder,
   IconFolderOpen,
-  IconFolderPlus,
-  IconPencil,
-  IconTrash,
 } from "@tabler/icons-react";
 
 import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import {
+  SystemAddFolderIcon,
+  SystemEditIcon,
+  SystemMoreHorizontalIcon,
+  SystemTrashcanIcon,
+} from "@jitaspace/eve-icons";
 
 import type { MarketTreeFilter } from "./filterMarketTree";
 import type { MarketTree } from "./readMarketTree";
@@ -192,7 +194,7 @@ function RowMenu({
           className={classes.menuButton}
           aria-label={label}
         >
-          <IconDots size={16} />
+          <SystemMoreHorizontalIcon size={16} color="currentColor" alt="" />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>{children}</Menu.Dropdown>
@@ -313,13 +315,17 @@ function FolderRow({ folderKey }: Readonly<{ folderKey: number }>) {
         )}
         <RowMenu label={`${folder.name} options`}>
           <Menu.Item
-            leftSection={<IconFolderPlus size={16} />}
+            leftSection={
+              <SystemAddFolderIcon size={16} color="currentColor" alt="" />
+            }
             onClick={() => context.newFolder(folderId)}
           >
             New folder inside
           </Menu.Item>
           <Menu.Item
-            leftSection={<IconPencil size={16} />}
+            leftSection={
+              <SystemEditIcon size={16} color="currentColor" alt="" />
+            }
             onClick={() => context.setEditingId(folderId)}
           >
             Rename
@@ -335,7 +341,9 @@ function FolderRow({ folderKey }: Readonly<{ folderKey: number }>) {
           <Menu.Divider />
           <Menu.Item
             color="red"
-            leftSection={<IconTrash size={16} />}
+            leftSection={
+              <SystemTrashcanIcon size={16} color="currentColor" alt="" />
+            }
             onClick={confirmDelete}
           >
             Delete folder
@@ -383,7 +391,9 @@ function ItemRow({ typeId, name }: Readonly<{ typeId: number; name: string }>) {
         <Menu.Divider />
         <Menu.Item
           color="red"
-          leftSection={<IconTrash size={16} />}
+          leftSection={
+            <SystemTrashcanIcon size={16} color="currentColor" alt="" />
+          }
           onClick={() => useQuickbarStore.getState().removeItem(typeId)}
         >
           Remove from quickbar
@@ -519,7 +529,9 @@ export function Quickbar({
           <Button
             variant="subtle"
             size="compact-sm"
-            leftSection={<IconFolderPlus size={16} />}
+            leftSection={
+              <SystemAddFolderIcon size={16} color="currentColor" alt="" />
+            }
             onClick={() => context.newFolder(null)}
           >
             New folder

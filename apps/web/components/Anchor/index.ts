@@ -4,6 +4,7 @@ export * from "./CalendarEventOwnerAnchor";
 export * from "./CategoryAnchor";
 export * from "./CharacterAnchor";
 export * from "./ConstellationAnchor";
+export * from "./ContractAnchor";
 export * from "./CorporationAnchor";
 export * from "./DogmaAttributeAnchor";
 export * from "./DogmaEffectAnchor";

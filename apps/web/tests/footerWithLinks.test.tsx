@@ -48,7 +48,7 @@ describe("FooterWithLinks", () => {
     // requests each, ~400k requests/day in production. Almost nobody
     // navigates here, so the prefetch must stay off.
     for (const [label, href] of [
-      ["About", "/about"],
+      ["About JitaSpace", "/about"],
       ["Support", "/support"],
       ["Status", "/status"],
     ]) {
@@ -56,5 +56,19 @@ describe("FooterWithLinks", () => {
       expect(link).toHaveAttribute("href", href);
       expect(link).toHaveAttribute("data-prefetch", "false");
     }
+  });
+
+  it("names the icon-only Discord link", () => {
+    const { FooterWithLinks } = require("~/layouts/MainLayout/FooterWithLinks");
+
+    render(
+      <MantineProvider>
+        <FooterWithLinks />
+      </MantineProvider>,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "JitaSpace on Discord" }),
+    ).toHaveAttribute("href", "https://discord.gg/jitaspace");
   });
 });

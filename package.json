@@ -34,7 +34,7 @@
   },
   "prettier": "@jitaspace/prettier-config",
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
+    "@changesets/cli": "^3.0.3",
     "@jitaspace/prettier-config": "workspace:*",
     "@manypkg/cli": "^0.25.1",
     "@turbo/gen": "^2.9.14",

@@ -9,8 +9,8 @@ import { usePreferencesStore } from "~/lib/preferences";
 import { revealPrePaintTheme } from "~/lib/themePreload";
 import { resolveAppTheme } from "~/themes";
 import {
-  DEFAULT_THEME_SEASON_END,
-  isDefaultThemeSeasonOver,
+  isDefaultThemeInSeason,
+  nextDefaultThemeSeasonChange,
 } from "~/themes/season";
 
 /**
@@ -19,11 +19,18 @@ import {
  * WCAG AA minimum for body text, and dimmed text here is often 12px. Mixing
  * in 18% white lifts it past 4.5:1 on every dark surface the themes use while
  * keeping each theme's tint and dimmed text visibly quieter than normal text.
+ *
+ * The light scheme's is `gray.6`, which a theme can replace with
+ * `other.lightDimmed` where its pale panels need darker dimmed text (EVE).
  */
 export const cssVariablesResolver: CSSVariablesResolver = (theme) => {
   const resolved = v8CssVariablesResolver(theme);
+  const lightDimmed = theme.other.lightDimmed;
   return {
     ...resolved,
+    light: lightDimmed
+      ? { ...resolved.light, "--mantine-color-dimmed": lightDimmed }
+      : resolved.light,
     dark: {
       ...resolved.dark,
       "--mantine-color-dimmed":
@@ -40,10 +47,10 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
 
   const [persistedThemeRendered, setPersistedThemeRendered] = useState(false);
-  // Whether the Default theme's season has ended (themes/season.ts). False on
-  // the server and during hydration, which render the seasonal theme as
+  // Whether the Default theme shows its season (themes/season.ts). True on the
+  // server and during hydration, which render the seasonal theme as
   // prerendered; the clock is read only in the layout effect below.
-  const [seasonOver, setSeasonOver] = useState(false);
+  const [inSeason, setInSeason] = useState(true);
   // Whether any pointer is coarse (a touchscreen), for the themes that keep
   // bigger controls there (themes/index.ts). False on the server and during
   // hydration; read in the layout effect below, and followed after that.
@@ -55,13 +62,13 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
   // land before the paint: the store's own subscription is attached in a
   // passive effect, which runs after it, whereas an update from a layout effect
   // re-renders synchronously, and that render reads the rehydrated store.
-  // The season is checked in the same effect, so a Default visitor past the
-  // season's end is switched to its fallback in that same re-render.
+  // The season is checked in the same effect, so a Default visitor outside the
+  // season is switched to its fallback in that same re-render.
   useLayoutEffect(() => {
     void usePreferencesStore.persist.rehydrate();
     // The synchronous re-render is the point here, not an accident.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSeasonOver(isDefaultThemeSeasonOver(Date.now()));
+    setInSeason(isDefaultThemeInSeason(Date.now()));
     setTouch(window.matchMedia(TOUCH_QUERY).matches);
     setPersistedThemeRendered(true);
   }, []);
@@ -74,16 +81,23 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
     return () => query.removeEventListener("change", onChange);
   }, []);
 
-  // A tab left open across the season's end switches when it ends. setTimeout
-  // overflows past ~24.8 days (2^31 - 1 ms), so a later end is left to the
-  // next page load.
+  // A tab left open across the season's start or end switches when it does.
+  // setTimeout overflows past ~24.8 days (2^31 - 1 ms), so a later change is
+  // left to the next page load. The timer sets the state at the boundary
+  // itself, not at the clock's reading when it fires, so a timer that fires a
+  // little early cannot leave the tab unswitched with no timer left.
   useEffect(() => {
-    if (seasonOver) return;
-    const delay = DEFAULT_THEME_SEASON_END - Date.now();
-    if (delay <= 0 || delay > 2 ** 31 - 1) return;
-    const timer = setTimeout(() => setSeasonOver(true), delay);
+    const now = Date.now();
+    const next = nextDefaultThemeSeasonChange(now);
+    if (next === null) return;
+    const delay = next - now;
+    if (delay > 2 ** 31 - 1) return;
+    const timer = setTimeout(
+      () => setInSeason(isDefaultThemeInSeason(next)),
+      delay,
+    );
     return () => clearTimeout(timer);
-  }, [seasonOver]);
+  }, [inSeason]);
 
   // Runs once that re-render has committed — still before the paint — so the
   // app shell the pre-paint script hid is only ever shown already themed.
@@ -92,8 +106,8 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
   }, [persistedThemeRendered]);
 
   const theme = useMemo(
-    () => resolveAppTheme(selectedTheme, seasonOver, touch),
-    [selectedTheme, seasonOver, touch],
+    () => resolveAppTheme(selectedTheme, inSeason, touch),
+    [selectedTheme, inSeason, touch],
   );
 
   return (

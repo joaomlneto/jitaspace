@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import { describe, expect, it } from "@jest/globals";
 
 import { getEnabledApps } from "~/components/Menu/appAccess";
-import { characterApps } from "~/config/apps";
+import { characterApps, extraJitaFeatures } from "~/config/apps";
 
 const getEnabledCharacterApps = (
   scopes: Parameters<typeof getEnabledApps>[1],
@@ -39,6 +39,46 @@ describe("character app access", () => {
     ]);
 
     expect(enabledApps.map((app) => app.name)).toContain("Contacts");
+  });
+
+  it("enables Mercenary Operations with the activities scope alone", () => {
+    // Den locations need a structures scope too, but the page works without
+    // it, so it must not be what decides whether the app is offered.
+    const enabledApps = getEnabledCharacterApps([
+      "esi-activities.read_character.v1",
+    ]);
+
+    expect(enabledApps.map((app) => app.name)).toContain(
+      "Mercenary Operations",
+    );
+    expect(getEnabledCharacterApps([]).map((app) => app.name)).not.toContain(
+      "Mercenary Operations",
+    );
+  });
+
+  it("asks for the Mercenary Den locations at login, without gating the app on them", () => {
+    // The login modal requests every extra feature by default, so a later
+    // login keeps the scope instead of quietly dropping it.
+    expect(extraJitaFeatures.flatMap((feature) => feature.scopes)).toContain(
+      "esi-structures.read_character.v1",
+    );
+    const mercenaryApp = Object.values(characterApps).find(
+      (app) => app.url === "/mercenary-tactical-operations",
+    );
+    expect(mercenaryApp?.scopes.optional).toBeUndefined();
+  });
+
+  it("asks for the customs offices at login, without gating Planetary Interaction on them", () => {
+    // Only Directors can read customs offices, so a character with just the
+    // planets scope must still be offered the app.
+    expect(
+      getEnabledCharacterApps(["esi-planets.manage_planets.v1"]).map(
+        (app) => app.name,
+      ),
+    ).toContain("Planetary Interaction");
+    expect(extraJitaFeatures.flatMap((feature) => feature.scopes)).toContain(
+      "esi-planets.read_customs_offices.v1",
+    );
   });
 
   it("disables optional-only apps when no optional scope is granted", () => {

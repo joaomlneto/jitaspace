@@ -21,7 +21,8 @@
   --surface-2: rgba(23, 27, 34, 0.66);
   --ink: #e3e7ec;
   --ink-2: #98a1af;
-  --ink-3: #646d7b;
+  /* The faintest ink still reads at 4.5:1 on the darkest surfaces (WCAG AA). */
+  --ink-3: #7f8896;
 }
 
 .mono {

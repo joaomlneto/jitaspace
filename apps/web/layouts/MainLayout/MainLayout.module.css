@@ -1,3 +1,16 @@
+/* AppShell.Main as a column: the page content grows to fill it, so the footer
+   after it sits at the bottom of the viewport on a page shorter than the
+   screen, and after the content on a longer one. */
+.main {
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1 0 auto;
+  min-width: 0;
+}
+
 /* The themed wallpaper, painted on its own viewport-sized fixed layer rather
    than with `background-attachment: fixed` on the (page-tall) AppShell root.
 

@@ -17,13 +17,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import {
-  IconAlertTriangle,
-  IconChevronRight,
-  IconExternalLink,
-  IconMeteor,
-  IconMoon,
-} from "@tabler/icons-react";
+import { IconChevronRight, IconMeteor, IconMoon } from "@tabler/icons-react";
 
 import { useGetFwSystems, useGetIncursions } from "@jitaspace/esi-client";
 import {
@@ -41,6 +35,8 @@ import {
   CategoryNpcActivityIcon,
   CategorySovereigntyIcon,
   ControlJumpToIcon,
+  SystemOpenWindowIcon,
+  WindowIncursionsIcon,
 } from "@jitaspace/eve-icons";
 import {
   useAllSolarSystemJumps,
@@ -373,10 +369,7 @@ function SystemControlPanels({
           <Paper p="md" radius="md">
             <Group justify="space-between" mb="xs">
               <Group gap="xs">
-                <IconAlertTriangle
-                  size={18}
-                  color="var(--mantine-color-red-5)"
-                />
+                <WindowIncursionsIcon size={18} alt="" />
                 <Text fw={600}>Incursion</Text>
               </Group>
               <Badge variant="light" color="red" tt="capitalize">
@@ -659,7 +652,13 @@ export default function Page({
                     href={tool.href(systemId)}
                     target="_blank"
                     size="xs"
-                    leftSection={<IconExternalLink size={13} />}
+                    leftSection={
+                      <SystemOpenWindowIcon
+                        size={13}
+                        color="currentColor"
+                        alt=""
+                      />
+                    }
                   >
                     {tool.label}
                   </Button>

@@ -15,13 +15,12 @@ import {
 import {
   IconArrowLeft,
   IconArrowRight,
-  IconDotsVertical,
   IconGripVertical,
-  IconPinned,
   IconX,
 } from "@tabler/icons-react";
 
 import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
+import { SystemMoreVerticalIcon, SystemPinnedIcon } from "@jitaspace/eve-icons";
 
 import type { IndexedCompareCatalog } from "./catalog";
 import { TypeAnchor } from "~/components/Anchor";
@@ -155,7 +154,11 @@ export const CompareItemHeader = memo(
                   aria-label={`Actions for ${name}`}
                   data-compare-menu={typeId}
                 >
-                  <IconDotsVertical size={12} />
+                  <SystemMoreVerticalIcon
+                    size={12}
+                    color="currentColor"
+                    alt=""
+                  />
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
@@ -174,7 +177,9 @@ export const CompareItemHeader = memo(
                   Move right
                 </Menu.Item>
                 <Menu.Item
-                  leftSection={<IconPinned size={14} />}
+                  leftSection={
+                    <SystemPinnedIcon size={14} color="currentColor" alt="" />
+                  }
                   disabled={isBaseline}
                   onClick={() => onMove(0)}
                 >

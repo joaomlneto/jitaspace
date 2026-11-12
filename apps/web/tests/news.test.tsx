@@ -157,6 +157,25 @@ describe("news", () => {
       ]);
     });
 
+    it("puts a higher-priority card first, ahead of newer ones", async () => {
+      renderCarousel([
+        makeItem({ id: "newest", title: "Newest item", date: "2026-03-01" }),
+        makeItem({
+          id: "pinned",
+          title: "Pinned item",
+          date: "2026-01-01",
+          priority: 100,
+        }),
+        makeItem({ id: "older", title: "Older item", date: "2026-02-01" }),
+      ]);
+
+      await screen.findByText("Pinned item");
+      const titles = screen
+        .getAllByText(/ item$/)
+        .map((element) => element.textContent);
+      expect(titles).toEqual(["Pinned item", "Newest item", "Older item"]);
+    });
+
     it("dismisses an item and persists the dismissal", async () => {
       renderCarousel([makeItem({ id: "dismiss-me", title: "Dismiss me" })]);
       expect(await screen.findByText("Dismiss me")).toBeInTheDocument();

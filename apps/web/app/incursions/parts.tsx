@@ -2,9 +2,9 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { Anchor, Badge, Group, Text, Tooltip } from "@mantine/core";
-import { IconExternalLink, IconSkull } from "@tabler/icons-react";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { CategorySkullIcon, SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 import {
   AllianceAvatar,
   DateHoverCard,
@@ -215,7 +215,7 @@ export function DotlanLink({
         c="dimmed"
         aria-label="Map on DOTLAN EveMaps"
       >
-        <IconExternalLink size={14} />
+        <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
       </Anchor>
     </Tooltip>
   );
@@ -243,7 +243,9 @@ export function BossBadge() {
         variant="filled"
         color="red"
         miw="max-content"
-        leftSection={<IconSkull size={12} />}
+        leftSection={
+          <CategorySkullIcon size={12} color="currentColor" alt="" />
+        }
       >
         Boss
       </Badge>

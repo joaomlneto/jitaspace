@@ -1,10 +1,9 @@
 import type { MenuProps } from "@mantine/core";
 import { Menu, Text } from "@mantine/core";
 import { modals, openContextModal } from "@mantine/modals";
-import { IconLockSearch } from "@tabler/icons-react";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
-import { TerminateIcon } from "@jitaspace/eve-icons";
+import { SystemLockedIcon, TerminateIcon } from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
   useAuthStore,
@@ -77,7 +76,7 @@ export const CharacterMenu = ({
                 component={HoverPrefetchLink}
                 href={app.url ?? ""}
                 onClick={app.onClick}
-                leftSection={<app.Icon width={20} />}
+                leftSection={<app.Icon width={20} alt="" />}
               >
                 {app.name}
               </Menu.Item>
@@ -90,7 +89,9 @@ export const CharacterMenu = ({
             <Menu.Label>Authentication</Menu.Label>
 
             <Menu.Item
-              leftSection={<IconLockSearch size={20} />}
+              leftSection={
+                <SystemLockedIcon size={20} color="currentColor" alt="" />
+              }
               onClick={() => {
                 openContextModal({
                   modal: "ssoToken",

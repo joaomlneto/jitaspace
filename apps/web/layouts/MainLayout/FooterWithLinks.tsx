@@ -1,6 +1,5 @@
 "use client";
 
-import type { LinkProps } from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -13,43 +12,38 @@ import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import { PartnerBadge } from "~/components/Badge";
 import { HoverPrefetchLink } from "~/components/Link";
+import { isExternalUrl, jitaSpaceApps } from "~/config/apps";
 import { env } from "~/env";
 import classes from "./FooterWithLinks.module.css";
 
-const links: { link: LinkProps["href"]; label: string }[] = [
-  {
-    link: "/about",
-    label: "About",
-  },
-  {
-    link: "/support",
-    label: "Support",
-  },
-  {
-    link: "/status",
-    label: "Status",
-  },
-];
-
+/**
+ * The page footer: the last thing in the page's flow, so it is seen only by
+ * scrolling to the bottom (and sits at the bottom of the viewport on a page
+ * shorter than the screen). The same links are always reachable from the
+ * header's About menu.
+ */
 export function FooterWithLinks() {
-  const items = links.map((link) => (
-    <Anchor
-      key={link.label}
-      component={HoverPrefetchLink}
-      href={link.link}
-      // The footer renders on every page, so prefetching these on sight would
-      // fetch /about, /support and /status on every single page view — four
-      // PPR segment requests each (~400k requests/day in production). They
-      // prefetch on hover instead.
-      size="xs"
-      c="dimmed"
-    >
-      {link.label}
-    </Anchor>
-  ));
+  const items = Object.values(jitaSpaceApps)
+    // Discord gets its own icon button below.
+    .filter((app) => app.url && !isExternalUrl(app.url))
+    .map((app) => (
+      <Anchor
+        key={app.name}
+        component={HoverPrefetchLink}
+        href={app.url ?? "#"}
+        // The footer renders on every page, so prefetching these on sight
+        // would fetch /about, /support and /status on every single page view —
+        // four PPR segment requests each (~400k requests/day in production).
+        // They prefetch on hover instead.
+        size="xs"
+        c="dimmed"
+      >
+        {app.name}
+      </Anchor>
+    ));
 
   return (
-    <div className={classes.footer}>
+    <footer className={classes.footer}>
       <Container size="xl" className={classes.inner}>
         <Text c="dimmed" size="xs">
           All EVE-related materials are property of{" "}
@@ -74,6 +68,7 @@ export function FooterWithLinks() {
               size="sm"
               variant="transparent"
               c="dimmed"
+              aria-label="JitaSpace on Discord"
             >
               <IconBrandDiscordFilled />
             </ActionIcon>
@@ -81,6 +76,6 @@ export function FooterWithLinks() {
           {items}
         </Group>
       </Container>
-    </div>
+    </footer>
   );
 }

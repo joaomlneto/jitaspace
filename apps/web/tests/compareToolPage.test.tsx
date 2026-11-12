@@ -31,6 +31,15 @@ jest.mock("@jitaspace/hooks", () => ({
 
 jest.mock("@jitaspace/eve-icons", () => ({
   CompareToolIcon: () => <span data-testid="compare-icon" />,
+  SystemAddIcon: () => null,
+  SystemCheckmarkIcon: () => null,
+  SystemFilterIcon: () => null,
+  SystemLinkIcon: () => null,
+  SystemMoreVerticalIcon: () => null,
+  SystemPinnedIcon: () => null,
+  SystemSearchIcon: () => null,
+  SystemTrashcanIcon: () => null,
+  WindowCompareToolIcon: () => null,
 }));
 
 const mockUseCompareCatalog = jest.fn<() => unknown>();

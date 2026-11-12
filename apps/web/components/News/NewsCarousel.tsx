@@ -70,8 +70,9 @@ export function NewsCarousel({
 
   if (!mounted) return <NewsCarouselPlaceholder />;
 
-  // Curated and generated cards together, newest first. The sort is stable, so
-  // cards published at the same moment (or undated) keep their given order.
+  // Curated and generated cards together, by priority and then newest first.
+  // The sort is stable, so cards published at the same moment (or undated)
+  // keep their given order.
   const slides: { item: NewsItem; onDismiss: () => void }[] = [
     ...activeItems.map((item) => ({
       item,
@@ -82,8 +83,11 @@ export function NewsCarousel({
       onDismiss: () => onDismissExtra?.(item.id),
     })),
   ].sort(
-    // `|| 0`: two undated cards subtract -Infinity from -Infinity, i.e. NaN.
-    (a, b) => publishedTime(b.item) - publishedTime(a.item) || 0,
+    (a, b) =>
+      (b.item.priority ?? 0) - (a.item.priority ?? 0) ||
+      // `|| 0`: two undated cards subtract -Infinity from -Infinity, i.e. NaN.
+      publishedTime(b.item) - publishedTime(a.item) ||
+      0,
   );
 
   if (slides.length === 0) return null;

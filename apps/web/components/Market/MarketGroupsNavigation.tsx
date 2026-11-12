@@ -11,8 +11,10 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconSearch, IconX } from "@tabler/icons-react";
+import { IconX } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
+
+import { SystemSearchIcon } from "@jitaspace/eve-icons";
 
 import type { MarketTree } from "./readMarketTree";
 import type { MarketSidebarView } from "~/lib/quickbar";
@@ -122,8 +124,21 @@ export function MarketGroupsNavigation() {
     },
   };
 
+  // One <Tabs> around the bar and the content, so each tab's aria-controls
+  // points at a panel that exists. The sticky bar still spans the whole list:
+  // the Tabs root is its containing block, and it holds everything below.
+  // keepMounted={false}: only the open view renders (the inactive panel is an
+  // empty element), so typing a search does not also rebuild the hidden one.
   return (
-    <>
+    <Tabs
+      keepMounted={false}
+      value={view}
+      onChange={(value) => {
+        if (value === "groups" || value === "quickbar") {
+          useQuickbarStore.getState().setView(value);
+        }
+      }}
+    >
       <Box
         pb="xs"
         bg="var(--mantine-color-body)"
@@ -134,7 +149,9 @@ export function MarketGroupsNavigation() {
           onChange={(event) => setQuery(event.currentTarget.value)}
           placeholder="Search market…"
           aria-label="Search market"
-          leftSection={<IconSearch size={16} />}
+          leftSection={
+            <SystemSearchIcon size={16} color="currentColor" alt="" />
+          }
           rightSection={
             query ? (
               <ActionIcon
@@ -148,70 +165,62 @@ export function MarketGroupsNavigation() {
             ) : null
           }
         />
-        <Tabs
-          value={view}
-          onChange={(value) => {
-            if (value === "groups" || value === "quickbar") {
-              useQuickbarStore.getState().setView(value);
+        <Tabs.List grow mt="xs">
+          <Tabs.Tab value="groups">Market groups</Tabs.Tab>
+          <Tabs.Tab
+            value="quickbar"
+            {...quickbarTabDrop}
+            data-drop-target={dragOverQuickbar || undefined}
+            style={
+              dragOverQuickbar
+                ? { background: "var(--mantine-primary-color-light)" }
+                : undefined
             }
-          }}
-          mt="xs"
-        >
-          <Tabs.List grow>
-            <Tabs.Tab value="groups">Market groups</Tabs.Tab>
-            <Tabs.Tab
-              value="quickbar"
-              {...quickbarTabDrop}
-              data-drop-target={dragOverQuickbar || undefined}
-              style={
-                dragOverQuickbar
-                  ? { background: "var(--mantine-primary-color-light)" }
-                  : undefined
-              }
-              rightSection={
-                hydrated && quickbarCount > 0 ? (
-                  <Badge size="xs" variant="light" circle={quickbarCount < 10}>
-                    {quickbarCount}
-                  </Badge>
-                ) : null
-              }
-            >
-              Quickbar
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs>
+            rightSection={
+              hydrated && quickbarCount > 0 ? (
+                <Badge size="xs" variant="light" circle={quickbarCount < 10}>
+                  {quickbarCount}
+                </Badge>
+              ) : null
+            }
+          >
+            Quickbar
+          </Tabs.Tab>
+        </Tabs.List>
       </Box>
-      {view === "quickbar" && (
+      <Tabs.Panel value="quickbar">
         <Quickbar marketTree={data} query={deferredQuery} />
-      )}
-      {view === "groups" && groupsUnavailable}
-      {view === "groups" && data && (
-        <>
-          {filter && rootMarketGroupIds.length === 0 && (
-            <Text size="sm" c="dimmed">
-              No market groups or items match.
-            </Text>
-          )}
-          {filter && !autoExpand && (
-            <Text size="xs" c="dimmed" pb="xs">
-              {filter.matchCount.toLocaleString()} matches — keep typing to
-              expand them.
-            </Text>
-          )}
-          {/* Keyed on the query so each search starts from its own open state. */}
-          <div key={deferredQuery}>
-            {rootMarketGroupIds.map((marketGroupId) => (
-              <MarketGroupNavLink
-                marketGroups={data.marketGroups}
-                marketGroupId={marketGroupId}
-                filter={filter}
-                autoExpand={autoExpand}
-                key={marketGroupId}
-              />
-            ))}
-          </div>
-        </>
-      )}
-    </>
+      </Tabs.Panel>
+      <Tabs.Panel value="groups">
+        {groupsUnavailable}
+        {data && (
+          <>
+            {filter && rootMarketGroupIds.length === 0 && (
+              <Text size="sm" c="dimmed">
+                No market groups or items match.
+              </Text>
+            )}
+            {filter && !autoExpand && (
+              <Text size="xs" c="dimmed" pb="xs">
+                {filter.matchCount.toLocaleString()} matches — keep typing to
+                expand them.
+              </Text>
+            )}
+            {/* Keyed on the query so each search starts from its own open state. */}
+            <div key={deferredQuery}>
+              {rootMarketGroupIds.map((marketGroupId) => (
+                <MarketGroupNavLink
+                  marketGroups={data.marketGroups}
+                  marketGroupId={marketGroupId}
+                  filter={filter}
+                  autoExpand={autoExpand}
+                  key={marketGroupId}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </Tabs.Panel>
+    </Tabs>
   );
 }

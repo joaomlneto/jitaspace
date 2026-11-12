@@ -1,8 +1,10 @@
 import React from "react";
+import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
 import {
+  AccessGroupsIcon,
   AgencyIcon,
   AgentFinderIcon,
   AlliancesIcon,
@@ -11,20 +13,46 @@ import {
   CalendarIcon,
   CharacterSheetIcon,
   ContactsIcon,
+  ContractsIcon,
   EveMailIcon,
   FactionalWarfareIcon,
   FittingIcon,
+  HelpIcon,
   IncursionsIcon,
+  InfoIcon,
   ItemsIcon,
   JournalIcon,
   LPStoreIcon,
   MapIcon,
   MarketIcon,
+  PlanetsIcon,
+  ScopeNetworkIcon,
   ShipsIcon,
   SkillsIcon,
+  SystemFreelanceProjectsIcon,
+  VotesIcon,
   WalletIcon,
+  WarReportIcon,
   WarsIcon,
+  WindowGiftIcon,
+  WindowMercenaryIcon,
 } from "@jitaspace/eve-icons";
+
+import { env } from "~/env";
+
+/**
+ * Everything "Your freelance jobs" can use. Corporation jobs are gated on the
+ * Project_Manager role, which is only known once the roles scope is granted.
+ */
+export const FREELANCE_SCOPES: ESIScope[] = [
+  "esi-characters.read_freelance_jobs.v1",
+  "esi-corporations.read_freelance_jobs.v1",
+  "esi-characters.read_corporation_roles.v1",
+];
+
+const FreelanceIcon = (props: EveIconProps) => (
+  <SystemFreelanceProjectsIcon color="currentColor" {...props} />
+);
 
 export interface AppScopeSet {
   reason: string;
@@ -163,6 +191,23 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  accessLists: {
+    name: "Access Lists",
+    description:
+      "Browse the access lists your characters manage, and who each one allows or blocks.",
+    url: "/access-lists",
+    Icon: (props) => React.createElement(AccessGroupsIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Access Lists",
+          description:
+            "Read the access lists your characters are a Manager or Admin of, with their members.",
+          scopes: ["esi-access.read_lists.v1"],
+        },
+      ],
+    },
+  },
   skills: {
     name: "Skills",
     description: "Manage your skills and skills points on your characters.",
@@ -211,6 +256,69 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  mercenaryTacticalOperations: {
+    name: "Mercenary Operations",
+    description:
+      "See the Mercenary Tactical Operations your Mercenary Dens are offering.",
+    url: "/mercenary-tactical-operations",
+    Icon: (props) => React.createElement(WindowMercenaryIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "Read Mercenary Tactical Operations",
+          scopes: ["esi-activities.read_character.v1"],
+        },
+      ],
+      // The den locations (esi-structures.read_character.v1) are not listed
+      // as optional: getEnabledApps treats an app with optional sets as
+      // needing one of them, which would hide this app from a character that
+      // granted only the activities scope. They are in extraJitaFeatures, so
+      // the login modal asks for them, and the page asks for them itself.
+    },
+  },
+  planetaryInteraction: {
+    name: "Planetary Interaction",
+    description:
+      "Track your colonies: extractor programs, factories, storage and daily production.",
+    url: "/planetary-interaction",
+    Icon: (props) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      required: [
+        {
+          reason: "View your planetary colonies",
+          scopes: ["esi-planets.manage_planets.v1"],
+        },
+      ],
+      // The corporation's customs offices are in extraJitaFeatures, not here
+      // as optional: getEnabledApps would then hide this app from every
+      // character that is not a Director.
+    },
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description:
+      "Track the freelance jobs your characters have joined and the ones your corporations have posted.",
+    url: "/freelance/mine",
+    Icon: FreelanceIcon,
+    scopes: {
+      optional: [
+        {
+          reason: "Read your freelance jobs",
+          description: "The jobs your characters are participating in.",
+          scopes: ["esi-characters.read_freelance_jobs.v1"],
+        },
+        {
+          reason: "Read your corporation's freelance jobs",
+          description:
+            "Every job your corporation has posted, and who joined it. Needs the Project Manager role.",
+          scopes: [
+            "esi-corporations.read_freelance_jobs.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
+        },
+      ],
+    },
+  },
   /*
   notifications: {
     name: "Notifications",
@@ -243,6 +351,47 @@ export const corporationApps: Record<string, JitaApp> = {
         {
           reason: "Read Corporation Contacts",
           scopes: ["esi-corporations.read_contacts.v1"],
+        },
+      ],
+    },
+  },
+  customsOffices: {
+    name: "Customs Offices",
+    description: "Review your corporation's customs office taxes and access.",
+    url: "/planetary-interaction/customs-offices",
+    subjectUrl: (id) =>
+      `/planetary-interaction/customs-offices?corporations=${id}`,
+    Icon: (props: EveIconProps) => React.createElement(PlanetsIcon, props),
+    scopes: {
+      optional: [
+        {
+          reason: "Read Corporation Customs Offices",
+          description:
+            "Only a corporation's Directors can read them, so your roles are read too.",
+          scopes: [
+            "esi-planets.read_customs_offices.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
+        },
+      ],
+    },
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description: "Every freelance job your corporation has posted.",
+    url: "/freelance/mine",
+    subjectUrl: (id) => `/freelance/mine?sources=corporation:${id}`,
+    Icon: FreelanceIcon,
+    scopes: {
+      // The link opens the list filtered to this corporation, so it needs that
+      // corporation's jobs to be readable.
+      optional: [
+        {
+          reason: "Read your corporation's freelance jobs",
+          scopes: [
+            "esi-corporations.read_freelance_jobs.v1",
+            "esi-characters.read_corporation_roles.v1",
+          ],
         },
       ],
     },
@@ -297,11 +446,40 @@ export const universeApps: Record<string, JitaApp> = {
     hotKey: ["⌘", "P"],
     scopes: {},
   },
+  contracts: {
+    name: "Contracts",
+    description:
+      "Browse public item exchanges, auctions and courier contracts, and your own.",
+    url: "/contracts",
+    Icon: (props) => <ContractsIcon {...props} />,
+    scopes: {
+      optional: [
+        {
+          reason: "See your contracts",
+          description: "List the contracts your characters have issued",
+          scopes: ["esi-contracts.read_character_contracts.v1"],
+        },
+        {
+          reason: "See your corporation's contracts",
+          description: "List the contracts issued for your corporations",
+          scopes: ["esi-contracts.read_corporation_contracts.v1"],
+        },
+      ],
+    },
+  },
   wars: {
     name: "Active Wars",
     description: "View all active wars.",
     url: "/active-wars",
     Icon: (props) => <WarsIcon {...props} />,
+    scopes: {},
+  },
+  militaryCampaigns: {
+    name: "Military Campaigns",
+    description:
+      "Follow every military campaign and its objectives, and what your characters contributed.",
+    url: "/military-campaigns",
+    Icon: (props) => <WarReportIcon {...props} />,
     scopes: {},
   },
   incursions: {
@@ -310,6 +488,22 @@ export const universeApps: Record<string, JitaApp> = {
       "Track active Sansha incursions, their spawn timeline and every past incursion since 2015.",
     url: "/incursions",
     Icon: (props) => <IncursionsIcon {...props} />,
+    scopes: {},
+  },
+  csm: {
+    name: "CSM 21",
+    description:
+      "Meet the candidates for the Council of Stellar Management, with their pitches, campaign threads and interviews.",
+    url: "/csm",
+    Icon: (props) => <VotesIcon {...props} />,
+    scopes: {},
+  },
+  freelance: {
+    name: "Freelance Jobs",
+    description:
+      "Browse the public freelance jobs: hauling, mining, combat and more, with their rewards and progress.",
+    url: "/freelance",
+    Icon: FreelanceIcon,
     scopes: {},
   },
   alliances: {
@@ -502,13 +696,110 @@ export const extraJitaFeatures: AppScopeSet[] = [
     reason: "View your character assets (and active ship fitting)",
     scopes: ["esi-assets.read_assets.v1"],
   },
+  {
+    // Here rather than as an optional scope of Mercenary Operations, which
+    // would hide that app from a character without it (getEnabledApps). Being
+    // in the login modal's default set also keeps a later login from dropping
+    // it.
+    reason: "Read where your Mercenary Dens are",
+    scopes: ["esi-structures.read_character.v1"],
+  },
+  {
+    // The Customs Offices corporation app needs this, but the login modal
+    // asks only for the character apps' scopes and these extra features.
+    // Not an optional scope of Planetary Interaction, for the same reason as
+    // the Mercenary Dens above.
+    reason: "Read your corporation's customs offices",
+    description:
+      "Only a corporation's Directors can read them, so your roles are read too.",
+    scopes: [
+      "esi-planets.read_customs_offices.v1",
+      "esi-characters.read_corporation_roles.v1",
+    ],
+  },
 ];
+
+/**
+ * Discord's own logo, where the other entries show EVE icons. It is drawn in
+ * the text colour around it (white in the dark theme), like the footer's
+ * Discord button. Takes the same props and fills the same square box, so
+ * menus lay it out like the icons beside it.
+ *
+ * EVE's artwork covers only about two-thirds of its square (12.5px of a 20px
+ * icon), while Tabler's logo spans nearly all of it (17px), so the logo is
+ * drawn at three-quarters of the box to look the same size as its neighbours.
+ */
+function DiscordLogo({ size, width, height }: EveIconProps) {
+  const box = Number(size ?? width ?? height ?? 24);
+  return (
+    <span
+      aria-hidden
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+        width: box,
+        height: box,
+      }}
+    >
+      <IconBrandDiscordFilled size={box * 0.75} />
+    </span>
+  );
+}
+
+/**
+ * The site's own pages and community: the header's "About" menu, the mobile
+ * drawer's section of the same name, and the footer's links. Discord is the
+ * one external URL (see isExternalUrl), so it opens in a new tab.
+ */
+export const jitaSpaceApps: Record<string, JitaApp> = {
+  about: {
+    name: "About JitaSpace",
+    description:
+      "What JitaSpace is, who builds it, how to get in touch, and the privacy policy.",
+    url: "/about",
+    Icon: (props) => <InfoIcon {...props} />,
+    scopes: {},
+  },
+  support: {
+    name: "Support",
+    description:
+      "Ways to support JitaSpace: creator code, sponsorship or ISK in-game.",
+    url: "/support",
+    Icon: (props) => <WindowGiftIcon {...props} />,
+    scopes: {},
+  },
+  status: {
+    name: "Status",
+    description:
+      "EVE Online Tranquility server status and JitaSpace service health.",
+    url: "/status",
+    Icon: (props) => <ScopeNetworkIcon {...props} />,
+    scopes: {},
+  },
+  discord: {
+    name: "Discord",
+    description:
+      "Join the JitaSpace community: questions, feedback and bug reports.",
+    url: env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
+    Icon: (props) => <DiscordLogo {...props} />,
+    scopes: {},
+  },
+};
+
+/** Whether an app's URL leaves the site, so menus open it in a new tab. */
+export function isExternalUrl(url: string): boolean {
+  return /^https?:\/\//.test(url);
+}
 
 export const jitaApps: Record<
   string,
   {
     apps: Record<string, JitaApp>;
     name: string;
+    /** The group's heading in search. Defaults to "<name> Apps". */
+    searchGroup?: string;
     Icon: (props: EveIconProps) => React.ReactElement;
   }
 > = {
@@ -521,5 +812,11 @@ export const jitaApps: Record<
     apps: universeApps,
     name: "Universe",
     Icon: (props) => <MapIcon {...props} />,
+  },
+  about: {
+    apps: jitaSpaceApps,
+    name: "About",
+    searchGroup: "About",
+    Icon: (props) => <HelpIcon {...props} />,
   },
 };

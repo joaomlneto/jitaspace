@@ -12,7 +12,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink, IconHistory } from "@tabler/icons-react";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -21,6 +20,8 @@ import {
   ControlConstellationLayoutIcon,
   ControlRegionLayoutIcon,
   IncursionsIcon,
+  SystemArrowRotateLeftIcon,
+  SystemOpenWindowIcon,
   WindowInfoIcon,
 } from "@jitaspace/eve-icons";
 
@@ -279,7 +280,9 @@ export default function RegionPage({
             Region
           </Text>
           <Group gap="sm" align="center">
-            <Title order={2}>{name}</Title>
+            <Title order={1} size="h2">
+              {name}
+            </Title>
             <ActiveIncursionBadge
               active={active}
               onClick={() => void setActiveTab("incursions")}
@@ -312,7 +315,9 @@ export default function RegionPage({
                 target="_blank"
                 rel="noopener noreferrer"
                 size="xs"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 {link.label}
               </Button>
@@ -361,7 +366,16 @@ export default function RegionPage({
                 Incursions ({formatInteger(incursions.incursions.length)})
               </Tabs.Tab>
             )}
-            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+            <Tabs.Tab
+              value="history"
+              leftSection={
+                <SystemArrowRotateLeftIcon
+                  size={16}
+                  color="currentColor"
+                  alt=""
+                />
+              }
+            >
               History
             </Tabs.Tab>
           </Tabs.List>

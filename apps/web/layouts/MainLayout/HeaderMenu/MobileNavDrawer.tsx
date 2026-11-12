@@ -12,17 +12,18 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { openSpotlight } from "@mantine/spotlight";
-import { IconSearch } from "@tabler/icons-react";
 
 import {
   RecruitmentIcon,
   SettingsIcon,
+  SystemSearchIcon,
   TerminateIcon,
 } from "@jitaspace/eve-icons";
 import { CharacterAvatar, LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import type { JitaApp } from "~/config/apps";
 import { HoverPrefetchLink } from "~/components/Link";
-import { jitaApps } from "~/config/apps";
+import { isExternalUrl, jitaApps } from "~/config/apps";
 import { useAccountActions } from "~/layouts/MainLayout/useAccountActions";
 import classes from "./HeaderMenu.module.css";
 
@@ -32,6 +33,15 @@ export interface MobileNavDrawerProps {
 }
 
 type AccountActions = ReturnType<typeof useAccountActions>;
+
+function DrawerAppLabel({ app }: Readonly<{ app: JitaApp }>) {
+  return (
+    <Group gap="sm" wrap="nowrap">
+      <app.Icon width={24} alt="" />
+      <Text size="sm">{app.name}</Text>
+    </Group>
+  );
+}
 
 /**
  * The signed-in character, the others to switch to, and the account actions,
@@ -203,7 +213,7 @@ export const MobileNavDrawer = memo(
             }}
             aria-label="Search New Eden"
           >
-            <IconSearch size={16} stroke={1.5} />
+            <SystemSearchIcon size={16} color="currentColor" alt="" />
             <Text className={classes.searchLabel} size="sm" c="dimmed">
               Search New Eden…
             </Text>
@@ -227,25 +237,37 @@ export const MobileNavDrawer = memo(
         {Object.values(jitaApps).map((group) => (
           <Stack gap={2} key={group.name} mb="sm">
             <Group gap="xs" px="md" py={4}>
-              <group.Icon width={20} />
+              <group.Icon width={20} alt="" />
               <Text fw={600} size="sm">
                 {group.name}
               </Text>
             </Group>
-            {Object.entries(group.apps).map(([key, app]) => (
-              <UnstyledButton
-                key={key}
-                component={HoverPrefetchLink}
-                href={app.url ?? "#"}
-                className={classes.link}
-                onClick={close}
-              >
-                <Group gap="sm" wrap="nowrap">
-                  <app.Icon width={24} />
-                  <Text size="sm">{app.name}</Text>
-                </Group>
-              </UnstyledButton>
-            ))}
+            {Object.entries(group.apps).map(([key, app]) =>
+              app.url && isExternalUrl(app.url) ? (
+                // Discord's invite leaves the site: a new tab, and the drawer
+                // stays as it was.
+                <UnstyledButton
+                  key={key}
+                  component="a"
+                  href={app.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={classes.link}
+                >
+                  <DrawerAppLabel app={app} />
+                </UnstyledButton>
+              ) : (
+                <UnstyledButton
+                  key={key}
+                  component={HoverPrefetchLink}
+                  href={app.url ?? "#"}
+                  className={classes.link}
+                  onClick={close}
+                >
+                  <DrawerAppLabel app={app} />
+                </UnstyledButton>
+              ),
+            )}
           </Stack>
         ))}
 

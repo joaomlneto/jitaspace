@@ -7,19 +7,24 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
 const mockUsePlanet = jest.fn();
+const mockPlanetFindUnique =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
-  useParams: () => ({ planetId: "1" }),
   useRouter: () => ({}),
   usePathname: () => "/",
 }));
 
-// planet/[planetId]/page.tsx imports prisma for generateMetadata; the wrapper
-// tests below never reach a query.
-jest.mock("~/lib/db", () => ({ prisma: {} }));
+// The server wrapper reads the planet (through a "use cache" helper) to 404 an
+// id with no planet; `generateMetadata` shares that read.
+jest.mock("~/lib/db", () => ({
+  prisma: {
+    planet: { findUnique: (...a: unknown[]) => mockPlanetFindUnique(...a) },
+  },
+}));
 
 jest.mock("@jitaspace/hooks", () => ({
   usePlanet: (planetId: number) => mockUsePlanet(planetId),
@@ -66,10 +71,11 @@ describe("planet page", () => {
     const Page = require("~/app/planet/[planetId]/page.client").default;
     render(
       <MantineProvider>
-        <Page />
+        <Page planetId={40009081} />
       </MantineProvider>,
     );
 
+    expect(mockUsePlanet).toHaveBeenCalledWith(40009081);
     expect(screen.getByText("Jita IV")).toBeInTheDocument();
     expect(screen.getByText("Solar System")).toBeInTheDocument();
     expect(screen.getByText("SecBadge 30000142")).toBeInTheDocument();
@@ -98,7 +104,7 @@ describe("planet page", () => {
     const Page = require("~/app/planet/[planetId]/page.client").default;
     render(
       <MantineProvider>
-        <Page />
+        <Page planetId={40009081} />
       </MantineProvider>,
     );
 
@@ -112,6 +118,10 @@ describe("planet page", () => {
 });
 
 describe("planet page server wrapper", () => {
+  beforeEach(() => {
+    mockPlanetFindUnique.mockReset();
+  });
+
   // `params` is awaited in the async child, never in `Page` itself, so the
   // route keeps a synchronous shell that Next can prerender.
   function runWrapper(planetId: string) {
@@ -122,12 +132,43 @@ describe("planet page server wrapper", () => {
     return child.type(child.props) as Promise<unknown>;
   }
 
-  it("renders the client page for a canonical id", async () => {
-    await expect(runWrapper("40009081")).resolves.toBeTruthy();
+  it("passes the parsed id to the client page", async () => {
+    mockPlanetFindUnique.mockResolvedValue({ name: "Jita IV" });
+    const element = (await runWrapper("40009081")) as {
+      props: { planetId: number };
+    };
+    expect(element.props.planetId).toBe(40009081);
+    expect(mockPlanetFindUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { planetId: 40009081 } }),
+    );
   });
 
   it("404s an id that isn't the canonical spelling", async () => {
     // `/planet/40009081.0` used to serve the same planet as `/planet/40009081`.
     await expect(runWrapper("40009081.0")).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mockPlanetFindUnique).not.toHaveBeenCalled();
+  });
+
+  it("404s an id with no planet", async () => {
+    mockPlanetFindUnique.mockResolvedValue(null);
+    await expect(runWrapper("40009081")).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  // The route is cached whole, so a 404 rendered for a failed read would be
+  // stored and served after the database recovers. The error must propagate.
+  it("lets a failed read throw instead of rendering a 404", async () => {
+    mockPlanetFindUnique.mockRejectedValue(new Error("db"));
+    await expect(runWrapper("40009081")).rejects.toThrow("db");
+  });
+
+  it("lists one placeholder param, which 404s without a query", async () => {
+    const { generateStaticParams } = require("~/app/planet/[planetId]/page");
+    const params = generateStaticParams() as { planetId: string }[];
+    expect(params).toEqual([{ planetId: "0" }]);
+
+    await expect(runWrapper(params[0]!.planetId)).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(mockPlanetFindUnique).not.toHaveBeenCalled();
   });
 });

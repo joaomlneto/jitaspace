@@ -43,6 +43,7 @@ export const AllianceAnchor = anchorStub("/alliance", "allianceId");
 export const BloodlineAnchor = anchorStub("/bloodline", "bloodlineId");
 export const CategoryAnchor = anchorStub("/category", "categoryId");
 export const CharacterAnchor = anchorStub("/character", "characterId");
+export const ContractAnchor = anchorStub("/contracts", "contractId");
 export const CorporationAnchor = anchorStub(
   "/corporation",
   "corporationId",

@@ -103,6 +103,46 @@ describe("client rate-limit integration", () => {
     expect(bucket?.requestHistory[0]?.endpoint).toBe("/status");
   });
 
+  describe("matches a request to an ESI route by its parsed origin", () => {
+    const mockOk = () =>
+      jest.spyOn(axiosInstance, "request").mockResolvedValue({
+        data: { ok: true },
+        status: 200,
+        statusText: "OK",
+        headers: {
+          "x-ratelimit-limit": "10/1m",
+          "x-ratelimit-remaining": "7",
+          "x-ratelimit-used": "3",
+        },
+      });
+
+    it("accepts ESI's origin however it is spelled", async () => {
+      mockOk();
+      await client({
+        method: "GET",
+        url: "https://ESI.evetech.net:443/status/?datasource=tranquility",
+      });
+
+      const bucket =
+        getRateLimitState()[getRateLimitBucketKey(STATUS_GROUP, TEST_USER)];
+      expect(bucket?.requestHistory[0]?.endpoint).toBe("/status");
+    });
+
+    it.each([
+      "https://esi.evetech.net.example.com/status",
+      "https://esi.evetech.net@example.com/status",
+      "https://esi.evetech.net:8443/status",
+      "http://esi.evetech.net/status",
+    ])("does not take %s for ESI's /status", async (url) => {
+      mockOk();
+      await client({ method: "GET", url });
+
+      expect(
+        getRateLimitState()[getRateLimitBucketKey(STATUS_GROUP, TEST_USER)],
+      ).toBeUndefined();
+    });
+  });
+
   it("falls back to token-cost rules when headers are missing for success and redirects", async () => {
     jest.spyOn(axiosInstance, "request").mockResolvedValueOnce({
       data: { ok: true },

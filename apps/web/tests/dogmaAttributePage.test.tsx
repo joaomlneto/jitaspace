@@ -108,6 +108,7 @@ const modifier = (
 ): AttributeModifierRow => ({
   effectId: 5189,
   effectName: "trackingSpeedBonusEffectLasers",
+  effectCategoryId: 0,
   carrierCount: 58,
   modifierIndex: 0,
   func: "LocationGroupModifier",
@@ -178,7 +179,28 @@ const PROPS: PageProps = {
   ],
   modifiedBy: [modifier({})],
   modifies: [],
-  statOf: [{ effectId: 10, effectName: "targetAttack", role: "Tracking" }],
+  statOf: [
+    {
+      effectId: 10,
+      effectName: "targetAttack",
+      effectCategoryId: 2,
+      role: "Tracking",
+    },
+  ],
+  effectCategories: {
+    0: {
+      effectCategoryId: 0,
+      name: "dgmEffPassive",
+      customName: "Passive",
+      customDescription: "Always applies.",
+    },
+    2: {
+      effectCategoryId: 2,
+      name: "dgmEffTarget",
+      customName: "Targeted",
+      customDescription: "Applies to a locked target.",
+    },
+  },
 };
 
 function renderPage(props: Partial<PageProps> = {}) {
@@ -270,6 +292,13 @@ describe("Dogma attribute page (client)", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByText("Used as a stat by effects")).toBeInTheDocument();
     expect(screen.getByText("targetAttack")).toBeInTheDocument();
+    // …under its effect category's heading.
+    expect(
+      screen
+        .getByText("Targeted")
+        .compareDocumentPosition(screen.getByText("targetAttack")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("fetches the item list and shows each item's value", () => {

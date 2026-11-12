@@ -15,7 +15,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { IconExternalLink, IconShield, IconSword } from "@tabler/icons-react";
 import posthog from "posthog-js";
 import useSWR from "swr";
 
@@ -29,6 +28,11 @@ import {
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
+import {
+  CategoryAttackIcon,
+  CategoryLoseShipIcon,
+  SystemOpenWindowIcon,
+} from "@jitaspace/eve-icons";
 import { useKillmail } from "@jitaspace/hooks";
 import {
   AllianceAvatar,
@@ -155,7 +159,9 @@ export default function Page() {
             <Button
               size="xs"
               variant="outline"
-              leftSection={<IconExternalLink size={14} />}
+              leftSection={
+                <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+              }
             >
               View on zKillboard
             </Button>
@@ -220,7 +226,9 @@ export default function Page() {
               <Button
                 size="xs"
                 variant="outline"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 zKillboard
               </Button>
@@ -233,7 +241,9 @@ export default function Page() {
               <Button
                 size="xs"
                 variant="outline"
-                leftSection={<IconExternalLink size={14} />}
+                leftSection={
+                  <SystemOpenWindowIcon size={14} color="currentColor" alt="" />
+                }
               >
                 EVE-Kill
               </Button>
@@ -285,7 +295,7 @@ export default function Page() {
             <Card withBorder h="100%">
               <Stack gap="xs">
                 <Group gap="xs">
-                  <IconShield size={16} />
+                  <CategoryLoseShipIcon size={16} color="currentColor" alt="" />
                   <Text fw={600}>Victim</Text>
                   <Badge color="red" size="sm">
                     {km.victim.damage_taken.toLocaleString()} damage taken
@@ -377,7 +387,7 @@ export default function Page() {
         <Stack gap="xs">
           <Title order={4}>
             <Group gap="xs">
-              <IconSword size={18} />
+              <CategoryAttackIcon size={18} color="currentColor" alt="" />
               Attackers ({km.attackers.length})
             </Group>
           </Title>

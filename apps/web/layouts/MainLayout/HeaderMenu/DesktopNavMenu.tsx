@@ -3,12 +3,13 @@
 import type React from "react";
 import { memo } from "react";
 import { Box, Center, Menu, Tooltip, UnstyledButton } from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
+import { IconChevronDown, IconExternalLink } from "@tabler/icons-react";
 
 import type { EveIconProps } from "@jitaspace/eve-icons";
 
 import type { JitaApp } from "~/config/apps";
 import { HoverPrefetchLink } from "~/components/Link";
+import { isExternalUrl } from "~/config/apps";
 import classes from "./HeaderMenu.module.css";
 
 export interface DesktopNavMenuProps {
@@ -38,13 +39,26 @@ export const DesktopNavMenu = memo(
         w={240}
         events={{ hover: true, focus: true, touch: false }}
       >
-        <Menu.Item
-          component={HoverPrefetchLink}
-          href={app.url ?? "#"}
-          leftSection={<app.Icon width={20} />}
-        >
-          {app.name}
-        </Menu.Item>
+        {app.url && isExternalUrl(app.url) ? (
+          <Menu.Item
+            component="a"
+            href={app.url}
+            target="_blank"
+            rel="noreferrer"
+            leftSection={<app.Icon width={20} alt="" />}
+            rightSection={<IconExternalLink size={14} stroke={1.5} />}
+          >
+            {app.name}
+          </Menu.Item>
+        ) : (
+          <Menu.Item
+            component={HoverPrefetchLink}
+            href={app.url ?? "#"}
+            leftSection={<app.Icon width={20} alt="" />}
+          >
+            {app.name}
+          </Menu.Item>
+        )}
       </Tooltip>
     ));
 
@@ -67,7 +81,7 @@ export const DesktopNavMenu = memo(
             aria-current={active ? "page" : undefined}
           >
             <Center inline>
-              <Icon width={20} />
+              <Icon width={20} alt="" />
               <Box component="span" mx={6} visibleFrom="md">
                 {label}
               </Box>

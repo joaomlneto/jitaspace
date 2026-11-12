@@ -9,7 +9,7 @@ overrides:
   "prosemirror-model": "1.25.7"
   "prosemirror-state": "1.4.4"
   "prosemirror-transform": "1.12.0"
-  "prosemirror-view": "1.41.8"
+  "prosemirror-view": "1.42.3"
   # Load-bearing, and not for the reason it looks like. next declares
   # optionalDependencies.sharp "^0.34.5", which is incompatible with apps/web's
   # "^0.35.3" — so under nodeLinker: hoisted pnpm HOISTS NEXT'S 0.34.5 to the root
@@ -23,7 +23,19 @@ overrides:
   # Caret, not an exact pin: an override replaces the importer's own specifier
   # outright, so pinning here would freeze the patch level this exists to raise
   # and a later manifest bump would install nothing.
-  "sharp": "^0.35.3"
+  "sharp": "^0.35.5"
+  # One copy of the OpenTelemetry API, on the 1.9 line. The API is a process-
+  # global singleton: a second copy registers its own tracer provider, so spans
+  # created through it (e.g. Next's built-in server spans) never reach Sentry.
+  # api 1.10 only works with OpenTelemetry SDK v3; Sentry v10 and trigger.dev
+  # 4.x are on SDK v2 (getsentry/sentry-javascript#25717 recommends exactly
+  # this pin). @sentry/* >=10.78 caps the API at <1.10 itself, but `next`'s
+  # optional peer, @redis/client, prom-client and @opentelemetry/api-logs still
+  # resolve the newest release, which left four nested 1.10 copies.
+  # Caveat: overrides also rewrite peer ranges, so `pnpm peers check` cannot
+  # catch an API conflict while this is here. Drop it once Sentry is on v11
+  # (SDK v3) and @trigger.dev/core no longer pins api 1.9.1 / core 2.x.
+  "@opentelemetry/api": "~1.9.1"
 nodeLinker: hoisted
 publicHoistPattern:
   - "*prisma*"
@@ -63,6 +75,4 @@ allowBuilds:
   turbo: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@jitaspace/db-builds@0.1.0'
-  # Published 2026-10-06 19:02 UTC; delete this entry once it is a day old.
-  - '@eve-online-tools/eve-ship-tree@0.3.0'
+  - '@jitaspace/db-builds@1.0.0'
