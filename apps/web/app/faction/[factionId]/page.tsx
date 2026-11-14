@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { loadEntityHistory } from "~/lib/history-entity-page";
 import { eveImage, pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import {
@@ -83,13 +82,12 @@ async function PageContent({
   );
   // The table rows stay out of the page; the tabs fetch them when opened.
   const { page } = splitFactionData(sde, live);
-  const history = await loadEntityHistory("faction", id);
   // nuqs's React adapter, not the app-wide Next one: the Next adapter reads
   // `useSearchParams()`, which drops this subtree out of the cached render. The
   // React adapter reads `?tab=` after hydration instead.
   return (
     <NuqsAdapter>
-      <PageClient {...page} history={history} />
+      <PageClient {...page} />
     </NuqsAdapter>
   );
 }

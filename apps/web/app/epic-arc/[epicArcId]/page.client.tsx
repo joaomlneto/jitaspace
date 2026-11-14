@@ -31,7 +31,6 @@ import {
 import { EveIconAvatar, FactionAvatar, ISKAmount } from "@jitaspace/ui";
 
 import type { EpicArc, EpicArcStep, EpicArcSummary } from "~/lib/epicArcs";
-import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { MissionKind } from "~/lib/missions";
 import { FactionAnchor, MissionAnchor } from "~/components/Anchor";
 import { HeroStat, SectionHeading, StatCard } from "~/components/EntityPage";
@@ -43,7 +42,7 @@ import {
 } from "~/components/Missions";
 import { epicArcAgents, epicArcSummary, isRepeatable } from "~/lib/epicArcs";
 import { formatMinutes } from "~/lib/missions";
-import { EmbeddedEntityHistory } from "../../history/EntityHistory";
+import { FetchedEntityHistory } from "../../history/EntityHistory";
 import {
   DEFAULT_EPIC_ARC_PAGE_TAB,
   EPIC_ARC_PAGE_TABS,
@@ -306,10 +305,7 @@ function EpicArcAgentsTable({ arc }: Readonly<{ arc: EpicArc }>) {
   );
 }
 
-export default function EpicArcPage({
-  arc,
-  history,
-}: Readonly<{ arc: EpicArc; history: EntityHistoryData | null }>) {
+export default function EpicArcPage({ arc }: Readonly<{ arc: EpicArc }>) {
   const summary = useMemo(() => epicArcSummary(arc), [arc]);
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
@@ -390,7 +386,10 @@ export default function EpicArcPage({
           </Tabs.Panel>
 
           <Tabs.Panel value="history" pt="lg">
-            <EmbeddedEntityHistory history={history} />
+            <FetchedEntityHistory
+              entityType="epicArc"
+              entityId={arc.epicArcId}
+            />
           </Tabs.Panel>
         </Tabs>
       </Stack>

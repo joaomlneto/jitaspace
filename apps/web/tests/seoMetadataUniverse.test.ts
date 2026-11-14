@@ -5,6 +5,11 @@
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
+// `resolveTypeImage` keeps a render whose image lookup failed out of an ISR
+// page's cache with `connection()`; jsdom has no fetch, so these pages take that
+// path, and the real `next/server` cannot load here.
+jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
+
 // Mock client components (pull in @tanstack/db ESM dependency chain)
 jest.mock("~/app/region/[regionId]/page.client", () => ({
   default: () => null,
@@ -27,9 +32,6 @@ jest.mock("~/app/station/[stationId]/page.client", () => ({
 const mockReadStation = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 jest.mock("~/app/station/[stationId]/data", () => ({
   readStation: (...a: unknown[]) => mockReadStation(...a),
-}));
-jest.mock("~/lib/history-entity-page", () => ({
-  loadEntityHistory: () => Promise.resolve(null),
 }));
 jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
@@ -232,12 +234,14 @@ describe("system/[systemId] generateMetadata", () => {
     ).toEqual({});
   });
 
-  it("returns empty when Prisma throws", async () => {
+  // The page is cached whole (ISR), so a failure must not be stored as the
+  // system's metadata.
+  it("throws when Prisma throws", async () => {
     mockSolarSystemFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/system/[systemId]/page");
-    expect(
-      await generateMetadata({ params: rp({ systemId: "30000142" }) }),
-    ).toEqual({});
+    await expect(
+      generateMetadata({ params: rp({ systemId: "30000142" }) }),
+    ).rejects.toThrow("db");
   });
 });
 

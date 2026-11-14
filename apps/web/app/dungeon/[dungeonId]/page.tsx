@@ -5,7 +5,6 @@ import { NuqsAdapter } from "nuqs/adapters/react";
 
 import type { DungeonDetail } from "./data";
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { dungeonDisplayName } from "~/lib/missions";
 import { parsePositiveEntityId } from "~/lib/routeParams";
@@ -84,12 +83,11 @@ async function PageContent({
   // rather than store a 404. `null` is a dungeon nothing in the SDE knows.
   const dungeon = await getDungeon(dungeonId);
   if (dungeon === null) notFound();
-  const history = await loadEntityHistory("dungeon", dungeonId);
   // nuqs's React adapter keeps the cached ISR page complete; see
   // apps/web/CLAUDE.md → "URL-synced filter state".
   return (
     <NuqsAdapter>
-      <DungeonPage dungeon={dungeon} history={history} />
+      <DungeonPage dungeon={dungeon} />
     </NuqsAdapter>
   );
 }

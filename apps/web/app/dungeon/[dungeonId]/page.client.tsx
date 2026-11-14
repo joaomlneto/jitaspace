@@ -41,7 +41,6 @@ import type {
   DungeonShipRestriction,
   RelatedDungeon,
 } from "./data";
-import type { EntityHistoryData } from "~/lib/history-entity-page";
 import type { FactionRef } from "~/lib/missionRefs";
 import {
   CorporationAnchor,
@@ -65,7 +64,7 @@ import {
   TypeRefLabel,
 } from "~/components/Missions";
 import { dungeonDisplayName, MISSION_KIND_LABELS } from "~/lib/missions";
-import { EmbeddedEntityHistory } from "../../history/EntityHistory";
+import { FetchedEntityHistory } from "../../history/EntityHistory";
 import {
   DEFAULT_DUNGEON_PAGE_TAB,
   DUNGEON_PAGE_TABS,
@@ -622,8 +621,7 @@ function DungeonOverview({ dungeon }: Readonly<{ dungeon: DungeonDetail }>) {
 
 export default function DungeonPage({
   dungeon,
-  history,
-}: Readonly<{ dungeon: DungeonDetail; history: EntityHistoryData | null }>) {
+}: Readonly<{ dungeon: DungeonDetail }>) {
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
     parseAsStringLiteral(DUNGEON_PAGE_TABS)
@@ -916,7 +914,10 @@ export default function DungeonPage({
           )}
 
           <Tabs.Panel value="history" pt="lg">
-            <EmbeddedEntityHistory history={history} />
+            <FetchedEntityHistory
+              entityType="dungeon"
+              entityId={dungeon.dungeonId}
+            />
           </Tabs.Panel>
         </Tabs>
       </Stack>

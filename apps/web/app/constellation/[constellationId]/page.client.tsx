@@ -27,7 +27,6 @@ import {
 import type { ConstellationPageTab } from "./tabs";
 import type { ConstellationIncursions, ConstellationPageData } from "./types";
 import type { SystemsById } from "~/components/UniversePage/types";
-import type { EntityHistoryData } from "~/lib/history-entity-page";
 import { RegionAnchor } from "~/components/Anchor";
 import { FactionLine, HeroCard } from "~/components/EntityPage";
 import {
@@ -41,7 +40,7 @@ import {
   UniverseHeroStats,
 } from "~/components/UniversePage";
 import { formatInteger } from "~/lib/format";
-import { EmbeddedEntityHistory } from "../../history/EntityHistory";
+import { FetchedEntityHistory } from "../../history/EntityHistory";
 import { hasIncursionData, IncursionsPanel } from "./IncursionsPanel";
 import {
   CONSTELLATION_PAGE_TABS,
@@ -52,8 +51,6 @@ import {
 export interface ConstellationPageProps {
   constellation: ConstellationPageData;
   incursions: ConstellationIncursions;
-  /** Null when the change history could not be read. */
-  history: EntityHistoryData | null;
 }
 
 const dotlanName = (name: string) =>
@@ -62,7 +59,6 @@ const dotlanName = (name: string) =>
 export default function ConstellationPage({
   constellation,
   incursions,
-  history,
 }: Readonly<ConstellationPageProps>) {
   const { constellationId, name, region, faction, systems } = constellation;
   const [activeTab, setActiveTab] = useQueryState(
@@ -237,7 +233,10 @@ export default function ConstellationPage({
           )}
 
           <Tabs.Panel value="history" pt="lg">
-            <EmbeddedEntityHistory history={history} />
+            <FetchedEntityHistory
+              entityType="constellation"
+              entityId={constellationId}
+            />
           </Tabs.Panel>
         </Tabs>
       </Stack>

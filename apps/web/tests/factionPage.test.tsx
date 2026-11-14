@@ -119,20 +119,16 @@ jest.mock("~/components/ShipTree/ShipTreeTab", () => ({
   preloadShipTreeSprites: () => mockPreloadShipTreeSprites(),
 }));
 
-// The page reads the entity's change history on the server; stub that read
-// (it loads `next/server`, which jsdom cannot).
-jest.mock("~/lib/history-entity-page", () => ({
-  loadEntityHistory: () => Promise.resolve(null),
-}));
+// The History tab fetches the history when it opens; stub the fetching tab.
 jest.mock("~/app/history/EntityHistory", () => ({
-  EmbeddedEntityHistory: ({
-    history,
+  FetchedEntityHistory: ({
+    entityType,
+    entityId,
   }: {
-    history: { entityId: number } | null;
+    entityType: string;
+    entityId: number;
   }) => (
-    <div data-testid="entity-history">
-      {history ? `history of ${history.entityId}` : "no history"}
-    </div>
+    <div data-testid="entity-history">{`history of ${entityType} ${entityId}`}</div>
   ),
 }));
 

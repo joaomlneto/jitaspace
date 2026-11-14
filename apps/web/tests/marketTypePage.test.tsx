@@ -359,6 +359,32 @@ describe("market item route", () => {
       await generateMetadata({ params: Promise.resolve({ typeId: "999999" }) }),
     ).toEqual({});
   });
+
+  // The page is cached whole (ISR): a caught failure would store the bare
+  // site title and no canonical as this item's market page.
+  it("lets a database failure throw out of the metadata too", async () => {
+    const { generateMetadata } = require("~/app/market/[typeId]/page") as {
+      generateMetadata: GenerateMarketMetadata;
+    };
+    mockFindUnique.mockRejectedValue(new Error("database unavailable"));
+
+    await expect(
+      generateMetadata({ params: Promise.resolve({ typeId: "587" }) }),
+    ).rejects.toThrow("database unavailable");
+  });
+
+  it("lists a placeholder id that 404s without a query, for ISR", async () => {
+    const { generateStaticParams } = require("~/app/market/[typeId]/page") as {
+      generateStaticParams: () => { typeId: string }[];
+    };
+    const params = generateStaticParams();
+    expect(params).toEqual([{ typeId: "0" }]);
+
+    await expect(resolveServerTree(params[0]!.typeId)).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(mockFindUnique).not.toHaveBeenCalled();
+  });
 });
 
 describe("market landing page", () => {

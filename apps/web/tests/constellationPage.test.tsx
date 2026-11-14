@@ -76,22 +76,16 @@ jest.mock("@jitaspace/ui", () => ({
   }) => <span>{`sec ${securityStatus}`}</span>,
 }));
 
-const mockLoadEntityHistory = jest.fn<
-  (entityType: string, entityId: number) => Promise<unknown>
->(() => Promise.resolve(null));
-jest.mock("~/lib/history-entity-page", () => ({
-  loadEntityHistory: (entityType: string, entityId: number) =>
-    mockLoadEntityHistory(entityType, entityId),
-}));
+// The History tab fetches the history when it opens; stub the fetching tab.
 jest.mock("~/app/history/EntityHistory", () => ({
-  EmbeddedEntityHistory: ({
-    history,
+  FetchedEntityHistory: ({
+    entityType,
+    entityId,
   }: {
-    history: { entityId: number } | null;
+    entityType: string;
+    entityId: number;
   }) => (
-    <div data-testid="entity-history">
-      {history ? `history of ${history.entityId}` : "no history"}
-    </div>
+    <div data-testid="entity-history">{`history of ${entityType} ${entityId}`}</div>
   ),
 }));
 
@@ -253,7 +247,6 @@ beforeEach(() => {
     for (const fn of Object.values(model)) fn.mockReset();
   }
   notFound.mockClear();
-  mockLoadEntityHistory.mockReset().mockResolvedValue(null);
 });
 
 describe("readConstellation", () => {
@@ -422,10 +415,9 @@ async function resolvePageContent(constellationId: string) {
 }
 
 describe("constellation page (server)", () => {
-  it("hands the client the constellation, its incursions and its history", async () => {
+  it("hands the client the constellation and its incursions, but not its history", async () => {
     mockSdeReads();
     mockIncursions();
-    mockLoadEntityHistory.mockResolvedValue({ entityId: JAYAI });
 
     const tree = (await resolvePageContent(String(JAYAI))) as {
       props: { children: { props: Record<string, unknown> } };
@@ -437,8 +429,9 @@ describe("constellation page (server)", () => {
         expect.objectContaining({ incursionId: 3 }),
       ]),
     });
-    expect(props.history).toEqual({ entityId: JAYAI });
-    expect(mockLoadEntityHistory).toHaveBeenCalledWith("constellation", JAYAI);
+    // The History tab fetches its own history; the page never reads it, so a
+    // history database outage cannot fail the cached render.
+    expect(props).not.toHaveProperty("history");
   });
 
   it("renders the not-found page for an id no row matches", async () => {
@@ -525,11 +518,7 @@ function renderClient(
     require("~/app/constellation/[constellationId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page
-        constellation={constellation}
-        incursions={incursions}
-        history={null}
-      />
+      <Page constellation={constellation} incursions={incursions} />
     </MantineProvider>,
     { wrapper: withNuqsTestingAdapter({ searchParams }) },
   );
@@ -643,7 +632,7 @@ describe("constellation page (client)", () => {
     const { constellation, incursions } = await pageData();
     renderClient(constellation, incursions, "?tab=history");
     expect(screen.getByTestId("entity-history")).toHaveTextContent(
-      "no history",
+      `history of constellation ${JAYAI}`,
     );
   });
 });

@@ -39,7 +39,6 @@ const corporationFindFirst = jest.fn<
     ticker?: string | null;
   } | null>
 >();
-const loyaltyStoreOfferCount = jest.fn<(a?: unknown) => Promise<number>>();
 const loyaltyStoreOfferFindMany =
   jest.fn<(a?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeFindMany =
@@ -52,7 +51,6 @@ jest.mock("~/lib/db", () => ({
     },
     loyaltyStoreOffer: {
       findMany: (a?: unknown) => loyaltyStoreOfferFindMany(a),
-      count: (a?: unknown) => loyaltyStoreOfferCount(a),
     },
     type: { findMany: (a?: unknown) => typeFindMany(a) },
   },
@@ -186,7 +184,6 @@ describe("LP Store corporation lookup", () => {
   beforeEach(() => {
     corporationFindFirst.mockReset();
     loyaltyStoreOfferFindMany.mockReset().mockResolvedValue([]);
-    loyaltyStoreOfferCount.mockReset().mockResolvedValue(12);
     typeFindMany.mockReset().mockResolvedValue([]);
   });
 
@@ -209,7 +206,7 @@ describe("LP Store corporation lookup", () => {
     expect(lookupWhere()).toEqual({ name: "Caldari Navy" });
   });
 
-  it.each(["01000035", "1000035.0", "+1000035"])(
+  it.each(["1000035.0", "+1000035"])(
     "does not resolve %p by id, so the duplicate URL reaches not-found",
     async (corporationId) => {
       corporationFindFirst.mockResolvedValue(null);
@@ -220,6 +217,33 @@ describe("LP Store corporation lookup", () => {
       expect(lookupWhere()).toEqual({ name: corporationId });
     },
   );
+
+  // A spelling made only of digits names no store, so it 404s without a
+  // query; that is also what lets `generateStaticParams` list "0" in CI.
+  it.each(["01000035", "0"])(
+    "404s %p without a query",
+    async (corporationId) => {
+      await expect(resolvePageContent(corporationId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+      expect(corporationFindFirst).not.toHaveBeenCalled();
+    },
+  );
+
+  it("lists a placeholder segment that 404s without a query, for ISR", () => {
+    const {
+      generateStaticParams,
+    } = require("~/app/lp-store/[corporationId]/page");
+    expect(generateStaticParams()).toEqual([{ corporationId: "0" }]);
+  });
+
+  // The page is cached whole (ISR), and a notFound() is stored like any page:
+  // a caught failure would serve a 404 for as long as the cache keeps it.
+  it("lets a database failure escape instead of caching it as a 404", async () => {
+    corporationFindFirst.mockRejectedValue(new Error("db down"));
+
+    await expect(resolvePageContent("1000035")).rejects.toThrow("db down");
+  });
 });
 
 // The index links stores by name, the sitemap advertises them by name, and the
@@ -228,7 +252,8 @@ describe("LP Store corporation lookup", () => {
 describe("LP Store corporation metadata", () => {
   beforeEach(() => {
     corporationFindFirst.mockReset();
-    loyaltyStoreOfferCount.mockReset().mockResolvedValue(12);
+    loyaltyStoreOfferFindMany.mockReset().mockResolvedValue([]);
+    typeFindMany.mockReset().mockResolvedValue([]);
   });
 
   it("gives the id and name forms identical metadata, canonical to the name", async () => {
@@ -245,7 +270,9 @@ describe("LP Store corporation metadata", () => {
       }),
     );
     expect(lookupWhere(0)).toEqual({ corporationId: 1000035 });
-    expect(lookupWhere(1)).toEqual({ name: "Caldari Navy" });
+    expect(lookupWhere(corporationFindFirst.mock.calls.length - 1)).toEqual({
+      name: "Caldari Navy",
+    });
   });
 
   it("keeps punctuation in the canonical exactly as the index links it", async () => {
@@ -267,13 +294,15 @@ describe("LP Store corporation metadata", () => {
     corporationFindFirst.mockResolvedValue(null);
 
     expect(await metadataFor("No_Such_Corp")).toEqual({});
-    expect(loyaltyStoreOfferCount).not.toHaveBeenCalled();
+    expect(loyaltyStoreOfferFindMany).not.toHaveBeenCalled();
   });
 
-  it("emits nothing when the lookup fails, so a failed read is never canonicalised", async () => {
+  // Cached whole, the page would keep a caught failure's generic title and
+  // missing canonical for as long as the cache keeps the page.
+  it("lets a failed lookup throw, so it is never stored as the store's metadata", async () => {
     corporationFindFirst.mockRejectedValue(new Error("db down"));
 
-    expect(await metadataFor("1000035")).toEqual({});
+    await expect(metadataFor("1000035")).rejects.toThrow("db down");
   });
 });
 
@@ -284,7 +313,6 @@ describe("LP Store corporation offers", () => {
   beforeEach(() => {
     corporationFindFirst.mockReset().mockResolvedValue(CORPORATION);
     loyaltyStoreOfferFindMany.mockReset().mockResolvedValue([]);
-    loyaltyStoreOfferCount.mockReset().mockResolvedValue(12);
     typeFindMany.mockReset().mockResolvedValue([]);
   });
 
@@ -299,11 +327,30 @@ describe("LP Store corporation offers", () => {
     expect(arg.select.requiredItems.where).toEqual({ isDeleted: false });
   });
 
+  // The metadata counts the page's own (cached) offers, so it skips the
+  // withdrawn ones by the same filter rather than a count query of its own.
   it("counts only the offers still on sale in the metadata", async () => {
-    await metadataFor("1000035");
+    loyaltyStoreOfferFindMany.mockResolvedValue(
+      [1, 2, 3].map((offerId) => ({
+        offerId,
+        corporationId: 1000035,
+        typeId: 34,
+        quantity: 1,
+        akCost: null,
+        lpCost: 100,
+        iskCost: 1000,
+        requiredItems: [],
+      })),
+    );
 
-    expect(loyaltyStoreOfferCount).toHaveBeenCalledWith({
-      where: { corporationId: 1000035, isDeleted: false },
-    });
+    const metadata = (await metadataFor("1000035")) as {
+      description?: string;
+    };
+
+    expect(metadata.description).toContain("3 Loyalty Point offers");
+    const arg = loyaltyStoreOfferFindMany.mock.calls[0]?.[0] as {
+      where: unknown;
+    };
+    expect(arg.where).toEqual({ corporationId: 1000035, isDeleted: false });
   });
 });
