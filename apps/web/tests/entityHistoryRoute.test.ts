@@ -17,6 +17,33 @@ jest.mock("~/lib/history-entity-page", () => ({
     getCachedEntityHistory(entityType, entityId),
 }));
 
+// The primary-key lookup each kind's page 404s on: a row, unless a test says
+// the entity does not exist.
+const findUnique = jest.fn<(args: unknown) => Promise<unknown>>();
+const MODELS = [
+  "type",
+  "race",
+  "faction",
+  "station",
+  "constellation",
+  "region",
+  "dungeon",
+  "mission",
+  "epicArc",
+] as const;
+
+jest.mock("~/lib/db", () => ({
+  prisma: Object.fromEntries(
+    MODELS.map((model) => [
+      model,
+      {
+        findUnique: (args: unknown) =>
+          findUnique({ model, ...(args as object) }),
+      },
+    ]),
+  ),
+}));
+
 const history = (entityType: string, entityId: number) => ({
   entityType,
   entityId,
@@ -42,6 +69,8 @@ function get(entityType: string, id: string) {
 describe("GET /api/history/entity/[entityType]/[id]", () => {
   beforeEach(() => {
     getCachedEntityHistory.mockReset();
+    findUnique.mockReset();
+    findUnique.mockResolvedValue({});
   });
 
   it.each([
@@ -76,6 +105,54 @@ describe("GET /api/history/entity/[entityType]/[id]", () => {
     ["type", "abc"],
   ])("404s %s/%s without reading", async (entityType, id) => {
     expect((await get(entityType, id)).status).toBe(404);
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(getCachedEntityHistory).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["type", 587, "type", { typeId: 587 }],
+    ["race", 1, "race", { raceId: 1 }],
+    ["faction", 500_001, "faction", { factionId: 500_001 }],
+    ["npcStation", 60_003_760, "station", { stationId: 60_003_760 }],
+    [
+      "constellation",
+      20_000_020,
+      "constellation",
+      { constellationId: 20_000_020 },
+    ],
+    ["region", 10_000_002, "region", { regionId: 10_000_002 }],
+    ["dungeon", 1_234, "dungeon", { dungeonId: 1_234 }],
+    ["mission", 5_678, "mission", { missionId: 5_678 }],
+    ["epicArc", 12, "epicArc", { epicArcId: 12 }],
+  ])(
+    "looks a %s up by the key its page 404s on",
+    async (entityType, id, model, where) => {
+      getCachedEntityHistory.mockResolvedValue(history(entityType, id));
+
+      await get(entityType, String(id));
+
+      expect(findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ model, where }),
+      );
+    },
+  );
+
+  // A crawler walking ids would otherwise read both databases per id, for a
+  // timeline that is always empty.
+  it("404s an id no page exists for, cached, without the history read", async () => {
+    findUnique.mockResolvedValue(null);
+
+    const response = await get("type", "999999999");
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Cache-Control")).toContain("s-maxage=3600");
+    expect(getCachedEntityHistory).not.toHaveBeenCalled();
+  });
+
+  it("lets a main database failure answer 500 rather than cache a 404", async () => {
+    findUnique.mockRejectedValue(new Error("main DB down"));
+
+    await expect(get("type", "587")).rejects.toThrow("main DB down");
     expect(getCachedEntityHistory).not.toHaveBeenCalled();
   });
 
