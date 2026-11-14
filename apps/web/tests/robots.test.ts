@@ -32,6 +32,28 @@ describe("robots.txt", () => {
     expect(rule?.crawlDelay).toBeGreaterThanOrEqual(10);
     // A crawler follows only the most specific group naming it, so this group
     // must carry the `*` disallow list itself.
-    expect(rule?.disallow).toEqual([...CRAWLER_DISALLOWED_PATHS]);
+    expect(rule?.disallow).toEqual([...CRAWLER_DISALLOWED_PATHS, "/api/og"]);
+  });
+
+  it.each([
+    "AhrefsBot",
+    "PerplexityBot",
+    "ExaSearchBot",
+    "ExaSearchBot-Images",
+  ])(
+    "keeps %s off the generated card images but not off the pages",
+    (userAgent) => {
+      const rule = rulesFor(userAgent);
+
+      expect(rule?.disallow).toContain("/api/og");
+      expect(rule?.disallow).not.toBe("/");
+      expect(rule?.disallow).toEqual(
+        expect.arrayContaining([...CRAWLER_DISALLOWED_PATHS]),
+      );
+    },
+  );
+
+  it("leaves the card images open to everyone else, for link previews", () => {
+    expect(rulesFor("*")?.disallow).toEqual([...CRAWLER_DISALLOWED_PATHS]);
   });
 });

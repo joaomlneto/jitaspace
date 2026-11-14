@@ -9,6 +9,24 @@ import { SITEMAP_INDEX_URL } from "./sitemap";
  */
 const AHREFS_CRAWL_DELAY_SECONDS = 10;
 
+/**
+ * The generated OpenGraph card. Each card is rendered on demand for one page,
+ * so a crawler walking the site makes the server draw an image nobody will
+ * look at: in the week to 2026-11-14, 31k of the 31.4k cards rendered went to
+ * the crawlers named below, and only 86 requests were served from the cache.
+ *
+ * It is not in `CRAWLER_DISALLOWED_PATHS` on purpose: link previews (X obeys
+ * robots.txt for its cards) and search engines still need the image.
+ */
+const OG_IMAGE_PATH = "/api/og";
+
+/** Crawlers that fetch every page's card image and have no use for it. */
+const OG_IMAGE_CRAWLERS = [
+  "PerplexityBot",
+  "ExaSearchBot",
+  "ExaSearchBot-Images",
+];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -31,9 +49,16 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "AhrefsBot",
         allow: "/",
-        disallow: [...CRAWLER_DISALLOWED_PATHS],
+        disallow: [...CRAWLER_DISALLOWED_PATHS, OG_IMAGE_PATH],
         crawlDelay: AHREFS_CRAWL_DELAY_SECONDS,
       },
+      // Search crawlers that stay welcome on the pages but are kept off the
+      // card images. As above, each group repeats the `*` disallow list.
+      ...OG_IMAGE_CRAWLERS.map((userAgent) => ({
+        userAgent,
+        allow: "/",
+        disallow: [...CRAWLER_DISALLOWED_PATHS, OG_IMAGE_PATH],
+      })),
     ],
     // One entry, not the enumerated pages: the index at /sitemap.xml expands to
     // every /sitemap/{n}.xml, so a new page needs no change here.
