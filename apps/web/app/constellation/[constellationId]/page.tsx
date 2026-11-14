@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, withArticle } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { readConstellation, readConstellationIncursions } from "./data";
@@ -61,12 +60,10 @@ async function PageContent({
 
   // Uncaught: this page is cached whole, so a database failure must throw
   // rather than store a 404. `null` is a constellation that genuinely does not
-  // exist. The history read runs alongside: a cold one takes seconds, and
-  // `loadEntityHistory` never throws.
-  const [constellation, incursions, history] = await Promise.all([
+  // exist.
+  const [constellation, incursions] = await Promise.all([
     readConstellation(id),
     readConstellationIncursions(id),
-    loadEntityHistory("constellation", id),
   ]);
   if (!constellation) notFound();
 
@@ -75,11 +72,7 @@ async function PageContent({
   // React adapter reads `?tab=` after hydration instead.
   return (
     <NuqsAdapter>
-      <PageClient
-        constellation={constellation}
-        incursions={incursions}
-        history={history}
-      />
+      <PageClient constellation={constellation} incursions={incursions} />
     </NuqsAdapter>
   );
 }

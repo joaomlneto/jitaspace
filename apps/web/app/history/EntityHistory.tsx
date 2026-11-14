@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Suspense, use } from "react";
 import {
   Alert,
   Anchor,
@@ -15,6 +14,7 @@ import {
   Text,
   Timeline,
 } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
 import { parseAsArrayOf, parseAsString, useQueryStates } from "nuqs";
 
 import type { Provenance, TimelineEvent } from "~/lib/history";
@@ -26,6 +26,7 @@ import {
   provenanceMeta,
   serverMeta,
 } from "~/lib/history";
+import { shouldRetryQuery } from "~/lib/queryRetry";
 import { KIND_COLOR } from "./_diff";
 import { EventContent } from "./_event";
 import { HistoryLabelsProvider } from "./_labels-context";
@@ -275,8 +276,8 @@ function EntityTimelineView({
 
 /**
  * An entity's history inside a host page's History tab. `history` is null when
- * the host's server read of it failed (`loadEntityHistory`), which hides the
- * timeline rather than failing the page.
+ * {@link FetchedEntityHistory}'s fetch failed, which hides the timeline rather
+ * than failing the page.
  */
 export function EmbeddedEntityHistory({
   history,
@@ -291,23 +292,40 @@ export function EmbeddedEntityHistory({
 }
 
 /**
- * An entity's history that the server is still reading when the host page
- * starts streaming: the item page passes the read's promise rather than
- * awaiting it, so its first byte never waits on the history, and the timeline
- * arrives later in the same response. The browser fetches nothing.
+ * An entity's history that the browser fetches from the CDN-cached
+ * `/api/history/entity/[entityType]/[id]`, for a host page cached whole: read
+ * inside that page's render, any history database outage failed the page's
+ * background revalidation. Mount it only while its tab is open.
+ *
+ * A failed load is retried once at most, and never a 404. Under the app's
+ * default (three retries for an error without a status) a history database
+ * that accepts connections and never answers held the loader for four 20 s
+ * route timeouts, and each tab open cost four of those invocations.
  */
-export function StreamedEntityHistory({
-  history,
-}: Readonly<{ history: Promise<EntityHistoryData | null> }>) {
-  return (
-    <Suspense fallback={<Loader />}>
-      <ResolvedEntityHistory history={history} />
-    </Suspense>
-  );
-}
-
-function ResolvedEntityHistory({
-  history,
-}: Readonly<{ history: Promise<EntityHistoryData | null> }>) {
-  return <EmbeddedEntityHistory history={use(history)} />;
+export function FetchedEntityHistory({
+  entityType,
+  entityId,
+}: Readonly<{ entityType: string; entityId: number }>) {
+  const url = `/api/history/entity/${entityType}/${entityId}`;
+  const { data, isError } = useQuery({
+    queryKey: ["entity-history", url],
+    queryFn: async (): Promise<EntityHistoryData> => {
+      const response = await fetch(url);
+      if (!response.ok) {
+        // The status where `shouldRetryQuery` looks for it, so a 404 (an
+        // unknown kind or id) is not asked for again.
+        throw Object.assign(
+          new Error(`History at ${url}: HTTP ${response.status}`),
+          { response: { status: response.status } },
+        );
+      }
+      return (await response.json()) as EntityHistoryData;
+    },
+    retry: (failureCount, error) =>
+      failureCount < 1 && shouldRetryQuery(failureCount, error),
+    staleTime: Infinity,
+  });
+  if (isError) return <EmbeddedEntityHistory history={null} />;
+  if (!data) return <Loader />;
+  return <EmbeddedEntityHistory history={data} />;
 }

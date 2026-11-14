@@ -17,7 +17,6 @@ import type { SolarSystemSdeInfo } from "~/app/system/[systemId]/types";
 
 const SYSTEM_ID = 30000142;
 
-const mockUseParams = jest.fn<(...args: unknown[]) => Record<string, string>>();
 const mockUseSelectedCharacter = jest.fn();
 const mockUseSolarSystem = jest.fn();
 const mockUseSolarSystemCostIndices = jest.fn();
@@ -44,7 +43,6 @@ jest.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
-  useParams: () => mockUseParams(),
   useRouter: () => ({}),
   usePathname: () => "/",
 }));
@@ -125,18 +123,17 @@ jest.mock("next/link", () => ({
 // handed to the client page as a plain prop, so tests pass it in directly.
 type SdeProp = SolarSystemSdeInfo | null;
 
-function renderPage(sde: SdeProp = null) {
+function renderPage(sde: SdeProp = null, systemId: number = SYSTEM_ID) {
   const Page = require("~/app/system/[systemId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page systemName="Jita" sde={sde} />
+      <Page systemId={systemId} systemName="Jita" sde={sde} />
     </MantineProvider>,
   );
 }
 
 describe("System page", () => {
   beforeEach(() => {
-    mockUseParams.mockReset().mockReturnValue({ systemId: String(SYSTEM_ID) });
     mockUseSelectedCharacter.mockReset().mockReturnValue(undefined);
     mockUseSolarSystem.mockReset().mockReturnValue({ data: undefined });
     mockUseSolarSystemCostIndices.mockReset().mockReturnValue({ data: {} });
@@ -387,9 +384,7 @@ describe("System page", () => {
   });
 
   it("returns null for a non-finite system id", () => {
-    mockUseParams.mockReturnValue({ systemId: "not-a-number" });
-
-    renderPage();
+    renderPage(null, Number.NaN);
 
     expect(screen.queryByText("System Information")).not.toBeInTheDocument();
     expect(screen.queryByText("Celestials")).not.toBeInTheDocument();
@@ -468,6 +463,35 @@ describe("System page", () => {
     });
     const child = tree.props.children;
 
+    await expect(child.type(child.props)).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mockSolarSystemFindUnique).not.toHaveBeenCalled();
+  });
+
+  // The page is cached whole (ISR), so its title must come from a read that
+  // throws on failure: a caught one would store the bare site title.
+  it("lets a database failure escape generateMetadata too", async () => {
+    mockSolarSystemFindUnique.mockRejectedValue(
+      new Error("database unavailable"),
+    );
+    const { generateMetadata } = require("~/app/system/[systemId]/page");
+
+    await expect(
+      generateMetadata({
+        params: Promise.resolve({ systemId: String(SYSTEM_ID) }),
+      }),
+    ).rejects.toThrow("database unavailable");
+  });
+
+  it("lists a placeholder id that 404s without a query, for ISR", async () => {
+    const {
+      default: WrapperPage,
+      generateStaticParams,
+    } = require("~/app/system/[systemId]/page");
+    const params = generateStaticParams();
+    expect(params).toEqual([{ systemId: "0" }]);
+
+    const child = WrapperPage({ params: Promise.resolve(params[0]) }).props
+      .children;
     await expect(child.type(child.props)).rejects.toThrow("NEXT_NOT_FOUND");
     expect(mockSolarSystemFindUnique).not.toHaveBeenCalled();
   });

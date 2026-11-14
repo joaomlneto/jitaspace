@@ -83,22 +83,16 @@ jest.mock("~/components/EveMail", () => ({
   ),
 }));
 
-const mockLoadEntityHistory = jest.fn<
-  (entityType: string, entityId: number) => Promise<unknown>
->(() => Promise.resolve(null));
-jest.mock("~/lib/history-entity-page", () => ({
-  loadEntityHistory: (entityType: string, entityId: number) =>
-    mockLoadEntityHistory(entityType, entityId),
-}));
+// The History tab fetches the history when it opens; stub the fetching tab.
 jest.mock("~/app/history/EntityHistory", () => ({
-  EmbeddedEntityHistory: ({
-    history,
+  FetchedEntityHistory: ({
+    entityType,
+    entityId,
   }: {
-    history: { entityId: number } | null;
+    entityType: string;
+    entityId: number;
   }) => (
-    <div data-testid="entity-history">
-      {history ? `history of ${history.entityId}` : "no history"}
-    </div>
+    <div data-testid="entity-history">{`history of ${entityType} ${entityId}`}</div>
   ),
 }));
 
@@ -237,7 +231,6 @@ beforeEach(() => {
     for (const fn of Object.values(model)) fn.mockReset();
   }
   notFound.mockClear();
-  mockLoadEntityHistory.mockReset().mockResolvedValue(null);
 });
 
 describe("readRegion", () => {
@@ -359,18 +352,18 @@ async function resolvePageContent(regionId: string) {
 }
 
 describe("region page (server)", () => {
-  it("hands the client the region, its incursions and its history", async () => {
+  it("hands the client the region and its incursions, but not its history", async () => {
     mockSdeReads();
     mockIncursions();
-    mockLoadEntityHistory.mockResolvedValue({ entityId: DEVOID });
 
     const tree = (await resolvePageContent(String(DEVOID))) as {
       props: { children: { props: Record<string, unknown> } };
     };
     const props = tree.props.children.props;
     expect(props.region).toMatchObject({ regionId: DEVOID });
-    expect(props.history).toEqual({ entityId: DEVOID });
-    expect(mockLoadEntityHistory).toHaveBeenCalledWith("region", DEVOID);
+    // The History tab fetches its own history; the page never reads it, so a
+    // history database outage cannot fail the cached render.
+    expect(props).not.toHaveProperty("history");
   });
 
   it("renders the not-found page for an id no row matches", async () => {
@@ -433,7 +426,7 @@ function renderClient(
   const Page = require("~/app/region/[regionId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page region={region} incursions={incursions} history={null} />
+      <Page region={region} incursions={incursions} />
     </MantineProvider>,
     { wrapper: withNuqsTestingAdapter({ searchParams }) },
   );
@@ -529,7 +522,7 @@ describe("region page (client)", () => {
     const { region, incursions } = await pageData();
     renderClient(region, incursions, "?tab=history");
     expect(screen.getByTestId("entity-history")).toHaveTextContent(
-      "no history",
+      `history of region ${DEVOID}`,
     );
   });
 });

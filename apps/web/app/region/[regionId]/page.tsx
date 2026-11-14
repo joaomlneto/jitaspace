@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { loadEntityHistory } from "~/lib/history-entity-page";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import { readRegion, readRegionIncursions } from "./data";
@@ -64,12 +63,9 @@ async function PageContent({
 
   // Uncaught: this page is cached whole, so a database failure must throw
   // rather than store a 404. `null` is a region that genuinely does not exist.
-  // The history read runs alongside: a cold one takes seconds, and
-  // `loadEntityHistory` never throws.
-  const [region, incursions, history] = await Promise.all([
+  const [region, incursions] = await Promise.all([
     readRegion(id),
     readRegionIncursions(id),
-    loadEntityHistory("region", id),
   ]);
   if (!region) notFound();
 
@@ -78,7 +74,7 @@ async function PageContent({
   // React adapter reads `?tab=` after hydration instead.
   return (
     <NuqsAdapter>
-      <PageClient region={region} incursions={incursions} history={history} />
+      <PageClient region={region} incursions={incursions} />
     </NuqsAdapter>
   );
 }

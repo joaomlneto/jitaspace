@@ -141,12 +141,16 @@ export const eveImage = {
  * has no artwork" for the whole `cacheLife` window — only a genuine answer
  * (including an empty list, or a 404 for a type the CDN has never heard of)
  * reaches the cache.
+ *
+ * Weekly: artwork changes with game patches, and the item, market and other
+ * pages cached whole revalidate on their shortest read, so a daily entry would
+ * re-render most of them on nearly every visit.
  */
 export async function readTypeImageVariations(
   typeId: number,
 ): Promise<string[]> {
   "use cache";
-  cacheLife("days");
+  cacheLife("weeks");
   const res = await fetch(`https://images.evetech.net/types/${typeId}`, {
     signal: AbortSignal.timeout(5_000),
   });
@@ -174,7 +178,9 @@ export async function readTypeImageVariations(
  *
  * Deliberately uncached: the failure is caught here, outside the cache scope of
  * `readTypeImageVariations`, so a CDN blip degrades this one render to "no
- * image" without being remembered.
+ * image" without being remembered. `connection()` keeps that render out of a
+ * page cached whole (ISR), which would otherwise store the card without its
+ * image until the page next revalidated.
  */
 export async function resolveTypeImage(
   typeId: number | null | undefined,
@@ -186,6 +192,10 @@ export async function resolveTypeImage(
   try {
     variations = await readTypeImageVariations(typeId);
   } catch {
+    // Imported here, on the failure path only: `next/server` cannot load in the
+    // jsdom suites that import pages using this.
+    const { connection } = await import("next/server");
+    await connection();
     return undefined;
   }
   if (variations.includes("render")) return eveImage.type(typeId, "render");

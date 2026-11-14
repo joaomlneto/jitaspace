@@ -9,12 +9,11 @@ import { render, screen, waitFor } from "@testing-library/react";
 // ---------------------------------------------------------------------------
 // The group page is an async server component. It reads params (a Promise),
 // loads a group from prisma (wrapped in a "use cache" helper), renders its
-// types, and calls notFound() on error. We mock prisma, next/cache,
+// types, and calls notFound() for a group that does not exist. We mock prisma, next/cache,
 // next/navigation, the UI anchors/avatars and the breadcrumbs component.
 // ---------------------------------------------------------------------------
 
-const mockFindUniqueOrThrow =
-  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockNotFound = jest.fn((..._args: unknown[]) => {
   throw new Error("NEXT_NOT_FOUND");
 });
@@ -22,7 +21,7 @@ const mockNotFound = jest.fn((..._args: unknown[]) => {
 jest.mock("~/lib/db", () => ({
   prisma: {
     group: {
-      findUniqueOrThrow: (...args: unknown[]) => mockFindUniqueOrThrow(...args),
+      findUnique: (...args: unknown[]) => mockFindUnique(...args),
     },
   },
 }));
@@ -84,12 +83,12 @@ async function renderPage(groupId = "25") {
 
 describe("Group Page", () => {
   beforeEach(() => {
-    mockFindUniqueOrThrow.mockReset();
+    mockFindUnique.mockReset();
     mockNotFound.mockClear();
   });
 
   it("renders the group name, breadcrumbs and alphabetically-sorted types", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       groupId: 25,
       name: "Frigate",
       types: [
@@ -116,7 +115,7 @@ describe("Group Page", () => {
     expect(screen.getByText("TypeAvatar 1")).toBeInTheDocument();
 
     // prisma queried with the numeric groupId
-    expect(mockFindUniqueOrThrow).toHaveBeenCalledWith(
+    expect(mockFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { groupId: 25 } }),
     );
 
@@ -128,7 +127,7 @@ describe("Group Page", () => {
   });
 
   it("renders a group with no types", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       groupId: 99,
       name: "Empty Group",
       types: [],
@@ -144,7 +143,7 @@ describe("Group Page", () => {
   });
 
   it("falls back to an empty type list when types is nullish", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       groupId: 5,
       name: "Nullish Types",
       types: null,
@@ -168,12 +167,12 @@ describe("Group Page", () => {
       await expect(resolveServerTree(groupId)).rejects.toThrow(
         "NEXT_NOT_FOUND",
       );
-      expect(mockFindUniqueOrThrow).not.toHaveBeenCalled();
+      expect(mockFindUnique).not.toHaveBeenCalled();
     },
   );
 
   it("still serves group 0, which the sitemap advertises", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       groupId: 0,
       name: "Group Zero",
       types: [],
@@ -184,7 +183,7 @@ describe("Group Page", () => {
     await waitFor(() =>
       expect(screen.getByText("Group Zero")).toBeInTheDocument(),
     );
-    expect(mockFindUniqueOrThrow).toHaveBeenCalledWith(
+    expect(mockFindUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { groupId: 0 } }),
     );
   });
@@ -192,7 +191,7 @@ describe("Group Page", () => {
   // The metadata used to reject 0 while the page accepted it, so /group/0 —
   // "#System" — rendered with the bare site title and no canonical.
   it("titles and canonicalises group 0 like any other group", async () => {
-    mockFindUniqueOrThrow.mockResolvedValue({
+    mockFindUnique.mockResolvedValue({
       groupId: 0,
       name: "#System",
       types: [],
@@ -209,13 +208,37 @@ describe("Group Page", () => {
     );
   });
 
-  it("calls notFound() when the group lookup throws", async () => {
-    mockFindUniqueOrThrow.mockRejectedValue(new Error("db error"));
+  it("calls notFound() for a group that does not exist", async () => {
+    mockFindUnique.mockResolvedValue(null);
 
-    // PageContent catches the prisma error and calls notFound(), which our
-    // mock turns into a thrown NEXT_NOT_FOUND.
     await expect(resolveServerTree("404")).rejects.toThrow("NEXT_NOT_FOUND");
 
     expect(mockNotFound).toHaveBeenCalled();
+  });
+
+  // The page is cached whole (ISR), and a notFound() is stored like any page:
+  // a caught failure would serve a 404 for as long as the cache keeps it.
+  it("lets a database failure escape instead of caching it as a 404", async () => {
+    mockFindUnique.mockRejectedValue(new Error("db error"));
+
+    await expect(resolveServerTree("404")).rejects.toThrow("db error");
+    expect(mockNotFound).not.toHaveBeenCalled();
+
+    const { generateMetadata } = require("~/app/group/[groupId]/page");
+    await expect(
+      generateMetadata({ params: Promise.resolve({ groupId: "404" }) }),
+    ).rejects.toThrow("db error");
+  });
+
+  it("lists a placeholder id that 404s without a query, for ISR", async () => {
+    const { generateStaticParams } = require("~/app/group/[groupId]/page");
+    const params = generateStaticParams() as { groupId: string }[];
+    // Not "0": group 0 is real, so the placeholder must be one no group has.
+    expect(params).toEqual([{ groupId: "-1" }]);
+
+    await expect(resolveServerTree(params[0]!.groupId)).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+    expect(mockFindUnique).not.toHaveBeenCalled();
   });
 });

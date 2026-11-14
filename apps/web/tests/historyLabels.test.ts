@@ -196,7 +196,6 @@ const mockReadEntityNames = jest.fn(
 let mockTimeline: EntityTimeline | null = null;
 let mockTimelineError: Error | null = null;
 let mockTimelineHang = false;
-const mockCapture = jest.fn();
 
 // A Prisma stand-in: each model's findMany returns its table's rows whose id
 // column is in the `where … in` filter.
@@ -247,14 +246,9 @@ jest.mock("next/cache", () => ({
   cacheLife: () => undefined,
   cacheTag: () => undefined,
 }));
-const mockConnection = jest.fn(() => Promise.resolve());
-jest.mock("next/server", () => ({ connection: () => mockConnection() }));
-jest.mock("@sentry/nextjs", () => ({
-  captureException: (e: unknown, c: unknown) => mockCapture(e, c),
-}));
 
 // Lazy-require after jest.mock: next/jest (SWC) does not hoist jest.mock.
-const { getCachedEntityHistory, loadEntityHistory, readHistoryLabels } =
+const { getCachedEntityHistory, readHistoryLabels } =
   require("~/lib/history-entity-page") as typeof EntityPage;
 
 beforeEach(() => {
@@ -265,8 +259,6 @@ beforeEach(() => {
   mockReadEntityNames.mockClear();
   mockReadMessages.mockClear();
   mockMessages = {};
-  mockCapture.mockClear();
-  mockConnection.mockClear();
 });
 
 describe("readHistoryLabels", () => {
@@ -445,35 +437,19 @@ describe("getCachedEntityHistory", () => {
       "history DB down",
     );
   });
-});
-
-describe("loadEntityHistory", () => {
-  it("passes the history through", async () => {
-    expect(await loadEntityHistory("faction", 500_001)).toMatchObject({
-      entityId: 500_001,
-    });
-    expect(mockConnection).not.toHaveBeenCalled();
-  });
-
-  it("gives up on a stalled read rather than hold the page open", async () => {
+  // The bound lives inside the cache scope: an ISR page's background render
+  // waits for every cache entry it starts, so a read that never answers would
+  // hold that render, and every request queued behind it, open.
+  it("gives up on a stalled read, so a background render is never held open", async () => {
     mockTimelineHang = true;
     jest.useFakeTimers();
     try {
-      const pending = loadEntityHistory("type", 587);
-      await jest.advanceTimersByTimeAsync(10_000);
-      expect(await pending).toBeNull();
-      expect(mockCapture).toHaveBeenCalledTimes(1);
-      expect(mockConnection).toHaveBeenCalledTimes(1);
+      const pending = getCachedEntityHistory("type", 587);
+      const settled = expect(pending).rejects.toThrow("took over 20000 ms");
+      await jest.advanceTimersByTimeAsync(20_000);
+      await settled;
     } finally {
       jest.useRealTimers();
     }
-  });
-
-  it("reports a failure and keeps the degraded page out of the cache", async () => {
-    mockTimelineError = new Error("history DB down");
-
-    expect(await loadEntityHistory("faction", 500_001)).toBeNull();
-    expect(mockCapture).toHaveBeenCalledTimes(1);
-    expect(mockConnection).toHaveBeenCalledTimes(1);
   });
 });
