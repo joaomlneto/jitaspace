@@ -16,11 +16,18 @@ import { env } from "~/env";
  */
 const globalForPrisma = globalThis as { __jitaspacePrisma?: Db };
 
+/** How long a query may wait for a database connection before it fails. */
+const DB_CONNECTION_TIMEOUT_MS = 10_000;
+
 export const prisma =
   globalForPrisma.__jitaspacePrisma ??
   createPrismaClient({
     connectionString: env.DATABASE_URL,
     logQueries: env.NODE_ENV === "development",
+    // Without a limit, a query queued behind a starved pool (or stuck in a TLS
+    // handshake on an overloaded instance) waits forever: the request then
+    // runs until Vercel's 300 s limit and returns a 504.
+    connectionTimeoutMillis: DB_CONNECTION_TIMEOUT_MS,
   });
 
 if (env.NODE_ENV !== "production") globalForPrisma.__jitaspacePrisma = prisma;
