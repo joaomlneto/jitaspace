@@ -26,6 +26,7 @@ import {
   provenanceMeta,
   serverMeta,
 } from "~/lib/history";
+import { shouldRetryQuery } from "~/lib/queryRetry";
 import { KIND_COLOR } from "./_diff";
 import { EventContent } from "./_event";
 import { HistoryLabelsProvider } from "./_labels-context";
@@ -295,6 +296,11 @@ export function EmbeddedEntityHistory({
  * `/api/history/entity/[entityType]/[id]`, for a host page cached whole: read
  * inside that page's render, any history database outage failed the page's
  * background revalidation. Mount it only while its tab is open.
+ *
+ * A failed load is retried once at most, and never a 404. Under the app's
+ * default (three retries for an error without a status) a history database
+ * that accepts connections and never answers held the loader for four 20 s
+ * route timeouts, and each tab open cost four of those invocations.
  */
 export function FetchedEntityHistory({
   entityType,
@@ -306,10 +312,17 @@ export function FetchedEntityHistory({
     queryFn: async (): Promise<EntityHistoryData> => {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`History at ${url}: HTTP ${response.status}`);
+        // The status where `shouldRetryQuery` looks for it, so a 404 (an
+        // unknown kind or id) is not asked for again.
+        throw Object.assign(
+          new Error(`History at ${url}: HTTP ${response.status}`),
+          { response: { status: response.status } },
+        );
       }
       return (await response.json()) as EntityHistoryData;
     },
+    retry: (failureCount, error) =>
+      failureCount < 1 && shouldRetryQuery(failureCount, error),
     staleTime: Infinity,
   });
   if (isError) return <EmbeddedEntityHistory history={null} />;

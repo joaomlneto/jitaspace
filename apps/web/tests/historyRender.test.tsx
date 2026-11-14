@@ -21,10 +21,13 @@ interface MockQueryOptions {
   queryKey?: unknown[];
   queryFn?: () => unknown;
   staleTime?: number | ((query: { state: { data: unknown } }) => number);
+  retry?: (failureCount: number, error: unknown) => boolean;
 }
 const mockUseQuery = jest.fn<(opts: MockQueryOptions) => unknown>();
 jest.mock("@tanstack/react-query", () => ({
   useQuery: (opts: MockQueryOptions) => mockUseQuery(opts),
+  // Read by the app's retry policy (`~/lib/queryRetry`): these run as a browser.
+  environmentManager: { isServer: () => false },
 }));
 
 // The history index page embeds the recharts-backed activity BarChart; stub it
@@ -545,6 +548,36 @@ describe("EntityHistory", () => {
     mockUseQuery.mockReturnValue({ data: undefined, isError: true });
     wrap(<FetchedEntityHistory entityType="type" entityId={587} />);
     expect(screen.getByText(/could not be loaded/)).toBeTruthy();
+  });
+
+  // A history database that accepts connections and never answers makes each
+  // attempt wait out the route's 20 s timeout, so the default three retries
+  // held the loader for over a minute.
+  it("retries a failed history load once at most, and never a 404", async () => {
+    const { FetchedEntityHistory } =
+      await import("~/app/history/EntityHistory");
+    mockUseQuery.mockReturnValue({ data: undefined, isError: false });
+    wrap(<FetchedEntityHistory entityType="type" entityId={587} />);
+    const opts = mockUseQuery.mock.calls.at(-1)?.[0];
+    const retry = opts?.retry;
+    if (!retry) throw new Error("FetchedEntityHistory sets no retry policy");
+
+    globalThis.fetch = jest.fn(() =>
+      Promise.resolve({ ok: false, status: 500 }),
+    ) as unknown as typeof fetch;
+    const serverError = await Promise.resolve(opts.queryFn?.()).catch(
+      (e: unknown) => e,
+    );
+    expect(retry(0, serverError)).toBe(true);
+    expect(retry(1, serverError)).toBe(false);
+
+    globalThis.fetch = jest.fn(() =>
+      Promise.resolve({ ok: false, status: 404 }),
+    ) as unknown as typeof fetch;
+    const notFound = await Promise.resolve(opts.queryFn?.()).catch(
+      (e: unknown) => e,
+    );
+    expect(retry(0, notFound)).toBe(false);
   });
 
   it("reads the history from the route, and fails the query on an error answer", async () => {
