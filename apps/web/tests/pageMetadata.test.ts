@@ -20,6 +20,8 @@ import {
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "~/lib/og";
 
 jest.mock("next/cache", () => ({ cacheLife: jest.fn(), cacheTag: jest.fn() }));
+const connection = jest.fn(() => Promise.resolve());
+jest.mock("next/server", () => ({ connection }));
 
 describe("pageMetadata", () => {
   const meta = pageMetadata({
@@ -247,6 +249,20 @@ describe("resolveTypeImage", () => {
     mockImageService("unavailable");
     await expect(readTypeImageVariations(587)).rejects.toThrow();
     expect(await resolveTypeImage(587)).toBeUndefined();
+  });
+
+  it("keeps a render without its image out of a page cached whole", async () => {
+    // An ISR page would otherwise store its card without the artwork until it
+    // next revalidated; `connection()` makes that render request-time instead.
+    connection.mockClear();
+    mockImageService("unavailable");
+    expect(await resolveTypeImage(587)).toBeUndefined();
+    expect(connection).toHaveBeenCalledTimes(1);
+
+    connection.mockClear();
+    mockImageService(["render"]);
+    await resolveTypeImage(587);
+    expect(connection).not.toHaveBeenCalled();
   });
 
   it.each([0, -1, 1.5, Number.NaN, null, undefined])(

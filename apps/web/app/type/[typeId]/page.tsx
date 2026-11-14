@@ -171,12 +171,16 @@ function nonEmpty(value: string | null | undefined): string | undefined {
  *
  * Not `cacheSdeRead()`: effects' `customDescription` and the categories'
  * names are written by our own scripts, not by the SDE ingest, so the entry
- * keeps a daily `cacheLife` and only adds the SDE tag, as
- * `app/lp-store/page.tsx` does.
+ * keeps its own `cacheLife` and only adds the SDE tag, as
+ * `app/lp-store/page.tsx` does. Weekly, not daily: the page is cached whole and
+ * revalidates on its shortest read, and most item pages are visited about
+ * twice a week, so a daily entry would re-render nearly every visit. Those
+ * descriptions change only when someone runs `describe-dogma-effects` by hand;
+ * run `revalidate-sde-cache` afterwards to show them at once.
  */
 async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   "use cache";
-  cacheLife("days");
+  cacheLife("weeks");
   cacheTag(SDE_CACHE_TAG);
 
   const [rows, effectRows, effectCategories] = await Promise.all([
@@ -471,14 +475,15 @@ async function getTypeTypeLists(
  * A failure throws rather than degrading here: the caller catches it, so a
  * database blip is never what gets written into the cache entry. Not
  * `cacheSdeRead()`: the effect descriptions include our own
- * `customDescription`, which the SDE ingest does not write.
+ * `customDescription`, which the SDE ingest does not write. Weekly for the
+ * same reason as `readTypeDogmaMeta`.
  */
 async function readCachedTypeSynchronizer(
   typeId: number,
   groupId: number,
 ): Promise<TypeSynchronizer> {
   "use cache";
-  cacheLife("days");
+  cacheLife("weeks");
   cacheTag(SDE_CACHE_TAG);
   return readTypeSynchronizer(typeId, groupId);
 }
@@ -504,13 +509,22 @@ async function getTypeSynchronizer(
   }
 }
 
+/** EVE's Ship category: the only one ESI lists insurance prices for. */
+const SHIP_CATEGORY_ID = 6;
+
 /**
  * The ship's latest insurance prices, for its Insurance tab. The page renders
  * fine without them, so a database failure just leaves the tab out, uncached.
+ *
+ * Only ships are read. The read's `cacheLife("hours")` sets how often the whole
+ * page revalidates, so reading it for every item would re-render each of the
+ * ~50k item pages hourly to find no prices; every insured type is a ship.
  */
 async function getTypeInsurance(
   typeId: number,
+  categoryId: number | undefined,
 ): Promise<InsurancePricePeriod | null> {
+  if (categoryId !== SHIP_CATEGORY_ID) return null;
   try {
     return await readLatestTypeInsurance(typeId);
   } catch {
@@ -557,7 +571,7 @@ export async function generateMetadata({
 // `next build` cannot reach in CI, and Cache Components rejects an empty list
 // — so this lists one id `parsePositiveEntityId` refuses, which prerenders as a
 // 404 without a query. The page then revalidates on its shortest read's
-// `cacheLife` (the insurance prices', hourly).
+// `cacheLife`: weekly for most items, hourly for ships (insurance prices).
 export function generateStaticParams() {
   return [{ typeId: "0" }];
 }
@@ -594,7 +608,7 @@ async function PageContent({
       getTypeVariations(data.variationBaseTypeId),
       getTypeTypeLists(typeId, data.groupId, data.categoryId),
       getTypeNpcStats(typeId, data.categoryId),
-      getTypeInsurance(typeId),
+      getTypeInsurance(typeId, data.categoryId),
       getTypeSynchronizer(typeId, data.groupId, data.categoryId),
     ]);
   // nuqs's React adapter, not the app-wide Next one: the Next adapter reads

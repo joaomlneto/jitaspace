@@ -7,6 +7,11 @@
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
+// `resolveTypeImage` keeps a render whose image lookup failed out of an ISR
+// page's cache with `connection()`; jsdom has no fetch, so these pages take that
+// path, and the real `next/server` cannot load here.
+jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
+
 // ---------------------------------------------------------------------------
 // Module mocks (hoisted before any imports)
 // ---------------------------------------------------------------------------

@@ -17,6 +17,11 @@ import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 import type * as DataModule from "~/app/station/[stationId]/data";
 import type { StationPageData } from "~/app/station/[stationId]/types";
 
+// `resolveTypeImage` keeps a render whose image lookup failed out of an ISR
+// page's cache with `connection()`; jsdom has no fetch, so these pages take that
+// path, and the real `next/server` cannot load here.
+jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
+
 // ---------------------------------------------------------------------------
 // /station/[stationId] reads one cached SDE half on the server (data.ts) and
 // renders a tabbed client page: Overview, Services, Agents and History.

@@ -30,6 +30,8 @@ const dogmaAttributeFindMany =
 const dogmaEffectCategoryFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 
+const insurancePriceFindFirst = jest.fn<(args?: unknown) => Promise<Row>>();
+
 jest.mock("~/lib/db", () => ({
   prisma: {
     solarSystem: { findUnique: (a?: unknown) => solarSystemFindUnique(a) },
@@ -50,7 +52,7 @@ jest.mock("~/lib/db", () => ({
     },
     dogmaAttribute: { findMany: (a?: unknown) => dogmaAttributeFindMany(a) },
     // No insurance for any item here: a failing read would degrade the page.
-    insurancePrice: { findFirst: () => Promise.resolve(null) },
+    insurancePrice: { findFirst: (a?: unknown) => insurancePriceFindFirst(a) },
   },
 }));
 
@@ -123,6 +125,7 @@ beforeEach(() => {
   dogmaEffectCategoryFindMany.mockReset().mockResolvedValue([]);
   dogmaEffectModifierFindMany.mockReset().mockResolvedValue([]);
   dogmaAttributeFindMany.mockReset().mockResolvedValue([]);
+  insurancePriceFindFirst.mockReset().mockResolvedValue(null);
   connection.mockClear();
   globalThis.fetch = jest.fn(() =>
     Promise.resolve({ status: 200, ok: true, json: () => Promise.resolve([]) }),
@@ -806,6 +809,26 @@ describe("type route item row", () => {
 
     expect(props.typeName).toBe("Rifter");
     expect(connection).not.toHaveBeenCalled();
+  });
+
+  // The insurance read is hourly, and the page revalidates on its shortest
+  // read: asking for every item would re-render each item page hourly.
+  it("reads insurance prices for ships only", async () => {
+    typeFindUnique.mockResolvedValue(rifter);
+    await runRoute("~/app/type/[typeId]/page", { typeId: "587" });
+    expect(insurancePriceFindFirst).toHaveBeenCalledTimes(1);
+
+    insurancePriceFindFirst.mockClear();
+    typeFindUnique.mockResolvedValue({
+      ...rifter,
+      typeId: 34,
+      name: "Tritanium",
+      groupId: 18,
+      group: { name: "Mineral", categoryId: 4, category: { name: "Material" } },
+    });
+    const props = await runRoute("~/app/type/[typeId]/page", { typeId: "34" });
+    expect(insurancePriceFindFirst).not.toHaveBeenCalled();
+    expect(props.insurance).toBeNull();
   });
 
   it("404s an item the SDE does not have", async () => {
