@@ -13,6 +13,15 @@ export interface CreatePrismaClientOptions {
    * through PlanetScale's PgBouncer, which admits 100 clients in total.
    */
   maxConnections?: number;
+  /**
+   * Longest a query waits to get a connection, in milliseconds: both for a
+   * free slot in a full pool and for a new connection's TLS handshake and
+   * login. Past it the query fails with `timeout exceeded when trying to
+   * connect`. Defaults to no limit (`pg`'s default), which suits long-running
+   * jobs; a request handler should set one, so a starved pool fails the
+   * request quickly instead of holding it open until the platform kills it.
+   */
+  connectionTimeoutMillis?: number;
 }
 
 /**
@@ -27,8 +36,13 @@ export function createPrismaClient({
   connectionString,
   logQueries = false,
   maxConnections = 5,
+  connectionTimeoutMillis,
 }: CreatePrismaClientOptions) {
-  const adapter = new PrismaPg({ connectionString, max: maxConnections });
+  const adapter = new PrismaPg({
+    connectionString,
+    max: maxConnections,
+    connectionTimeoutMillis,
+  });
   return new PrismaClient({
     adapter,
     log: logQueries ? ["query", "info", "error", "warn"] : ["error"],

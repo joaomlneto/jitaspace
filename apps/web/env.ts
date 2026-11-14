@@ -13,6 +13,12 @@ const server = z.object({
    */
   NEXT_RUNTIME: z.enum(["nodejs", "edge"]).optional(),
 
+  /**
+   * Populated by Next.js with the phase it is running in; `next build` sets
+   * "phase-production-build" before its prerender workers start.
+   */
+  NEXT_PHASE: z.string().optional(),
+
   NEXTAUTH_SECRET: z.string().min(1),
 
   DATABASE_URL: z.url(),
@@ -81,6 +87,7 @@ const client = z.object({
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
   NEXT_RUNTIME: process.env.NEXT_RUNTIME,
+  NEXT_PHASE: process.env.NEXT_PHASE,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
   REDIS_URL: process.env.REDIS_URL,

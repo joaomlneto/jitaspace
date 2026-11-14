@@ -53,6 +53,8 @@
     // supplied by us — pass it through rather than hashing it. Surfaced by
     // turbo/no-undeclared-env-vars once env.ts came back under lint.
     "NEXT_RUNTIME",
+    // Set by Next.js to the phase it runs in (read by apps/web/lib/db.ts).
+    "NEXT_PHASE",
     "npm_lifecycle_event"
   ],
   "tasks": {
