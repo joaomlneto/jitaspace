@@ -16,13 +16,8 @@ import { env } from "~/env";
  */
 const globalForPrisma = globalThis as { __jitaspacePrisma?: Db };
 
-/**
- * How long a query may wait for a database connection before it fails. None
- * during `next build`: its prerender workers queue many reads on each pool by
- * design, and Next bounds each cache fill there itself (50 s).
- */
-const DB_CONNECTION_TIMEOUT_MS =
-  env.NEXT_PHASE === "phase-production-build" ? undefined : 10_000;
+/** How long a query may wait for a database connection before it fails. */
+const DB_CONNECTION_TIMEOUT_MS = 10_000;
 
 export const prisma =
   globalForPrisma.__jitaspacePrisma ??
