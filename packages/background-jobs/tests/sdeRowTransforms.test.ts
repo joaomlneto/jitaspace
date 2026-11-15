@@ -1,12 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
 
-// All four modules are runtime-dependency-free (type-only Prisma imports, plus
+// All five modules are runtime-dependency-free (type-only Prisma imports, plus
 // sdeFields, which imports nothing), so unlike the other job tests these need
 // no p-limit / env mocks.
 import {
   rgba,
   toGraphicMaterialSetRow,
 } from "../jobs/scrape/sde/graphicMaterialSetTransforms";
+import { toMercenaryTacticalOperationRow } from "../jobs/scrape/sde/mercenaryTacticalOperationTransforms";
 import {
   annotationValue,
   toCampaignRow,
@@ -261,11 +262,80 @@ describe("annotationValue", () => {
     );
   });
 
+  it("keeps the four annotations CCP added in build 3682781", () => {
+    // 2026-11-11: `achievementUUID` (plain string), `infoLabel` and
+    // `infoLabelHint` (localized) and `uiIndex` (bare number). The annotation
+    // table is key/value so new keys need no column, but each value shape still
+    // has to come back as text for its row to be written.
+    const annotations = {
+      achievementUUID: "b6bf1e3d-b219-5184-b075-ea22fc1bcef7",
+      infoLabel: en("Race against the Caldari State"),
+      infoLabelHint: en("Complete all campaign objectives first."),
+      uiIndex: 3,
+    };
+    expect(
+      Object.fromEntries(
+        Object.entries(annotations).map(([key, value]) => [
+          key,
+          annotationValue(value),
+        ]),
+      ),
+    ).toEqual({
+      achievementUUID: "b6bf1e3d-b219-5184-b075-ea22fc1bcef7",
+      infoLabel: "Race against the Caldari State",
+      infoLabelHint: "Complete all campaign objectives first.",
+      uiIndex: "3",
+    });
+  });
+
   it("stringifies booleans and rejects nullish / unmappable objects", () => {
     expect(annotationValue(false)).toBe("false");
     expect(annotationValue(null)).toBeNull();
     expect(annotationValue(undefined)).toBeNull();
     expect(annotationValue({ de: "only German" })).toBeNull();
+  });
+});
+
+describe("toMercenaryTacticalOperationRow", () => {
+  // A record as build 3698585 ships it: no `dungeonID`.
+  const record = {
+    name: en("Rogue Drone Emergence"),
+    description: en("Destroy all Rogue Drones."),
+    anarchyImpact: -20,
+    developmentImpact: 10,
+    infomorphBonus: 350,
+  };
+
+  it("takes the dungeon id from the record key", () => {
+    // Regression: CCP removed `dungeonID` after build 3693310 as "identical to
+    // key". Reading it gave NaN, Prisma rejected the row, and `ingest-sde-all`
+    // stopped at this step on every run from 2026-11-13.
+    const row = toMercenaryTacticalOperationRow(12367, record);
+    expect(row).toEqual({
+      mercenaryTacticalOperationId: 12367,
+      name: "Rogue Drone Emergence",
+      description: "Destroy all Rogue Drones.",
+      dungeonId: 12367,
+      anarchyImpact: -20,
+      developmentImpact: 10,
+      infomorphBonus: 350,
+      isDeleted: false,
+    });
+  });
+
+  it("builds the same row from a record that still carries dungeonID", () => {
+    // Builds up to 3693310 repeated the key as a field, so an older archive
+    // must produce an identical row and not a spurious update.
+    expect(
+      toMercenaryTacticalOperationRow(12367, { ...record, dungeonID: 12367 }),
+    ).toEqual(toMercenaryTacticalOperationRow(12367, record));
+  });
+
+  it("never emits a non-finite number for a complete record", () => {
+    const row = toMercenaryTacticalOperationRow(12368, record);
+    for (const value of Object.values(row)) {
+      if (typeof value === "number") expect(Number.isFinite(value)).toBe(true);
+    }
   });
 });
 
