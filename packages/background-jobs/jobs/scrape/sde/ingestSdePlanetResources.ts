@@ -8,9 +8,14 @@ export interface IngestSdePlanetResourcesEventPayload {
 }
 
 /**
- * planetResources.yaml maps a planet to its colony resource — each planet
- * provides exactly one of `power`, `workforce`, or a `reagent` (flattened into
- * the reagent* columns).
+ * planetResources.yaml maps a planet (or star) to its colony resource — each
+ * provides one of `power`, `workforce`, or a `reagent` (flattened into the
+ * reagent* columns).
+ *
+ * Since SDE build 3693310 (2026-11-13) the file writes `power` and `workforce`
+ * out as 0 where it used to omit them, so a planet's row now holds both and the
+ * one it does not provide is 0 rather than null. Stars still carry `power`
+ * alone. The values are stored as the SDE gives them.
  */
 export const ingestSdePlanetResources = defineJob<
   IngestSdePlanetResourcesEventPayload["data"]

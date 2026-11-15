@@ -1,7 +1,7 @@
-import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { enString, ingestSdeTable, requiredNumber } from "../../../helpers";
+import { ingestSdeTable } from "../../../helpers";
+import { toMercenaryTacticalOperationRow } from "./mercenaryTacticalOperationTransforms";
 
 export interface IngestSdeMercenaryTacticalOperationsEventPayload {
   data: Record<string, never>;
@@ -23,19 +23,7 @@ export const ingestSdeMercenaryTacticalOperations = defineJob<
       filename: "mercenaryTacticalOperations.yaml",
       idField: "mercenaryTacticalOperationId",
       delegate: prisma.mercenaryTacticalOperation,
-      toRow: (
-        record,
-        id,
-      ): Prisma.MercenaryTacticalOperationCreateManyInput => ({
-        mercenaryTacticalOperationId: id,
-        name: enString(record.name) ?? "",
-        description: enString(record.description) ?? "",
-        dungeonId: requiredNumber(record.dungeonID),
-        anarchyImpact: requiredNumber(record.anarchyImpact),
-        developmentImpact: requiredNumber(record.developmentImpact),
-        infomorphBonus: requiredNumber(record.infomorphBonus),
-        isDeleted: false,
-      }),
+      toRow: (record, id) => toMercenaryTacticalOperationRow(id, record),
     });
     return {
       stats: { mercenaryTacticalOperations },

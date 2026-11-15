@@ -2437,8 +2437,11 @@ model MercenaryTacticalOperation {
   mercenaryTacticalOperationId Int      @id
   name                         String
   description                  String
-  // The dungeon this operation runs in. dungeons.yaml is not ingested, so this
-  // is a plain id with no foreign key.
+  // The dungeon this operation runs in. An operation is keyed by its dungeon,
+  // so this always equals mercenaryTacticalOperationId: the SDE carried it as a
+  // separate `dungeonID` field until build 3693310 (2026-11-13), when CCP
+  // removed it as identical to the key. The ingest now fills it from the key.
+  // A plain id with no foreign key.
   dungeonId                    Int
   anarchyImpact                Int
   developmentImpact            Int
@@ -2615,8 +2618,12 @@ model SovereigntyUpgrade {
   isDeleted              Boolean  @default(false)
 }
 
-/// Sparse planetary colony resource of a planet (planetResources.yaml). Each
-/// planet provides exactly one of power / workforce / a reagent.
+/// Sparse planetary colony resource of a planet or star (planetResources.yaml).
+/// Each body provides one of power / workforce / a reagent. Since SDE build
+/// 3693310 (2026-11-13) the file writes the others out as 0 rather than omitting
+/// them, so on a planet `power` and `workforce` are both set and "provides
+/// power" means `power > 0`, not `power IS NOT NULL`. Stars carry `power` only,
+/// so their `workforce` stays null.
 model PlanetResource {
   planetId                 Int      @id
   power                    Int?
