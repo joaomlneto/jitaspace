@@ -16,7 +16,10 @@ export function PosthogIdentity() {
   // A string, so the effect re-runs when a character is added or removed and
   // not on every token refresh (which replaces the `characters` object).
   const characterKey = useAuthStore((state) =>
-    Object.keys(state.characters).sort().join(","),
+    Object.keys(state.characters)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .join(","),
   );
 
   useEffect(() => {
