@@ -5,8 +5,10 @@
 // the device's physical resolution (portrait). Landscape launches fall back to
 // the manifest background_color, so only portrait images are produced.
 //
-// Requires sharp:  pnpm add -D sharp
-// Run:            node scripts/generate-ios-splash.mjs
+// The logo comes from public/icons/icon-512.png, which
+// generate-logo-assets.mjs renders from public/logo.svg; run that first.
+//
+// Run: node scripts/generate-ios-splash.mjs
 
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -16,7 +18,7 @@ import sharp from "sharp";
 const here = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(here, "..", "public");
 const outDir = join(publicDir, "splash");
-const logo = join(publicDir, "logo-512-upscaled.png");
+const logo = join(publicDir, "icons", "icon-512.png");
 
 const BACKGROUND = { r: 4, g: 7, b: 12, alpha: 1 }; // #04070c
 

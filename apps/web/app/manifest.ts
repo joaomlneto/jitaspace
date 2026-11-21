@@ -69,20 +69,20 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: DARK_HEADER_BACKGROUND,
     icons: [
       {
-        src: "/logo-192-upscaled.png",
+        src: "/icons/icon-192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/logo-512-upscaled.png",
+        src: "/icons/icon-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
-      // Maskable variants for Android adaptive icons. Generated from the logo
-      // padded into the ~80% safe zone over the dark background; refine at
-      // https://maskable.app if the mask crops anything important.
+      // Maskable variants for Android adaptive icons: the star inside the 80%
+      // safe-zone circle, over the dark background. All four are rendered from
+      // public/logo.svg by scripts/generate-logo-assets.mjs.
       {
         src: "/icons/icon-192-maskable.png",
         sizes: "192x192",
