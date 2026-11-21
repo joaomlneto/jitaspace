@@ -30,4 +30,4 @@ export const MarketGroupAnchor = memo(
     );
   },
 );
-MarketGroupAnchor.displayName = "MarketGroupNameAnchor";
+MarketGroupAnchor.displayName = "MarketGroupAnchor";

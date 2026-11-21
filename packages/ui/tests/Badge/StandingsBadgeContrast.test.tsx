@@ -104,6 +104,21 @@ describe("StandingsBadge rendering", () => {
     expect(style?.color).toBe(color);
   });
 
+  // The tier follows the displayed (rounded) value, so the colour never
+  // disagrees with the number on the badge.
+  it.each<[number, string, string]>([
+    [0.04, "0.0", "rgb(128, 128, 128)"],
+    [-0.04, "0.0", "rgb(128, 128, 128)"],
+    [5.04, "5.0", "rgb(34, 79, 183)"],
+    [-5.04, "-5.0", "rgb(181, 50, 9)"],
+  ])("standing %p shows %s in its displayed tier", (standing, label, bg) => {
+    const { container } = renderWithMantine(
+      <StandingsBadge standing={standing} />,
+    );
+    expect(container).toHaveTextContent(label);
+    expect(badgeStyle(container)?.backgroundColor).toBe(bg);
+  });
+
   /**
    * Regression: leaving the text colour to the variant is not safe here.
    * Both app themes set `Badge.extend({ defaultProps: { variant: "outline",

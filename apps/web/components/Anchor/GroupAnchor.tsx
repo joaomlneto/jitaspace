@@ -30,4 +30,4 @@ export const GroupAnchor = memo(
     );
   },
 );
-GroupAnchor.displayName = "GroupNameAnchor";
+GroupAnchor.displayName = "GroupAnchor";

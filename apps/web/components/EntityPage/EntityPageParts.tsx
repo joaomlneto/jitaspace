@@ -13,20 +13,20 @@ import { Badge, Box, Group, Paper, Stack, Text, Title } from "@mantine/core";
 /**
  * A page's hero card: framed artwork on the left, title and stats beside it.
  * `banner` runs edge to edge above the content (a corporation's palette
- * stripe); `style` and `contentClassName` let a page tint the card (its
- * palette wash).
+ * stripe); `style` and `contentStyle` let a page tint the card (its palette
+ * wash).
  */
 export function HeroCard({
   artwork,
   banner,
   style,
-  contentClassName,
+  contentStyle,
   children,
 }: Readonly<{
   artwork: ReactNode;
   banner?: ReactNode;
   style?: CSSProperties;
-  contentClassName?: string;
+  contentStyle?: CSSProperties;
   children: ReactNode;
 }>) {
   return (
@@ -42,7 +42,7 @@ export function HeroCard({
         gap="xl"
         wrap="wrap"
         p="lg"
-        className={contentClassName}
+        style={contentStyle}
       >
         <Box
           style={{

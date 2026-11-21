@@ -22,6 +22,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
+import { WebEntityLinksProvider } from "~/components/Link";
 import { contextModals } from "~/components/Modals";
 import { RouterTransition } from "~/components/RouterTransition.tsx";
 import { SpeedInsights } from "~/components/SpeedInsights";
@@ -176,7 +177,9 @@ export default function RootLayout({
                     modals={contextModals}
                     modalProps={{ centered: true }}
                   >
-                    <MainLayout>{children}</MainLayout>
+                    <WebEntityLinksProvider>
+                      <MainLayout>{children}</MainLayout>
+                    </WebEntityLinksProvider>
                   </ModalsProvider>
                 </>
               </EsiClientSSOAccessTokenInjector>

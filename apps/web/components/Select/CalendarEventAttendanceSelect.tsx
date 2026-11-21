@@ -2,6 +2,7 @@
 
 import type { SelectProps } from "@mantine/core";
 import { memo, useCallback } from "react";
+import { openConfirmModal } from "@mantine/modals";
 
 import { putCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 import { useAccessToken, useCalendarEvent } from "@jitaspace/hooks";
@@ -50,9 +51,21 @@ export const CalendarEventAttendanceSelect = memo(
       [characterId, eventId, authHeaders],
     );
 
+    const eventTitle = event?.data.title;
+    const confirmResponse = useCallback(
+      (response: CalendarEventAttendanceResponse, apply: () => void) => {
+        openConfirmModal({
+          title: "Are you sure?",
+          children: `This will mark event ${eventTitle} as ${response}.`,
+          labels: { confirm: "Confirm", cancel: "Cancel" },
+          onConfirm: apply,
+        });
+      },
+      [eventTitle],
+    );
+
     return (
       <UICalendarEventAttendanceSelect
-        eventTitle={event?.data.title}
         initialResponse={
           event?.data.response as
             | CalendarEventAttendanceResponse
@@ -61,6 +74,7 @@ export const CalendarEventAttendanceSelect = memo(
         }
         canRespond={canRespondToEvents}
         isLoading={isLoading}
+        confirmResponse={confirmResponse}
         onRespond={handleRespond}
         {...otherProps}
       />

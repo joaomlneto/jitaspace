@@ -30,4 +30,4 @@ export const CategoryAnchor = memo(
     );
   },
 );
-CategoryAnchor.displayName = "CategoryNameAnchor";
+CategoryAnchor.displayName = "CategoryAnchor";

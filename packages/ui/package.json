@@ -20,7 +20,6 @@
     "@jitaspace/utils": "workspace:*",
     "@mantine/core": "^9.3.0",
     "@mantine/hooks": "^9.3.0",
-    "@mantine/modals": "^9.3.0",
     "@tabler/icons-react": "^3.44.0",
     "date-fns": "^4.3.0",
     "humanize-duration": "^3.33.2",

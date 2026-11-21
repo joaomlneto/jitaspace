@@ -21,6 +21,12 @@ const mockUseMarketGroup = jest.fn<(id: number) => unknown>();
 const mockUseCharacterMailLabels = jest.fn();
 const mockUseAccessToken = jest.fn();
 const mockUseCalendarEvent = jest.fn();
+const mockOpenConfirmModal = jest.fn();
+
+// The attendance select's confirmation modal is opened by the web wrapper.
+jest.mock("@mantine/modals", () => ({
+  openConfirmModal: (...args: unknown[]) => mockOpenConfirmModal(...args),
+}));
 
 jest.mock("@jitaspace/hooks", () => ({
   useCharacterMail: (...args: unknown[]) => mockUseCharacterMail(...args),
@@ -98,24 +104,31 @@ jest.mock("@jitaspace/ui", () => ({
     <div data-testid="ui-total-unread">{`Unread ${totalUnreadCount ?? ""}`}</div>
   ),
   CalendarEventAttendanceSelect: ({
-    eventTitle,
     initialResponse,
     canRespond,
     isLoading,
+    confirmResponse,
     onRespond,
   }: {
-    eventTitle?: string;
     initialResponse?: string | null;
     canRespond?: boolean;
     isLoading?: boolean;
+    confirmResponse?: (response: string, apply: () => void) => void;
     onRespond?: (response: string) => void;
   }) => (
     <div data-testid="ui-attendance-select">
-      <span>{`Event ${eventTitle ?? ""}`}</span>
       <span>{`Response ${initialResponse ?? ""}`}</span>
       <span>{`CanRespond ${String(!!canRespond)}`}</span>
       <span>{`Loading ${String(!!isLoading)}`}</span>
-      <button type="button" onClick={() => onRespond?.("accepted")}>
+      {/* Picks "accepted" the way the real select does: ask, then apply. */}
+      <button
+        type="button"
+        onClick={() => {
+          const apply = () => onRespond?.("accepted");
+          if (confirmResponse) confirmResponse("accepted", apply);
+          else apply();
+        }}
+      >
         respond
       </button>
     </div>
@@ -720,7 +733,7 @@ describe("TotalUnreadMailsIndicator", () => {
 // Select wrapper (imported from the barrel so index.ts is covered too)
 // ===========================================================================
 describe("CalendarEventAttendanceSelect", () => {
-  it("forwards the event title, response and respond capability", () => {
+  it("forwards the response and respond capability", () => {
     mockUseCalendarEvent.mockReturnValue({
       data: { data: { title: "Fleet Op", response: "tentative" } },
       isLoading: false,
@@ -740,7 +753,6 @@ describe("CalendarEventAttendanceSelect", () => {
     });
 
     const node = screen.getByTestId("ui-attendance-select");
-    expect(node).toHaveTextContent("Event Fleet Op");
     expect(node).toHaveTextContent("Response tentative");
     expect(node).toHaveTextContent("CanRespond true");
     expect(node).toHaveTextContent("Loading false");
@@ -762,6 +774,32 @@ describe("CalendarEventAttendanceSelect", () => {
     // onRespond is a no-op without crashing (esi-client mock not required here).
     fireEvent.click(screen.getByRole("button", { name: "respond" }));
     expect(screen.getByRole("button", { name: "respond" })).toBeInTheDocument();
+  });
+
+  it("asks for confirmation in a modal naming the event and the response", () => {
+    mockOpenConfirmModal.mockReset();
+    mockUseCalendarEvent.mockReturnValue({
+      data: { data: { title: "Fleet Op", response: "not_responded" } },
+      isLoading: false,
+      canRespondToEvents: true,
+    });
+
+    const { CalendarEventAttendanceSelect } = require("~/components/Select");
+
+    renderWithMantine(
+      <CalendarEventAttendanceSelect characterId={42} eventId={99} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "respond" }));
+
+    expect(mockOpenConfirmModal).toHaveBeenCalledTimes(1);
+    const config = mockOpenConfirmModal.mock.calls[0]![0] as {
+      title: string;
+      children: string;
+      onConfirm: () => void;
+    };
+    expect(config.title).toBe("Are you sure?");
+    expect(config.children).toBe("This will mark event Fleet Op as accepted.");
+    expect(typeof config.onConfirm).toBe("function");
   });
 
   it("surfaces the loading state while the event is fetching", () => {
