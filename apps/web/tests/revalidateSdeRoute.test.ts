@@ -20,6 +20,15 @@ jest.mock("next/cache", () => ({
 const mockEnv: { CRON_SECRET?: string } = {};
 jest.mock("~/env", () => ({ env: mockEnv }));
 
+// Off by default, as on Vercel; tests/cdnPurge.test.ts covers the purge itself.
+let mockCdnPurgeEnabled = false;
+const mockPurgeCdnAfterResponse = jest.fn();
+jest.mock("~/lib/cdnPurge", () => ({
+  isCdnPurgeEnabled: () => mockCdnPurgeEnabled,
+  purgeCdnAfterResponse: (...args: unknown[]) =>
+    mockPurgeCdnAfterResponse(...args),
+}));
+
 const SECRET = "0123456789abcdef-test-secret";
 
 // Loaded lazily, after the mocks above are registered: @swc/jest does not hoist
@@ -43,6 +52,8 @@ beforeEach(() => {
   mockRevalidateTag.mockReset();
   mockCacheTag.mockReset();
   mockCacheLife.mockReset();
+  mockPurgeCdnAfterResponse.mockReset();
+  mockCdnPurgeEnabled = false;
   mockEnv.CRON_SECRET = SECRET;
 });
 
@@ -57,6 +68,18 @@ describe("POST /api/revalidate/sde", () => {
     // page if it is down) instead of being served the old copy.
     expect(mockRevalidateTag).toHaveBeenCalledTimes(1);
     expect(mockRevalidateTag).toHaveBeenCalledWith("sde", "max");
+  });
+
+  it("expires the tag and purges the whole CDN when purging is enabled", () => {
+    mockCdnPurgeEnabled = true;
+
+    expect(post(`Bearer ${SECRET}`).status).toBe(200);
+    // A stale page is served with its full s-maxage, so Cloudflare would cache
+    // the old copy again right after the purge: expire it instead.
+    expect(mockRevalidateTag).toHaveBeenCalledWith("sde", { expire: 0 });
+    expect(mockPurgeCdnAfterResponse).toHaveBeenCalledWith({
+      everything: true,
+    });
   });
 
   it.each([

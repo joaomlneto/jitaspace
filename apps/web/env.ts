@@ -30,6 +30,15 @@ const server = z.object({
   EVE_CLIENT_SECRET: z.string(),
 
   /**
+   * Cloudflare zone and API token (Cache Purge permission) for purging the CDN
+   * in front of a self-hosted deploy when the `/api/revalidate/*` routes run;
+   * see `lib/cdnPurge.ts`. Leave both unset on Vercel, whose CDN is purged by
+   * `revalidateTag` itself.
+   */
+  CLOUDFLARE_ZONE_ID: z.string().min(1).optional(),
+  CLOUDFLARE_API_TOKEN: z.string().min(1).optional(),
+
+  /**
    * Trigger.dev secret key (tr_prod_… / tr_dev_…) used by the status
    * dashboard's runs.list calls. Optional: the dashboard degrades to an
    * "unavailable" state when unset.
@@ -88,6 +97,8 @@ const processEnv = {
   EVE_BUILDS_DATABASE_SCHEMA: process.env.EVE_BUILDS_DATABASE_SCHEMA,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
+  CLOUDFLARE_ZONE_ID: process.env.CLOUDFLARE_ZONE_ID,
+  CLOUDFLARE_API_TOKEN: process.env.CLOUDFLARE_API_TOKEN,
   TRIGGER_SECRET_KEY: process.env.TRIGGER_SECRET_KEY,
   TRIGGER_API_URL: process.env.TRIGGER_API_URL,
   CRON_SECRET: process.env.CRON_SECRET,

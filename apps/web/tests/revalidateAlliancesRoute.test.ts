@@ -15,6 +15,15 @@ jest.mock("next/cache", () => ({
 const mockEnv: { CRON_SECRET?: string } = {};
 jest.mock("~/env", () => ({ env: mockEnv }));
 
+// Off by default, as on Vercel; tests/cdnPurge.test.ts covers the purge itself.
+let mockCdnPurgeEnabled = false;
+const mockPurgeCdnAfterResponse = jest.fn();
+jest.mock("~/lib/cdnPurge", () => ({
+  isCdnPurgeEnabled: () => mockCdnPurgeEnabled,
+  purgeCdnAfterResponse: (...args: unknown[]) =>
+    mockPurgeCdnAfterResponse(...args),
+}));
+
 const SECRET = "0123456789abcdef-test-secret";
 
 // Loaded lazily, after the mocks above are registered: @swc/jest does not hoist
@@ -38,6 +47,8 @@ const post = (body: string | undefined, authorization = `Bearer ${SECRET}`) =>
 beforeEach(() => {
   mockRevalidatePath.mockReset();
   mockRevalidateTag.mockReset();
+  mockPurgeCdnAfterResponse.mockReset();
+  mockCdnPurgeEnabled = false;
   mockEnv.CRON_SECRET = SECRET;
 });
 
@@ -59,6 +70,21 @@ describe("POST /api/revalidate/alliances", () => {
       ["alliance:2", { expire: 0 }],
       ["alliances", "max"],
     ]);
+  });
+
+  it("expires the list too and purges each page from the CDN when purging is enabled", async () => {
+    mockCdnPurgeEnabled = true;
+
+    const res = await post(JSON.stringify({ allianceIds: [1, 2, 2] }));
+
+    expect(res.status).toBe(200);
+    // Cloudflare would re-cache a stale list for its full s-maxage.
+    expect(mockRevalidateTag).toHaveBeenLastCalledWith("alliances", {
+      expire: 0,
+    });
+    expect(mockPurgeCdnAfterResponse).toHaveBeenCalledWith({
+      pathPrefixes: ["/alliances", "/alliance/1", "/alliance/2"],
+    });
   });
 
   it("refuses a wrong secret and evicts nothing", async () => {

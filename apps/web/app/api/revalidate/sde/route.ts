@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
 
+import { isCdnPurgeEnabled, purgeCdnAfterResponse } from "~/lib/cdnPurge";
 import { isCronAuthorized } from "~/lib/cronAuth";
 import { SDE_CACHE_TAG } from "~/lib/sdeCache";
 
@@ -14,11 +15,17 @@ import { SDE_CACHE_TAG } from "~/lib/sdeCache";
  * or get an error page if the database is unavailable at that moment. Nothing
  * is re-read until it is requested, so purging tens of thousands of pages costs
  * nothing up front.
+ *
+ * Behind a Cloudflare cache that this deploy purges (`lib/cdnPurge.ts`, never
+ * on Vercel), the tag is expired instead and the whole zone is purged once the
+ * response is sent. A stale page would be re-cached by Cloudflare for its full
+ * `s-maxage`; the cost is that each page's next visitor waits for its render.
  */
 export function POST(request: Request): Response {
   if (!isCronAuthorized(request)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  revalidateTag(SDE_CACHE_TAG, "max");
+  revalidateTag(SDE_CACHE_TAG, isCdnPurgeEnabled() ? { expire: 0 } : "max");
+  purgeCdnAfterResponse({ everything: true });
   return Response.json({ revalidated: SDE_CACHE_TAG });
 }
