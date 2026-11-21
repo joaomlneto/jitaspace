@@ -30,6 +30,25 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const NOT_FOUND = Symbol("NOT_FOUND");
 
 /**
+ * How long to wait before retrying a failed ESI call. A 420 says when the error
+ * limit resets, so wait exactly that long; anything else backs off exponentially.
+ */
+const retryDelayMs = (error: unknown, attempt: number) => {
+  if (isAxiosError(error) && error.response?.status === 420) {
+    const reset = Number(error.response.headers["x-esi-error-limit-reset"]);
+    if (Number.isFinite(reset)) return (reset + 1) * 1000;
+  }
+  return Math.min(MAX_BACKOFF_MS, 1000 * 2 ** attempt);
+};
+
+/** The HTTP status of a failed call, or its message when there was no response. */
+const describeFailure = (error: unknown) => {
+  const status = isAxiosError(error) ? error.response?.status : undefined;
+  if (status !== undefined) return String(status);
+  return error instanceof Error ? error.message : "error";
+};
+
+/**
  * Run an ESI call, retrying transient failures for up to {@link MAX_RETRY_MS}.
  * Resolves to the call's result, or to {@link NOT_FOUND} on a 404. Throws once
  * retrying has gone on that long, so a run fails loudly instead of storing a
@@ -49,15 +68,9 @@ export const withEsiRetry = async <T>(
       // 400 means the request itself is wrong (e.g. an invalid ID); retrying
       // cannot help, so surface it.
       if (status === 400 || Date.now() - started >= MAX_RETRY_MS) throw error;
-      const reset = isAxiosError(error)
-        ? Number(error.response?.headers["x-esi-error-limit-reset"])
-        : Number.NaN;
-      const waitMs =
-        status === 420 && Number.isFinite(reset)
-          ? (reset + 1) * 1000
-          : Math.min(MAX_BACKOFF_MS, 1000 * 2 ** attempt);
+      const waitMs = retryDelayMs(error, attempt);
       console.log(
-        `${label}: ${status ?? (error instanceof Error ? error.message : "error")}, retrying in ${Math.round(waitMs / 1000)}s (attempt ${attempt})`,
+        `${label}: ${describeFailure(error)}, retrying in ${Math.round(waitMs / 1000)}s (attempt ${attempt})`,
       );
       await sleep(waitMs);
     }

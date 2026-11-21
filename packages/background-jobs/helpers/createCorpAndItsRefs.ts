@@ -799,9 +799,10 @@ const fetchCharactersFromEsi = (
           ? races.get(eveKill.race_name)
           : undefined;
         const name = eveKill?.name ?? (await esiNameOf(characterId));
-        console.log(
-          `character ${characterId}: deleted; ${eveKill ? "details from eve-kill" : name ? "name from ESI" : "storing a marker"}`,
-        );
+        let source = "storing a marker";
+        if (eveKill) source = "details from eve-kill";
+        else if (name) source = "name from ESI";
+        console.log(`character ${characterId}: deleted; ${source}`);
         return {
           characterId,
           birthday: eveKillBirthday(eveKill?.birthday) ?? new Date(1),
