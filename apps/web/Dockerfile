@@ -9,8 +9,10 @@
 # EVE_BUILDS_DATABASE_URL. Supply them either way:
 #   - a BuildKit secret named `env`, mounted as the root `.env` that the
 #     `with-env` script already reads (nothing is written to an image layer), or
-#   - build arguments, for hosts that only offer those. Secrets passed this way
-#     are visible in `docker history`, so keep such an image private.
+#   - build arguments, for hosts that only offer those. A database URL passed
+#     this way is visible in `docker history`, so keep such an image private.
+# Credentials that are nothing but a secret (SENTRY_AUTH_TOKEN, for source map
+# upload) have no build argument on purpose: pass them in the `env` secret.
 # NEXT_PUBLIC_* values are inlined into the browser bundle at build time: a
 # different public value needs a new image, not a new container variable.
 
@@ -49,7 +51,6 @@ ARG NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN
 ARG NEXT_PUBLIC_POSTHOG_HOST
 ARG NEXT_PUBLIC_DISCORD_INVITE_LINK
 ARG SKIP_ENV_VALIDATION
-ARG SENTRY_AUTH_TOKEN
 RUN --mount=type=secret,id=env,target=/repo/.env,required=false \
     pnpm exec turbo run build --filter=@jitaspace/web
 
