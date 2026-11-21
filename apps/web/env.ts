@@ -43,6 +43,13 @@ const server = z.object({
   // on. Requiring it broke the README's one-click Vercel deploy, which
   // does not prompt for it, with an opaque "Invalid environment variables".
   SKIP_BUILD_STATIC_GENERATION: z.string().optional(),
+
+  /**
+   * Set to "1" by Vercel on its builds and functions; unset anywhere else
+   * (`next dev`, a self-hosted `next start`). Gates the integrations that only
+   * work on Vercel's platform.
+   */
+  VERCEL: z.string().optional(),
 });
 
 /**
@@ -92,6 +99,7 @@ const processEnv = {
   TRIGGER_API_URL: process.env.TRIGGER_API_URL,
   CRON_SECRET: process.env.CRON_SECRET,
   SKIP_BUILD_STATIC_GENERATION: process.env.SKIP_BUILD_STATIC_GENERATION,
+  VERCEL: process.env.VERCEL,
   NEXT_PUBLIC_GOOGLE_TAG_ID: process.env.NEXT_PUBLIC_GOOGLE_TAG_ID,
   NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
   NEXT_PUBLIC_MODIFIED_DATE: process.env.NEXT_PUBLIC_MODIFIED_DATE,
