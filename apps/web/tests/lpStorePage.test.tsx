@@ -265,7 +265,7 @@ describe("LP Store corporation metadata", () => {
     expect(byId).toEqual(byName);
     expect(byId).toEqual(
       expect.objectContaining({
-        title: `${CORPORATION.name} LP Store`,
+        title: `${CORPORATION.name} LP Store: ISK per LP`,
         alternates: { canonical: "/lp-store/Caldari_Navy" },
       }),
     );

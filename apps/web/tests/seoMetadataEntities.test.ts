@@ -1138,7 +1138,7 @@ describe("lp-store/[corporationId] generateMetadata", () => {
     const result = await generateMetadata({
       params: rp({ corporationId: "1000035" }),
     });
-    expect(result.title).toBe("Caldari Navy LP Store");
+    expect(result.title).toBe("Caldari Navy LP Store: ISK per LP");
     expect(result.description).toContain("Caldari Navy");
     expect(result.description).toContain("42 Loyalty Point offers");
   });

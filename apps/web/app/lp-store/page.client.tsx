@@ -89,6 +89,11 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
           <LPStoreIcon width={48} />
           <Title>LP Store</Title>
         </Group>
+        <Text c="dimmed">
+          Every Loyalty Point store in EVE Online. Each store lists its offers
+          with their LP and ISK cost, required items, Jita prices and the ISK
+          per LP you would make.
+        </Text>
         <Title order={2} size="h3">
           Select a corporation below or{" "}
           <Anchor inherit component={Link} href="/lp-store/all">
