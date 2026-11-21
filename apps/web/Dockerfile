@@ -58,9 +58,14 @@ RUN --mount=type=secret,id=env,target=/repo/.env,required=false \
 # node_modules, which is large but runs exactly what Vercel runs. Slimming it
 # with `output: "standalone"` is a follow-up.
 FROM build AS runner
+# NODE_OPTIONS and CI are cleared: they are build settings, and this stage
+# inherits the build stage's environment. Left in place, the server would run
+# with the build's 6 GB heap limit.
 ENV NODE_ENV=production \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    NODE_OPTIONS= \
+    CI=
 WORKDIR /repo/apps/web
 # `next start` writes regenerated pages and its caches under .next.
 RUN chown -R node:node /repo/apps/web/.next
