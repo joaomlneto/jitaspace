@@ -14,3 +14,5 @@ export const captureMock = jest.fn();
 export const identifyMock = jest.fn();
 export const captureExceptionMock = jest.fn();
 export const resetMock = jest.fn();
+export const registerMock = jest.fn();
+export const getDistinctIdMock = jest.fn<() => string>();

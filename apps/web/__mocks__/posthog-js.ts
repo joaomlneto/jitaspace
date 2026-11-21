@@ -10,8 +10,10 @@
 import {
   captureExceptionMock,
   captureMock,
+  getDistinctIdMock,
   identifyMock,
   initMock,
+  registerMock,
   resetMock,
 } from "./posthogMocks";
 
@@ -21,6 +23,11 @@ const posthog = {
   identify: identifyMock,
   captureException: captureExceptionMock,
   reset: resetMock,
+  register: registerMock,
+  get_distinct_id: getDistinctIdMock,
+  // The real SDK sets this once `init` has run; tests flip it to cover the
+  // "no project token" case.
+  __loaded: true,
 };
 
 export default posthog;

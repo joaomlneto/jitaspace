@@ -23,6 +23,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
+import { PosthogIdentity } from "~/components/PosthogIdentity";
 import { RouterTransition } from "~/components/RouterTransition.tsx";
 import { SpeedInsights } from "~/components/SpeedInsights";
 import { MainSpotlight } from "~/components/Spotlight";
@@ -152,6 +153,7 @@ export default function RootLayout({
         )}
         <Analytics />
         <SpeedInsights />
+        <PosthogIdentity />
         {/* Enables nuqs `useQueryState`/`useQueryStates` app-wide (URL-synced
             filter state). NOTE: nuqs calls `useSearchParams()` internally, so any
             component using it must sit under a `<Suspense>` boundary — otherwise
