@@ -41,6 +41,13 @@ import type {
 } from "./sdeOwnedColumns";
 import { CharacterGender, prisma } from "../db";
 import { esiTaxRateToFraction } from "./mergeEntriesIntoCorporationsTable";
+import {
+  esiNameOf,
+  eveKillBirthday,
+  fetchEveKill,
+  NOT_FOUND,
+  withEsiRetry,
+} from "./refResolution";
 
 // Columns on these ESI-scraped tables that only an SDE ingest writes, so the ESI
 // row builders here must not claim to supply them (see sdeOwnedColumns.ts).
@@ -51,6 +58,47 @@ type SdeOwnedRaceColumn = (typeof SDE_OWNED_RACE_COLUMNS)[number];
 type SdeOwnedStationColumn = (typeof SDE_OWNED_STATION_COLUMNS)[number];
 
 const limit = pLimit(1);
+
+/** Where EVE puts deleted characters, and the stand-in for an unknown creator. */
+const DOOMHEIM_CORPORATION_ID = 1000001;
+
+interface EveKillCharacter {
+  character?: {
+    name?: string;
+    birthday?: string | null;
+    gender?: string | null;
+    bloodline_name?: string | null;
+    race_name?: string | null;
+    description?: string | null;
+    security_status?: number | null;
+  };
+}
+interface EveKillCorporation {
+  corporation?: {
+    name?: string;
+    ticker?: string;
+    member_count?: number | null;
+    tax_rate?: number | null;
+    date_founded?: string | null;
+    description?: string | null;
+  };
+}
+interface EveKillAlliance {
+  alliance?: { name?: string; ticker?: string; date_founded?: string | null };
+}
+
+/** Bloodline and race IDs by English name, for eve-kill's name-only fields. */
+let bloodlineAndRaceIds:
+  | Promise<{ bloodlines: Map<string, number>; races: Map<string, number> }>
+  | undefined;
+const loadBloodlineAndRaceIds = () =>
+  (bloodlineAndRaceIds ??= Promise.all([
+    prisma.bloodline.findMany({ select: { bloodlineId: true, name: true } }),
+    prisma.race.findMany({ select: { raceId: true, name: true } }),
+  ]).then(([bloodlines, races]) => ({
+    bloodlines: new Map(bloodlines.map((b) => [b.name, b.bloodlineId])),
+    races: new Map(races.map((r) => [r.name, r.raceId])),
+  })));
 
 export const createCorpAndItsRefRecords = async ({
   alliances = [],
@@ -648,10 +696,13 @@ export const createCorpAndItsRefRecords = async ({
 const fetchAlliancesFromEsi = (allianceIds: number[]) =>
   Promise.all(
     allianceIds.map((allianceId) =>
-      limit(async () =>
-        getAlliancesAllianceId(allianceId)
-          .then((res) => res.data)
-          .then((alliance) => ({
+      limit(async () => {
+        const res = await withEsiRetry(`alliance ${allianceId}`, () =>
+          getAlliancesAllianceId(allianceId),
+        );
+        if (res !== NOT_FOUND) {
+          const alliance = res.data;
+          return {
             allianceId,
             creatorCorporationId: alliance.creator_corporation_id,
             dateFounded: new Date(alliance.date_founded),
@@ -660,8 +711,29 @@ const fetchAlliancesFromEsi = (allianceIds: number[]) =>
             name: alliance.name,
             ticker: alliance.ticker,
             isDeleted: false,
-          })),
-      ),
+          };
+        }
+        // EVE no longer shows it. eve-kill keeps name, ticker and founding date,
+        // but no source has the creator corporation, so Doomheim marks it unknown.
+        const eveKill = (
+          await fetchEveKill<EveKillAlliance>(`alliances/${allianceId}`)
+        )?.alliance;
+        console.log(
+          `alliance ${allianceId}: not on ESI; ${eveKill ? "rebuilt from eve-kill" : "storing a marker"}`,
+        );
+        return {
+          allianceId,
+          creatorCorporationId: DOOMHEIM_CORPORATION_ID,
+          dateFounded: eveKill?.date_founded
+            ? new Date(eveKill.date_founded)
+            : new Date(0),
+          executorCorporationId: null,
+          factionId: null,
+          name: eveKill?.name ?? (await esiNameOf(allianceId)) ?? "",
+          ticker: eveKill?.ticker ?? "",
+          isDeleted: true,
+        };
+      }),
     ),
   );
 
@@ -692,10 +764,13 @@ const fetchCharactersFromEsi = (
 > =>
   Promise.all(
     characterIds.map((characterId) =>
-      limit(async () =>
-        getCharactersDetail(characterId)
-          .then((res) => res.data)
-          .then((character) => ({
+      limit(async () => {
+        const res = await withEsiRetry(`character ${characterId}`, () =>
+          getCharactersDetail(characterId),
+        );
+        if (res !== NOT_FOUND) {
+          const character = res.data;
+          return {
             characterId,
             birthday: new Date(character.birthday),
             bloodlineId: character.bloodline_id,
@@ -708,25 +783,43 @@ const fetchCharactersFromEsi = (
             securityStatus: character.security_status ?? null,
             title: character.corporation_title ?? null,
             isDeleted: false,
-          }))
-          .catch((err) => {
-            console.log("error fetching character with ID " + characterId, err);
-            return {
-              characterId,
-              birthday: new Date(1),
-              bloodlineId: 1,
-              corporationId: 1000001,
-              description: null,
-              factionId: null,
-              gender: CharacterGender.male,
-              name: "",
-              raceId: 1,
-              securityStatus: null,
-              title: null,
-              isDeleted: true,
-            };
-          }),
-      ),
+          };
+        }
+        // Deleted in EVE ("Character has been deleted!"). eve-kill often still has
+        // the details; ESI's name lookup still has the name. What neither has is
+        // stored as the usual marker values (1970 birthday, bloodline/race 1, male).
+        const eveKill = (
+          await fetchEveKill<EveKillCharacter>(`characters/${characterId}`)
+        )?.character;
+        const { bloodlines, races } = await loadBloodlineAndRaceIds();
+        const bloodlineId = eveKill?.bloodline_name
+          ? bloodlines.get(eveKill.bloodline_name)
+          : undefined;
+        const raceId = eveKill?.race_name
+          ? races.get(eveKill.race_name)
+          : undefined;
+        const name = eveKill?.name ?? (await esiNameOf(characterId));
+        console.log(
+          `character ${characterId}: deleted; ${eveKill ? "details from eve-kill" : name ? "name from ESI" : "storing a marker"}`,
+        );
+        return {
+          characterId,
+          birthday: eveKillBirthday(eveKill?.birthday) ?? new Date(1),
+          bloodlineId: bloodlineId ?? 1,
+          corporationId: DOOMHEIM_CORPORATION_ID,
+          description: eveKill?.description ?? null,
+          factionId: null,
+          gender:
+            eveKill?.gender === "female"
+              ? CharacterGender.female
+              : CharacterGender.male,
+          name: name ?? "",
+          raceId: raceId ?? 1,
+          securityStatus: eveKill?.security_status ?? null,
+          title: null,
+          isDeleted: true,
+        };
+      }),
     ),
   );
 
@@ -735,10 +828,13 @@ const fetchCorporationsFromEsi = (
 ): Promise<EsiCorporationRow[]> =>
   Promise.all(
     corporationIds.map((corporationId) =>
-      limit(async () =>
-        getCorporationsCorporationId(corporationId)
-          .then((res) => res.data)
-          .then((corporation) => ({
+      limit(async () => {
+        const res = await withEsiRetry(`corporation ${corporationId}`, () =>
+          getCorporationsCorporationId(corporationId),
+        );
+        if (res !== NOT_FOUND) {
+          const corporation = res.data;
+          return {
             corporationId,
             allianceId: corporation.alliance_id ?? null,
             ceoId:
@@ -763,32 +859,40 @@ const fetchCorporationsFromEsi = (
             url: corporation.url ?? null,
             warEligible: corporation.war_eligible,
             isDeleted: false,
-          }))
-          .catch((err) => {
-            console.log(
-              "error fetching corporation with ID " + corporationId,
-              err,
-            );
-            return {
-              corporationId,
-              allianceId: null,
-              ceoId: null,
-              creatorId: null,
-              dateFounded: null,
-              description: null,
-              enlistedFactionId: null,
-              homeStationId: null,
-              memberCount: -1,
-              name: "",
-              shares: null,
-              taxRate: 0,
-              ticker: "",
-              url: null,
-              warEligible: null,
-              isDeleted: false,
-            };
-          }),
-      ),
+          };
+        }
+        // EVE no longer shows it. eve-kill may still have it; otherwise a marker
+        // (blank name, memberCount -1). References are left empty rather than
+        // pointing at entities that may not exist either.
+        const eveKill = (
+          await fetchEveKill<EveKillCorporation>(
+            `corporations/${corporationId}`,
+          )
+        )?.corporation;
+        console.log(
+          `corporation ${corporationId}: not on ESI; ${eveKill ? "rebuilt from eve-kill" : "storing a marker"}`,
+        );
+        return {
+          corporationId,
+          allianceId: null,
+          ceoId: null,
+          creatorId: null,
+          dateFounded: eveKill?.date_founded
+            ? new Date(eveKill.date_founded)
+            : null,
+          description: eveKill?.description ?? null,
+          enlistedFactionId: null,
+          homeStationId: null,
+          memberCount: eveKill?.member_count ?? -1,
+          name: eveKill?.name ?? (await esiNameOf(corporationId)) ?? "",
+          shares: null,
+          taxRate: eveKill?.tax_rate ?? 0,
+          ticker: eveKill?.ticker ?? "",
+          url: null,
+          warEligible: null,
+          isDeleted: true,
+        };
+      }),
     ),
   );
 
@@ -832,42 +936,45 @@ const fetchRacesFromEsi = () =>
 const fetchStationsFromEsi = (stationIds: number[]) =>
   Promise.all(
     stationIds.map((stationId) =>
-      limit(async () =>
-        getUniverseStationsStationId(stationId)
-          .then((res) => res.data)
-          .then((station) => ({
-            stationId: station.station_id,
-            name: station.name,
-            solarSystemId: station.system_id === 1 ? null : station.system_id,
-            typeId: station.type_id,
-            maxDockableShipVolume: station.max_dockable_ship_volume,
-            officeRentalCost: station.office_rental_cost,
-            ownerId: station.owner ?? null,
-            raceId: station.race_id ?? null,
-            reprocessingEfficiency: station.reprocessing_efficiency,
-            reprocessingStationsTake: station.reprocessing_stations_take,
-            // SDE-only; ingestSdeStations fills this in.
+      limit(async () => {
+        const res = await withEsiRetry(`station ${stationId}`, () =>
+          getUniverseStationsStationId(stationId),
+        );
+        if (res === NOT_FOUND) {
+          // Not on ESI and no other source lists stations: store a marker.
+          console.log(`station ${stationId}: not on ESI; storing a marker`);
+          return {
+            stationId,
+            name: "",
+            solarSystemId: null,
+            typeId: 54, // just a placeholder should be a valid type ID...
+            maxDockableShipVolume: -1,
+            officeRentalCost: -1,
+            ownerId: null,
+            raceId: null,
+            reprocessingEfficiency: -1,
+            reprocessingStationsTake: -1,
             reprocessingHangarFlag: null,
-            isDeleted: false,
-          }))
-          .catch((err) => {
-            console.log("error fetching station with ID " + stationId, err);
-            return {
-              stationId,
-              name: "",
-              solarSystemId: null,
-              typeId: 54, // just a placeholder should be a valid type ID...
-              maxDockableShipVolume: -1,
-              officeRentalCost: -1,
-              ownerId: null,
-              raceId: null,
-              reprocessingEfficiency: -1,
-              reprocessingStationsTake: -1,
-              reprocessingHangarFlag: null,
-              isDeleted: true,
-            };
-          }),
-      ),
+            isDeleted: true,
+          };
+        }
+        const station = res.data;
+        return {
+          stationId: station.station_id,
+          name: station.name,
+          solarSystemId: station.system_id === 1 ? null : station.system_id,
+          typeId: station.type_id,
+          maxDockableShipVolume: station.max_dockable_ship_volume,
+          officeRentalCost: station.office_rental_cost,
+          ownerId: station.owner ?? null,
+          raceId: station.race_id ?? null,
+          reprocessingEfficiency: station.reprocessing_efficiency,
+          reprocessingStationsTake: station.reprocessing_stations_take,
+          // SDE-only; ingestSdeStations fills this in.
+          reprocessingHangarFlag: null,
+          isDeleted: false,
+        };
+      }),
     ),
   );
 
@@ -875,8 +982,12 @@ const fetchWarsFromEsi = (warIds: number[]) =>
   Promise.all(
     warIds.map((warId) =>
       limit(async () =>
-        getWarsWarId(warId)
-          .then((res) => res.data)
+        withEsiRetry(`war ${warId}`, () => getWarsWarId(warId))
+          .then((res) => {
+            if (res === NOT_FOUND)
+              throw new Error(`war ${warId} is not on ESI`);
+            return res.data;
+          })
           .then((war) => ({
             warId: warId,
             declaredDate: new Date(war.declared),
