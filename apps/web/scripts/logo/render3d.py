@@ -89,8 +89,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(b'saved')
 
 
-# Plain HTTP on purpose: the server below listens on the loopback interface only, for the
-# person running this script, and a local page has no certificate to serve HTTPS with.
-URL = urllib.parse.urlunsplit(('http', 'localhost:%d' % PORT, '/render3d.html', urllib.parse.urlencode(PARAMS), ''))
-print('open', URL, flush=True)
-http.server.ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()
+print('open http://localhost:%d/render3d.html?%s' % (PORT, urllib.parse.urlencode(PARAMS)), flush=True)
+# Plain HTTP on purpose: this listens on the loopback interface only, for the person
+# running the script, and a local page has no certificate to serve HTTPS with.
+http.server.ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()  # NOSONAR: loopback only, see above
