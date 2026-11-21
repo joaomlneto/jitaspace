@@ -150,40 +150,29 @@ const fetchCorporationRoles = async (
 let staleDataRefreshInFlight = false;
 
 /**
- * Stored sessions with `accessTokenPayload.scp` as the list its type promises.
- *
- * EVE leaves the claim out of a token that grants no scopes and writes a lone
- * scope as a bare string, and sessions saved before the decoder folded those
- * into a list still hold them that way. Every `scp.includes(...)` in this
- * package then throws on the first or matches substrings on the second. A
- * live session is repaired by its next token refresh, but an expired one never
- * refreshes, so the saved copy is repaired as it is read. Not shared with the
- * decoder in `@jitaspace/auth-utils`: this guards data that predates it.
+ * The scopes a token carries. Typed as a list, but EVE's JWT writes a lone
+ * scope as a plain string and leaves the claim out when there are none.
  */
-function withScopeLists(
-  characters: Record<number, CharacterSsoSession>,
-): Record<number, CharacterSsoSession> {
-  return Object.fromEntries(
-    Object.entries(characters).map(([characterId, character]) => {
-      // Read from storage, so nothing about its shape is guaranteed, and a
-      // throw here would fail the rehydration of every character.
-      const payload = character.accessTokenPayload as
-        | EveSsoAccessTokenPayload
-        | undefined;
-      const scp: unknown = payload?.scp;
-      if (payload === undefined || Array.isArray(scp)) {
-        return [characterId, character];
-      }
-      const scopes = typeof scp === "string" && scp !== "" ? [scp] : [];
-      return [
-        characterId,
-        {
-          ...character,
-          accessTokenPayload: { ...payload, scp: scopes },
-        },
-      ];
-    }),
-  );
+export function grantedScopesOf(
+  scp: ESIScope[] | ESIScope | undefined,
+): ESIScope[] {
+  if (Array.isArray(scp)) return scp;
+  return scp ? [scp] : [];
+}
+
+/**
+ * A session read back from storage, with its scopes as a list. Sessions saved
+ * before the token decoder did this still hold `scp` the way EVE wrote it.
+ */
+function withScopeList(session: CharacterSsoSession): CharacterSsoSession {
+  // Stored data, so the session or its payload may be missing.
+  const payload = (session as Partial<CharacterSsoSession> | null)
+    ?.accessTokenPayload;
+  if (!payload) return session;
+  return {
+    ...session,
+    accessTokenPayload: { ...payload, scp: grantedScopesOf(payload.scp) },
+  };
 }
 
 export const useAuthStore = create(
@@ -431,10 +420,22 @@ export const useAuthStore = create(
     {
       name: "jitaspace-auth",
       skipHydration: true,
-      // The default merge, plus a repair of what older versions stored.
+      // The default shallow merge, with the saved sessions passed through
+      // `withScopeList`.
       merge: (persisted, current) => {
-        const state = { ...current, ...(persisted as Partial<SsoAuthState>) };
-        return { ...state, characters: withScopeLists(state.characters) };
+        const saved = persisted as Partial<SsoAuthState> | undefined;
+        return {
+          ...current,
+          ...saved,
+          ...(saved?.characters && {
+            characters: Object.fromEntries(
+              Object.entries(saved.characters).map(([id, session]) => [
+                id,
+                withScopeList(session),
+              ]),
+            ),
+          }),
+        };
       },
     },
   ),

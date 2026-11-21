@@ -78,7 +78,7 @@ describe("verifyEveSsoAccessToken", () => {
     expect(payload.scp).toEqual([]);
   });
 
-  it("returns a lone scope, which EVE writes as a string, as a list", async () => {
+  it("returns a lone scope as a list", async () => {
     const token = await mintToken(signingKey, { scp: "publicData" });
     const payload = await verifyEveSsoAccessToken(token, { jwks });
     expect(payload.scp).toEqual(["publicData"]);

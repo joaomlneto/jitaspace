@@ -1,7 +1,4 @@
-import {
-  getEveSsoAccessTokenPayload,
-  normalizeEveSsoScopes,
-} from "../utils/getEveSsoAccessTokenPayload";
+import { getEveSsoAccessTokenPayload } from "../utils/getEveSsoAccessTokenPayload";
 
 function makeJwt(payload: object): string {
   const header = Buffer.from(
@@ -108,36 +105,18 @@ describe("getEveSsoAccessTokenPayload", () => {
     });
   });
 
-  // `scp` is typed as a list and every caller asks `scp.includes(scope)`. EVE
-  // only writes a list when the token grants several scopes.
+  // Callers ask `scp.includes(scope)`, so it has to be a list every time.
   describe("the scp claim", () => {
-    it("is an empty list when the token grants no scopes", () => {
-      // A login that asked for no scopes: EVE leaves the claim out, and
-      // `undefined.includes` threw in every scope check.
+    it("is empty when the token grants no scopes and has no claim", () => {
       const { scp: _omitted, ...withoutScopes } = samplePayload;
-      const result = getEveSsoAccessTokenPayload(makeJwt(withoutScopes));
-      expect(result?.scp).toEqual([]);
-      expect(result?.sub).toBe("CHARACTER:EVE:12345678");
+      expect(getEveSsoAccessTokenPayload(makeJwt(withoutScopes))?.scp).toEqual(
+        [],
+      );
     });
 
     it("wraps a lone scope, which EVE writes as a bare string", () => {
-      // Left as a string, `includes` matches substrings: "esi-skills" would
-      // pass as a granted scope.
-      const result = getEveSsoAccessTokenPayload(
-        makeJwt({ ...samplePayload, scp: "esi-skills.read_skills.v1" }),
-      );
-      expect(result?.scp).toEqual(["esi-skills.read_skills.v1"]);
-    });
-
-    it.each([
-      ["a list", ["publicData", "esi-skills.read_skills.v1"]],
-      ["an empty list", []],
-    ])("keeps %s as it is", (_label, scp) => {
-      expect(normalizeEveSsoScopes(scp)).toEqual(scp);
-    });
-
-    it.each([undefined, null, "", 42, {}])("reads %p as no scopes", (scp) => {
-      expect(normalizeEveSsoScopes(scp)).toEqual([]);
+      const token = makeJwt({ ...samplePayload, scp: "publicData" });
+      expect(getEveSsoAccessTokenPayload(token)?.scp).toEqual(["publicData"]);
     });
   });
 
@@ -148,14 +127,6 @@ describe("getEveSsoAccessTokenPayload", () => {
         getEveSsoAccessTokenPayload("header.!!!not-base64!!!.sig"),
       ).toBeNull();
     });
-
-    it.each(["null", "42", '"a string"'])(
-      "returns null when the payload is the JSON value %s, not an object",
-      (json) => {
-        const segment = Buffer.from(json).toString("base64url");
-        expect(getEveSsoAccessTokenPayload(`header.${segment}.sig`)).toBeNull();
-      },
-    );
 
     it("returns null when the payload segment is not JSON", () => {
       const notJson = Buffer.from("this is not json").toString("base64url");

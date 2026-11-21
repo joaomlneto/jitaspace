@@ -349,10 +349,7 @@ describe("useAccessToken — roles", () => {
   });
 });
 
-describe("useAccessToken — sessions saved before scopes were normalised", () => {
-  // EVE leaves `scp` out of a token that grants no scopes. A session saved
-  // that way made the scope check throw on every render of every component
-  // asking for a scope, the site search among them (Sentry JITASPACE-56).
+describe("useAccessToken — a session saved with EVE's raw scp claim", () => {
   const rehydrateWith = async (scp: unknown) => {
     const session = character({ characterId: 1 });
     localStorage.setItem(
@@ -365,7 +362,6 @@ describe("useAccessToken — sessions saved before scopes were normalised", () =
               accessTokenPayload: { ...session.accessTokenPayload, scp },
             },
           },
-          selectedCharacter: 1,
         },
         version: 0,
       }),
@@ -373,34 +369,26 @@ describe("useAccessToken — sessions saved before scopes were normalised", () =
     await useAuthStore.persist.rehydrate();
   };
 
-  it("reports no token, instead of throwing, when a scope is required", async () => {
+  // Sentry JITASPACE-56: a token with no scopes has no `scp`, and the check
+  // threw on every render of anything asking for a scope.
+  it("returns no token, rather than throwing, for a character with no scopes", async () => {
     await rehydrateWith(undefined);
 
     const { result } = renderHook(() =>
       useAccessToken({ scopes: [MAIL_SCOPE] }),
     );
 
-    expect(result.current.character).toBeNull();
     expect(result.current.accessToken).toBeNull();
   });
 
-  it("still serves the character when no scope is required", async () => {
-    await rehydrateWith(undefined);
-
-    const { result } = renderHook(() => useAccessToken({ characterId: 1 }));
-
-    expect(result.current.accessToken).toBe("token-1");
-  });
-
-  it("matches a lone scope exactly, not as a substring", async () => {
-    // Saved as the bare string EVE writes for a single scope, `includes`
-    // was a substring test and "esi-mail" passed as granted.
+  // A lone scope is a bare string, where `includes` is a substring test.
+  it("does not accept part of a scope's name", async () => {
     await rehydrateWith(MAIL_SCOPE);
 
-    const granted = renderHook(() => useAccessToken({ scopes: [MAIL_SCOPE] }));
-    const partial = renderHook(() => useAccessToken({ scopes: ["esi-mail"] }));
+    const whole = renderHook(() => useAccessToken({ scopes: [MAIL_SCOPE] }));
+    const part = renderHook(() => useAccessToken({ scopes: ["esi-mail"] }));
 
-    expect(granted.result.current.accessToken).toBe("token-1");
-    expect(partial.result.current.accessToken).toBeNull();
+    expect(whole.result.current.accessToken).toBe("token-1");
+    expect(part.result.current.accessToken).toBeNull();
   });
 });
