@@ -143,3 +143,7 @@ apps/web/cypress/downloads/
 
 # Python bytecode (apps/web/scripts/logo).
 __pycache__/
+
+# Working files of the logo scripts, including the Caldari Navy logo they
+# download from CCP's image server (CCP artwork is not committed).
+apps/web/scripts/logo/.cache/

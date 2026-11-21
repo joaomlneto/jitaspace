@@ -1,12 +1,16 @@
 // Generates every raster copy of the logo from the two SVGs in public/:
 //
-//   logo.svg        the detailed star, for anything shown larger than ~48px
-//   logo-small.svg  8 shading shapes instead of 100 and a thicker border, for
-//                   favicons and other small sizes
+//   logo.svg        the detailed star with its brushed grain, for anything
+//                   shown larger than ~64px
+//   logo-small.svg  the same star with a quarter of the shading shapes and no
+//                   grain, for the header, favicons and other small sizes
+//
+// Both come from scripts/logo/ (see its README).
 //
 // Outputs: public/logo.png and logo-1080p.png, the web-app manifest icons
-// (public/icons/), app/apple-icon.png, the favicons (public/favicon-*.png and
-// favicon.ico), and the icon server's copies (apps/icon-server/public/).
+// (public/icons/), app/apple-icon.png, app/icon.svg (a copy of the small
+// logo), the favicons (public/favicon-*.png and favicon.ico), the print
+// sticker, and the icon server's copies (apps/icon-server/public/).
 // The iOS splash screens are made from public/icons/icon-512.png by
 // generate-ios-splash.mjs; run it after this script.
 //
@@ -15,7 +19,7 @@
 //
 // Run: node scripts/generate-logo-assets.mjs
 
-import { readFile, writeFile } from "node:fs/promises";
+import { copyFile, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -79,9 +83,9 @@ function squareAroundStar(fraction) {
  * @returns {ViewBox}
  */
 function squareAroundBox(margin) {
-  // Covers both borders: logo.svg's thin, mitred one spans x 1.9-174.1 and
-  // y 3.0-166.8; logo-small.svg's thick, round-joined one x 0.7-175.3 and
-  // y 1.9-168.3.
+  // The star itself spans x 3.4-172.6 and y 4.7-165.5; the box leaves about
+  // 3 units around it (it was sized for an earlier logo with a border, and
+  // keeping it keeps the star the same size in every icon).
   const box = { x: 0.6, y: 1.9, w: 174.8, h: 166.4 };
   const side = Math.max(box.w, box.h) * (1 + 2 * margin);
   const cx = box.x + box.w / 2;
@@ -136,6 +140,13 @@ await render(
   frame(detailed, squareAroundStar(0.8), 180, 180, DARK_BACKGROUND),
   join(webDir, "app", "apple-icon.png"),
 );
+
+// The browser-tab icon (Next serves app/icon.svg) is the small logo itself.
+await copyFile(
+  join(publicDir, "logo-small.svg"),
+  join(webDir, "app", "icon.svg"),
+);
+console.log("wrote app/icon.svg");
 
 // Favicons, from the small logo.
 const favicons = await Promise.all(

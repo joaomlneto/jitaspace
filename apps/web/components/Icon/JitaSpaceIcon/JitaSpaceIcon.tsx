@@ -1,8 +1,8 @@
 import type { ImageProps } from "next/image";
 import Image from "next/image";
 
-// public/logo-small.svg is 176 x 168: the logo drawn for small sizes, with a
-// border that stays visible down to favicon size.
+// public/logo-small.svg is 176 x 168: the logo drawn for small sizes (fewer
+// shading shapes than logo.svg and no grain, which is invisible this small).
 const WIDTH = 176;
 const HEIGHT = 168;
 

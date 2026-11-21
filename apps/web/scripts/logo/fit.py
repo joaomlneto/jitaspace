@@ -1,9 +1,11 @@
-"""Fit the logo SVG to the original PNG.
+"""Fit the previous, flat logo SVG to the old raster logo (source-4x.png).
 
-  python3 fit.py --shapes 100 --polish 3 --out ../../public/logo.svg
-  python3 fit.py --small --out ../../public/logo-small.svg
+  python3 fit.py --shapes 100 --polish 3 --out flat.svg
+  python3 fit.py --small --out flat-small.svg
 
-See README.md for what each step does. Deterministic for a given --seed.
+The logo is now made by fit3d.py (see README.md); this is kept as the record of how
+its predecessor was made, and fit3d.py shares its model (model.py). Deterministic
+for a given --seed.
 """
 import argparse
 import math
