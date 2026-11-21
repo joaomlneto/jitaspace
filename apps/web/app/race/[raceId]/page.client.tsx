@@ -2,10 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Alert,
-  Anchor,
   Badge,
   Box,
   Container,
@@ -71,6 +69,7 @@ import {
   CharacterAnchor,
   FactionAnchor,
   GroupAnchor,
+  LpOffersAnchor,
   RegionAnchor,
   SolarSystemAnchor,
   StationAnchor,
@@ -947,14 +946,9 @@ const corporationColumns: DataTableColumn<RaceCorporationRow>[] = [
     sortable: true,
     align: "right",
     filter: { type: "range", min: 0 },
-    cell: (row) =>
-      row.lpOffers > 0 ? (
-        <Anchor component={Link} href={`/lp-store/${row.corporationId}`}>
-          {formatCount(row.lpOffers)}
-        </Anchor>
-      ) : (
-        "–"
-      ),
+    cell: (row) => (
+      <LpOffersAnchor corporationId={row.corporationId} count={row.lpOffers} />
+    ),
   },
   {
     id: "size",

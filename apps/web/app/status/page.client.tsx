@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -40,6 +39,7 @@ import type {
   SdeLastModifiedResponse,
   VercelStatusResponse,
 } from "./types";
+import { HoverPrefetchLink } from "~/components/Link";
 import { env } from "~/env";
 import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
@@ -167,7 +167,11 @@ export default function StatusPage({
                   <Text size="sm" fw={500}>
                     Website Updated On
                   </Text>
-                  <Anchor component={Link} href="/changelog" size="sm">
+                  <Anchor
+                    component={HoverPrefetchLink}
+                    href="/changelog"
+                    size="sm"
+                  >
                     {webLastUpdatedDate && (
                       <FormattedDateText
                         date={webLastUpdatedDate}

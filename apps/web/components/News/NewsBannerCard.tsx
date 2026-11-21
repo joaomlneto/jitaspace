@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { Badge, Box, Button, CloseButton, Stack, Text } from "@mantine/core";
 
 import { SystemOpenWindowIcon } from "@jitaspace/eve-icons";
 
 import type { NewsItem } from "~/config/news";
+import { HoverPrefetchLink } from "~/components/Link";
 import { formatNewsDate } from "./formatNewsDate";
 
 export interface NewsBannerCardProps {
@@ -76,7 +76,7 @@ export function NewsBannerCard({
           />
         ) : (
           <Box
-            component={Link}
+            component={HoverPrefetchLink}
             href={item.link.href}
             aria-hidden
             tabIndex={-1}
@@ -162,7 +162,7 @@ export function NewsBannerCard({
             </Button>
           ) : (
             <Button
-              component={Link}
+              component={HoverPrefetchLink}
               href={item.link.href}
               color={color}
               size="xs"

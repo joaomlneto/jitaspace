@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Anchor,
   Button,
@@ -31,6 +30,7 @@ import { CategoryIskIcon, WindowGiftIcon } from "@jitaspace/eve-icons";
 import { CharacterAvatar, CorporationAvatar } from "@jitaspace/ui";
 
 import { CharacterAnchor, CorporationAnchor } from "~/components/Anchor";
+import { HoverPrefetchLink } from "~/components/Link";
 import { env } from "~/env";
 
 /**
@@ -340,7 +340,7 @@ export function SupportContent() {
               Payments are handled entirely by the respective platforms (the EVE
               Store, Markee Dragon, GitHub, Buy Me a Coffee, …). JitaSpace does
               not process or store any of your payment information. See the{" "}
-              <Anchor inherit component={Link} href="/about">
+              <Anchor inherit component={HoverPrefetchLink} href="/about">
                 About page
               </Anchor>{" "}
               for the full privacy policy.

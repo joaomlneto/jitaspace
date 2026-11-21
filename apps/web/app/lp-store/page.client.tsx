@@ -1,7 +1,6 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -22,6 +21,7 @@ import { LPStoreIcon, SystemSearchIcon } from "@jitaspace/eve-icons";
 import { CorporationAvatar, FactionAvatar } from "@jitaspace/ui";
 
 import type { LPStoreGroup } from "./groups";
+import { HoverPrefetchLink } from "~/components/Link";
 // The modules themselves, not the `~/components/LPStore` barrel, which would
 // pull the offers table and its data-table engines into this page.
 import { useLoyaltyPointsResource } from "~/components/LPStore/characterResources";
@@ -91,7 +91,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
         </Group>
         <Title order={2} size="h3">
           Select a corporation below or{" "}
-          <Anchor inherit component={Link} href="/lp-store/all">
+          <Anchor inherit component={HoverPrefetchLink} href="/lp-store/all">
             show all offers
           </Anchor>
         </Title>
@@ -169,7 +169,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
                     <Title order={3} size="h4">
                       <Anchor
                         inherit
-                        component={Link}
+                        component={HoverPrefetchLink}
                         href={`/faction/${group.faction.factionId}`}
                       >
                         {group.faction.name}
@@ -191,7 +191,7 @@ export default function LPStorePage({ groups }: Readonly<LPStorePageProps>) {
                     loyaltyPointsMap[corporation.corporationId] ?? 0;
                   return (
                     <Anchor
-                      component={Link}
+                      component={HoverPrefetchLink}
                       href={lpStorePath(corporation.name)}
                       key={corporation.corporationId}
                       onClick={() =>
