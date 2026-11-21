@@ -53,3 +53,21 @@ pnpm type-check   # tsc --noEmit
 pnpm test         # jest (registry + util tests)
 pnpm lint
 ```
+
+`scripts/` holds one-off runs that are not jobs. `bootstrapIndustryCostIndices.ts`
+fills the industry cost index history from EVE Ref's archive before the hourly
+`esi-sync-industry-cost-indices` job first runs (the history is append-only, so
+nothing can be added before what the job has written). It resumes where the
+database ends, and caches its downloads in `~/.cache/jitaspace/everef-industry-systems` for re-runs:
+
+```
+pnpm with-env tsx scripts/bootstrapIndustryCostIndices.ts --dry-run   # count only
+pnpm with-env tsx scripts/bootstrapIndustryCostIndices.ts --cluster
+```
+
+It needs `xz` on the PATH (EVE Ref's yearly archives are `.tar.xz`). The full
+history (from 2017-11-29) is ~41M rows; on Postgres 18 it loaded in 3.5 hours,
+mostly waiting on EVE Ref's rate limit for the current year's hourly files.
+`--cluster` rewrites the table in system order afterwards (it locks the table,
+so pause the hourly job first); without it, a busy system's "All" chart reads
+one table page per row.
