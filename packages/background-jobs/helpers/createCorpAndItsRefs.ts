@@ -87,7 +87,11 @@ interface EveKillAlliance {
   alliance?: { name?: string; ticker?: string; date_founded?: string | null };
 }
 
-/** Bloodline and race IDs by English name, for eve-kill's name-only fields. */
+/**
+ * Bloodline and race IDs by English name, for eve-kill's name-only fields.
+ * Loaded once per process. A failed load is forgotten, so one database error
+ * does not fail every later deleted character in the same process.
+ */
 let bloodlineAndRaceIds:
   | Promise<{ bloodlines: Map<string, number>; races: Map<string, number> }>
   | undefined;
@@ -95,10 +99,15 @@ const loadBloodlineAndRaceIds = () =>
   (bloodlineAndRaceIds ??= Promise.all([
     prisma.bloodline.findMany({ select: { bloodlineId: true, name: true } }),
     prisma.race.findMany({ select: { raceId: true, name: true } }),
-  ]).then(([bloodlines, races]) => ({
-    bloodlines: new Map(bloodlines.map((b) => [b.name, b.bloodlineId])),
-    races: new Map(races.map((r) => [r.name, r.raceId])),
-  })));
+  ])
+    .then(([bloodlines, races]) => ({
+      bloodlines: new Map(bloodlines.map((b) => [b.name, b.bloodlineId])),
+      races: new Map(races.map((r) => [r.name, r.raceId])),
+    }))
+    .catch((error: unknown) => {
+      bloodlineAndRaceIds = undefined;
+      throw error;
+    }));
 
 export const createCorpAndItsRefRecords = async ({
   alliances = [],
