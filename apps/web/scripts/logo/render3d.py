@@ -91,5 +91,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 print('open http://localhost:%d/render3d.html?%s' % (PORT, urllib.parse.urlencode(PARAMS)), flush=True)
 # Plain HTTP on purpose: this listens on the loopback interface only, for the person
-# running the script, and a local page has no certificate to serve HTTPS with.
-http.server.ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()  # NOSONAR: loopback only, see above
+# running the script, and a local page has no certificate to serve HTTPS with
+# (sonar-project.properties records the same reason for SonarCloud).
+http.server.ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()
