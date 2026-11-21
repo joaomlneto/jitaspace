@@ -1,6 +1,7 @@
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
 import { base64UrlToUtf8 } from "./base64";
+import { scopeList } from "./scopeList";
 
 export interface EveSsoAccessTokenPayload {
   scp: ESIScope[];
@@ -35,11 +36,10 @@ export function getEveSsoAccessTokenPayload(
   // is not valid base64, and `JSON.parse` rejects a payload that is not JSON —
   // and the token here is untrusted input, so neither should escape as a throw.
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const decoded: EveSsoAccessTokenPayload = JSON.parse(
+    const payload = JSON.parse(
       base64UrlToUtf8(tokenPayload),
-    );
-    return decoded;
+    ) as EveSsoAccessTokenPayload;
+    return { ...payload, scp: scopeList(payload.scp) };
   } catch {
     return null;
   }

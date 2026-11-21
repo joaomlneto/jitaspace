@@ -348,3 +348,47 @@ describe("useAccessToken — roles", () => {
     expect(result.current.character?.characterId).toBe(100);
   });
 });
+
+describe("useAccessToken — a session saved with EVE's raw scp claim", () => {
+  const rehydrateWith = async (scp: unknown) => {
+    const session = character({ characterId: 1 });
+    localStorage.setItem(
+      "jitaspace-auth",
+      JSON.stringify({
+        state: {
+          characters: {
+            1: {
+              ...session,
+              accessTokenPayload: { ...session.accessTokenPayload, scp },
+            },
+          },
+        },
+        version: 0,
+      }),
+    );
+    await useAuthStore.persist.rehydrate();
+  };
+
+  // Sentry JITASPACE-56: a token with no scopes has no `scp`, and the check
+  // threw on every render of anything asking for a scope.
+  it("returns no token, rather than throwing, for a character with no scopes", async () => {
+    await rehydrateWith(undefined);
+
+    const { result } = renderHook(() =>
+      useAccessToken({ scopes: [MAIL_SCOPE] }),
+    );
+
+    expect(result.current.accessToken).toBeNull();
+  });
+
+  // A lone scope is a bare string, where `includes` is a substring test.
+  it("does not accept part of a scope's name", async () => {
+    await rehydrateWith(MAIL_SCOPE);
+
+    const whole = renderHook(() => useAccessToken({ scopes: [MAIL_SCOPE] }));
+    const part = renderHook(() => useAccessToken({ scopes: ["esi-mail"] }));
+
+    expect(whole.result.current.accessToken).toBe("token-1");
+    expect(part.result.current.accessToken).toBeNull();
+  });
+});

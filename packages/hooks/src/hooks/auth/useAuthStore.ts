@@ -149,6 +149,32 @@ const fetchCorporationRoles = async (
 // the same stale entries and duplicate every request — unbounded if ESI hangs.
 let staleDataRefreshInFlight = false;
 
+/**
+ * The scopes a token carries. Typed as a list, but EVE's JWT writes a lone
+ * scope as a plain string and leaves the claim out when there are none.
+ */
+export function grantedScopesOf(
+  scp: ESIScope[] | ESIScope | undefined,
+): ESIScope[] {
+  if (Array.isArray(scp)) return scp;
+  return scp ? [scp] : [];
+}
+
+/**
+ * A session read back from storage, with its scopes as a list. Sessions saved
+ * before the token decoder did this still hold `scp` the way EVE wrote it.
+ */
+function withScopeList(session: CharacterSsoSession): CharacterSsoSession {
+  // Stored data, so the session or its payload may be missing.
+  const payload = (session as Partial<CharacterSsoSession> | null)
+    ?.accessTokenPayload;
+  if (!payload) return session;
+  return {
+    ...session,
+    accessTokenPayload: { ...payload, scp: grantedScopesOf(payload.scp) },
+  };
+}
+
 export const useAuthStore = create(
   persist<SsoAuthState>(
     (set, get) => ({
@@ -394,6 +420,23 @@ export const useAuthStore = create(
     {
       name: "jitaspace-auth",
       skipHydration: true,
+      // The default shallow merge, with the saved sessions passed through
+      // `withScopeList`.
+      merge: (persisted, current) => {
+        const saved = persisted as Partial<SsoAuthState> | undefined;
+        return {
+          ...current,
+          ...saved,
+          ...(saved?.characters && {
+            characters: Object.fromEntries(
+              Object.entries(saved.characters).map(([id, session]) => [
+                id,
+                withScopeList(session),
+              ]),
+            ),
+          }),
+        };
+      },
     },
   ),
 );

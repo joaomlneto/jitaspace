@@ -105,6 +105,21 @@ describe("getEveSsoAccessTokenPayload", () => {
     });
   });
 
+  // Callers ask `scp.includes(scope)`, so it has to be a list every time.
+  describe("the scp claim", () => {
+    it("is empty when the token grants no scopes and has no claim", () => {
+      const { scp: _omitted, ...withoutScopes } = samplePayload;
+      expect(getEveSsoAccessTokenPayload(makeJwt(withoutScopes))?.scp).toEqual(
+        [],
+      );
+    });
+
+    it("wraps a lone scope, which EVE writes as a bare string", () => {
+      const token = makeJwt({ ...samplePayload, scp: "publicData" });
+      expect(getEveSsoAccessTokenPayload(token)?.scp).toEqual(["publicData"]);
+    });
+  });
+
   // The signature promises `| null`, so malformed input must not throw.
   describe("malformed tokens", () => {
     it("returns null when the payload segment is not valid base64", () => {

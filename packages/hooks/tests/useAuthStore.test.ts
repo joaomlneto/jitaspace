@@ -504,3 +504,55 @@ describe("useAuthStore.removeCharacter", () => {
     expect(useAuthStore.getState()).toBe(before);
   });
 });
+
+describe("useAuthStore rehydration", () => {
+  // Sessions saved before the token decoder made `scp` a list hold it the way
+  // EVE wrote it: a bare string for one scope, nothing at all for none.
+  const rehydrate = async (session: object | null) => {
+    localStorage.setItem(
+      "jitaspace-auth",
+      JSON.stringify({
+        state: { characters: { [CHARACTER_ID]: session } },
+        version: 0,
+      }),
+    );
+    await useAuthStore.persist.rehydrate();
+  };
+
+  it.each([
+    ["no scopes", undefined, []],
+    ["a lone scope", ROLES_SCOPE, [ROLES_SCOPE]],
+    ["a list", [ROLES_SCOPE, "publicData"], [ROLES_SCOPE, "publicData"]],
+  ])("reads a session saved with %s as a list", async (_label, scp, scopes) => {
+    await rehydrate({
+      characterId: CHARACTER_ID,
+      accessTokenPayload: { sub: SUB, scp },
+    });
+
+    expect(storedCharacter()?.accessTokenPayload).toEqual({
+      sub: SUB,
+      scp: scopes,
+    });
+  });
+
+  // A throw while merging would leave the store unhydrated for good.
+  it.each([
+    ["no token payload", { characterId: CHARACTER_ID }],
+    ["nothing in it", null],
+  ])("still loads a saved session with %s", async (_label, session) => {
+    await rehydrate(session);
+
+    expect(useAuthStore.persist.hasHydrated()).toBe(true);
+    expect(storedCharacter()).toEqual(session);
+  });
+
+  it("leaves the sessions in memory alone when nothing was saved", async () => {
+    await seedCharacter();
+    const before = useAuthStore.getState().characters;
+    localStorage.removeItem("jitaspace-auth");
+
+    await useAuthStore.persist.rehydrate();
+
+    expect(useAuthStore.getState().characters).toBe(before);
+  });
+});

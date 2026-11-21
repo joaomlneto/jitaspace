@@ -5,7 +5,7 @@ import { useShallow } from "zustand/shallow";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
-import { useAuthStore } from "./useAuthStore";
+import { grantedScopesOf, useAuthStore } from "./useAuthStore";
 
 /** A logged-in character that cannot be used for some feature yet. */
 export interface CharacterWithoutScopes {
@@ -15,15 +15,6 @@ export interface CharacterWithoutScopes {
   grantedScopes: ESIScope[];
   /** Signed in, but its session ended: it has to sign in again either way. */
   sessionExpired: boolean;
-}
-
-/**
- * The scopes a token carries. Typed as a list, but EVE's JWT writes a lone
- * scope as a plain string, and spreading that would split it into letters.
- */
-function grantedScopesOf(scp: ESIScope[] | ESIScope | undefined): ESIScope[] {
-  if (Array.isArray(scp)) return scp;
-  return scp ? [scp] : [];
 }
 
 /**
