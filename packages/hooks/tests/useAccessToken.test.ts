@@ -348,3 +348,59 @@ describe("useAccessToken — roles", () => {
     expect(result.current.character?.characterId).toBe(100);
   });
 });
+
+describe("useAccessToken — sessions saved before scopes were normalised", () => {
+  // EVE leaves `scp` out of a token that grants no scopes. A session saved
+  // that way made the scope check throw on every render of every component
+  // asking for a scope, the site search among them (Sentry JITASPACE-56).
+  const rehydrateWith = async (scp: unknown) => {
+    const session = character({ characterId: 1 });
+    localStorage.setItem(
+      "jitaspace-auth",
+      JSON.stringify({
+        state: {
+          characters: {
+            1: {
+              ...session,
+              accessTokenPayload: { ...session.accessTokenPayload, scp },
+            },
+          },
+          selectedCharacter: 1,
+        },
+        version: 0,
+      }),
+    );
+    await useAuthStore.persist.rehydrate();
+  };
+
+  it("reports no token, instead of throwing, when a scope is required", async () => {
+    await rehydrateWith(undefined);
+
+    const { result } = renderHook(() =>
+      useAccessToken({ scopes: [MAIL_SCOPE] }),
+    );
+
+    expect(result.current.character).toBeNull();
+    expect(result.current.accessToken).toBeNull();
+  });
+
+  it("still serves the character when no scope is required", async () => {
+    await rehydrateWith(undefined);
+
+    const { result } = renderHook(() => useAccessToken({ characterId: 1 }));
+
+    expect(result.current.accessToken).toBe("token-1");
+  });
+
+  it("matches a lone scope exactly, not as a substring", async () => {
+    // Saved as the bare string EVE writes for a single scope, `includes`
+    // was a substring test and "esi-mail" passed as granted.
+    await rehydrateWith(MAIL_SCOPE);
+
+    const granted = renderHook(() => useAccessToken({ scopes: [MAIL_SCOPE] }));
+    const partial = renderHook(() => useAccessToken({ scopes: ["esi-mail"] }));
+
+    expect(granted.result.current.accessToken).toBe("token-1");
+    expect(partial.result.current.accessToken).toBeNull();
+  });
+});

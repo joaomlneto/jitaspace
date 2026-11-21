@@ -36,6 +36,8 @@ const mintToken = (
     aud?: string | string[];
     azp?: string;
     expSecondsFromNow?: number;
+    /** `null` leaves the claim out, as EVE does for a scope-less login. */
+    scp?: string | string[] | null;
   } = {},
 ) => {
   const {
@@ -43,9 +45,14 @@ const mintToken = (
     aud = EVE_SSO_AUDIENCE,
     azp = OUR_CLIENT_ID,
     expSecondsFromNow = 1200,
+    scp = ["publicData"],
   } = claims;
 
-  return new SignJWT({ sub: "CHARACTER:EVE:123", scp: ["publicData"], azp })
+  return new SignJWT({
+    sub: "CHARACTER:EVE:123",
+    azp,
+    ...(scp !== null && { scp }),
+  })
     .setProtectedHeader({ alg: "RS256", kid: KID })
     .setIssuer(iss)
     .setAudience(aud)
@@ -62,6 +69,18 @@ describe("verifyEveSsoAccessToken", () => {
     const token = await mintToken(signingKey);
     const payload = await verifyEveSsoAccessToken(token, { jwks });
     expect(payload.sub).toBe("CHARACTER:EVE:123");
+    expect(payload.scp).toEqual(["publicData"]);
+  });
+
+  it("returns no scopes for a token that carries no scp claim", async () => {
+    const token = await mintToken(signingKey, { scp: null });
+    const payload = await verifyEveSsoAccessToken(token, { jwks });
+    expect(payload.scp).toEqual([]);
+  });
+
+  it("returns a lone scope, which EVE writes as a string, as a list", async () => {
+    const token = await mintToken(signingKey, { scp: "publicData" });
+    const payload = await verifyEveSsoAccessToken(token, { jwks });
     expect(payload.scp).toEqual(["publicData"]);
   });
 

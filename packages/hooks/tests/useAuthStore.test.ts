@@ -504,3 +504,71 @@ describe("useAuthStore.removeCharacter", () => {
     expect(useAuthStore.getState()).toBe(before);
   });
 });
+
+describe("useAuthStore rehydration", () => {
+  // What the browser holds for a session saved before the token decoder
+  // turned every `scp` claim into a list.
+  const store = (characters: Record<number, unknown>) =>
+    localStorage.setItem(
+      "jitaspace-auth",
+      JSON.stringify({
+        state: { characters, selectedCharacter: CHARACTER_ID },
+        version: 0,
+      }),
+    );
+  const storedSession = (scp: unknown) => ({
+    characterId: CHARACTER_ID,
+    accessToken: "AT1",
+    accessTokenPayload: { sub: SUB, exp: LIVE_EXP, scp },
+  });
+
+  beforeEach(() => {
+    useAuthStore.setState({ characters: {}, selectedCharacter: null });
+  });
+
+  it("gives a session saved without scopes an empty scope list", async () => {
+    // EVE leaves `scp` out of a token that grants nothing, and every
+    // `scp.includes(...)` threw on it (Sentry JITASPACE-56).
+    store({ [CHARACTER_ID]: storedSession(undefined) });
+
+    await useAuthStore.persist.rehydrate();
+
+    expect(storedCharacter()?.accessTokenPayload.scp).toEqual([]);
+    expect(storedCharacter()?.accessTokenPayload.sub).toBe(SUB);
+    expect(useAuthStore.getState().selectedCharacter).toBe(CHARACTER_ID);
+  });
+
+  it("wraps a lone scope that was saved as a string", async () => {
+    store({ [CHARACTER_ID]: storedSession(ROLES_SCOPE) });
+
+    await useAuthStore.persist.rehydrate();
+
+    expect(storedCharacter()?.accessTokenPayload.scp).toEqual([ROLES_SCOPE]);
+  });
+
+  it("leaves a session that already holds a list untouched", async () => {
+    const session = storedSession([ROLES_SCOPE, "publicData"]);
+    store({ [CHARACTER_ID]: session });
+
+    await useAuthStore.persist.rehydrate();
+
+    expect(storedCharacter()).toEqual(session);
+  });
+
+  it("keeps a session with no payload rather than failing the rehydration", async () => {
+    store({ [CHARACTER_ID]: { characterId: CHARACTER_ID } });
+
+    await useAuthStore.persist.rehydrate();
+
+    expect(storedCharacter()).toEqual({ characterId: CHARACTER_ID });
+  });
+
+  it("keeps the store's actions when nothing was saved", async () => {
+    localStorage.removeItem("jitaspace-auth");
+
+    await useAuthStore.persist.rehydrate();
+
+    expect(useAuthStore.getState().characters).toEqual({});
+    expect(typeof useAuthStore.getState().addCharacter).toBe("function");
+  });
+});

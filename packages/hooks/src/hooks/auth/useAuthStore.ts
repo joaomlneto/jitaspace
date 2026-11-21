@@ -149,6 +149,43 @@ const fetchCorporationRoles = async (
 // the same stale entries and duplicate every request — unbounded if ESI hangs.
 let staleDataRefreshInFlight = false;
 
+/**
+ * Stored sessions with `accessTokenPayload.scp` as the list its type promises.
+ *
+ * EVE leaves the claim out of a token that grants no scopes and writes a lone
+ * scope as a bare string, and sessions saved before the decoder folded those
+ * into a list still hold them that way. Every `scp.includes(...)` in this
+ * package then throws on the first or matches substrings on the second. A
+ * live session is repaired by its next token refresh, but an expired one never
+ * refreshes, so the saved copy is repaired as it is read. Not shared with the
+ * decoder in `@jitaspace/auth-utils`: this guards data that predates it.
+ */
+function withScopeLists(
+  characters: Record<number, CharacterSsoSession>,
+): Record<number, CharacterSsoSession> {
+  return Object.fromEntries(
+    Object.entries(characters).map(([characterId, character]) => {
+      // Read from storage, so nothing about its shape is guaranteed, and a
+      // throw here would fail the rehydration of every character.
+      const payload = character.accessTokenPayload as
+        | EveSsoAccessTokenPayload
+        | undefined;
+      const scp: unknown = payload?.scp;
+      if (payload === undefined || Array.isArray(scp)) {
+        return [characterId, character];
+      }
+      const scopes = typeof scp === "string" && scp !== "" ? [scp] : [];
+      return [
+        characterId,
+        {
+          ...character,
+          accessTokenPayload: { ...payload, scp: scopes },
+        },
+      ];
+    }),
+  );
+}
+
 export const useAuthStore = create(
   persist<SsoAuthState>(
     (set, get) => ({
@@ -394,6 +431,11 @@ export const useAuthStore = create(
     {
       name: "jitaspace-auth",
       skipHydration: true,
+      // The default merge, plus a repair of what older versions stored.
+      merge: (persisted, current) => {
+        const state = { ...current, ...(persisted as Partial<SsoAuthState>) };
+        return { ...state, characters: withScopeLists(state.characters) };
+      },
     },
   ),
 );

@@ -1,6 +1,7 @@
 import type { JWTVerifyGetKey } from "jose";
 
 import type { EveSsoAccessTokenPayload } from "./getEveSsoAccessTokenPayload";
+import { normalizeEveSsoScopes } from "./getEveSsoAccessTokenPayload";
 
 /** EVE Online's published JWKS endpoint (from its SSO metadata). */
 export const EVE_SSO_JWKS_URI = "https://login.eveonline.com/oauth/jwks";
@@ -94,5 +95,9 @@ export async function verifyEveSsoAccessToken(
     );
   }
 
-  return payload as unknown as EveSsoAccessTokenPayload;
+  // `scp` arrives as a list, a bare string or not at all; hand back a list.
+  return {
+    ...(payload as unknown as EveSsoAccessTokenPayload),
+    scp: normalizeEveSsoScopes(payload.scp),
+  };
 }
