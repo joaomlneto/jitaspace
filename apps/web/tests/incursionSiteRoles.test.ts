@@ -62,11 +62,26 @@ describe("incursionSiteRole", () => {
     expect(incursionSiteRole(30003822)).toBeUndefined(); // Espigoure, staging
   });
 
-  it("leaves out what the wiki gets wrong or lost to Pochven", () => {
+  it("leaves out what the wiki gets wrong", () => {
     // BB-EKF: 50-5UD's staging system, also listed as a vanguard.
     expect(incursionSiteRole(30004851)).toBeUndefined();
-    // Raravoss: moved to Pochven.
-    expect(incursionSiteRole(30003495)).toBeUndefined();
+  });
+
+  it("lays out Krai Svarog, in Pochven, by the layout rule", () => {
+    const krai = {
+      30045328: "vanguard", // Ahtila
+      30002770: "vanguard", // Tunudan
+      30002225: "vanguard", // Harva
+      30003504: "vanguard", // Niarja
+      30003495: "assault", // Raravoss, an assault since it moved to Pochven
+      30002411: "assault", // Skarkon
+      30001413: "assault", // Nani
+      30040141: "headquarters", // Urhinichi
+    };
+    for (const [id, role] of Object.entries(krai)) {
+      expect([id, incursionSiteRole(Number(id))]).toEqual([id, role]);
+    }
+    expect(incursionSiteRole(30000021)).toBeUndefined(); // Kuharah, staging
   });
 
   it.each([
