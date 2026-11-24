@@ -1,0 +1,23 @@
+# Build context for apps/web/Dockerfile and apps/icon-server/Dockerfile
+# (both use the repository root as their context).
+**/node_modules
+**/.next
+**/.turbo
+**/.output
+**/.nitro
+**/.vercel
+**/coverage
+**/.eslintcache
+**/*.tsbuildinfo
+.git
+.claude
+.idea
+.vscode
+apps/web/cypress/videos
+apps/web/cypress/screenshots
+
+# Secrets never enter the image. Build-time values arrive as a BuildKit secret
+# or as build arguments; runtime values as container environment variables.
+.env
+.env.*
+!.env.example

@@ -151,8 +151,17 @@ export default function RootLayout({
         {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
           <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
         )}
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel Web Analytics and Speed Insights load their script from
+            `/_vercel/insights` and `/_vercel/speed-insights`, which only exist
+            on Vercel: on a self-hosted deploy they 404 on every page view.
+            Vercel sets `VERCEL` both when it builds and when it serves, so the
+            prerendered shell and request-time renders agree. */}
+        {env.VERCEL && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
         <PosthogIdentity />
         {/* Enables nuqs `useQueryState`/`useQueryStates` app-wide (URL-synced
             filter state). NOTE: nuqs calls `useSearchParams()` internally, so any
