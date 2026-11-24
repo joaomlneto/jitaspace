@@ -7,7 +7,6 @@
   "exports": {
     ".": "./index.ts",
     "./factions": "./factions.ts",
-    "./server": "./server.ts",
     "./postcss": "./postcss.cjs"
   },
   "main": "./index.ts",

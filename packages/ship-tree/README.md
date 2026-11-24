@@ -6,15 +6,14 @@ The web app imports this package, never the library directly.
 
 ## What it adds
 
-| Export                                       | What                                                                                                                              |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `ShipTreeView`                               | One component: faction, optional skills, optional Omega. Loads the data once, sizes itself, hides the library's decorative footer |
-| `ShipTreeFactionSelector`                    | The library's faction picker (a grid of logos), listing `SHIP_TREE_FACTIONS` in their alphabetical order                          |
-| `SHIP_TREE_FACTIONS` and lookups             | The 17 factions with URL-safe slugs, for pickers and `?faction=`                                                                  |
-| `getSkillInTraining`                         | The skill in training, from ESI's skill queue and skills, for `ShipTreeView`'s `training`                                         |
-| `SHIP_TREE_DATA_*`, `isShipTreeDataFileName` | The data tables the library fetches, and where we serve them                                                                      |
-| `@jitaspace/ship-tree/server`                | `readShipTreeDataFile`: reads a table out of the installed library (Node only)                                                    |
-| `@jitaspace/ship-tree/postcss`               | PostCSS plugin that makes the library's stylesheet importable (see below)                                                         |
+| Export                           | What                                                                                                                              |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `ShipTreeView`                   | One component: faction, optional skills, optional Omega. Loads the data once, sizes itself, hides the library's decorative footer |
+| `ShipTreeFactionSelector`        | The library's faction picker (a grid of logos), listing `SHIP_TREE_FACTIONS` in their alphabetical order                          |
+| `SHIP_TREE_FACTIONS` and lookups | The 17 factions with URL-safe slugs, for pickers and `?faction=`                                                                  |
+| `getSkillInTraining`             | The skill in training, from ESI's skill queue and skills, for `ShipTreeView`'s `training`                                         |
+| `SHIP_TREE_DATA_BASE_URL`        | Where the web app serves the data tables the library fetches                                                                      |
+| `@jitaspace/ship-tree/postcss`   | PostCSS plugin that makes the library's stylesheet importable (see below)                                                         |
 
 ```tsx
 import { ShipTreeView } from "@jitaspace/ship-tree";
@@ -37,9 +36,7 @@ The library's tooltips are on by default. Two optional props feed them:
 
 ## Things to know
 
-**Data.** The library keeps no data in its JavaScript: it fetches its `<table>.jsonl` files in the browser. They ship inside the npm package, and `apps/web/app/api/ship-tree-data/[file]/route.ts` serves them, prerendered at build from `node_modules`. Nothing is copied into the repository or `public/`. The tables are a pinned snapshot of the SDE, not our database, so new game data arrives with a library upgrade.
-
-**Locating the files** uses `module.findPackageJSON` and not `require.resolve`: Turbopack expands a templated `require.resolve` into a glob over every file in `data/generated` and fails the build trying to bundle each `.jsonl` as a module.
+**Data.** The library keeps no data in its JavaScript: it fetches its `<table>.jsonl` files in the browser. They ship inside the npm package, and the web app serves them as static files: `apps/web/scripts/copy-ship-tree-data.mjs` copies them into `public/ship-tree-data` before `next dev` and `next build`. Git ignores that directory, so nothing is committed. The tables are a pinned snapshot of the SDE, not our database, so new game data arrives with a library upgrade.
 
 **The stylesheet** (`styles.css`) contains four empty `url("")` values that Turbopack refuses to resolve (`Can't resolve ''`). `postcss.cjs` drops them, for that file only, and `apps/web/postcss.config.cjs` loads it. They already rendered as nothing, so no visible change.
 
