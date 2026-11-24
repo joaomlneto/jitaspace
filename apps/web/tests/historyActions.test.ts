@@ -115,6 +115,11 @@ jest.mock("botid/server", () => ({
   checkBotId: () => Promise.resolve({ isBot: mockIsBot }),
 }));
 
+// BotID runs only on Vercel (`env.VERCEL` set); none of the history modules
+// read any other env var. Set per test, reset to "1" before each one.
+const mockEnv: { VERCEL?: string } = { VERCEL: "1" };
+jest.mock("~/env", () => ({ env: mockEnv }));
+
 jest.mock("@sentry/nextjs", () => ({
   captureException: (error: unknown, context?: unknown) =>
     mockCaptureException(error, context),
@@ -1033,6 +1038,13 @@ describe("BotID gate", () => {
 
   afterEach(() => {
     mockIsBot = false;
+    mockEnv.VERCEL = "1";
+  });
+
+  it("skips the check off Vercel, where checkBotId() would throw", async () => {
+    // The stub still says "bot": only skipping the check gets a result back.
+    mockEnv.VERCEL = undefined;
+    expect(await getBuildRangeChanges(700000, 700003)).not.toBeNull();
   });
 
   it("refuses getBuildRangeChanges to a bot, and serves it to a human", async () => {

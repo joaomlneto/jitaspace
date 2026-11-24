@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import { checkBotId } from "botid/server";
 
 import type { BuildRangeChanges, EntityNames } from "~/lib/history";
+import { env } from "~/env";
 import {
   getCachedBuildRangeChanges,
   getCachedRangeNames,
@@ -45,10 +46,17 @@ import {
  * `instrumentation-client.ts`; if it is not, the headers are missing and this
  * fails closed. Local development always classifies as human.
  *
+ * BotID is a Vercel service, so the check runs only on Vercel. Anywhere else
+ * `checkBotId()` throws in production (it needs the OIDC token Vercel attaches
+ * to each request), which would fail every comparison for every visitor. A
+ * self-hosted deploy has to rate-limit `POST /history/compare/*` at the CDN
+ * in front of it instead.
+ *
  * Callers treat `null` as "not found" and render an empty state, so refusing a
  * bot here degrades to an empty view rather than an error page.
  */
 const isBot = async (): Promise<boolean> => {
+  if (!env.VERCEL) return false;
   const { isBot } = await checkBotId();
   return isBot;
 };
