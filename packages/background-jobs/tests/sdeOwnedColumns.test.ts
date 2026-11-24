@@ -64,7 +64,7 @@ function scalarColumnsOf(schema: string, modelName: string): Set<string> {
   return new Set(columns);
 }
 
-/** `SDE_OWNED_ASTEROID_BELT_COLUMNS` -> `AsteroidBelt`. */
+/** `SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS` -> `DogmaAttribute`. */
 const modelNameOf = (listName: string) =>
   listName
     .replace(/^SDE_OWNED_|_COLUMNS$/g, "")
@@ -104,7 +104,10 @@ describe("SDE-owned column lists", () => {
         /^SDE_OWNED_\w+_COLUMNS$/.test(name),
       ).length,
     );
-    expect(TABLES.length).toBeGreaterThan(15);
+    // A floor that only catches the discovery above finding nothing. The
+    // corporation, character and dogma-attribute lists are the ones left now
+    // that ESI's static /universe routes are gone.
+    expect(TABLES.length).toBeGreaterThanOrEqual(3);
   });
 
   it("finds the columns it claims to parse", () => {

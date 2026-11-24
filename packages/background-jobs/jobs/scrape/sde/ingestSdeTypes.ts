@@ -38,11 +38,11 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
     // `raceID` and `metaGroupID` have no dangling values and need no guard.
     const factionIds = await loadSdeFileIds("factions.yaml");
 
-    // `packagedVolume` is left to ESI even though types.yaml has carried it
-    // since build 3475087 (46,748 of 52,863 types). Two writers for one column
-    // is the situation `SDE_OWNED_TYPE_COLUMNS` exists to prevent, so switching
-    // owners means removing it from the ESI scraper's payload in the same
-    // change — not just setting it here. Until then the SDE value is ignored.
+    // This job is the only writer of Type: ESI stopped serving
+    // /universe/types at compatibility date 2026-11-19. Values are stored as
+    // the SDE has them, so a field the SDE omits is null — ESI used to report
+    // 0 for a missing mass/capacity/volume/packaged volume and 1 for a
+    // missing radius.
     const types = await ingestSdeTable({
       filename: "types.yaml",
       records: files["types.yaml"],
@@ -59,6 +59,8 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
         volume: optionalNumber(record.volume),
         radius: optionalNumber(record.radius),
         portionSize: optionalNumber(record.portionSize),
+        // On 47,698 of 53,941 types (build 3739102); absent on the rest.
+        packagedVolume: optionalNumber(record.packagedVolume),
         graphicId: present(graphicIds, optionalNumber(record.graphicID)),
         iconId: present(iconIds, optionalNumber(record.iconID)),
         marketGroupId: present(

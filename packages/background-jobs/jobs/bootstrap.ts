@@ -21,51 +21,38 @@ export const bootstrapDatabase = defineJob<
     await ctx.invoke("scrape-hoboleaks-agent-types", {});
     await ctx.invoke("scrape-hoboleaks-dogma-effect-categories", {});
     await ctx.invoke("scrape-hoboleaks-dogma-units", {});
-    await ctx.invoke("scrape-esi-graphics", {});
     await ctx.invoke("scrape-esi-market-groups", {});
     await ctx.invoke("scrape-esi-dogma-attributes", {});
     await ctx.invoke("scrape-esi-dogma-effects", {});
-    await ctx.invoke("scrape-esi-categories", {});
-    await ctx.invoke("scrape-esi-groups", {});
-    await ctx.invoke("scrape-esi-types", {});
-    await ctx.invoke("scrape-esi-regions", {});
-    await ctx.invoke("scrape-esi-constellations", {});
-    await ctx.invoke("scrape-esi-solar-systems", {});
-    await ctx.invoke("scrape-esi-factions", {});
-    await ctx.invoke("scrape-esi-races", {});
-    await ctx.invoke("scrape-esi-bloodlines", {});
-    await ctx.invoke("scrape-esi-ancestries", {});
-    await ctx.invoke("scrape-esi-npc-corporations", {});
-    await ctx.invoke("scrape-esi-loyalty-store-offers", {});
 
     // Direct SDE-archive ingest pipeline — the full FK-ordered set, shared with
-    // the standalone `ingest-sde-all` job. These jobs coexist with the scrapers
-    // above (the diff machinery only writes the columns each job owns, so SDE
-    // and ESI never clobber each other) and also add the tables the scrapers
-    // don't cover (celestials, blueprints, certificates, skins, metaGroups,
-    // contraband, the planetary / dogma reference tables, etc.).
-    //
-    // This loop is also the sole populator of the SDE reference tables that
-    // used to be seeded before the ESI scrapers above (Icon, Race,
-    // StationService, NpcCorporationDivision, DogmaAttributeCategory). The ESI
-    // scrapers guard their optional SDE-owned FKs against rows that don't exist
-    // yet — e.g. scrape-esi-types leaves `iconId` null on a fresh database —
-    // and the ingest jobs then set those columns authoritatively, in FK order,
-    // within this same bootstrap run.
+    // the standalone `ingest-sde-all` job. It is the only writer of the static
+    // universe tables (types, groups, categories, graphics, the map, stations,
+    // factions, races, bloodlines, ancestries): ESI stopped serving them at
+    // compatibility date 2026-11-19, so there is no ESI scrape to run first.
     for (const jobId of SDE_INGEST_JOB_IDS) {
-      // `scrape-sde-agents` is sequenced INTO this list rather than run with the
-      // scrapers above: `Agent.stationId` is a real FK and agents sit in NPC
-      // stations, but `ingest-sde-stations` (earlier in this list) is the only
-      // thing bootstrap AWAITS that fills the NPC station set. The ESI station
-      // scrape is reached only via a fire-and-forget `ctx.send` from
-      // `scrape-esi-solar-systems`, so racing it leaves just the handful of
-      // corporation home stations and the agent write fails with P2003. It has
-      // to come before `ingest-sde-agents-in-space` in turn, which FKs `Agent`.
+      // The NPC corporations go in just before the races. Bloodlines point at
+      // a corporation (a real FK), so they cannot be ingested until the
+      // corporations exist; the corporations in turn need types (a home
+      // station's `typeId`), which are ingested by this point. Anything else a
+      // corporation references that is still missing — its CEO's bloodline and
+      // race, its faction, its home station — `createCorpAndItsRefRecords`
+      // fetches from the SDE itself, and the ingests below then refresh them.
+      if (jobId === "ingest-sde-races") {
+        await ctx.invoke("scrape-esi-npc-corporations", {});
+      }
+      // `scrape-sde-agents` is sequenced INTO this list: `Agent.stationId` is a
+      // real FK and agents sit in NPC stations, which `ingest-sde-stations`
+      // (earlier in this list) fills. It has to come before
+      // `ingest-sde-agents-in-space` in turn, which FKs `Agent`.
       if (jobId === "ingest-sde-agents-in-space") {
         await ctx.invoke("scrape-sde-agents", {});
       }
       await ctx.invoke(jobId, {});
     }
+
+    // Loyalty-store offers reference types and corporations, both filled above.
+    await ctx.invoke("scrape-esi-loyalty-store-offers", {});
 
     // SDE jobs that reference ESI-owned tables, so they run last: `Agent` points
     // at Character and Station, both of which the scrapers above and the ingest

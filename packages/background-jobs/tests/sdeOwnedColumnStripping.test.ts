@@ -79,7 +79,7 @@ function sourceFiles(): { file: string; source: string }[] {
   return files;
 }
 
-/** `asteroidBelt` -> `SDE_OWNED_ASTEROID_BELT_COLUMNS`. */
+/** `dogmaAttribute` -> `SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS`. */
 const listNameFor = (model: string) =>
   `SDE_OWNED_${model.replace(/(?!^)([A-Z])/g, "_$1").toUpperCase()}_COLUMNS`;
 
@@ -142,8 +142,11 @@ describe("SDE-owned columns are stripped wherever the table is diffed", () => {
     // Exact: a site the parser silently drops is a table it never checks.
     expect(sites.length + unresolvable).toBe(liveOccurrences());
     expect(unresolvable).toBe(4);
-    expect(sites.length).toBeGreaterThan(35);
-    expect(declaredLists.size).toBeGreaterThan(15);
+    // Floors, not counts: they only catch a parser that has stopped matching.
+    // Both fell when ESI's static /universe routes went (compatibility date
+    // 2026-11-19) and their scrapers and lists went with them.
+    expect(sites.length).toBeGreaterThan(10);
+    expect(declaredLists.size).toBeGreaterThanOrEqual(3);
   });
 
   it("excludes them at every site that diffs a co-owned table", () => {

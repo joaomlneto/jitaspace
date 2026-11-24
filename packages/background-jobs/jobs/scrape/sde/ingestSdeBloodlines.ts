@@ -4,7 +4,10 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  loadSdeFileIds,
+  loadSdeFiles,
   optionalNumber,
+  present,
   requiredNumber,
 } from "../../../helpers";
 
@@ -24,14 +27,33 @@ export const ingestSdeBloodlines = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
+    const files = await loadSdeFiles(["bloodlines.yaml", "races.yaml"]);
+    const typeIds = await loadSdeFileIds("types.yaml");
+
+    // A bloodline's starting ship is its race's: bloodlines.yaml has no ship
+    // of its own, and ESI's `ship_type_id` equalled the race's `shipTypeID` on
+    // all 18 bloodlines (checked 2026-11-24, null for the non-playable races).
+    const raceShipTypeIds = new Map<number, number | null>();
+    for (const [raceId, race] of Object.entries(files["races.yaml"])) {
+      raceShipTypeIds.set(
+        Number(raceId),
+        present(
+          typeIds,
+          optionalNumber((race as Record<string, unknown>).shipTypeID),
+        ),
+      );
+    }
+
     const bloodlines = await ingestSdeTable({
       filename: "bloodlines.yaml",
+      records: files["bloodlines.yaml"],
       idField: "bloodlineId",
       delegate: prisma.bloodline,
       toRow: (record, id): Prisma.BloodlineCreateManyInput => ({
         bloodlineId: id,
         corporationId: requiredNumber(record.corporationID),
         raceId: requiredNumber(record.raceID),
+        shipTypeId: raceShipTypeIds.get(requiredNumber(record.raceID)) ?? null,
         name: enString(record.name) ?? "",
         description: enString(record.description) ?? "",
         charisma: requiredNumber(record.charisma),

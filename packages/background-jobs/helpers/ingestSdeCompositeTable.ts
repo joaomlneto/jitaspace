@@ -39,8 +39,9 @@ const chunkArray = <T>(items: T[], size: number): T[][] => {
  * local fetch and the remote rows, so within a chunk a local row with no
  * matching remote row is still detected and soft-deleted.
  *
- * Pass `softDelete: false` when another writer also owns the table — e.g. the
- * ESI `scrapeEsiTypes` scraper also fills TypeAttribute / TypeEffect. The local
+ * Pass `softDelete: false` when rows the file does not list must survive — e.g.
+ * TypeAttribute keeps the `charge` / `shieldCharge` rows ESI wrote before it
+ * stopped serving types (see `ingestSdeTypeDogma`). The local
  * fetch is then filtered to the remote keys, so the diff only creates/updates
  * and never soft-deletes rows the other writer owns (the same "never delete what
  * the SDE didn't fetch" guarantee {@link import("./ingestSdeTable").ingestSdeTable}

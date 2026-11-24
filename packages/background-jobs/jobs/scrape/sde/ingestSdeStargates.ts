@@ -70,8 +70,7 @@ export const ingestSdeStargates = defineJob<
 
     // Pass 2: backfill destinationStargateId now that every stargate row exists, so
     // the self-FK is always satisfiable. Diffed against the current values so
-    // re-runs are no-ops and so it coexists with `scrapeEsiStargates` (which also
-    // sets this column).
+    // re-runs are no-ops.
     //
     // Written as chunked bulk UPDATEs rather than concurrent per-row updates.
     // Stargates are mutually-referencing PAIRS (A's destination is B while B's is

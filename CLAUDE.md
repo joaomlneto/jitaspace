@@ -85,7 +85,7 @@ The main database is **PostgreSQL on PlanetScale**: a single-node PS-20 (¼ vCPU
 - **Connections are scarce.** The server allows 25 connections, and PlanetScale keeps some of them. PgBouncer admits 100 clients and shares about 20 server connections between them, and `createPrismaClient` caps each instance's pool at 5. Do not raise that cap or connect apps directly on 5432 without thinking about the total.
 - **Transaction pooling has limits.** Through PgBouncer you cannot rely on session state: no session-level `SET`, advisory locks, `LISTEN`/`NOTIFY` or temporary tables across statements. Nothing uses them today.
 - **CPU, not RAM, is the first limit.** The whole database (~1.5 GB after the 2026-10 migration) nearly fits in memory, and the cache hit ratio is above 99%. Heavy ingest jobs compete with page traffic for the ¼ vCPU. Move to PS-40 if the hit ratio drops below ~99% or CPU stays saturated.
-- **Bulk writes: one statement, not many concurrent ones.** PostgreSQL takes a `FOR KEY SHARE` lock on the referenced row, so concurrent single-row updates on mutually-referencing rows (stargate pairs) deadlock with `40P01`. Write such links in a single `UPDATE … FROM (VALUES …)`, as `ingestSdeStargates` and `scrapeEsiStargates` do.
+- **Bulk writes: one statement, not many concurrent ones.** PostgreSQL takes a `FOR KEY SHARE` lock on the referenced row, so concurrent single-row updates on mutually-referencing rows (stargate pairs) deadlock with `40P01`. Write such links in a single `UPDATE … FROM (VALUES …)`, as `ingestSdeStargates` does.
 
 ## Never catch a database error inside a `"use cache"` scope
 

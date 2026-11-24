@@ -42,6 +42,10 @@ export const ingestSdeGraphics = defineJob<
       records: data,
       idField: "graphicId",
       delegate: prisma.graphic,
+      // `collisionFile` and `sofDna` are not in graphics.yaml. ESI was their
+      // only source and stopped serving /universe/graphics at compatibility
+      // date 2026-11-19, so existing rows keep ESI's last value and new ones
+      // stay null.
       toRow: (record, id): Prisma.GraphicCreateManyInput => ({
         graphicId: id,
         graphicFile: plainString(record.graphicFile),

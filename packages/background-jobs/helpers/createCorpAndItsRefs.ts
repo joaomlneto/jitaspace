@@ -15,10 +15,6 @@ import {
   getAlliancesAllianceId,
   getCharactersDetail,
   getCorporationsCorporationId,
-  getUniverseBloodlines,
-  getUniverseFactions,
-  getUniverseRaces,
-  getUniverseStationsStationId,
   getWarsWarId,
 } from "@jitaspace/esi-client";
 
@@ -32,13 +28,7 @@ import type {
   War,
 } from "../db";
 import type { EsiCorporationRow } from "./mergeEntriesIntoCorporationsTable";
-import type {
-  SDE_OWNED_BLOODLINE_COLUMNS,
-  SDE_OWNED_CHARACTER_COLUMNS,
-  SDE_OWNED_FACTION_COLUMNS,
-  SDE_OWNED_RACE_COLUMNS,
-  SDE_OWNED_STATION_COLUMNS,
-} from "./sdeOwnedColumns";
+import type { SDE_OWNED_CHARACTER_COLUMNS } from "./sdeOwnedColumns";
 import { CharacterGender, prisma } from "../db";
 import { esiTaxRateToFraction } from "./mergeEntriesIntoCorporationsTable";
 import {
@@ -48,14 +38,22 @@ import {
   NOT_FOUND,
   withEsiRetry,
 } from "./refResolution";
+import {
+  enString,
+  optionalNumber,
+  plainString,
+  requiredBoolean,
+  requiredNumber,
+  subRecord,
+} from "./sdeFields";
+import { fetchSdeRecord, fetchSdeTable } from "./sdeHttp";
 
-// Columns on these ESI-scraped tables that only an SDE ingest writes, so the ESI
-// row builders here must not claim to supply them (see sdeOwnedColumns.ts).
-type SdeOwnedBloodlineColumn = (typeof SDE_OWNED_BLOODLINE_COLUMNS)[number];
+// Columns on the ESI-scraped Character table that only an SDE ingest writes, so
+// the ESI row builder here must not claim to supply them (see sdeOwnedColumns.ts).
 type SdeOwnedCharacterColumn = (typeof SDE_OWNED_CHARACTER_COLUMNS)[number];
-type SdeOwnedFactionColumn = (typeof SDE_OWNED_FACTION_COLUMNS)[number];
-type SdeOwnedRaceColumn = (typeof SDE_OWNED_RACE_COLUMNS)[number];
-type SdeOwnedStationColumn = (typeof SDE_OWNED_STATION_COLUMNS)[number];
+
+/** A row as `createMany` takes it: everything but the timestamps. */
+type Row<T> = Omit<T, "updatedAt" | "createdAt">;
 
 const limit = pLimit(1);
 
@@ -129,10 +127,7 @@ export const createCorpAndItsRefRecords = async ({
 }: {
   alliances?: Omit<Alliance, "updatedAt" | "createdAt">[];
   missingAllianceIds?: Set<number>;
-  bloodlines?: Omit<
-    Bloodline,
-    "updatedAt" | "createdAt" | SdeOwnedBloodlineColumn
-  >[];
+  bloodlines?: Row<Bloodline>[];
   missingBloodlineIds?: Set<number>;
   characters?: Omit<
     Character,
@@ -141,11 +136,11 @@ export const createCorpAndItsRefRecords = async ({
   missingCharacterIds?: Set<number>;
   corporations?: EsiCorporationRow[];
   missingCorporationIds?: Set<number>;
-  factions?: Omit<Faction, "updatedAt" | "createdAt" | SdeOwnedFactionColumn>[];
+  factions?: Row<Faction>[];
   missingFactionIds?: Set<number>;
-  races?: Omit<Race, "updatedAt" | "createdAt" | SdeOwnedRaceColumn>[];
+  races?: Row<Race>[];
   missingRaceIds?: Set<number>;
-  stations?: Omit<Station, "updatedAt" | "createdAt" | SdeOwnedStationColumn>[];
+  stations?: Row<Station>[];
   missingStationIds?: Set<number>;
   wars?: Omit<War, "updatedAt" | "createdAt">[];
   missingWarIds?: Set<number>;
@@ -493,7 +488,7 @@ export const createCorpAndItsRefRecords = async ({
     );
 
     // Update stations
-    const fetchedStations = await fetchStationsFromEsi(missingIds.stationIds);
+    const fetchedStations = await fetchStationsFromSde(missingIds.stationIds);
     stations.push(...fetchedStations);
     fetchedStations.forEach((station) =>
       existingStationIds.add(station.stationId),
@@ -506,7 +501,9 @@ export const createCorpAndItsRefRecords = async ({
 
     // Update bloodlines
     if (missingIds.bloodlineIds.length > 0) {
-      const fetchedBloodlines = await fetchBloodlinesFromEsi();
+      const fetchedBloodlines = await fetchBloodlinesFromSde(
+        missingIds.bloodlineIds,
+      );
       bloodlines.push(...fetchedBloodlines);
       fetchedBloodlines.forEach((bloodline) =>
         existingBloodlineIds.add(bloodline.bloodlineId),
@@ -515,7 +512,7 @@ export const createCorpAndItsRefRecords = async ({
 
     // Update factions
     if (missingIds.factionIds.length > 0) {
-      const fetchedFactions = await fetchFactionsFromEsi();
+      const fetchedFactions = await fetchFactionsFromSde(missingIds.factionIds);
       factions.push(...fetchedFactions);
       fetchedFactions.forEach((faction) =>
         existingFactionIds.add(faction.factionId),
@@ -524,7 +521,7 @@ export const createCorpAndItsRefRecords = async ({
 
     // Update races
     if (missingIds.raceIds.length > 0) {
-      const fetchedRaces = await fetchRacesFromEsi();
+      const fetchedRaces = await fetchRacesFromSde(missingIds.raceIds);
       races.push(...fetchedRaces);
       fetchedRaces.forEach((race) => existingRaceIds.add(race.raceId));
     }
@@ -746,25 +743,58 @@ const fetchAlliancesFromEsi = (allianceIds: number[]) =>
     ),
   );
 
-const fetchBloodlinesFromEsi = () =>
-  getUniverseBloodlines()
-    .then((res) => res.data)
-    .then((bloodlines) =>
-      bloodlines.map((bloodline) => ({
-        bloodlineId: bloodline.bloodline_id,
-        corporationId: bloodline.corporation_id,
-        name: bloodline.name,
-        description: bloodline.description,
-        shipTypeId: bloodline.ship_type_id,
-        raceId: bloodline.race_id,
-        charisma: bloodline.charisma,
-        intelligence: bloodline.intelligence,
-        memory: bloodline.memory,
-        perception: bloodline.perception,
-        willpower: bloodline.willpower,
+/**
+ * Static reference rows (bloodlines, factions, races, NPC stations) used to come
+ * from ESI's /universe routes. ESI dropped them at compatibility date
+ * 2026-11-19; the SDE is their source now. The ingest jobs keep the tables
+ * current, so these fetchers only fill the gap for a row the next ingest has
+ * not written yet — chiefly on a fresh database, where `bootstrap-database`
+ * creates the NPC corporations before the races and bloodlines are ingested.
+ * The rows are built the way the matching `ingest-sde-*` job builds them.
+ */
+
+/** The subset of `ids` that already exist, for a nullable FK column. */
+const existingSolarSystemIds = async (ids: number[]) =>
+  new Set(
+    (
+      await prisma.solarSystem.findMany({
+        select: { solarSystemId: true },
+        where: { solarSystemId: { in: ids } },
+      })
+    ).map((system) => system.solarSystemId),
+  );
+
+const fetchBloodlinesFromSde = async (
+  bloodlineIds: number[],
+): Promise<Row<Bloodline>[]> => {
+  const [bloodlines, races] = await Promise.all([
+    fetchSdeTable("bloodlines"),
+    fetchSdeTable("races"),
+  ]);
+  return bloodlineIds.flatMap((bloodlineId) => {
+    const record = bloodlines.get(bloodlineId);
+    if (!record) return [];
+    const raceId = requiredNumber(record.raceID);
+    return [
+      {
+        bloodlineId,
+        corporationId: requiredNumber(record.corporationID),
+        name: enString(record.name) ?? "",
+        description: enString(record.description) ?? "",
+        // A bloodline starts in its race's ship (see ingestSdeBloodlines).
+        shipTypeId: optionalNumber(races.get(raceId)?.shipTypeID),
+        raceId,
+        charisma: requiredNumber(record.charisma),
+        intelligence: requiredNumber(record.intelligence),
+        memory: requiredNumber(record.memory),
+        perception: requiredNumber(record.perception),
+        willpower: requiredNumber(record.willpower),
+        iconId: optionalNumber(record.iconID),
         isDeleted: false,
-      })),
-    );
+      },
+    ];
+  });
+};
 
 const fetchCharactersFromEsi = (
   characterIds: number[],
@@ -906,53 +936,77 @@ const fetchCorporationsFromEsi = (
     ),
   );
 
-const fetchFactionsFromEsi = () =>
-  getUniverseFactions()
-    .then((res) => res.data)
-    .then((factions) =>
-      factions.map((faction) => ({
-        factionId: faction.faction_id,
-        corporationId: faction.corporation_id ?? null,
-        description: faction.description,
-        isUnique: faction.is_unique,
-        militiaCorporationId: faction.militia_corporation_id ?? null,
-        name: faction.name,
-        sizeFactor: faction.size_factor,
-        solarSystemId: faction.solar_system_id ?? null,
-        stationCount: faction.station_count,
-        stationSystemCount: faction.station_system_count,
-        // SDE-only; ingestSdeFactions fills these in.
-        flatLogo: null,
-        flatLogoWithName: null,
+const fetchFactionsFromSde = async (
+  factionIds: number[],
+): Promise<Row<Faction>[]> => {
+  const factions = await fetchSdeTable("factions");
+  const systemIds = await existingSolarSystemIds(
+    factionIds.flatMap((factionId) => {
+      const systemId = optionalNumber(factions.get(factionId)?.solarSystemID);
+      return systemId === null ? [] : [systemId];
+    }),
+  );
+  return factionIds.flatMap((factionId) => {
+    const record = factions.get(factionId);
+    if (!record) return [];
+    const solarSystemId = optionalNumber(record.solarSystemID);
+    return [
+      {
+        factionId,
+        name: enString(record.name) ?? "",
+        description: enString(record.description) ?? "",
+        isUnique: requiredBoolean(record.uniqueName),
+        corporationId: optionalNumber(record.corporationID),
+        militiaCorporationId: optionalNumber(record.militiaCorporationID),
+        sizeFactor: requiredNumber(record.sizeFactor),
+        // Set once the map is in: the faction's home system may not be yet.
+        solarSystemId:
+          solarSystemId !== null && systemIds.has(solarSystemId)
+            ? solarSystemId
+            : null,
+        // ingestSdeFactions counts these from npcStations; it fills them in.
+        stationCount: 0,
+        stationSystemCount: 0,
+        flatLogo: plainString(record.flatLogo),
+        flatLogoWithName: plainString(record.flatLogoWithName),
+        iconId: optionalNumber(record.iconID),
+        shortDescription: enString(record.shortDescription),
         isDeleted: false,
-      })),
-    );
+      },
+    ];
+  });
+};
 
-const fetchRacesFromEsi = () =>
-  getUniverseRaces()
-    .then((res) => res.data)
-    .then((races) =>
-      races.map((race) => ({
-        raceId: race.race_id,
-        name: race.name,
-        description: race.description,
-        factionId: race.alliance_id,
-        // SDE-only; ingestSdeRaces fills this in.
-        shipTypeId: null,
+const fetchRacesFromSde = async (raceIds: number[]): Promise<Row<Race>[]> => {
+  const races = await fetchSdeTable("races");
+  return raceIds.flatMap((raceId) => {
+    const record = races.get(raceId);
+    if (!record) return [];
+    return [
+      {
+        raceId,
+        name: enString(record.name) ?? "",
+        description: enString(record.description),
+        // ESI's `alliance_id`. The SDE does not say which faction a race
+        // belongs to, so a race first seen this way has none.
+        factionId: null,
+        shipTypeId: optionalNumber(record.shipTypeID),
+        iconId: optionalNumber(record.iconID),
         isDeleted: false,
-      })),
-    );
+      },
+    ];
+  });
+};
 
-const fetchStationsFromEsi = (stationIds: number[]) =>
+const fetchStationsFromSde = (stationIds: number[]): Promise<Row<Station>[]> =>
   Promise.all(
     stationIds.map((stationId) =>
-      limit(async () => {
-        const res = await withEsiRetry(`station ${stationId}`, () =>
-          getUniverseStationsStationId(stationId),
-        );
-        if (res === NOT_FOUND) {
-          // Not on ESI and no other source lists stations: store a marker.
-          console.log(`station ${stationId}: not on ESI; storing a marker`);
+      limit(async (): Promise<Row<Station>> => {
+        const record = await fetchSdeRecord("npcStations", stationId);
+        if (!record) {
+          // Not an NPC station (e.g. an Upwell structure) and no other source
+          // lists stations: store a marker.
+          console.log(`station ${stationId}: not in the SDE; storing a marker`);
           return {
             stationId,
             name: "",
@@ -965,23 +1019,54 @@ const fetchStationsFromEsi = (stationIds: number[]) =>
             reprocessingEfficiency: -1,
             reprocessingStationsTake: -1,
             reprocessingHangarFlag: null,
+            operationId: null,
+            orbitId: null,
+            positionX: null,
+            positionY: null,
+            positionZ: null,
             isDeleted: true,
           };
         }
-        const station = res.data;
+        const typeId = requiredNumber(record.typeID);
+        const solarSystemId = requiredNumber(record.solarSystemID);
+        const [systemIds, type] = await Promise.all([
+          existingSolarSystemIds([solarSystemId]),
+          prisma.type.findUnique({
+            select: { raceId: true },
+            where: { typeId },
+          }),
+        ]);
+        // A station is its type's race, as ESI reported it. Race is a real FK.
+        const race =
+          type?.raceId == null
+            ? null
+            : await prisma.race.findUnique({
+                select: { raceId: true },
+                where: { raceId: type.raceId },
+              });
+        const position = subRecord(record.position);
         return {
-          stationId: station.station_id,
-          name: station.name,
-          solarSystemId: station.system_id === 1 ? null : station.system_id,
-          typeId: station.type_id,
-          maxDockableShipVolume: station.max_dockable_ship_volume,
-          officeRentalCost: station.office_rental_cost,
-          ownerId: station.owner ?? null,
-          raceId: station.race_id ?? null,
-          reprocessingEfficiency: station.reprocessing_efficiency,
-          reprocessingStationsTake: station.reprocessing_stations_take,
-          // SDE-only; ingestSdeStations fills this in.
-          reprocessingHangarFlag: null,
+          stationId,
+          // The SDE has no station names; ingestSdeStations builds them from
+          // the map, and ESI's name lookup has the same name until it runs.
+          name: (await esiNameOf(stationId)) ?? "",
+          solarSystemId: systemIds.has(solarSystemId) ? solarSystemId : null,
+          typeId,
+          // ESI-only, and ESI no longer serves stations.
+          maxDockableShipVolume: null,
+          officeRentalCost: null,
+          ownerId: optionalNumber(record.ownerID),
+          raceId: race?.raceId ?? null,
+          reprocessingEfficiency: requiredNumber(record.reprocessingEfficiency),
+          reprocessingStationsTake: requiredNumber(
+            record.reprocessingStationsTake,
+          ),
+          reprocessingHangarFlag: optionalNumber(record.reprocessingHangarFlag),
+          operationId: optionalNumber(record.operationID),
+          orbitId: optionalNumber(record.orbitID),
+          positionX: optionalNumber(position.x),
+          positionY: optionalNumber(position.y),
+          positionZ: optionalNumber(position.z),
           isDeleted: false,
         };
       }),

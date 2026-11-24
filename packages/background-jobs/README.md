@@ -13,9 +13,9 @@ context keeps the jobs portable to another adapter if one is ever added.
 ```ts
 import { defineJob } from "../core";
 
-export const scrapeEsiRegions = defineJob<{ batchSize?: number }>({
-  id: "scrape-esi-regions", // stable: also the Trigger.dev task id
-  name: "Scrape Regions",
+export const scrapeEsiWars = defineJob<{ batchSize?: number }>({
+  id: "scrape-esi-wars", // stable: also the Trigger.dev task id
+  name: "Scrape Wars",
   trigger: { type: "event" }, // or { type: "cron", cron: "TZ=UTC 30 * * * *" }
   concurrencyLimit: 1, // singleton: true for one-at-a-time
   retries: 5,
