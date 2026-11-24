@@ -169,7 +169,7 @@ describe("Freelance job page", () => {
       error: null,
     });
     hooks.subjects.mockReturnValue([]);
-    hooks.group.mockReturnValue({ data: { data: { name: "Mineral" } } });
+    hooks.group.mockReturnValue({ data: { name: "Mineral" } });
   });
 
   it("shows what the job is and who posted it", () => {

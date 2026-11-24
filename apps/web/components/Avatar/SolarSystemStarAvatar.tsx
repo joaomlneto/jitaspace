@@ -12,12 +12,10 @@ export type SolarSystemStarAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const SolarSystemStarAvatar = memo(
   ({ solarSystemId, ...otherProps }: SolarSystemStarAvatarProps) => {
-    const { data: solarSystem } = useSolarSystem(solarSystemId ?? 0);
-    const starId = solarSystem?.data.star_id;
-    const { data: star } = useStar(starId ?? 0);
-    return (
-      <UISolarSystemStarAvatar typeId={star?.data.type_id} {...otherProps} />
-    );
+    const { data: solarSystem } = useSolarSystem(solarSystemId);
+    const starId = solarSystem?.starID;
+    const { data: star } = useStar(starId);
+    return <UISolarSystemStarAvatar typeId={star?.typeID} {...otherProps} />;
   },
 );
 SolarSystemStarAvatar.displayName = "SolarSystemStarAvatar";

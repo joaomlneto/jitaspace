@@ -20,27 +20,27 @@ export default function Page({ planetId }: Readonly<{ planetId: number }>) {
     <Container size="sm">
       <Stack>
         <Group gap="xl">
-          <TypeAvatar typeId={planet?.data.type_id} size="xl" radius={256} />
+          <TypeAvatar typeId={planet?.typeID} size="xl" radius={256} />
           <Title order={3}>
-            <Text>{planet?.data.name}</Text>
+            <Text>{planet?.name}</Text>
           </Title>
         </Group>
         <Group justify="space-between">
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
-              solarSystemId={planet?.data.system_id}
+              solarSystemId={planet?.solarSystemID}
               size="sm"
             />
-            <SolarSystemAnchor solarSystemId={planet?.data.system_id}>
-              <SolarSystemName span solarSystemId={planet?.data.system_id} />
+            <SolarSystemAnchor solarSystemId={planet?.solarSystemID}>
+              <SolarSystemName span solarSystemId={planet?.solarSystemID} />
             </SolarSystemAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Planet Type</Text>
-          <TypeAnchor typeId={planet?.data.type_id}>
-            <TypeName span typeId={planet?.data.type_id} />
+          <TypeAnchor typeId={planet?.typeID}>
+            <TypeName span typeId={planet?.typeID} />
           </TypeAnchor>
         </Group>
         <Group justify="space-between">
@@ -48,9 +48,7 @@ export default function Page({ planetId }: Readonly<{ planetId: number }>) {
           <Position3DText
             size="xs"
             position={
-              planet?.data.position
-                ? Object.values(planet.data.position)
-                : undefined
+              planet?.position ? Object.values(planet.position) : undefined
             }
           />
         </Group>

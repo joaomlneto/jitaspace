@@ -59,12 +59,10 @@ describe("planet page", () => {
   it("renders rich planet details when data is available", () => {
     mockUsePlanet.mockReturnValue({
       data: {
-        data: {
-          name: "Jita IV",
-          type_id: 13,
-          system_id: 30000142,
-          position: { x: 1.1, y: 2.2, z: 3.3 },
-        },
+        name: "Jita IV",
+        typeID: 13,
+        solarSystemID: 30000142,
+        position: { x: 1.1, y: 2.2, z: 3.3 },
       },
     });
 
@@ -92,12 +90,10 @@ describe("planet page", () => {
   it("renders with undefined position and missing data", () => {
     mockUsePlanet.mockReturnValue({
       data: {
-        data: {
-          name: undefined,
-          type_id: undefined,
-          system_id: undefined,
-          position: undefined,
-        },
+        name: undefined,
+        typeID: undefined,
+        solarSystemID: undefined,
+        position: undefined,
       },
     });
 

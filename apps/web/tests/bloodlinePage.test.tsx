@@ -6,6 +6,7 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
 const mockUseBloodline = jest.fn();
+const mockUseRace = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ bloodlineId: "1" }),
@@ -22,6 +23,7 @@ jest.mock("~/lib/db", () => ({ prisma: {} }));
 
 jest.mock("@jitaspace/hooks", () => ({
   useBloodline: (bloodlineId: number) => mockUseBloodline(bloodlineId),
+  useRace: (raceId?: number) => mockUseRace(raceId),
 }));
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
@@ -61,15 +63,16 @@ jest.mock("next/link", () => ({
 describe("bloodline page", () => {
   beforeEach(() => {
     mockUseBloodline.mockReset();
+    mockUseRace.mockReset();
+    mockUseRace.mockReturnValue({ data: undefined });
   });
 
   it("renders rich bloodline details when data is available", () => {
     mockUseBloodline.mockReturnValue({
       data: {
-        bloodline_id: 1,
-        corporation_id: 1000006,
-        race_id: 1,
-        ship_type_id: 596,
+        bloodlineID: 1,
+        corporationID: 1000006,
+        raceID: 1,
         description: "A proud and ancient bloodline.",
         charisma: 6,
         intelligence: 7,
@@ -78,6 +81,8 @@ describe("bloodline page", () => {
         willpower: 8,
       },
     });
+    // A bloodline's corvette is its race's.
+    mockUseRace.mockReturnValue({ data: { raceID: 1, shipTypeID: 596 } });
 
     const Page = require("~/app/bloodline/[bloodlineId]/page.client").default;
     render(
@@ -86,6 +91,7 @@ describe("bloodline page", () => {
       </MantineProvider>,
     );
 
+    expect(mockUseRace).toHaveBeenCalledWith(1);
     expect(screen.getByText("Bloodline 1")).toBeInTheDocument();
     expect(
       screen.getByText("Viewer:sanitized:A proud and ancient bloodline."),

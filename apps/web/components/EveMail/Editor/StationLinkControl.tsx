@@ -5,14 +5,11 @@ import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
-import {
-  getUniverseStationsStationId,
-  getUniverseStructuresStructureId,
-} from "@jitaspace/esi-client";
+import { getUniverseStructuresStructureId } from "@jitaspace/esi-client";
 import { isStationId } from "@jitaspace/esi-metadata";
 import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { StationIcon } from "@jitaspace/eve-icons";
-import { useAccessToken } from "@jitaspace/hooks";
+import { fetchSdeRecord, useAccessToken } from "@jitaspace/hooks";
 
 import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { StationAvatar, StructureAvatar } from "~/components/Avatar";
@@ -71,7 +68,7 @@ export const StationLinkControl = forwardRef<
   // A `showinfo:` link names the location's type as well as its id.
   const fetchTypeId = async (id: number): Promise<number | undefined> => {
     if (isStationId(id)) {
-      return (await getUniverseStationsStationId(id)).data.type_id;
+      return (await fetchSdeRecord("npcStations", id)).typeID;
     }
     return (await getUniverseStructuresStructureId(id, { ...authHeaders })).data
       .type_id;

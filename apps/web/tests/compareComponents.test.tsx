@@ -97,9 +97,9 @@ const items: CompareItemInput[] = [
   {
     typeId: 587,
     type: {
-      dogma_attributes: [
-        { attribute_id: 37, value: 365 },
-        { attribute_id: 263, value: 450 },
+      dogmaAttributes: [
+        { attributeID: 37, value: 365 },
+        { attributeID: 263, value: 450 },
       ],
     },
     market: { buy: 1000, sell: 2000 },
@@ -107,9 +107,9 @@ const items: CompareItemInput[] = [
   {
     typeId: 585,
     type: {
-      dogma_attributes: [
-        { attribute_id: 37, value: 430 },
-        { attribute_id: 263, value: 350 },
+      dogmaAttributes: [
+        { attributeID: 37, value: 430 },
+        { attributeID: 263, value: 350 },
       ],
     },
     market: { buy: 1500, sell: 2500 },

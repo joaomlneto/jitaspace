@@ -1,28 +1,14 @@
 "use client";
 
-import type {
-  GetUniverseTypesTypeIdHeaderParams,
-  GetUniverseTypesTypeIdQueryResponse,
-} from "@jitaspace/esi-client";
-import { getUniverseTypesTypeIdQueryOptions } from "@jitaspace/esi-client";
+import { useSdeRecords } from "../../sde";
 
-import {
-  REFERENCE_DATA_STALE_TIME_MS,
-  useEsiQueriesById,
-} from "../utils/useEsiQueriesById";
+/** Several types at once, keyed by type id. See `useSdeRecords`. */
+export const useTypes = (typeIds: readonly number[]) =>
+  useSdeRecords("types", typeIds);
 
-const typeIdOf = (type: GetUniverseTypesTypeIdQueryResponse) => type.type_id;
-
-/** Several types at once, keyed by type id. See useEsiQueriesById. */
-export const useTypes = (
-  typeIds: number[],
-  headers?: GetUniverseTypesTypeIdHeaderParams,
-) =>
-  useEsiQueriesById(
-    typeIds,
-    (typeId) => ({
-      ...getUniverseTypesTypeIdQueryOptions(typeId, headers),
-      staleTime: REFERENCE_DATA_STALE_TIME_MS,
-    }),
-    typeIdOf,
-  );
+/**
+ * Several types' dogma at once, keyed by type id. A type with no dogma has no
+ * record, so it shows up in `failedIds`, not in `data`.
+ */
+export const useTypesDogma = (typeIds: readonly number[]) =>
+  useSdeRecords("typeDogma", typeIds);

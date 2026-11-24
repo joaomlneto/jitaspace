@@ -8,12 +8,12 @@ import type { CatalogAttribute, CompareCatalog } from "./catalog";
  * first item). Kept free of React so the rules can be tested on their own.
  */
 
-/** The ESI type fields the comparison reads. */
+/** The SDE type fields the comparison reads, with the type's dogma attributes. */
 export interface CompareTypeData {
-  dogma_attributes?: { attribute_id: number; value: number }[];
+  dogmaAttributes?: { attributeID: number; value: number }[];
   capacity?: number;
   mass?: number;
-  packaged_volume?: number;
+  packagedVolume?: number;
   volume?: number;
 }
 
@@ -25,7 +25,7 @@ export interface CompareMarketData {
 
 export interface CompareItemInput {
   typeId: number;
-  /** The ESI type; undefined while it loads. */
+  /** The type; undefined while it loads. */
   type?: CompareTypeData;
   market?: CompareMarketData;
   /**
@@ -242,8 +242,8 @@ function attributeValue(
   item: CompareItemInput,
   attributeId: number,
 ): number | undefined {
-  return item.type?.dogma_attributes?.find(
-    (attribute) => attribute.attribute_id === attributeId,
+  return item.type?.dogmaAttributes?.find(
+    (attribute) => attribute.attributeID === attributeId,
   )?.value;
 }
 
@@ -365,7 +365,7 @@ const PROPERTY_ROWS: RowSpec[] = [
     unitSymbol: "m3",
     hidden: false,
     hasDelta: true,
-    read: (item) => item.type?.packaged_volume,
+    read: (item) => item.type?.packagedVolume,
     isLoaded: typeLoaded,
   },
   {
@@ -497,9 +497,9 @@ function buildAttributeSections(
 ): CompareSection[] {
   const attributeIds = new Set<number>();
   for (const item of items) {
-    for (const attribute of item.type?.dogma_attributes ?? []) {
-      if (!PROPERTY_ATTRIBUTE_IDS.has(attribute.attribute_id)) {
-        attributeIds.add(attribute.attribute_id);
+    for (const attribute of item.type?.dogmaAttributes ?? []) {
+      if (!PROPERTY_ATTRIBUTE_IDS.has(attribute.attributeID)) {
+        attributeIds.add(attribute.attributeID);
       }
     }
   }

@@ -12,8 +12,8 @@ export type PlanetNameProps = TextProps & {
 
 export const PlanetName = memo(
   ({ planetId, ...otherProps }: PlanetNameProps) => {
-    const { data } = usePlanet(planetId ?? 0);
-    return <UIPlanetName name={data?.data.name} {...otherProps} />;
+    const { data } = usePlanet(planetId);
+    return <UIPlanetName name={data?.name} {...otherProps} />;
   },
 );
 PlanetName.displayName = "PlanetName";

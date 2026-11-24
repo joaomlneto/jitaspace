@@ -12,8 +12,8 @@ export type StargateAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const StargateAvatar = memo(
   ({ stargateId, ...otherProps }: StargateAvatarProps) => {
-    const { data } = useStargate(stargateId ?? 0);
-    return <UIStargateAvatar typeId={data?.data.type_id} {...otherProps} />;
+    const { data } = useStargate(stargateId);
+    return <UIStargateAvatar typeId={data?.typeID} {...otherProps} />;
   },
 );
 StargateAvatar.displayName = "StargateAvatar";

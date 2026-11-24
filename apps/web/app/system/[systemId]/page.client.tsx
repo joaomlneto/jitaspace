@@ -42,11 +42,8 @@ import {
   useAllSolarSystemJumps,
   useAllSolarSystemKills,
   useSelectedCharacter,
-  useSolarSystem,
   useSolarSystemCostIndices,
   useSolarSystemSovereignty,
-  useStar,
-  useStargate,
 } from "@jitaspace/hooks";
 import {
   FactionAvatar,
@@ -57,7 +54,7 @@ import {
   securityStatusColor,
 } from "@jitaspace/ui";
 
-import type { SolarSystemSdeInfo } from "./types";
+import type { SolarSystemContents, SolarSystemSdeInfo } from "./types";
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StationAnchor } from "~/components/Anchor";
 import {
@@ -81,11 +78,7 @@ interface SovereigntyEntry {
 }
 
 /** Coarse security band shown next to the system name. */
-function getSecurityBand(
-  securityStatus: number | undefined,
-  isWormhole: boolean,
-): string | undefined {
-  if (securityStatus == null) return undefined;
+function getSecurityBand(securityStatus: number, isWormhole: boolean): string {
   if (isWormhole) return "W-Space";
   return securityStatusBand(securityStatus);
 }
@@ -220,13 +213,11 @@ function PlanetRow({
 }
 
 /** A stargate rendered as a jump to its destination system. */
-function StargateConnection({ stargateId }: Readonly<{ stargateId: number }>) {
-  const { data: stargate } = useStargate(stargateId);
-  const destination = stargate?.data.destination as
-    | { system_id: number }
-    | undefined;
-  const destinationSystemId = destination?.system_id;
-
+function StargateConnection({
+  stargateId,
+  destinationSystemId,
+}: Readonly<{ stargateId: number; destinationSystemId: number | null }>) {
+  const destination = destinationSystemId ?? undefined;
   return (
     <Anchor
       component={Link}
@@ -236,13 +227,10 @@ function StargateConnection({ stargateId }: Readonly<{ stargateId: number }>) {
       className={classes.row}
     >
       <StargateAvatar stargateId={stargateId} size="sm" radius={999} />
-      <SolarSystemSecurityStatusBadge
-        solarSystemId={destinationSystemId}
-        size="sm"
-      />
+      <SolarSystemSecurityStatusBadge solarSystemId={destination} size="sm" />
       <SolarSystemName
         span
-        solarSystemId={destinationSystemId}
+        solarSystemId={destination}
         style={{ flex: 1, minWidth: 0 }}
       />
       <IconChevronRight size={16} color="var(--mantine-color-dimmed)" />
@@ -408,7 +396,7 @@ function SystemInfoSection({
 }: Readonly<{
   securityStatus?: number;
   securityClass?: string;
-  star?: { data: { spectral_class?: string; temperature?: number } };
+  star?: SolarSystemContents["star"];
   sde?: SolarSystemSdeInfo | null;
 }>) {
   return (
@@ -421,13 +409,10 @@ function SystemInfoSection({
             value={securityStatus?.toFixed(2) ?? "—"}
           />
           <InfoItem label="Security Class" value={securityClass ?? "—"} />
-          <InfoItem
-            label="Star Type"
-            value={star?.data.spectral_class ?? "—"}
-          />
+          <InfoItem label="Star Type" value={star?.spectralClass ?? "—"} />
           <InfoItem
             label="Temperature"
-            value={withUnit(star?.data.temperature, "K")}
+            value={withUnit(star?.temperature, "K")}
           />
           <InfoItem label="Luminosity" value={formatNumber(sde?.luminosity)} />
           <InfoItem label="Radius" value={withUnit(sde?.radius, "m")} />
@@ -501,15 +486,15 @@ export default function Page({
   systemId,
   systemName,
   sde,
+  contents,
 }: Readonly<{
   systemId: number;
   systemName: string;
   sde: SolarSystemSdeInfo | null;
+  contents: SolarSystemContents;
 }>) {
   const character = useSelectedCharacter();
-  const { data: solarSystem } = useSolarSystem(systemId);
-  const starId = solarSystem?.data.star_id;
-  const { data: star } = useStar(starId ?? 0);
+  const { starId, star, planets, stargates, stationIds: stations } = contents;
   const sov = useSolarSystemSovereignty(systemId) as
     | SovereigntyEntry
     | undefined;
@@ -524,26 +509,15 @@ export default function Page({
     return null;
   }
 
-  const data = solarSystem?.data;
-
-  const securityStatus = data?.security_status;
-  const secColor =
-    securityStatus == null
-      ? "var(--mantine-color-dark-4)"
-      : securityStatusColor(securityStatus);
-  const isWormhole = (securityStatus ?? 0) < -0.9;
+  const { securityStatus } = contents;
+  const secColor = securityStatusColor(securityStatus);
+  const isWormhole = securityStatus < -0.9;
   const band = getSecurityBand(securityStatus, isWormhole);
   const secColorStyle = { "--sec-color": secColor } as CSSProperties;
 
-  const planets = data?.planets ?? [];
   const planetCount = planets.length;
-  const moonCount = planets.reduce((sum, p) => sum + (p.moons?.length ?? 0), 0);
-  const beltCount = planets.reduce(
-    (sum, p) => sum + (p.asteroid_belts?.length ?? 0),
-    0,
-  );
-  const stargates = data?.stargates ?? [];
-  const stations = data?.stations ?? [];
+  const moonCount = planets.reduce((sum, p) => sum + p.moonCount, 0);
+  const beltCount = planets.reduce((sum, p) => sum + p.beltCount, 0);
 
   const jumps = allJumps?.data.find(
     (j) => j.system_id === systemId,
@@ -601,19 +575,17 @@ export default function Page({
               </Group>
 
               <Group gap="sm" align="center">
-                {securityStatus != null && (
-                  <span
-                    className={classes.secPill}
-                    style={{
-                      backgroundColor: secColor,
-                      color: isLightSecurityStatus(securityStatus)
-                        ? "var(--mantine-color-black)"
-                        : "var(--mantine-color-white)",
-                    }}
-                  >
-                    {formatSecurityStatus(securityStatus)}
-                  </span>
-                )}
+                <span
+                  className={classes.secPill}
+                  style={{
+                    backgroundColor: secColor,
+                    color: isLightSecurityStatus(securityStatus)
+                      ? "var(--mantine-color-black)"
+                      : "var(--mantine-color-white)",
+                  }}
+                >
+                  {formatSecurityStatus(securityStatus)}
+                </span>
                 {band && (
                   <Text fw={600} className={classes.band}>
                     {band}
@@ -633,14 +605,10 @@ export default function Page({
                 )}
               </Group>
 
-              {data ? (
-                <Text size="sm" c="dimmed">
-                  {planetCount} planets · {moonCount} moons · {beltCount} belts
-                  · {stations.length} stations · {stargates.length} gates
-                </Text>
-              ) : (
-                <Skeleton height={14} width={280} />
-              )}
+              <Text size="sm" c="dimmed">
+                {planetCount} planets · {moonCount} moons · {beltCount} belts ·{" "}
+                {stations.length} stations · {stargates.length} gates
+              </Text>
 
               <Group gap="xs" mt={4}>
                 {EXTERNAL_TOOLS.map((tool) => (
@@ -744,32 +712,32 @@ export default function Page({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <StarName span starId={starId} fw={500} />
                     <Text size="xs" c="dimmed">
-                      {star?.data.spectral_class ?? "Star"}
-                      {star?.data.temperature != null &&
-                        ` · ${star.data.temperature.toLocaleString()} K`}
+                      {star?.spectralClass ?? "Star"}
+                      {star && ` · ${star.temperature.toLocaleString()} K`}
                     </Text>
                   </div>
                 </div>
               )}
               {planets.map((planet) => (
                 <PlanetRow
-                  key={planet.planet_id}
-                  planetId={planet.planet_id}
-                  moons={planet.moons?.length ?? 0}
-                  belts={planet.asteroid_belts?.length ?? 0}
+                  key={planet.planetId}
+                  planetId={planet.planetId}
+                  moons={planet.moonCount}
+                  belts={planet.beltCount}
                 />
               ))}
-              {!starId && planetCount === 0 && (
-                <Skeleton height={48} radius="sm" />
-              )}
             </Stack>
           </div>
 
           <div>
             <SectionHeader title="Stargates" count={stargates.length} />
             <Stack gap={2} mb="lg">
-              {stargates.map((stargateId) => (
-                <StargateConnection key={stargateId} stargateId={stargateId} />
+              {stargates.map(({ stargateId, destinationSystemId }) => (
+                <StargateConnection
+                  key={stargateId}
+                  stargateId={stargateId}
+                  destinationSystemId={destinationSystemId}
+                />
               ))}
               {stargates.length === 0 && (
                 <Text size="sm" c="dimmed">
@@ -827,7 +795,7 @@ export default function Page({
         {/* ---- System information ---- */}
         <SystemInfoSection
           securityStatus={securityStatus}
-          securityClass={data?.security_class}
+          securityClass={contents.securityClass ?? undefined}
           star={star}
           sde={sde}
         />

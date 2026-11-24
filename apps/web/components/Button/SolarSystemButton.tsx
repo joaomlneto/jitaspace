@@ -12,17 +12,13 @@ export interface SolarSystemButtonProps {
 
 export const SolarSystemButton = memo(
   ({ solarSystemId }: SolarSystemButtonProps) => {
-    const { data } = useSolarSystem(
-      solarSystemId ?? 0,
-      {},
-      { query: { enabled: solarSystemId !== undefined } },
-    );
+    const { data } = useSolarSystem(solarSystemId);
     return (
       <UnstyledButton className={classes.user}>
         <Group wrap="nowrap" gap="sm">
           <SolarSystemStarAvatar solarSystemId={solarSystemId} size={30} />
           <Text fz="sm" fw={500}>
-            {data?.data.name}
+            {data?.name}
           </Text>
         </Group>
       </UnstyledButton>

@@ -57,10 +57,8 @@ jest.mock("next/navigation", () => ({
   notFound: () => notFound(),
 }));
 
-const mockUseStation = jest.fn();
 const mockUseSelectedCharacter = jest.fn();
 jest.mock("@jitaspace/hooks", () => ({
-  useStation: (id: number) => mockUseStation(id),
   useSelectedCharacter: () => mockUseSelectedCharacter(),
 }));
 
@@ -599,17 +597,15 @@ const hrefs = () =>
 describe("station page (client)", () => {
   beforeEach(() => {
     mockUseSelectedCharacter.mockReturnValue(null);
-    mockUseStation.mockReturnValue({ data: undefined });
   });
   afterEach(() => {
     cleanup();
   });
 
-  it("renders the server-read station before ESI answers", () => {
+  it("renders the server-read station", () => {
     renderClient(stationData());
 
-    // What a crawler is served: the name, location and outgoing links, with
-    // no ESI response at all.
+    // What a crawler is served: the name, location and outgoing links.
     expect(
       screen.getByRole("heading", {
         name: "Jita IV - Moon 4 - Caldari Navy Assembly Plant",
@@ -671,44 +667,6 @@ describe("station page (client)", () => {
     expect(screen.getByTestId("entity-history")).toHaveTextContent(
       `history of npcStation ${JITA_44}`,
     );
-  });
-
-  it("prefers ESI's name and owner once it answers", () => {
-    mockUseStation.mockReturnValue({
-      data: {
-        data: {
-          name: "Jita IV - Moon 4 - Renamed Assembly Plant",
-          owner: 1000036,
-          office_rental_cost: 1_500_000,
-        },
-      },
-    });
-    renderClient(stationData());
-
-    expect(
-      screen.getByRole("heading", {
-        name: "Jita IV - Moon 4 - Renamed Assembly Plant",
-      }),
-    ).toBeInTheDocument();
-    // The server's owner name no longer labels the corporation, nor does its
-    // faction, which belonged to the old owner.
-    expect(screen.queryByText("Caldari Navy")).not.toBeInTheDocument();
-    expect(screen.queryByText("Caldari State")).not.toBeInTheDocument();
-    // ESI's office rent, which our row did not have: in the hero and overview.
-    expect(screen.getAllByText("Office rent")).toHaveLength(2);
-  });
-
-  it("names ESI's race when our row has none", () => {
-    mockUseStation.mockReturnValue({ data: { data: { race_id: 1 } } });
-    renderClient(stationData({ race: null }));
-    expect(screen.getByText("Race")).toBeInTheDocument();
-    expect(screen.getByText("Race name")).toBeInTheDocument();
-  });
-
-  it("hides standing restrictions once ESI names another owner", () => {
-    mockUseStation.mockReturnValue({ data: { data: { owner: 1000036 } } });
-    renderClient(stationData(), "?tab=services");
-    expect(screen.queryByText("Standing ≥ 3.00")).not.toBeInTheDocument();
   });
 
   it("renders a station the SDE left unplaced without an undefined link", () => {

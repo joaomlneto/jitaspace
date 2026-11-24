@@ -9,31 +9,32 @@ import type * as UseTypeMarketOrdersModule from "../src/hooks/useTypeMarketOrder
 // mock is registered.
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
-  useGetUniverseRegions: jest.fn(),
   useGetMarketsRegionIdTypes: jest.fn(),
   getMarketsRegionIdOrders: jest.fn(),
 }));
+// The region list comes from the SDE.
+jest.mock("../src/hooks/universe/useRegion", () => ({
+  __esModule: true,
+  useRegionIds: jest.fn(),
+}));
 
-const {
-  useGetUniverseRegions,
-  useGetMarketsRegionIdTypes,
-  getMarketsRegionIdOrders,
-} = require("@jitaspace/esi-client") as {
-  useGetUniverseRegions: jest.MockedFunction<
-    () => { data?: { data: number[] } }
-  >;
-  useGetMarketsRegionIdTypes: jest.MockedFunction<
-    () => { data?: { data: number[] }; isError: boolean }
-  >;
-  getMarketsRegionIdOrders: jest.MockedFunction<
-    (
-      regionId: number,
-      params: unknown,
-      headers?: unknown,
-      config?: { signal?: AbortSignal },
-    ) => Promise<{ data: unknown[]; headers: Record<string, string> }>
-  >;
+const { useRegionIds } = require("../src/hooks/universe/useRegion") as {
+  useRegionIds: jest.MockedFunction<() => { data?: number[] }>;
 };
+const { useGetMarketsRegionIdTypes, getMarketsRegionIdOrders } =
+  require("@jitaspace/esi-client") as {
+    useGetMarketsRegionIdTypes: jest.MockedFunction<
+      () => { data?: { data: number[] }; isError: boolean }
+    >;
+    getMarketsRegionIdOrders: jest.MockedFunction<
+      (
+        regionId: number,
+        params: unknown,
+        headers?: unknown,
+        config?: { signal?: AbortSignal },
+      ) => Promise<{ data: unknown[]; headers: Record<string, string> }>
+    >;
+  };
 
 const { useTypeMarketOrders } =
   require("../src/hooks/useTypeMarketOrders") as typeof UseTypeMarketOrdersModule;
@@ -66,7 +67,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("requests the major trade-hub regions before the long tail", async () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
 
     renderHook(() => useTypeMarketOrders(34));
 
@@ -93,10 +94,10 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("requests the global PLEX market with the hubs for PLEX, and loads it with them", async () => {
-    // Where ESI lists it: last, after wormhole and Abyssal space.
+    // Where the SDE lists it: last, after wormhole and Abyssal space.
     const WORMHOLE = 11000001;
-    useGetUniverseRegions.mockReturnValue({
-      data: { data: [...UNSORTED_REGIONS, WORMHOLE, GLOBAL_PLEX_MARKET] },
+    useRegionIds.mockReturnValue({
+      data: [...UNSORTED_REGIONS, WORMHOLE, GLOBAL_PLEX_MARKET],
     });
     // Hold the long tail: PLEX trades only on the global market, so its tables
     // must not stop loading until that region is in.
@@ -124,8 +125,8 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("leaves the global PLEX market in the long tail for other types", async () => {
-    useGetUniverseRegions.mockReturnValue({
-      data: { data: [...UNSORTED_REGIONS, GLOBAL_PLEX_MARKET] },
+    useRegionIds.mockReturnValue({
+      data: [...UNSORTED_REGIONS, GLOBAL_PLEX_MARKET],
     });
     // Hold the long tail: a type that doesn't trade there must not wait on it.
     const heldTail = new Promise<never>(() => undefined);
@@ -146,7 +147,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("waits to know where the type trades before requesting anything", () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
     useGetMarketsRegionIdTypes.mockReturnValue({ isError: false });
 
     const { result } = renderHook(() => useTypeMarketOrders(34));
@@ -156,7 +157,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("treats the type as an ordinary one if the global market can't be listed", async () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
     useGetMarketsRegionIdTypes.mockReturnValue({ isError: true });
 
     const { result } = renderHook(() => useTypeMarketOrders(PLEX));
@@ -168,7 +169,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("doesn't start over when the global market's types load after failing", async () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
     useGetMarketsRegionIdTypes.mockReturnValue({ isError: true });
 
     const { result, rerender } = renderHook(() => useTypeMarketOrders(PLEX));
@@ -191,7 +192,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("fetches nothing when no type is selected", () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
 
     renderHook(() => useTypeMarketOrders(undefined));
 
@@ -199,7 +200,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("does not throw before the region list has loaded", () => {
-    useGetUniverseRegions.mockReturnValue({ data: undefined });
+    useRegionIds.mockReturnValue({ data: undefined });
 
     renderHook(() => useTypeMarketOrders(34));
 
@@ -207,7 +208,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("reports loading from the very first render until the hub orders land", async () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
 
     // Hold every region request open, so the assertions below cannot race a
     // batch that already resolved.
@@ -234,7 +235,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("is never loading when no type is selected", () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
 
     const { result } = renderHook(() => useTypeMarketOrders(undefined));
 
@@ -242,7 +243,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("commits orders in whole batches rather than once per region", async () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
 
     // Hold the long-tail regions so the hub batch is observed on its own;
     // otherwise both batches settle together and React coalesces the renders.
@@ -291,7 +292,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("drops regions that fail without losing the rest of the batch", async () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
     getMarketsRegionIdOrders.mockImplementation((regionId) =>
       regionId === DOMAIN
         ? Promise.reject(new Error("ESI is having a moment"))
@@ -313,7 +314,7 @@ describe("useTypeMarketOrders", () => {
   });
 
   it("does not show one type's orders while the next type is loading", async () => {
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
     getMarketsRegionIdOrders.mockImplementation((regionId) =>
       Promise.resolve({
         data: [{ order_id: regionId }],
@@ -339,7 +340,7 @@ describe("useTypeMarketOrders", () => {
   it("aborts the previous type's requests when the type changes", async () => {
     // Only the results used to be ignored: the requests themselves kept
     // downloading every region for a type the user had already left.
-    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    useRegionIds.mockReturnValue({ data: UNSORTED_REGIONS });
     const signals: AbortSignal[] = [];
     getMarketsRegionIdOrders.mockImplementation(
       (_region, _params, _h, config) => {
@@ -362,7 +363,7 @@ describe("useTypeMarketOrders", () => {
 
   it("keeps at most 16 long-tail regions in flight at once", async () => {
     const TAIL = Array.from({ length: 40 }, (_, index) => 20000000 + index);
-    useGetUniverseRegions.mockReturnValue({ data: { data: TAIL } });
+    useRegionIds.mockReturnValue({ data: TAIL });
     let inFlight = 0;
     let peak = 0;
     getMarketsRegionIdOrders.mockImplementation(async () => {

@@ -11,7 +11,7 @@ export type MoonNameProps = TextProps & {
 };
 
 export const MoonName = memo(({ moonId, ...otherProps }: MoonNameProps) => {
-  const { data } = useMoon(moonId ?? 0);
-  return <UIMoonName name={data?.data.name} {...otherProps} />;
+  const { data } = useMoon(moonId);
+  return <UIMoonName name={data?.name} {...otherProps} />;
 });
 MoonName.displayName = "MoonName";

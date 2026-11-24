@@ -11,7 +11,7 @@ export type StarAvatarProps = Omit<AvatarProps, "src"> & {
 };
 
 export const StarAvatar = memo(({ starId, ...otherProps }: StarAvatarProps) => {
-  const { data } = useStar(starId ?? 0);
-  return <UIStarAvatar typeId={data?.data.type_id} {...otherProps} />;
+  const { data } = useStar(starId);
+  return <UIStarAvatar typeId={data?.typeID} {...otherProps} />;
 });
 StarAvatar.displayName = "StarAvatar";

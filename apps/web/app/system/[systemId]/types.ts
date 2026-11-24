@@ -18,3 +18,21 @@ export interface SolarSystemSdeInfo {
   isInternational: boolean;
   isRegional: boolean;
 }
+
+/**
+ * What the system holds, from our database: the celestials, gates and stations
+ * the page lists. ESI used to return this in one response; the SDE spreads it
+ * over a record per celestial, so the server reads it here instead of the
+ * browser fetching dozens of records.
+ */
+export interface SolarSystemContents {
+  securityStatus: number;
+  securityClass: string | null;
+  starId: number | null;
+  star: { spectralClass: string; temperature: number } | null;
+  /** In orbit order, each with how many moons and asteroid belts it has. */
+  planets: { planetId: number; moonCount: number; beltCount: number }[];
+  /** Each with the system it leads to, when we know it. */
+  stargates: { stargateId: number; destinationSystemId: number | null }[];
+  stationIds: number[];
+}

@@ -8,10 +8,7 @@ import type {
   GetCharactersCharacterIdSearchQueryParamsCategoriesEnum,
   UniverseNamesPost,
 } from "@jitaspace/esi-client";
-import {
-  getUniverseStargatesStargateId,
-  postUniverseNames,
-} from "@jitaspace/esi-client";
+import { postUniverseNames } from "@jitaspace/esi-client";
 import {
   allianceIdRanges,
   characterIdRanges,
@@ -21,6 +18,8 @@ import {
   stargateRanges,
 } from "@jitaspace/esi-metadata";
 
+import { stargateName } from "../sde/celestialNames";
+import { fetchSdeRecord } from "../sde/client";
 import { UNIVERSE_NAMES_MAX_ID } from "./universeNamesLimits";
 import { useEsiAcceptLanguage } from "./useEsiAcceptLanguage";
 
@@ -195,10 +194,17 @@ const resolveNameViaOwnEndpoint = async (
   category: "stargate" | "structure",
 ): Promise<string> => {
   switch (category) {
-    case "stargate":
-      return getUniverseStargatesStargateId(id, {}, {}).then(
-        (response) => response.data.name,
+    case "stargate": {
+      // EVE names a stargate after where it leads. The SDE has the gate but not
+      // the name; the destination system's name comes through the same batched
+      // /universe/names lookup as every other name, in the same language.
+      const stargate = await fetchSdeRecord("mapStargates", id);
+      const destination = await resolveViaUniverseNames(
+        stargate.destination.solarSystemID,
       );
+      if (!destination) throw new Error(`ESI returned no name for ${id}`);
+      return stargateName(destination.name);
+    }
     case "structure":
       // `/universe/structures/{id}` needs `esi-universe.read_structures.v1` and
       // a character on the structure's access list. This cache resolves

@@ -12,8 +12,8 @@ export type StationAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const StationAvatar = memo(
   ({ stationId, ...otherProps }: StationAvatarProps) => {
-    const { data } = useStation(stationId ?? 0);
-    return <UIStationAvatar typeId={data?.data.type_id} {...otherProps} />;
+    const { data } = useStation(stationId);
+    return <UIStationAvatar typeId={data?.typeID} {...otherProps} />;
   },
 );
 StationAvatar.displayName = "StationAvatar";

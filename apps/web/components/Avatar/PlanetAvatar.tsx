@@ -12,8 +12,8 @@ export type PlanetAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const PlanetAvatar = memo(
   ({ planetId, ...otherProps }: PlanetAvatarProps) => {
-    const { data } = usePlanet(planetId ?? 0);
-    return <UIPlanetAvatar typeId={data?.data.type_id} {...otherProps} />;
+    const { data } = usePlanet(planetId);
+    return <UIPlanetAvatar typeId={data?.typeID} {...otherProps} />;
   },
 );
 PlanetAvatar.displayName = "PlanetAvatar";

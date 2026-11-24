@@ -8,7 +8,7 @@ import {
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
-import { useBloodline } from "@jitaspace/hooks";
+import { useBloodline, useRace } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import { CorporationAvatar } from "@jitaspace/ui";
 
@@ -26,6 +26,9 @@ export default function Page() {
   );
 
   const { data: bloodline } = useBloodline(bloodlineId);
+  // A bloodline's corvette is its race's.
+  const { data: race } = useRace(bloodline?.raceID);
+  const shipTypeId = race?.shipTypeID;
   if (!Number.isFinite(bloodlineId)) {
     return null;
   }
@@ -50,30 +53,27 @@ export default function Page() {
         <Group justify="space-between">
           <Text>Corporation</Text>
           <Group wrap="nowrap">
-            <CorporationAvatar corporationId={bloodline?.corporation_id} />
-            <CorporationAnchor corporationId={bloodline?.corporation_id}>
-              <CorporationName corporationId={bloodline?.corporation_id} />
+            <CorporationAvatar corporationId={bloodline?.corporationID} />
+            <CorporationAnchor corporationId={bloodline?.corporationID}>
+              <CorporationName corporationId={bloodline?.corporationID} />
             </CorporationAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Race</Text>
           <Group wrap="nowrap">
-            <RaceAvatar raceId={bloodline?.race_id} />
-            <RaceAnchor raceId={bloodline?.race_id}>
-              <RaceName raceId={bloodline?.race_id} />
+            <RaceAvatar raceId={bloodline?.raceID} />
+            <RaceAnchor raceId={bloodline?.raceID}>
+              <RaceName raceId={bloodline?.raceID} />
             </RaceAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Corvette</Text>
           <Group wrap="nowrap">
-            <TypeAvatar
-              typeId={bloodline?.ship_type_id ?? undefined}
-              radius="xl"
-            />
-            <TypeAnchor typeId={bloodline?.ship_type_id ?? undefined}>
-              <TypeName typeId={bloodline?.ship_type_id ?? undefined} />
+            <TypeAvatar typeId={shipTypeId} radius="xl" />
+            <TypeAnchor typeId={shipTypeId}>
+              <TypeName typeId={shipTypeId} />
             </TypeAnchor>
           </Group>
         </Group>

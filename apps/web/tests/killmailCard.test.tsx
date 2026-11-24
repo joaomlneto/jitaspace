@@ -129,11 +129,9 @@ const DETAILS = `/kill/139116685?hash=${HASH}`;
 
 beforeEach(() => {
   mockUseSolarSystem.mockReturnValue({
-    data: { data: { security_status: 0.95, constellation_id: 20000020 } },
+    data: { securityStatus: 0.95, constellationID: 20000020 },
   });
-  mockUseConstellation.mockReturnValue({
-    data: { data: { region_id: 10000002 } },
-  });
+  mockUseConstellation.mockReturnValue({ data: { regionID: 10000002 } });
   mockUseEsiName.mockReturnValue({ name: "Capsule", loading: false });
 });
 

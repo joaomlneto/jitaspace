@@ -32,20 +32,20 @@ import {
 // unambiguous.
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/hooks", () => ({
-  // { data: { data: { name } } }
-  useAsteroidBelt: () => ({ data: { data: { name: "Asteroid Belt Value" } } }),
-  useCategory: () => ({ data: { data: { name: "Category Value" } } }),
+  // ESI: { data: { data: { name } } }
   useDogmaAttribute: () => ({
     data: { data: { name: "Dogma Attribute Value" } },
   }),
   useDogmaEffect: () => ({ data: { data: { name: "Dogma Effect Value" } } }),
-  useGroup: () => ({ data: { data: { name: "Group Value" } } }),
-  useMoon: () => ({ data: { data: { name: "Moon Value" } } }),
-  usePlanet: () => ({ data: { data: { name: "Planet Value" } } }),
-  useStargate: () => ({ data: { data: { name: "Stargate Value" } } }),
-  useStar: () => ({ data: { data: { name: "Star Value" } } }),
 
-  // { data: { name } }
+  // SDE: { data: { name } }
+  useAsteroidBelt: () => ({ data: { name: "Asteroid Belt Value" } }),
+  useCategory: () => ({ data: { name: "Category Value" } }),
+  useGroup: () => ({ data: { name: "Group Value" } }),
+  useMoon: () => ({ data: { name: "Moon Value" } }),
+  usePlanet: () => ({ data: { name: "Planet Value" } }),
+  useStargate: () => ({ data: { name: "Stargate Value" } }),
+  useStar: () => ({ data: { name: "Star Value" } }),
   useBloodline: () => ({ data: { name: "Bloodline Value" } }),
   useRace: () => ({ data: { name: "Race Value" } }),
 

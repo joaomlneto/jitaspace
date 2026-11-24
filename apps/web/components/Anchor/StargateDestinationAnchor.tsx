@@ -16,15 +16,10 @@ export type StargateDestinationAnchorProps = PropsWithChildren<
 
 export const StargateDestinationAnchor = memo(
   ({ stargateId, ...otherProps }: StargateDestinationAnchorProps) => {
-    const { data } = useStargate(stargateId ?? 0);
-    // The generated stargate type marks `destination` as always present, but
-    // the API (and tests) can omit it, so treat it as optional at runtime.
-    const destination = data?.data.destination as
-      | { system_id: number }
-      | undefined;
+    const { data } = useStargate(stargateId);
     return (
       <StargateDestinationAnchorDisplay
-        destinationSystemId={destination?.system_id}
+        destinationSystemId={data?.destination.solarSystemID}
         {...otherProps}
       />
     );

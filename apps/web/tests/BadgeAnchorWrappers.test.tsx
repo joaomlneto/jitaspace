@@ -337,9 +337,7 @@ describe("MailLabelBadge (wrapper)", () => {
 
 describe("SolarSystemSecurityStatusBadge (wrapper)", () => {
   it("passes the security status from the hook to the UI badge", () => {
-    mockUseSolarSystem.mockReturnValue({
-      data: { data: { security_status: 0.9 } },
-    });
+    mockUseSolarSystem.mockReturnValue({ data: { securityStatus: 0.9 } });
     const { SolarSystemSecurityStatusBadge } = badges();
 
     renderWithMantine(
@@ -350,13 +348,13 @@ describe("SolarSystemSecurityStatusBadge (wrapper)", () => {
     expect(screen.getByTestId("ui-security-status")).toHaveTextContent("0.9");
   });
 
-  it("defaults the solar system id to 0 when none is provided", () => {
+  it("passes an omitted solar system id through as unknown", () => {
     mockUseSolarSystem.mockReturnValue({ data: undefined });
     const { SolarSystemSecurityStatusBadge } = badges();
 
     renderWithMantine(<SolarSystemSecurityStatusBadge />);
 
-    expect(mockUseSolarSystem).toHaveBeenCalledWith(0);
+    expect(mockUseSolarSystem).toHaveBeenCalledWith(undefined);
     expect(screen.getByTestId("ui-security-status")).toHaveTextContent(
       "no-sec",
     );
@@ -526,7 +524,7 @@ describe("CalendarEventOwnerAnchor", () => {
 describe("StargateDestinationAnchor (wrapper)", () => {
   it("passes the destination system id from the hook to the UI anchor", () => {
     mockUseStargate.mockReturnValue({
-      data: { data: { destination: { system_id: 30000144 } } },
+      data: { destination: { solarSystemID: 30000144 } },
     });
     const { StargateDestinationAnchor } = anchors();
 
@@ -539,13 +537,13 @@ describe("StargateDestinationAnchor (wrapper)", () => {
     );
   });
 
-  it("defaults the stargate id to 0 and handles a missing destination", () => {
-    mockUseStargate.mockReturnValue({ data: { data: {} } });
+  it("passes an omitted stargate id through and waits for the stargate", () => {
+    mockUseStargate.mockReturnValue({ data: undefined });
     const { StargateDestinationAnchor } = anchors();
 
     renderWithMantine(<StargateDestinationAnchor />);
 
-    expect(mockUseStargate).toHaveBeenCalledWith(0);
+    expect(mockUseStargate).toHaveBeenCalledWith(undefined);
     expect(screen.getByTestId("ui-stargate-anchor")).toHaveAttribute(
       "data-destination-system-id",
       "",

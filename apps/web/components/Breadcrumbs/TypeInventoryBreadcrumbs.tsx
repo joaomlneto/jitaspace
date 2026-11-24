@@ -19,19 +19,19 @@ export const TypeInventoryBreadcrumbs = memo(
   ({ typeId, showType, ...otherProps }: TypeInventoryBreadcrumbsProps) => {
     const typeIdNum =
       typeof typeId === "string" ? Number.parseInt(typeId) : typeId;
-    const { data: type } = useType(typeIdNum ?? 0);
-    const groupId = type?.data.group_id;
+    const { data: type } = useType(typeIdNum);
+    const groupId = type?.groupID;
     const { data: group } = useGroup(groupId);
-    const categoryId = group?.data.category_id;
+    const categoryId = group?.categoryID;
     const { data: category } = useCategory(categoryId);
 
     return (
       <TypeInventoryBreadcrumbsDisplay
         typeId={typeId}
         groupId={groupId}
-        groupName={group?.data.name}
+        groupName={group?.name}
         categoryId={categoryId}
-        categoryName={category?.data.name}
+        categoryName={category?.name}
         showType={showType}
         {...otherProps}
       />

@@ -7,15 +7,15 @@ import { render, screen } from "@testing-library/react";
 // ---------------------------------------------------------------------------
 // DnaShipFittingCard's job is to (a) parse an EVE "DNA" fitting string and
 // (b) resolve each item's slot flag from type dogma effects (fetched via
-// useTypes), then hand the result to <ShipFittingCard>. We stub the heavy
+// useTypesDogma), then hand the result to <ShipFittingCard>. We stub the heavy
 // ShipFittingCard child with a tiny inspector that serialises the props it
 // receives, so we can assert on the parsing/slot-assignment logic directly.
 // ---------------------------------------------------------------------------
 
-const mockUseTypes = jest.fn<(typeIds: number[]) => { data: unknown }>();
+const mockUseTypesDogma = jest.fn<(typeIds: number[]) => { data: unknown }>();
 
 jest.mock("@jitaspace/hooks", () => ({
-  useTypes: (typeIds: number[]) => mockUseTypes(typeIds),
+  useTypesDogma: (typeIds: number[]) => mockUseTypesDogma(typeIds),
 }));
 
 jest.mock("~/components/Fitting/ShipFittingCard/ShipFittingCard", () => {
@@ -63,9 +63,12 @@ jest.mock("~/components/Fitting/ShipFittingCard/ShipFittingCard", () => {
   };
 });
 
-// A type entry carrying the dogma effect that marks a given slot.
+// A type's dogma, carrying the effect that marks a given slot.
 function typeWithEffect(typeId: number, effectId: number) {
-  return { type_id: typeId, dogma_effects: [{ effect_id: effectId }] };
+  return {
+    typeID: typeId,
+    dogmaEffects: [{ effectID: effectId, isDefault: false }],
+  };
 }
 
 function renderCard(
@@ -77,7 +80,7 @@ function renderCard(
   },
   typeData: Record<number, unknown> = {},
 ) {
-  mockUseTypes.mockReturnValue({ data: typeData });
+  mockUseTypesDogma.mockReturnValue({ data: typeData });
   const {
     DnaShipFittingCard,
   } = require("~/components/Fitting/ShipFittingCard/DnaShipFittingCard");
@@ -90,7 +93,7 @@ function renderCard(
 
 describe("DnaShipFittingCard", () => {
   beforeEach(() => {
-    mockUseTypes.mockReset();
+    mockUseTypesDogma.mockReset();
   });
 
   it("parses the ship type id from the head of the DNA string", () => {

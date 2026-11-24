@@ -11,17 +11,13 @@ export interface TypeButtonProps {
 }
 
 export const TypeButton = memo(({ typeId }: TypeButtonProps) => {
-  const { data } = useType(
-    typeId ?? 0,
-    {},
-    { query: { enabled: typeId !== undefined } },
-  );
+  const { data } = useType(typeId);
   return (
     <UnstyledButton className={classes.user}>
       <Group wrap="nowrap" gap="sm">
         <TypeAvatar typeId={typeId} size={30} />
         <Text fz="sm" fw={500}>
-          {data?.data.name}
+          {data?.name}
         </Text>
       </Group>
     </UnstyledButton>

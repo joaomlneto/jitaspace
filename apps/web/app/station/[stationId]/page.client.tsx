@@ -32,7 +32,7 @@ import {
   WindowReprocessingIcon,
   WindowTutorialIcon,
 } from "@jitaspace/eve-icons";
-import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
+import { useSelectedCharacter } from "@jitaspace/hooks";
 import { ISKAmount, SolarSystemSecurityStatusBadge } from "@jitaspace/ui";
 
 import type { StationPageTab } from "./tabs";
@@ -67,7 +67,6 @@ import {
 import { RaceName } from "~/components/Text";
 import { formatCountOf, formatInteger, formatPercent } from "~/lib/format";
 import { lpStorePath } from "~/lib/lpStorePath";
-import { named } from "~/lib/namedRef";
 import { FetchedEntityHistory } from "../../history/EntityHistory";
 import { SERVICE, ServiceIcon } from "./serviceIcons";
 import {
@@ -81,37 +80,6 @@ export interface StationPageProps {
 }
 
 const formatVolume = (m3: number) => `${formatInteger(m3)} m³`;
-
-/**
- * The station's figures, ESI's where it has answered. ESI is the fresher
- * source — a station can be renamed or change hands between SDE ingests, and
- * our rows only carry office rent and the docking limit once the ESI station
- * scraper has run — but it only answers in the browser. Until then the
- * server's row, which the cached HTML was rendered from, so hydration agrees.
- */
-function useLiveStation(station: StationPageData) {
-  const { data } = useStation(station.stationId);
-  const esi = data?.data;
-  const owner = named(esi?.owner ?? station.owner?.id, station.owner);
-  return {
-    name: esi?.name ?? station.name,
-    owner,
-    // The faction is the server-read owner's; drop it if ESI names another.
-    faction: owner?.id === station.owner?.id ? station.faction : null,
-    // Our row's race comes from the ESI station scraper, so ESI may know one
-    // our row does not have yet.
-    race: named(esi?.race_id ?? station.race?.id, station.race),
-    reprocessingEfficiency:
-      esi?.reprocessing_efficiency ?? station.reprocessingEfficiency,
-    reprocessingStationsTake:
-      esi?.reprocessing_stations_take ?? station.reprocessingStationsTake,
-    maxDockableShipVolume:
-      esi?.max_dockable_ship_volume ?? station.maxDockableShipVolume,
-    officeRentalCost: esi?.office_rental_cost ?? station.officeRentalCost,
-  };
-}
-
-type LiveStation = ReturnType<typeof useLiveStation>;
 
 /** The celestial the station orbits, linked where it has a page. */
 function OrbitValue({ orbit }: Readonly<{ orbit: StationOrbit }>) {
@@ -143,29 +111,29 @@ function orbitLabel(orbit: StationOrbit) {
 /** What a service's card adds from this station's own figures. */
 function serviceDetail(
   service: StationService,
-  live: LiveStation,
+  station: StationPageData,
 ): ReactNode | undefined {
   switch (service.serviceId) {
     case SERVICE.reprocessingPlant:
-      return `${formatPercent(live.reprocessingEfficiency)} base yield, ${formatPercent(live.reprocessingStationsTake)} station take`;
+      return `${formatPercent(station.reprocessingEfficiency)} base yield, ${formatPercent(station.reprocessingStationsTake)} station take`;
     case SERVICE.docking:
-      return live.maxDockableShipVolume === null
+      return station.maxDockableShipVolume === null
         ? undefined
-        : `Ships up to ${formatVolume(live.maxDockableShipVolume)}`;
+        : `Ships up to ${formatVolume(station.maxDockableShipVolume)}`;
     case SERVICE.officeRental:
-      return live.officeRentalCost === null ? undefined : (
+      return station.officeRentalCost === null ? undefined : (
         <Group gap={4} component="span">
-          <ISKAmount span inherit amount={live.officeRentalCost} /> per month
+          <ISKAmount span inherit amount={station.officeRentalCost} /> per month
         </Group>
       );
     case SERVICE.loyaltyPointStore:
-      return live.owner ? (
+      return station.owner ? (
         <Anchor
           component={Link}
           href={
-            live.owner.name
-              ? lpStorePath(live.owner.name)
-              : `/lp-store/${live.owner.id}`
+            station.owner.name
+              ? lpStorePath(station.owner.name)
+              : `/lp-store/${station.owner.id}`
           }
           inherit
         >
@@ -183,14 +151,14 @@ function standingLabel(minimumStanding: number) {
 
 function ServiceCard({
   service,
-  live,
+  station,
   faction,
 }: Readonly<{
   service: StationService;
-  live: LiveStation;
+  station: StationPageData;
   faction: NamedRef | null;
 }>) {
-  const detail = serviceDetail(service, live);
+  const detail = serviceDetail(service, station);
   return (
     <Paper withBorder radius="md" p="sm">
       <Group gap="sm" wrap="nowrap" align="flex-start">
@@ -246,10 +214,7 @@ function ServiceList({ services }: Readonly<{ services: StationService[] }>) {
   );
 }
 
-function OverviewPanel({
-  station,
-  live,
-}: Readonly<{ station: StationPageData; live: LiveStation }>) {
+function OverviewPanel({ station }: Readonly<{ station: StationPageData }>) {
   const { location, orbit, operation, agents } = station;
   const levels = [...new Set(agents.map((agent) => agent.level))].sort(
     (a, b) => a - b,
@@ -326,24 +291,26 @@ function OverviewPanel({
           Operator
         </SectionHeading>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-          {live.owner && (
+          {station.owner && (
             <StatCard
               label="Owner"
-              value={<CorporationLine corporation={live.owner} />}
+              value={<CorporationLine corporation={station.owner} />}
             />
           )}
-          {live.faction && (
+          {station.faction && (
             <StatCard
               label="Faction"
-              value={<FactionLine faction={live.faction} />}
+              value={<FactionLine faction={station.faction} />}
             />
           )}
-          {live.race && (
+          {station.race && (
             <StatCard
               label="Race"
               value={
-                <RaceAnchor raceId={live.race.id}>
-                  {live.race.name ?? <RaceName span raceId={live.race.id} />}
+                <RaceAnchor raceId={station.race.id}>
+                  {station.race.name ?? (
+                    <RaceName span raceId={station.race.id} />
+                  )}
                 </RaceAnchor>
               }
             />
@@ -392,24 +359,26 @@ function OverviewPanel({
         <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm">
           <StatCard
             label="Reprocessing efficiency"
-            value={formatPercent(live.reprocessingEfficiency)}
+            value={formatPercent(station.reprocessingEfficiency)}
             sub="Base yield, before skills"
           />
           <StatCard
             label="Station's take"
-            value={formatPercent(live.reprocessingStationsTake)}
+            value={formatPercent(station.reprocessingStationsTake)}
             sub="Of reprocessed output"
           />
-          {live.maxDockableShipVolume !== null && (
+          {station.maxDockableShipVolume !== null && (
             <StatCard
               label="Max dockable ship"
-              value={formatVolume(live.maxDockableShipVolume)}
+              value={formatVolume(station.maxDockableShipVolume)}
             />
           )}
-          {live.officeRentalCost !== null && (
+          {station.officeRentalCost !== null && (
             <StatCard
               label="Office rent"
-              value={<ISKAmount span inherit amount={live.officeRentalCost} />}
+              value={
+                <ISKAmount span inherit amount={station.officeRentalCost} />
+              }
               sub="Per month"
             />
           )}
@@ -484,10 +453,7 @@ function OverviewPanel({
   );
 }
 
-function ServicesPanel({
-  station,
-  live,
-}: Readonly<{ station: StationPageData; live: LiveStation }>) {
+function ServicesPanel({ station }: Readonly<{ station: StationPageData }>) {
   const { operation } = station;
   return (
     <Stack gap="lg">
@@ -525,8 +491,8 @@ function ServicesPanel({
             <ServiceCard
               key={service.serviceId}
               service={service}
-              live={live}
-              faction={live.faction}
+              station={station}
+              faction={station.faction}
             />
           ))}
         </SimpleGrid>
@@ -538,7 +504,6 @@ function ServicesPanel({
 export default function StationPage({ station }: Readonly<StationPageProps>) {
   const { stationId, location } = station;
   const selectedCharacter = useSelectedCharacter();
-  const live = useLiveStation(station);
   const [activeTab, setActiveTab] = useQueryState(
     "tab",
     parseAsStringLiteral(STATION_PAGE_TABS)
@@ -598,7 +563,7 @@ export default function StationPage({ station }: Readonly<StationPageProps>) {
           )}
           <Group gap="sm" align="center">
             <Title order={1} size="h2">
-              {live.name}
+              {station.name}
             </Title>
             {location && (
               <SolarSystemSecurityStatusBadge
@@ -618,9 +583,9 @@ export default function StationPage({ station }: Readonly<StationPageProps>) {
               </>
             )}
           </Group>
-          {live.owner && (
+          {station.owner && (
             <Box>
-              <CorporationLine corporation={live.owner} />
+              <CorporationLine corporation={station.owner} />
             </Box>
           )}
 
@@ -635,13 +600,13 @@ export default function StationPage({ station }: Readonly<StationPageProps>) {
             />
             <HeroStat
               label="Reprocessing"
-              value={formatPercent(live.reprocessingEfficiency)}
+              value={formatPercent(station.reprocessingEfficiency)}
             />
-            {live.officeRentalCost !== null && (
+            {station.officeRentalCost !== null && (
               <HeroStat
                 label="Office rent"
                 value={
-                  <ISKAmount span inherit amount={live.officeRentalCost} />
+                  <ISKAmount span inherit amount={station.officeRentalCost} />
                 }
               />
             )}
@@ -709,12 +674,12 @@ export default function StationPage({ station }: Readonly<StationPageProps>) {
           </Tabs.List>
 
           <Tabs.Panel value="overview" pt="lg">
-            <OverviewPanel station={station} live={live} />
+            <OverviewPanel station={station} />
           </Tabs.Panel>
 
           {visibleTabs.services && (
             <Tabs.Panel value="services" pt="lg">
-              <ServicesPanel station={station} live={live} />
+              <ServicesPanel station={station} />
             </Tabs.Panel>
           )}
 

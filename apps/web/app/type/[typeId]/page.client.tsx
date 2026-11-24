@@ -23,7 +23,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 
-import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeName } from "@jitaspace/eve-components";
 import {
   CategoryCombatIcon,
@@ -45,9 +44,11 @@ import {
 } from "@jitaspace/eve-icons";
 import {
   useFuzzworkTypeMarketStats,
+  useGroup,
   useMarketPrices,
   useSelectedCharacter,
   useType,
+  useTypeDogma,
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import { DogmaAttributeValue, EveIconAvatar, ISKAmount } from "@jitaspace/ui";
@@ -304,26 +305,20 @@ export default function TypePage({
       .withDefault(DEFAULT_TYPE_PAGE_TAB)
       .withOptions({ history: "replace" }),
   );
-  const { data: type } = useType(typeId);
+  const { data: typeData } = useType(typeId);
+  const { data: dogma } = useTypeDogma(typeId);
   const { data: marketPrices } = useMarketPrices();
   const [regionId] = useState(THE_FORGE_REGION_ID);
   const { data: marketStats } = useFuzzworkTypeMarketStats(
     typeId,
     regionId,
   ) as { data: MarketAggregateStats | null };
-  const typeData = type?.data;
   const marketPrice = marketPrices[typeId] as MarketPriceEntry | undefined;
-  const { data: group } = useGetUniverseGroupsGroupId(
-    typeData?.group_id ?? 0,
-    {},
-    {
-      query: { enabled: typeData?.group_id !== undefined },
-    },
-  );
+  const { data: group } = useGroup(typeData?.groupID);
 
   const name = typeData?.name ?? typeName;
   const description = typeData?.description ?? typeDescription;
-  const categoryId = group?.data.category_id;
+  const categoryId = group?.categoryID;
   // Ships, modules and the like: comparable, and the items with variations.
   const isComparable =
     categoryId !== undefined && COMPARABLE_CATEGORY_IDS.includes(categoryId);
@@ -370,10 +365,10 @@ export default function TypePage({
 
   const sortedDogmaAttributes = useMemo(
     () =>
-      [...(typeData?.dogma_attributes ?? [])].sort(
-        (a, b) => a.attribute_id - b.attribute_id,
+      [...(dogma?.dogmaAttributes ?? [])].sort(
+        (a, b) => a.attributeID - b.attributeID,
       ),
-    [typeData?.dogma_attributes],
+    [dogma?.dogmaAttributes],
   );
 
   // Per-attribute SDE metadata (display name, icon, unit, category), keyed by
@@ -381,8 +376,8 @@ export default function TypePage({
   const attributeMetaById = useMemo(() => {
     const metaById = new Map<number, TypeDogmaAttributeMeta>();
     for (const attribute of sortedDogmaAttributes) {
-      const meta = dogmaMeta.attributes[attribute.attribute_id];
-      if (meta) metaById.set(attribute.attribute_id, meta);
+      const meta = dogmaMeta.attributes[attribute.attributeID];
+      if (meta) metaById.set(attribute.attributeID, meta);
     }
     return metaById;
   }, [dogmaMeta.attributes, sortedDogmaAttributes]);
@@ -433,7 +428,7 @@ export default function TypePage({
 
     for (const attribute of sortedDogmaAttributes) {
       const categoryId = attributeMetaById.get(
-        attribute.attribute_id,
+        attribute.attributeID,
       )?.categoryId;
       const key = categoryId === undefined ? "uncategorized" : `${categoryId}`;
       const categoryLabel =
@@ -467,10 +462,8 @@ export default function TypePage({
 
   const sortedDogmaEffects = useMemo(
     () =>
-      [...(typeData?.dogma_effects ?? [])].sort(
-        (a, b) => a.effect_id - b.effect_id,
-      ),
-    [typeData?.dogma_effects],
+      [...(dogma?.dogmaEffects ?? [])].sort((a, b) => a.effectID - b.effectID),
+    [dogma?.dogmaEffects],
   );
 
   // By when they apply (Passive, Activated, Online, …), as the attributes are
@@ -479,7 +472,7 @@ export default function TypePage({
     () =>
       groupByEffectCategory(
         sortedDogmaEffects,
-        (effect) => dogmaMeta.effects[effect.effect_id]?.categoryId,
+        (effect) => dogmaMeta.effects[effect.effectID]?.categoryId,
         dogmaMeta.effectCategories,
       ),
     [sortedDogmaEffects, dogmaMeta.effects, dogmaMeta.effectCategories],
@@ -496,11 +489,11 @@ export default function TypePage({
       });
     };
     push("Volume", typeData?.volume, "m³");
-    push("Packaged Volume", typeData?.packaged_volume, "m³");
+    push("Packaged Volume", typeData?.packagedVolume, "m³");
     push("Capacity", typeData?.capacity, "m³");
     push("Mass", typeData?.mass, "kg");
     push("Radius", typeData?.radius, "m");
-    push("Portion Size", typeData?.portion_size);
+    push("Portion Size", typeData?.portionSize);
     return items;
   }, [typeData]);
 
@@ -510,7 +503,7 @@ export default function TypePage({
   const hasAttributes =
     sortedDogmaAttributes.length > 0 || sortedDogmaEffects.length > 0;
   const hasMarket =
-    typeData?.market_group_id !== undefined ||
+    typeData?.marketGroupID !== undefined ||
     marketPrice !== undefined ||
     marketStats != null;
 
@@ -561,8 +554,8 @@ export default function TypePage({
           </Group>
 
           <Group gap="xs" align="center">
-            <GroupAnchor groupId={typeData?.group_id}>
-              <GroupName groupId={typeData?.group_id} />
+            <GroupAnchor groupId={typeData?.groupID}>
+              <GroupName groupId={typeData?.groupID} />
             </GroupAnchor>
             {categoryId !== undefined && (
               <>
@@ -772,14 +765,14 @@ export default function TypePage({
                   <StatCard
                     label="Group"
                     value={
-                      <GroupAnchor groupId={typeData?.group_id}>
-                        <GroupName groupId={typeData?.group_id} />
+                      <GroupAnchor groupId={typeData?.groupID}>
+                        <GroupName groupId={typeData?.groupID} />
                       </GroupAnchor>
                     }
                     sub={
-                      typeData?.group_id === undefined
+                      typeData?.groupID === undefined
                         ? undefined
-                        : `ID ${typeData.group_id}`
+                        : `ID ${typeData.groupID}`
                     }
                   />
                   <StatCard
@@ -797,19 +790,19 @@ export default function TypePage({
                       categoryId === undefined ? undefined : `ID ${categoryId}`
                     }
                   />
-                  {typeData?.market_group_id !== undefined && (
+                  {typeData?.marketGroupID !== undefined && (
                     <StatCard
                       label="Market Group"
                       value={
                         <MarketGroupAnchor
-                          marketGroupId={typeData.market_group_id}
+                          marketGroupId={typeData.marketGroupID}
                         >
                           <MarketGroupName
-                            marketGroupId={typeData.market_group_id}
+                            marketGroupId={typeData.marketGroupID}
                           />
                         </MarketGroupAnchor>
                       }
-                      sub={`ID ${typeData.market_group_id}`}
+                      sub={`ID ${typeData.marketGroupID}`}
                     />
                   )}
                   <StatCard
@@ -922,14 +915,14 @@ export default function TypePage({
                             <Table.Tbody>
                               {category.attributes.map((attribute) => {
                                 const meta = attributeMetaById.get(
-                                  attribute.attribute_id,
+                                  attribute.attributeID,
                                 );
                                 const unit = meta?.unitId
                                   ? unitById.get(meta.unitId)
                                   : undefined;
                                 const label = meta?.displayName ?? meta?.name;
                                 return (
-                                  <Table.Tr key={attribute.attribute_id}>
+                                  <Table.Tr key={attribute.attributeID}>
                                     <Table.Td style={{ width: 36 }}>
                                       {meta?.iconId ? (
                                         <EveIconAvatar
@@ -941,7 +934,7 @@ export default function TypePage({
                                     </Table.Td>
                                     <Table.Td>
                                       <DogmaAttributeAnchor
-                                        attributeId={attribute.attribute_id}
+                                        attributeId={attribute.attributeID}
                                       >
                                         {label ?? (
                                           <Skeleton height="1em" width="10ch" />
@@ -1000,15 +993,15 @@ export default function TypePage({
                             </Table.Thead>
                             <Table.Tbody>
                               {group.items.map((effect) => (
-                                <Table.Tr key={effect.effect_id}>
+                                <Table.Tr key={effect.effectID}>
                                   <Table.Td>
                                     <TypeEffectCell
-                                      effectId={effect.effect_id}
-                                      meta={dogmaMeta.effects[effect.effect_id]}
+                                      effectId={effect.effectID}
+                                      meta={dogmaMeta.effects[effect.effectID]}
                                     />
                                   </Table.Td>
                                   <Table.Td ta="right">
-                                    {booleanBadge(effect.is_default)}
+                                    {booleanBadge(effect.isDefault)}
                                   </Table.Td>
                                 </Table.Tr>
                               ))}

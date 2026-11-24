@@ -3,12 +3,10 @@
 import { useEffect, useState } from "react";
 
 import type { GetMarketsRegionIdOrdersQueryResponse } from "@jitaspace/esi-client";
-import {
-  getMarketsRegionIdOrders,
-  useGetUniverseRegions,
-} from "@jitaspace/esi-client";
+import { getMarketsRegionIdOrders } from "@jitaspace/esi-client";
 
 import { marketHubRegionIds } from "./marketHubRegions";
+import { useRegionIds } from "./universe/useRegion";
 import { useTradesOnGlobalMarket } from "./useTradesOnGlobalMarket";
 
 type RegionOrders = Record<number, GetMarketsRegionIdOrdersQueryResponse>;
@@ -143,11 +141,7 @@ export function useTypeMarketOrders(typeId?: number) {
     hubsLoaded: false,
     orders: NO_ORDERS,
   });
-  const { data: regions } = useGetUniverseRegions(
-    {},
-    { query: { enabled: typeId !== undefined } },
-  );
-  const regionIds = regions?.data;
+  const { data: regionIds } = useRegionIds({ enabled: typeId !== undefined });
   // Asked alongside the region list, so waiting on it costs no extra trip.
   const tradesOnGlobalMarket = useTradesOnGlobalMarket(typeId);
 

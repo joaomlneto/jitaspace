@@ -46,7 +46,7 @@ jest.mock("next/dynamic", () => ({
         data-stations={String(props.stations.length)}
         data-stargates={String(props.stargates.length)}
         data-height={String(props.height)}
-        // carrying the ESI x/y/z through to each body's `position` is the whole
+        // carrying the SDE x/y/z through to each body's `position` is the whole
         // job of this adapter, so surface them rather than only the counts
         data-planet0-pos={JSON.stringify(props.planets[0]?.position)}
         data-moon0-pos={JSON.stringify(props.planets[0]?.moons[0]?.position)}
@@ -72,30 +72,18 @@ jest.mock("@jitaspace/solar-system-map", () => ({
   SolarSystemMap: () => null,
 }));
 
+// Tag each query-options call so the react-query stub can dispatch to fixtures.
+const SDE_TABLE_KINDS: Record<string, string> = {
+  mapStars: "star",
+  mapPlanets: "planet",
+  mapMoons: "moon",
+  npcStations: "station",
+  mapStargates: "stargate",
+};
 jest.mock("@jitaspace/hooks", () => ({
   useSolarSystem: (id: number) => mockUseSolarSystem(id),
-}));
-
-// Tag each query-options call so the react-query stub can dispatch to fixtures.
-jest.mock("@jitaspace/esi-client", () => ({
-  getUniverseStarsStarIdQueryOptions: (id: number) => ({
-    _kind: "star",
-    _id: id,
-  }),
-  getUniversePlanetsPlanetIdQueryOptions: (id: number) => ({
-    _kind: "planet",
-    _id: id,
-  }),
-  getUniverseMoonsMoonIdQueryOptions: (id: number) => ({
-    _kind: "moon",
-    _id: id,
-  }),
-  getUniverseStationsStationIdQueryOptions: (id: number) => ({
-    _kind: "station",
-    _id: id,
-  }),
-  getUniverseStargatesStargateIdQueryOptions: (id: number) => ({
-    _kind: "stargate",
+  sdeRecordQueryOptions: (table: string, id: number) => ({
+    _kind: SDE_TABLE_KINDS[table],
     _id: id,
   }),
 }));
@@ -109,27 +97,35 @@ jest.mock("~/lib/queryRetry", () => ({
 }));
 
 jest.mock("@tanstack/react-query", () => {
-  // ESI universe bodies keyed by kind+id. A body without a `position` models a
-  // record that hasn't resolved (or lacks coordinates) and must be dropped. Only
-  // the star carries a radius — ESI's planet/moon endpoints don't expose one.
+  // SDE records keyed by kind+id. An id with no record models a lookup that
+  // hasn't resolved (or failed), whose body must be dropped. The system lists
+  // its planets; each planet its moons, and planets and moons their stations.
   const BODIES: Record<string, Record<number, unknown>> = {
     star: { 40000001: { radius: 5e8 } },
     planet: {
-      40000010: { position: { x: 4e10, y: 0, z: 2e10 } },
-      40000020: {}, // no position → dropped
+      40000010: {
+        planetID: 40000010,
+        position: { x: 4e10, y: 0, z: 2e10 },
+        moonIDs: [40000101, 40000102],
+        npcStationIDs: [60000001],
+      },
+      // 40000020 never resolves → dropped
     },
     moon: {
-      40000101: { position: { x: 4e10, y: 0, z: 2e10 } },
-      40000102: {}, // no position → dropped
+      40000101: {
+        position: { x: 4e10, y: 0, z: 2e10 },
+        npcStationIDs: [60000002],
+      },
+      // 40000102 never resolves → dropped
     },
     station: {
       60000001: { position: { x: 41e9, y: 1e9, z: 20e9 } },
-      60000002: {}, // no position → dropped
+      // 60000002 never resolves → dropped
     },
     stargate: { 50000001: { position: { x: 0, y: 0, z: -4e12 } } },
   };
   // React Query exposes `data: undefined` for a disabled/unresolved query, and
-  // `data: { data: body }` (the axios envelope) once it resolves.
+  // the record itself once it resolves.
   const result = (q: {
     _kind: string;
     _id: number;
@@ -139,7 +135,7 @@ jest.mock("@tanstack/react-query", () => {
     mockSeenQueries.push(q);
     const body = BODIES[q._kind]?.[q._id];
     return {
-      data: body === undefined ? undefined : { data: body },
+      data: body,
       isLoading: mockLoadingIds.has(q._id),
     };
   };
@@ -173,13 +169,9 @@ const { SolarSystem3D } =
   require("~/components/SolarSystem3D/SolarSystem3D") as typeof import("~/components/SolarSystem3D/SolarSystem3D");
 
 const SYSTEM = {
-  star_id: 40000001,
-  planets: [
-    { planet_id: 40000010, moons: [40000101, 40000102] },
-    { planet_id: 40000020, moons: [] },
-  ],
-  stations: [60000001, 60000002],
-  stargates: [50000001],
+  starID: 40000001,
+  planetIDs: [40000010, 40000020],
+  stargateIDs: [50000001],
 };
 
 function renderAdapter(height?: number | string) {
@@ -197,9 +189,9 @@ describe("SolarSystem3D adapter", () => {
     mockLoadingIds.clear();
   });
 
-  it("maps resolved ESI bodies into map props, dropping position-less ones", () => {
+  it("maps resolved SDE bodies into map props, dropping unresolved ones", () => {
     mockUseSolarSystem.mockReturnValue({
-      data: { data: SYSTEM },
+      data: SYSTEM,
       isError: false,
     });
 
@@ -208,24 +200,24 @@ describe("SolarSystem3D adapter", () => {
     const map = screen.getByTestId("ssm");
     expect(map).toHaveAttribute("data-star-id", "40000001");
     expect(map).toHaveAttribute("data-star-radius", "500000000");
-    // planet 40000020 has no SDE position → dropped
+    // planet 40000020 never resolved → dropped
     expect(map).toHaveAttribute("data-planets", "1");
-    // moon 40000102 has no position → dropped from its planet
+    // moon 40000102 never resolved → dropped from its planet
     expect(map).toHaveAttribute("data-planet0-moons", "1");
-    // station 60000002 has no position → dropped
+    // station 60000002 (orbiting the moon) never resolved → dropped
     expect(map).toHaveAttribute("data-stations", "1");
     expect(map).toHaveAttribute("data-stargates", "1");
   });
 
-  it("carries each body's ESI coordinates through to its map position", () => {
+  it("carries each body's SDE coordinates through to its map position", () => {
     mockUseSolarSystem.mockReturnValue({
-      data: { data: SYSTEM },
+      data: SYSTEM,
       isError: false,
     });
 
     renderAdapter();
 
-    // x/y/z in that order, straight from the ESI fixtures above — a mirrored
+    // x/y/z in that order, straight from the SDE fixtures above — a mirrored
     // axis or a misaligned index would still type-check and still be a Vec3
     const map = screen.getByTestId("ssm");
     expect(map).toHaveAttribute(
@@ -245,7 +237,7 @@ describe("SolarSystem3D adapter", () => {
 
   it("routes each hover kind to its matching name component", () => {
     mockUseSolarSystem.mockReturnValue({
-      data: { data: SYSTEM },
+      data: SYSTEM,
       isError: false,
     });
 
@@ -283,7 +275,7 @@ describe("SolarSystem3D adapter", () => {
 
   it("stays loading while a celestial query is still in flight", () => {
     mockUseSolarSystem.mockReturnValue({
-      data: { data: SYSTEM },
+      data: SYSTEM,
       isError: false,
     });
     // the system query resolved, but one planet's SDE lookup has not yet
@@ -300,7 +292,7 @@ describe("SolarSystem3D adapter", () => {
 
   it("marks every SDE lookup immutable and low-retry", () => {
     mockUseSolarSystem.mockReturnValue({
-      data: { data: SYSTEM },
+      data: SYSTEM,
       isError: false,
     });
 
@@ -327,7 +319,7 @@ describe("SolarSystem3D adapter", () => {
 
   it("does not resolve a star name when the system has no star", () => {
     mockUseSolarSystem.mockReturnValue({
-      data: { data: { ...SYSTEM, star_id: undefined } },
+      data: { ...SYSTEM, starID: undefined },
       isError: false,
     });
 
@@ -345,7 +337,7 @@ describe("SolarSystem3D adapter", () => {
 
   it("keeps the loading fallbacks at the caller's height", () => {
     mockUseSolarSystem.mockReturnValue({
-      data: { data: SYSTEM },
+      data: SYSTEM,
       isError: false,
     });
 

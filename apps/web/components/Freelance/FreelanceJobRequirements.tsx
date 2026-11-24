@@ -25,7 +25,7 @@ function GroupNameAnchor({ groupId }: Readonly<{ groupId: number }>) {
   const { data } = useGroup(groupId);
   return (
     <GroupAnchor groupId={groupId} size="sm">
-      {data?.data.name ?? `Group ${groupId}`}
+      {data?.name ?? `Group ${groupId}`}
     </GroupAnchor>
   );
 }

@@ -16,11 +16,11 @@ export const TypeMarketBreadcrumbs = memo(
   ({ typeId, showType, ...otherProps }: TypeMarketBreadcrumbsProps) => {
     const typeIdNum =
       typeof typeId === "string" ? Number.parseInt(typeId) : typeId;
-    const { data: type } = useType(typeIdNum ?? 0);
+    const { data: type } = useType(typeIdNum);
 
     // `.data` is react-query's own object, so it keeps its identity between
     // renders and the memo below only recomputes when a group actually lands.
-    const level1Id = type?.data.market_group_id ?? 0;
+    const level1Id = type?.marketGroupID ?? 0;
     const level1 = useMarketGroup(level1Id).data;
     const level2Id = (level1Id && level1?.parent_group_id) ?? 0;
     const level2 = useMarketGroup(level2Id).data;

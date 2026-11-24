@@ -28,14 +28,12 @@ import {
 } from "recharts";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import {
-  useGetMarketsRegionIdHistory,
-  useGetUniverseRegions,
-} from "@jitaspace/esi-client";
+import { useGetMarketsRegionIdHistory } from "@jitaspace/esi-client";
 import {
   GLOBAL_MARKET_REGION_ID,
   marketHubRegionIds,
   useEsiNameLookup,
+  useRegionIds,
   useTradesOnGlobalMarket,
 } from "@jitaspace/hooks";
 
@@ -798,14 +796,14 @@ export function MarketPriceHistory({ typeId }: Readonly<{ typeId: number }>) {
 /**
  * Region choices: the hubs first (with the global PLEX market if asked), then
  * every other region with a market. Also the set of those regions' ids,
- * `undefined` until ESI has listed them (and empty if it could not).
+ * `undefined` until the SDE has listed them (and empty if it could not).
  */
 function useRegionOptions(withGlobalMarket: boolean) {
   const hubRegionIds = marketHubRegionIds(withGlobalMarket);
-  const { data, isError } = useGetUniverseRegions();
+  const { data, isError } = useRegionIds();
   const marketRegionIds = useMemo(() => {
     if (data) {
-      return new Set(data.data.filter((id) => id < FIRST_NON_MARKET_REGION_ID));
+      return new Set(data.filter((id) => id < FIRST_NON_MARKET_REGION_ID));
     }
     // Without the list, no region outside the hubs can be trusted.
     if (isError) return new Set<number>();

@@ -4,7 +4,6 @@ import {
   focusManager,
   QueryClient,
   QueryClientProvider,
-  useQuery,
 } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
@@ -29,15 +28,6 @@ const mockUseLayout = jest.fn();
 const mockFetchLayout = jest.fn();
 const mockFetchCustomsOffices = jest.fn();
 const mockFetchSchematic = jest.fn();
-const schematicQueryOptions = (schematicId: number) => ({
-  queryKey: [
-    {
-      url: "/universe/schematics/:schematic_id",
-      params: { schematic_id: schematicId },
-    },
-  ],
-  queryFn: () => mockFetchSchematic(schematicId),
-});
 
 jest.mock("@jitaspace/auth-utils", () => ({
   __esModule: true,
@@ -75,15 +65,16 @@ jest.mock("@jitaspace/esi-client", () => ({
   ],
   getCorporationsCorporationIdCustomsOffices: (...args: unknown[]) =>
     mockFetchCustomsOffices(...args),
-  // Shaped like the generated pair: options under the generated key, and a
-  // hook that runs them with the caller's query overrides on top.
-  getUniverseSchematicsSchematicIdQueryOptions: (schematicId: number) =>
-    schematicQueryOptions(schematicId),
-  useGetUniverseSchematicsSchematicId: (
-    schematicId: number,
-    _headers: unknown,
-    options: { query?: Record<string, unknown> } = {},
-  ) => useQuery({ ...schematicQueryOptions(schematicId), ...options.query }),
+}));
+jest.mock("../src/hooks/useEsiAcceptLanguage", () => ({
+  __esModule: true,
+  useEsiAcceptLanguage: () => "en",
+}));
+// Schematics come from the SDE.
+jest.mock("../src/sde/client", () => ({
+  __esModule: true,
+  fetchSdeRecord: (table: string, key: number) =>
+    mockFetchSchematic(table, key),
 }));
 
 const { useAuthStore } =
@@ -489,22 +480,32 @@ describe("useCorporationCustomsOffices", () => {
 });
 
 describe("usePlanetSchematic", () => {
-  const schematic = (name: string) =>
-    response({ cycle_time: 3600, schematic_name: name });
+  const schematic = (schematicId: number, name: string) => ({
+    schematicID: schematicId,
+    cycleTime: 3600,
+    name: { en: name, de: `${name} (de)` },
+    pins: [],
+    types: [],
+  });
+  const schematicFor = (_table: unknown, schematicId: unknown) =>
+    Promise.resolve(
+      schematic(schematicId as number, `Schematic ${schematicId as number}`),
+    );
 
-  it("keeps the response exactly as ESI sends it", async () => {
+  it("reads the schematic from the SDE, in the reader's language", async () => {
     mockFetchSchematic.mockImplementation(() =>
-      Promise.resolve(schematic("Superconductors")),
+      Promise.resolve(schematic(65, "Superconductors")),
     );
 
     const { result } = renderHook(() => usePlanetSchematic(65), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.data).toEqual({
-      cycle_time: 3600,
-      schematic_name: "Superconductors",
+    expect(result.current.data).toMatchObject({
+      schematicID: 65,
+      cycleTime: 3600,
+      name: "Superconductors",
     });
-    expect(mockFetchSchematic).toHaveBeenCalledWith(65);
+    expect(mockFetchSchematic).toHaveBeenCalledWith("planetSchematics", 65);
   });
 
   it("does not query without an id", () => {
@@ -515,9 +516,7 @@ describe("usePlanetSchematic", () => {
   });
 
   it("fetches several, keyed by the id each was requested by", async () => {
-    mockFetchSchematic.mockImplementation((schematicId) =>
-      Promise.resolve(schematic(`Schematic ${schematicId as number}`)),
-    );
+    mockFetchSchematic.mockImplementation(schematicFor);
 
     const { result } = renderHook(() => usePlanetSchematics([65, 0, 66]), {
       wrapper,
@@ -526,18 +525,15 @@ describe("usePlanetSchematic", () => {
     await waitFor(() =>
       expect(Object.keys(result.current.data)).toHaveLength(2),
     );
-    expect(result.current.data[65]?.schematic_name).toBe("Schematic 65");
-    expect(result.current.data[66]?.schematic_name).toBe("Schematic 66");
+    expect(result.current.data[65]?.name).toBe("Schematic 65");
+    expect(result.current.data[66]?.name).toBe("Schematic 66");
     expect(mockFetchSchematic).toHaveBeenCalledTimes(2);
   });
 
-  it("shares one cache entry with the single hook without either reshaping it", async () => {
-    mockFetchSchematic.mockImplementation((schematicId) =>
-      Promise.resolve(schematic(`Schematic ${schematicId as number}`)),
-    );
+  it("shares one cache entry with the single hook", async () => {
+    mockFetchSchematic.mockImplementation(schematicFor);
 
-    // Both mounted on the same client, as a page using both would be. The
-    // entry is written once and read by both; it must suit them both.
+    // Both mounted on the same client, as a page using both would be.
     const { result } = renderHook(
       () => ({
         one: usePlanetSchematic(65),
@@ -547,7 +543,7 @@ describe("usePlanetSchematic", () => {
     );
 
     await waitFor(() => expect(result.current.many.data[65]).toBeDefined());
-    expect(result.current.one.data?.data.schematic_name).toBe("Schematic 65");
+    expect(result.current.one.data?.name).toBe("Schematic 65");
     expect(Object.keys(result.current.many.data)).toEqual(["65"]);
     expect(mockFetchSchematic).toHaveBeenCalledTimes(1);
   });

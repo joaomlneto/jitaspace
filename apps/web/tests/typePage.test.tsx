@@ -22,22 +22,19 @@ jest.mock("next/navigation", () => ({
 // ---------------------------------------------------------------------------
 const mockUseSelectedCharacter = jest.fn();
 const mockUseType = jest.fn();
+const mockUseTypeDogma = jest.fn();
+const mockUseGroup = jest.fn();
 const mockUseMarketPrices = jest.fn();
 const mockUseFuzzworkTypeMarketStats = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
   useType: (...args: unknown[]) => mockUseType(...args),
+  useTypeDogma: (...args: unknown[]) => mockUseTypeDogma(...args),
+  useGroup: (...args: unknown[]) => mockUseGroup(...args),
   useMarketPrices: () => mockUseMarketPrices(),
   useFuzzworkTypeMarketStats: (...args: unknown[]) =>
     mockUseFuzzworkTypeMarketStats(...args),
-}));
-
-// ESI client hook used for the group/category lookup.
-const mockUseGetUniverseGroupsGroupId = jest.fn();
-jest.mock("@jitaspace/esi-client", () => ({
-  useGetUniverseGroupsGroupId: (...args: unknown[]) =>
-    mockUseGetUniverseGroupsGroupId(...args),
 }));
 
 // The SDE dogma metadata is resolved on the server and passed in as
@@ -96,28 +93,32 @@ jest.mock("next/link", () => ({
 // Sample data
 // ---------------------------------------------------------------------------
 const FULL_TYPE_DATA = {
-  type_id: 30,
+  typeID: 30,
   name: "Tritanium",
   description: "A common mineral.",
   published: true,
-  group_id: 18,
-  market_group_id: 1031,
+  groupID: 18,
+  marketGroupID: 1031,
   capacity: 0,
   mass: 1,
   radius: 1,
   volume: 0.01,
-  packaged_volume: 0.01,
-  portion_size: 100,
-  graphic_id: 1234,
-  icon_id: 5678,
-  dogma_attributes: [
-    { attribute_id: 4, value: 100 }, // -> category 7 (named)
-    { attribute_id: 161, value: 0.01 }, // -> category 7 (named)
-    { attribute_id: 999, value: 5 }, // -> no category (other)
+  packagedVolume: 0.01,
+  portionSize: 100,
+  graphicID: 1234,
+  iconID: 5678,
+};
+
+const FULL_TYPE_DOGMA = {
+  typeID: 30,
+  dogmaAttributes: [
+    { attributeID: 4, value: 100 }, // -> category 7 (named)
+    { attributeID: 161, value: 0.01 }, // -> category 7 (named)
+    { attributeID: 999, value: 5 }, // -> no category (other)
   ],
-  dogma_effects: [
-    { effect_id: 11, is_default: true },
-    { effect_id: 12, is_default: false },
+  dogmaEffects: [
+    { effectID: 11, isDefault: true },
+    { effectID: 12, isDefault: false },
   ],
 };
 
@@ -227,12 +228,14 @@ describe("Type page (client)", () => {
     mockUseType.mockReset();
     mockUseMarketPrices.mockReset();
     mockUseFuzzworkTypeMarketStats.mockReset();
-    mockUseGetUniverseGroupsGroupId.mockReset();
+    mockUseTypeDogma.mockReset();
+    mockUseGroup.mockReset();
     mockUseQuery.mockReset();
 
     // Defaults exercised by the "full data" path.
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
-    mockUseType.mockReturnValue({ data: { data: FULL_TYPE_DATA } });
+    mockUseType.mockReturnValue({ data: FULL_TYPE_DATA });
+    mockUseTypeDogma.mockReturnValue({ data: FULL_TYPE_DOGMA });
     mockUseMarketPrices.mockReturnValue({
       data: {
         30: { average_price: 6.5, adjusted_price: 7.25 },
@@ -244,9 +247,7 @@ describe("Type page (client)", () => {
         sell: { percentile: 7 },
       },
     });
-    mockUseGetUniverseGroupsGroupId.mockReturnValue({
-      data: { data: { category_id: 4 } },
-    });
+    mockUseGroup.mockReturnValue({ data: { categoryID: 4 } });
 
     // The type image-variations query — no variations (falls back to icon).
     mockUseQuery.mockReturnValue({ data: [] });
@@ -289,9 +290,7 @@ describe("Type page (client)", () => {
   });
 
   it("shows the EVE Workbench fits link only for ships (category 6)", () => {
-    mockUseGetUniverseGroupsGroupId.mockReturnValue({
-      data: { data: { category_id: 6 } },
-    });
+    mockUseGroup.mockReturnValue({ data: { categoryID: 6 } });
 
     renderPage();
 
@@ -301,9 +300,7 @@ describe("Type page (client)", () => {
   });
 
   it("offers Compare for comparable items, and Variations when there are some", () => {
-    mockUseGetUniverseGroupsGroupId.mockReturnValue({
-      data: { data: { category_id: 7 } },
-    });
+    mockUseGroup.mockReturnValue({ data: { categoryID: 7 } });
     renderPage(
       {
         variations: [
@@ -503,16 +500,14 @@ describe("Type page (client)", () => {
   });
 
   it("sorts categories numerically and places the uncategorized bucket last", () => {
-    mockUseType.mockReturnValue({
+    mockUseTypeDogma.mockReturnValue({
       data: {
-        data: {
-          ...FULL_TYPE_DATA,
-          dogma_attributes: [
-            { attribute_id: 4, value: 1 }, // -> category 9
-            { attribute_id: 50, value: 2 }, // -> category 3
-            { attribute_id: 999, value: 3 }, // -> other
-          ],
-        },
+        ...FULL_TYPE_DOGMA,
+        dogmaAttributes: [
+          { attributeID: 4, value: 1 }, // -> category 9
+          { attributeID: 50, value: 2 }, // -> category 3
+          { attributeID: 999, value: 3 }, // -> other
+        ],
       },
     });
     renderPage({
@@ -568,9 +563,10 @@ describe("Type page (client)", () => {
   it("hides data-less tabs and shows fallbacks when optional data is empty", () => {
     mockUseSelectedCharacter.mockReturnValue(null);
     mockUseType.mockReturnValue({ data: undefined });
+    mockUseTypeDogma.mockReturnValue({ data: undefined });
     mockUseMarketPrices.mockReturnValue({ data: {} });
     mockUseFuzzworkTypeMarketStats.mockReturnValue({ data: null });
-    mockUseGetUniverseGroupsGroupId.mockReturnValue({ data: undefined });
+    mockUseGroup.mockReturnValue({ data: undefined });
 
     renderPage({ typeName: "Fallback Name", typeDescription: undefined });
 

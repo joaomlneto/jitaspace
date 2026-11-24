@@ -4,7 +4,7 @@ import type { CardProps } from "@mantine/core";
 import { memo, useMemo } from "react";
 
 import type { FittingItemFlag } from "@jitaspace/hooks";
-import { useTypes } from "@jitaspace/hooks";
+import { useTypesDogma } from "@jitaspace/hooks";
 
 import { ShipFittingCard } from "./ShipFittingCard";
 
@@ -38,15 +38,15 @@ interface RawDnaItem {
   quantity: number;
 }
 
-// Determine a module's slot prefix from its dogma effects (if type data is
+// Determine a module's slot prefix from its dogma effects (if they are
 // loaded). Returns undefined for charges/drones/unknown items.
 function getSlotPrefix(
-  type: { dogma_effects?: { effect_id: number }[] } | undefined,
+  dogma: { dogmaEffects?: { effectID: number }[] } | undefined,
 ): string | undefined {
-  if (!type?.dogma_effects) return undefined;
-  for (const { effect_id } of type.dogma_effects) {
-    if (SLOT_EFFECT_TO_PREFIX[effect_id]) {
-      return SLOT_EFFECT_TO_PREFIX[effect_id];
+  if (!dogma?.dogmaEffects) return undefined;
+  for (const { effectID } of dogma.dogmaEffects) {
+    if (SLOT_EFFECT_TO_PREFIX[effectID]) {
+      return SLOT_EFFECT_TO_PREFIX[effectID];
     }
   }
   return undefined;
@@ -110,7 +110,7 @@ export const DnaShipFittingCard = memo(
       () => [...new Set(rawItems.map((item) => item.typeId))],
       [rawItems],
     );
-    const { data: typeData } = useTypes(typeIds);
+    const { data: typeDogma } = useTypesDogma(typeIds);
 
     const items = useMemo<
       { typeId: number; quantity: number; flag: FittingItemFlag }[]
@@ -123,10 +123,8 @@ export const DnaShipFittingCard = memo(
       }[] = [];
 
       for (const { typeId, quantity } of rawItems) {
-        const type = typeData[typeId];
-
-        // Determine slot prefix from dogma effects (if type data is loaded)
-        const slotPrefix = getSlotPrefix(type);
+        // Determine slot prefix from dogma effects (if they are loaded)
+        const slotPrefix = getSlotPrefix(typeDogma[typeId]);
 
         if (slotPrefix) {
           // Module: expand quantity into consecutive slots
@@ -146,7 +144,7 @@ export const DnaShipFittingCard = memo(
       }
 
       return result;
-    }, [rawItems, typeData]);
+    }, [rawItems, typeDogma]);
 
     return (
       <ShipFittingCard
