@@ -42,7 +42,7 @@
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "prettier": "^3.8.3",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   },
   "prettier": "@jitaspace/prettier-config"
 }
