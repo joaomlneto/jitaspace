@@ -50,3 +50,9 @@ global.requestAnimationFrame = (cb) => {
 global.cancelAnimationFrame = () => {
   /* no-op: rAF callbacks run synchronously above, so there is nothing to cancel */
 };
+
+// jsdom does not implement scrollIntoView either. Mantine's Combobox calls it
+// to bring the selected option into view when a Select with a value opens.
+Element.prototype.scrollIntoView = () => {
+  /* no-op: jsdom does no layout, so there is nothing to scroll */
+};

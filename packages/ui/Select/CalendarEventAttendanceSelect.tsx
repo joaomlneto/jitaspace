@@ -3,7 +3,6 @@
 import type { SelectProps } from "@mantine/core";
 import { memo, useEffect, useState } from "react";
 import { Loader, Select } from "@mantine/core";
-import { openConfirmModal } from "@mantine/modals";
 
 export type CalendarEventAttendanceResponse =
   | "accepted"
@@ -19,19 +18,27 @@ const responseOptions: CalendarEventAttendanceResponse[] = [
 ];
 
 export type CalendarEventAttendanceSelectProps = Omit<SelectProps, "data"> & {
-  eventTitle?: string;
   initialResponse?: CalendarEventAttendanceResponse | null;
   canRespond?: boolean;
   isLoading?: boolean;
+  /**
+   * Asks before a new response is applied: call `apply` to go ahead, or don't
+   * to leave the response as it was. Without it, a pick applies at once.
+   * The web app opens a confirmation modal here.
+   */
+  confirmResponse?: (
+    response: CalendarEventAttendanceResponse,
+    apply: () => void,
+  ) => void;
   onRespond?: (response: CalendarEventAttendanceResponse) => void;
 };
 
 export const CalendarEventAttendanceSelect = memo(
   ({
-    eventTitle,
     initialResponse,
     canRespond,
     isLoading,
+    confirmResponse,
     onRespond,
     ...otherProps
   }: CalendarEventAttendanceSelectProps) => {
@@ -72,16 +79,14 @@ export const CalendarEventAttendanceSelect = memo(
             )
           )
             return;
-          openConfirmModal({
-            title: "Are you sure?",
-            children: `This will mark event ${eventTitle} as ${newValue}.`,
-            labels: { confirm: "Confirm", cancel: "Cancel" },
-            onConfirm: () => {
-              setValue(newValue as CalendarEventAttendanceResponse);
-              otherProps.onChange?.(newValue, options);
-              onRespond?.(newValue as CalendarEventAttendanceResponse);
-            },
-          });
+          const response = newValue as CalendarEventAttendanceResponse;
+          const apply = () => {
+            setValue(response);
+            otherProps.onChange?.(newValue, options);
+            onRespond?.(response);
+          };
+          if (confirmResponse) confirmResponse(response, apply);
+          else apply();
         }}
       />
     );

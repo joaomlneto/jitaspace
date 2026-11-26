@@ -34,4 +34,4 @@ export const FormattedDateText = memo(
     );
   },
 );
-FormattedDateText.displayName = "DateText";
+FormattedDateText.displayName = "FormattedDateText";

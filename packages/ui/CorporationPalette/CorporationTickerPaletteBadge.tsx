@@ -1,10 +1,9 @@
 import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
 import { Badge } from "@mantine/core";
-import clsx from "clsx";
 
 import { getCorporationTickerFill } from "./corporationPalette";
-import classes from "./CorporationPalette.module.css";
+import { corporationPaletteStyles } from "./corporationPaletteStyles";
 
 export type CorporationTickerPaletteBadgeProps = BadgeProps & {
   ticker: string;
@@ -22,14 +21,12 @@ export const CorporationTickerPaletteBadge = memo(
   ({
     ticker,
     colors = [],
-    className,
     style,
     ...otherProps
   }: CorporationTickerPaletteBadgeProps) => {
     const fill = getCorporationTickerFill(colors);
     return (
       <Badge
-        className={clsx(fill && classes.tickerEdge, className)}
         style={[
           fill
             ? {
@@ -39,6 +36,7 @@ export const CorporationTickerPaletteBadge = memo(
                 backgroundImage: fill.background,
                 color: fill.color,
                 flexShrink: 0,
+                ...corporationPaletteStyles.tickerEdge,
               }
             : { flexShrink: 0 },
           style,

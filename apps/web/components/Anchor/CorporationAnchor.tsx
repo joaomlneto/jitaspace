@@ -45,4 +45,4 @@ export const CorporationAnchor = memo(
     );
   },
 );
-CorporationAnchor.displayName = "CorporationNameAnchor";
+CorporationAnchor.displayName = "CorporationAnchor";

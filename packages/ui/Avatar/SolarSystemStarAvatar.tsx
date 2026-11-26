@@ -21,4 +21,4 @@ export const SolarSystemStarAvatar = memo(
     );
   },
 );
-SolarSystemStarAvatar.displayName = "SolarSystemAvatar";
+SolarSystemStarAvatar.displayName = "SolarSystemStarAvatar";
