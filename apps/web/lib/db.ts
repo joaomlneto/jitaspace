@@ -2,6 +2,7 @@ import type { Db } from "@jitaspace/db";
 import { createPrismaClient } from "@jitaspace/db";
 
 import { env } from "~/env";
+import { poolSizeFromEnv } from "./dbPoolSize";
 
 /**
  * App-level Prisma singleton.
@@ -24,6 +25,7 @@ export const prisma =
   createPrismaClient({
     connectionString: env.DATABASE_URL,
     logQueries: env.NODE_ENV === "development",
+    maxConnections: poolSizeFromEnv(env.DATABASE_POOL_MAX),
     // Without a limit, a query queued behind a starved pool (or stuck in a TLS
     // handshake on an overloaded instance) waits forever: the request then
     // runs until Vercel's 300 s limit and returns a 504.
