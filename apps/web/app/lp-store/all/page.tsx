@@ -7,9 +7,9 @@ import { collectLpStoreOfferTypeIds } from "./collectTypeIds";
 import LPStoreAllPage from "./page.client";
 
 export const metadata = pageMetadata({
-  title: "All LP Store Offers",
+  title: "All EVE Online LP Store Offers by ISK per LP",
   description:
-    "Browse all Loyalty Point store offers from every NPC corporation in EVE Online.",
+    "Compare every Loyalty Point store offer from every NPC corporation in EVE Online: LP and ISK cost, required items, Jita prices, profit and ISK per LP.",
   path: "/lp-store/all",
   badge: "Loyalty Points",
 });

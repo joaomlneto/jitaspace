@@ -144,8 +144,10 @@ export async function generateMetadata({
   const offerCount = store.offers.length;
 
   return pageMetadata({
-    title: `${corporation.name} LP Store`,
-    description: `Browse the ${offerCount} Loyalty Point offers from ${corporation.name} in EVE Online — LP and ISK cost, required items, and item values.`,
+    // "ISK per LP" is what the table works out and what people search for
+    // alongside the corporation's name.
+    title: `${corporation.name} LP Store: ISK per LP`,
+    description: `The ${offerCount} Loyalty Point ${offerCount === 1 ? "offer" : "offers"} from ${corporation.name} in EVE Online, with LP and ISK cost, required items, Jita prices, profit and ISK per LP.`,
     // The name form, whichever form was requested, so `/lp-store/1000180`
     // and `/lp-store/State_Protectorate` declare the same canonical.
     path: lpStorePath(corporation.name),

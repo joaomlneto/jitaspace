@@ -7,9 +7,12 @@ import { groupCorporationsByFaction } from "./groups";
 import LPStorePage from "./page.client";
 
 export const metadata = pageMetadata({
-  title: "LP Store",
+  // Worded for what people type into a search engine: "eve online lp store",
+  // "lp store calculator", "isk per lp". The table on each store works out the
+  // ISK per LP, which the old title ("LP Store") never said.
+  title: "EVE Online LP Store and ISK per LP Calculator",
   description:
-    "Browse EVE Online Loyalty Point store offers — find what you can buy with LP from NPC corporations.",
+    "Every EVE Online Loyalty Point store in one place. Pick an NPC corporation to see its LP offers with Jita prices, profit and ISK per LP.",
   path: "/lp-store",
   badge: "Loyalty Points",
 });
