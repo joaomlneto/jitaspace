@@ -5,7 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
 const mockUseSolarSystem =
-  jest.fn<(...args: unknown[]) => { data?: { data: { name?: string } } }>();
+  jest.fn<(...args: unknown[]) => { data?: { name?: string } }>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSolarSystem: (...args: unknown[]) => mockUseSolarSystem(...args),
@@ -47,7 +47,7 @@ describe("SolarSystemButton", () => {
   });
 
   it("renders the solar system name from the hook data", () => {
-    mockUseSolarSystem.mockReturnValue({ data: { data: { name: "Jita" } } });
+    mockUseSolarSystem.mockReturnValue({ data: { name: "Jita" } });
     renderButton(30000142);
     expect(screen.getByText("Jita")).toBeInTheDocument();
   });
@@ -59,21 +59,13 @@ describe("SolarSystemButton", () => {
     expect(container.querySelector("button")).toBeInTheDocument();
   });
 
-  it("calls useSolarSystem with the id and an enabled-query option", () => {
+  it("calls useSolarSystem with the id", () => {
     renderButton(30000142);
-    expect(mockUseSolarSystem).toHaveBeenCalledWith(
-      30000142,
-      {},
-      { query: { enabled: true } },
-    );
+    expect(mockUseSolarSystem).toHaveBeenCalledWith(30000142);
   });
 
-  it("disables the query when no id is provided (enabled: false)", () => {
+  it("passes an unknown id through, which the hook does not fetch", () => {
     renderButton(undefined);
-    expect(mockUseSolarSystem).toHaveBeenCalledWith(
-      0,
-      {},
-      { query: { enabled: false } },
-    );
+    expect(mockUseSolarSystem).toHaveBeenCalledWith(undefined);
   });
 });

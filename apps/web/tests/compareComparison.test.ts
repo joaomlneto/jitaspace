@@ -105,8 +105,8 @@ const type = (
   attributes: Record<number, number>,
   fields: Partial<CompareItemInput["type"]> = {},
 ): CompareItemInput["type"] => ({
-  dogma_attributes: Object.entries(attributes).map(([id, value]) => ({
-    attribute_id: Number(id),
+  dogmaAttributes: Object.entries(attributes).map(([id, value]) => ({
+    attributeID: Number(id),
     value,
   })),
   ...fields,
@@ -126,7 +126,7 @@ const rifter: CompareItemInput = {
       277: 1,
       460: -7.5,
     },
-    { capacity: 140, mass: 1067000, volume: 27289, packaged_volume: 2500 },
+    { capacity: 140, mass: 1067000, volume: 27289, packagedVolume: 2500 },
   ),
   market: { buy: 255000, sell: 283000 },
 };
@@ -146,7 +146,7 @@ const slasher: CompareItemInput = {
       283: 5,
       460: -5,
     },
-    { capacity: 120, mass: 1075000, volume: 17400, packaged_volume: 2500 },
+    { capacity: 120, mass: 1075000, volume: 17400, packagedVolume: 2500 },
   ),
   market: { buy: 333000, sell: 0 },
 };

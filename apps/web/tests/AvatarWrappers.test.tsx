@@ -55,8 +55,8 @@ jest.mock("@jitaspace/ui", () => ({
   PlanetAvatar: ({ typeId }: { typeId?: number }) => (
     <span data-testid="ui-planet-avatar">{`planet type ${typeId}`}</span>
   ),
-  RaceAvatar: ({ factionId }: { factionId?: string }) => (
-    <span data-testid="ui-race-avatar">{`race faction ${factionId}`}</span>
+  EveIconAvatar: ({ iconId }: { iconId?: number }) => (
+    <span data-testid="ui-eveicon-avatar">{`icon ${iconId}`}</span>
   ),
   SolarSystemStarAvatar: ({ typeId }: { typeId?: number }) => (
     <span data-testid="ui-solarsystemstar-avatar">{`solarsystemstar type ${typeId}`}</span>
@@ -156,7 +156,7 @@ describe("Avatar wrappers", () => {
   });
 
   it("PlanetAvatar passes the planet type id", () => {
-    mockUsePlanet.mockReturnValue({ data: { data: { type_id: 2016 } } });
+    mockUsePlanet.mockReturnValue({ data: { typeID: 2016 } });
 
     const { PlanetAvatar } = require("~/components/Avatar");
     renderWithProvider(<PlanetAvatar planetId={40000001} />);
@@ -167,54 +167,45 @@ describe("Avatar wrappers", () => {
     );
   });
 
-  it("PlanetAvatar defaults the planet id to 0 when omitted", () => {
-    mockUsePlanet.mockReturnValue({ data: { data: { type_id: 13 } } });
+  it("PlanetAvatar passes an omitted planet id through as unknown", () => {
+    mockUsePlanet.mockReturnValue({ data: { typeID: 13 } });
 
     const { PlanetAvatar } = require("~/components/Avatar");
     renderWithProvider(<PlanetAvatar />);
 
-    expect(mockUsePlanet).toHaveBeenCalledWith(0);
+    expect(mockUsePlanet).toHaveBeenCalledWith(undefined);
     expect(screen.getByTestId("ui-planet-avatar")).toBeInTheDocument();
   });
 
-  it("RaceAvatar passes the race's faction id as a string (ESI's alliance_id)", () => {
-    // ESI's race record names the race's faction `alliance_id`; there is no
-    // `faction_id`, and reading one left the avatar blank on every page.
+  it("RaceAvatar shows the race's own SDE icon", () => {
     mockUseRace.mockReturnValue({
-      data: {
-        race_id: 1,
-        name: "Caldari",
-        description: "",
-        alliance_id: 500001,
-      },
+      data: { raceID: 1, name: "Caldari", iconID: 1439 },
     });
 
     const { RaceAvatar } = require("~/components/Avatar");
     renderWithProvider(<RaceAvatar raceId={1} />);
 
     expect(mockUseRace).toHaveBeenCalledWith(1);
-    expect(screen.getByTestId("ui-race-avatar")).toHaveTextContent(
-      "race faction 500001",
+    expect(screen.getByTestId("ui-eveicon-avatar")).toHaveTextContent(
+      "icon 1439",
     );
   });
 
-  it("RaceAvatar tolerates a missing race (defaults id to 0)", () => {
+  it("RaceAvatar tolerates a missing race", () => {
     mockUseRace.mockReturnValue({ data: undefined });
 
     const { RaceAvatar } = require("~/components/Avatar");
     renderWithProvider(<RaceAvatar />);
 
-    expect(mockUseRace).toHaveBeenCalledWith(0);
-    expect(screen.getByTestId("ui-race-avatar")).toHaveTextContent(
-      "race faction undefined",
+    expect(mockUseRace).toHaveBeenCalledWith(undefined);
+    expect(screen.getByTestId("ui-eveicon-avatar")).toHaveTextContent(
+      "icon undefined",
     );
   });
 
   it("SolarSystemStarAvatar resolves the star via the solar system then passes its type id", () => {
-    mockUseSolarSystem.mockReturnValue({
-      data: { data: { star_id: 40000002 } },
-    });
-    mockUseStar.mockReturnValue({ data: { data: { type_id: 3800 } } });
+    mockUseSolarSystem.mockReturnValue({ data: { starID: 40000002 } });
+    mockUseStar.mockReturnValue({ data: { typeID: 3800 } });
 
     const { SolarSystemStarAvatar } = require("~/components/Avatar");
     renderWithProvider(<SolarSystemStarAvatar solarSystemId={30000142} />);
@@ -227,7 +218,7 @@ describe("Avatar wrappers", () => {
   });
 
   it("StarAvatar passes the star type id", () => {
-    mockUseStar.mockReturnValue({ data: { data: { type_id: 45031 } } });
+    mockUseStar.mockReturnValue({ data: { typeID: 45031 } });
 
     const { StarAvatar } = require("~/components/Avatar");
     renderWithProvider(<StarAvatar starId={40000002} />);
@@ -239,7 +230,7 @@ describe("Avatar wrappers", () => {
   });
 
   it("StargateAvatar passes the stargate type id", () => {
-    mockUseStargate.mockReturnValue({ data: { data: { type_id: 29624 } } });
+    mockUseStargate.mockReturnValue({ data: { typeID: 29624 } });
 
     const { StargateAvatar } = require("~/components/Avatar");
     renderWithProvider(<StargateAvatar stargateId={50000056} />);
@@ -251,7 +242,7 @@ describe("Avatar wrappers", () => {
   });
 
   it("StationAvatar passes the station type id", () => {
-    mockUseStation.mockReturnValue({ data: { data: { type_id: 1531 } } });
+    mockUseStation.mockReturnValue({ data: { typeID: 1531 } });
 
     const { StationAvatar } = require("~/components/Avatar");
     renderWithProvider(<StationAvatar stationId={60003760} />);
@@ -337,13 +328,14 @@ describe("Avatar wrappers", () => {
       </div>,
     );
 
-    // Each defaults its lookup id to 0 when the prop is omitted.
-    expect(mockUsePlanet).toHaveBeenCalledWith(0);
-    expect(mockUseSolarSystem).toHaveBeenCalledWith(0);
-    // StarAvatar (0) + SolarSystemStarAvatar's inner useStar (0, no star_id).
-    expect(mockUseStar).toHaveBeenCalledWith(0);
-    expect(mockUseStargate).toHaveBeenCalledWith(0);
-    expect(mockUseStation).toHaveBeenCalledWith(0);
+    // Each passes an omitted id through as unknown; the SDE hooks hold the
+    // request back until it is known.
+    expect(mockUsePlanet).toHaveBeenCalledWith(undefined);
+    expect(mockUseSolarSystem).toHaveBeenCalledWith(undefined);
+    // StarAvatar + SolarSystemStarAvatar's inner useStar (no starID yet).
+    expect(mockUseStar).toHaveBeenCalledWith(undefined);
+    expect(mockUseStargate).toHaveBeenCalledWith(undefined);
+    expect(mockUseStation).toHaveBeenCalledWith(undefined);
     expect(mockUseStructure).toHaveBeenCalledWith(0, undefined);
 
     expect(screen.getByTestId("ui-planet-avatar")).toHaveTextContent(

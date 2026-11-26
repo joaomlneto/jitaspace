@@ -1,8 +1,11 @@
 "use client";
 
-import type { GetUniverseConstellationsConstellationIdQueryResponse } from "@jitaspace/esi-client";
+import type { Localized, SdeConstellation, SdeHookOptions } from "../../sde";
+import { useSdeRecord } from "../../sde";
 
-export { useGetUniverseConstellationsConstellationId as useConstellation } from "@jitaspace/esi-client";
+export type Constellation = Localized<SdeConstellation>;
 
-export type Constellation =
-  GetUniverseConstellationsConstellationIdQueryResponse;
+export const useConstellation = (
+  constellationId: number | undefined,
+  options?: SdeHookOptions,
+) => useSdeRecord("mapConstellations", constellationId, options);

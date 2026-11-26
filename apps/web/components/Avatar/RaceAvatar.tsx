@@ -4,17 +4,17 @@ import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
 
 import { useRace } from "@jitaspace/hooks";
-import { RaceAvatar as UIRaceAvatar } from "@jitaspace/ui";
+import { EveIconAvatar } from "@jitaspace/ui";
 
 export type RaceAvatarProps = Omit<AvatarProps, "src"> & {
   raceId?: number;
 };
 
+/** The race's own icon, as the SDE gives it (the same art as its empire's). */
 export const RaceAvatar = memo(({ raceId, ...otherProps }: RaceAvatarProps) => {
-  const { data: race } = useRace(raceId ?? 0);
-  // ESI calls the race's faction its `alliance_id`; there is no `faction_id`.
+  const { data: race } = useRace(raceId);
   return (
-    <UIRaceAvatar factionId={race?.alliance_id.toString()} {...otherProps} />
+    <EveIconAvatar iconId={race?.iconID} alt={race?.name} {...otherProps} />
   );
 });
 RaceAvatar.displayName = "RaceAvatar";

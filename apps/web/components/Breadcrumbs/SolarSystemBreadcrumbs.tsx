@@ -24,10 +24,10 @@ export const SolarSystemBreadcrumbs = memo(
       typeof solarSystemId === "string"
         ? Number.parseInt(solarSystemId)
         : solarSystemId;
-    const { data: solarSystem } = useSolarSystem(solarSystemIdNum ?? 0);
-    const constellationId = solarSystem?.data.constellation_id;
-    const { data: constellation } = useConstellation(constellationId ?? 0);
-    const regionId = constellation?.data.region_id;
+    const { data: solarSystem } = useSolarSystem(solarSystemIdNum);
+    const constellationId = solarSystem?.constellationID;
+    const { data: constellation } = useConstellation(constellationId);
+    const regionId = constellation?.regionID;
 
     return (
       <SolarSystemBreadcrumbsDisplay

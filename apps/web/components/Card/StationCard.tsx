@@ -24,9 +24,9 @@ export const StationCard = memo(
           <StationAvatar stationId={stationId} size="md" />
           <div>
             <Group gap="xs" wrap="nowrap">
-              {data?.data.system_id && (
+              {data?.solarSystemID && (
                 <SolarSystemSecurityStatusBadge
-                  solarSystemId={data.data.system_id}
+                  solarSystemId={data.solarSystemID}
                   size="xs"
                   w={42}
                 />
@@ -40,7 +40,7 @@ export const StationCard = memo(
             </Group>
             <SolarSystemBreadcrumbs
               textProps={{ size: "xs" }}
-              solarSystemId={data?.data.system_id}
+              solarSystemId={data?.solarSystemID}
             />
           </div>
         </Group>

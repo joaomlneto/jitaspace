@@ -36,7 +36,7 @@ jest.mock("@jitaspace/hooks", () => ({
     accessTokenPayload: { scp: ["publicData"] },
   }),
   usePlanet: (planetId: number) => ({
-    data: { data: { name: `Planet ${planetId}` } },
+    data: { name: `Planet ${planetId}` },
   }),
 }));
 jest.mock("@jitaspace/eve-components", () => ({

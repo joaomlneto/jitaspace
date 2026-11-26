@@ -11,7 +11,7 @@ export type RaceNameProps = TextProps & {
 };
 
 export const RaceName = memo(({ raceId, ...otherProps }: RaceNameProps) => {
-  const { data: race } = useRace(raceId ?? 0);
+  const { data: race } = useRace(raceId);
   return <UIRaceName name={race?.name} {...otherProps} />;
 });
 RaceName.displayName = "RaceName";

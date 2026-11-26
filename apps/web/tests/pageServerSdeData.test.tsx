@@ -149,6 +149,22 @@ describe("system route server data", () => {
     isCorridor: null,
     isInternational: true,
     isRegional: null,
+    securityStatus: "0.945913",
+    securityClass: "B",
+    starId: 40009076,
+    star: { spectralClass: "F1 V", temperature: BigInt(7305) },
+    Planet: [
+      { planetId: 40009077, _count: { moons: 0, asteroidBelts: 1 } },
+      { planetId: 40009082, _count: { moons: 12, asteroidBelts: 0 } },
+    ],
+    stargates: [
+      {
+        stargateId: 50001248,
+        DestinationStargate: { solarSystemId: 30000140 },
+      },
+      { stargateId: 50001249, DestinationStargate: null },
+    ],
+    stations: [{ stationId: 60003760 }],
   };
 
   it("maps the SDE columns onto the client prop, folding position into one object", async () => {
@@ -172,6 +188,30 @@ describe("system route server data", () => {
       isCorridor: false,
       isInternational: true,
       isRegional: false,
+    });
+  });
+
+  it("lists the system's contents, as ESI's system record used to", async () => {
+    solarSystemFindUnique.mockResolvedValue(columns);
+
+    const props = await runRoute("~/app/system/[systemId]/page", {
+      systemId: "30000142",
+    });
+
+    expect(props.contents).toEqual({
+      securityStatus: 0.945913,
+      securityClass: "B",
+      starId: 40009076,
+      star: { spectralClass: "F1 V", temperature: 7305 },
+      planets: [
+        { planetId: 40009077, moonCount: 0, beltCount: 1 },
+        { planetId: 40009082, moonCount: 12, beltCount: 0 },
+      ],
+      stargates: [
+        { stargateId: 50001248, destinationSystemId: 30000140 },
+        { stargateId: 50001249, destinationSystemId: null },
+      ],
+      stationIds: [60003760],
     });
   });
 

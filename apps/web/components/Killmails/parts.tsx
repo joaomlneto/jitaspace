@@ -228,15 +228,15 @@ export function KillmailLocation({
   size = "sm",
 }: Readonly<{ solarSystemId: number; showRegion?: boolean; size?: string }>) {
   const { data: system } = useSolarSystem(solarSystemId);
-  const constellationId = system?.data.constellation_id;
+  const constellationId = system?.constellationID;
   const { data: constellation } = useConstellation(
     showRegion ? constellationId : undefined,
   );
-  const regionId = constellation?.data.region_id;
+  const regionId = constellation?.regionID;
   return (
     <Group gap={6} wrap="nowrap" className={classes.truncate} component="span">
       <SolarSystemSecurityStatusBadge
-        securityStatus={system?.data.security_status}
+        securityStatus={system?.securityStatus}
         size={size === "xs" ? "xs" : "sm"}
       />
       <SolarSystemAnchor solarSystemId={solarSystemId} size={size} fw={600}>

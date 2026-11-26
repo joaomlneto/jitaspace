@@ -12,10 +12,10 @@ export type SolarSystemSecurityStatusBadgeProps = BadgeProps & {
 
 export const SolarSystemSecurityStatusBadge = memo(
   ({ solarSystemId, ...otherProps }: SolarSystemSecurityStatusBadgeProps) => {
-    const { data } = useSolarSystem(solarSystemId ?? 0);
+    const { data } = useSolarSystem(solarSystemId);
     return (
       <UISolarSystemSecurityStatusBadge
-        securityStatus={data?.data.security_status}
+        securityStatus={data?.securityStatus}
         {...otherProps}
       />
     );

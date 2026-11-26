@@ -12,7 +12,7 @@ export type BloodlineNameProps = TextProps & {
 
 export const BloodlineName = memo(
   ({ bloodlineId, ...otherProps }: BloodlineNameProps) => {
-    const { data: bloodline } = useBloodline(bloodlineId ?? 0);
+    const { data: bloodline } = useBloodline(bloodlineId);
     return <UIBloodlineName name={bloodline?.name} {...otherProps} />;
   },
 );

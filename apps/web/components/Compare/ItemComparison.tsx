@@ -16,6 +16,7 @@ import { useUncontrolled } from "@mantine/hooks";
 import {
   useFuzzworkRegionalMarketAggregates,
   useTypes,
+  useTypesDogma,
 } from "@jitaspace/hooks";
 
 import type {
@@ -216,6 +217,8 @@ export function ItemComparison({
     refetch: refetchCatalog,
   } = useCompareCatalog();
   const { data: types, failedIds: failedTypeIds } = useTypes(typeIds);
+  // A type with no dogma has no record, so a failed lookup means "none".
+  const { data: dogma, failedIds: noDogmaTypeIds } = useTypesDogma(typeIds);
   // Prices of the items already shown stay put while an added item's load.
   const {
     data: marketAggregates,
@@ -228,9 +231,15 @@ export function ItemComparison({
   const items = useMemo<CompareItemInput[]>(
     () =>
       typeIds.map((typeId) => {
+        const type = types[typeId];
+        const hasDogma =
+          dogma[typeId] !== undefined || noDogmaTypeIds.includes(typeId);
         return {
           typeId,
-          type: types[typeId],
+          type:
+            type && hasDogma
+              ? { ...type, dogmaAttributes: dogma[typeId]?.dogmaAttributes }
+              : undefined,
           market: marketData(typeId, {
             aggregates: marketAggregates,
             isPlaceholder: isMarketPlaceholder,
@@ -242,6 +251,8 @@ export function ItemComparison({
     [
       typeIds,
       types,
+      dogma,
+      noDogmaTypeIds,
       failedTypeIds,
       marketAggregates,
       isMarketPlaceholder,
@@ -262,7 +273,7 @@ export function ItemComparison({
   const groupIds = useMemo(
     () =>
       Object.fromEntries(
-        typeIds.map((typeId) => [typeId, types[typeId]?.group_id]),
+        typeIds.map((typeId) => [typeId, types[typeId]?.groupID]),
       ),
     [typeIds, types],
   );

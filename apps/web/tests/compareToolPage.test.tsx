@@ -22,6 +22,8 @@ jest.mock("@jitaspace/hooks", () => ({
     failedIds: [],
     ...(mockUseTypes(ids) as object),
   }),
+  // No item here has dogma: a type without any has no record, so it fails.
+  useTypesDogma: (ids: number[]) => ({ data: {}, failedIds: ids }),
   useFuzzworkRegionalMarketAggregates: (
     ids: number[],
     regionId: number,
@@ -271,7 +273,7 @@ describe("Compare tool page", () => {
   });
 
   it("feeds each item's type and Jita prices to the comparison", () => {
-    mockUseTypes.mockReturnValue({ data: { 34: { group_id: 18 } } });
+    mockUseTypes.mockReturnValue({ data: { 34: { groupID: 18 } } });
     mockUseMarket.mockReturnValue({
       data: { 34: { buy: { percentile: 4 }, sell: { percentile: 5 } } },
       isError: false,
@@ -284,7 +286,7 @@ describe("Compare tool page", () => {
     expect(items).toEqual([
       {
         typeId: 34,
-        type: { group_id: 18 },
+        type: { groupID: 18 },
         market: { buy: 4, sell: 5 },
         failed: false,
       },
@@ -311,7 +313,7 @@ describe("Compare tool page", () => {
 
   it("flags an item that failed to load", () => {
     mockUseTypes.mockReturnValue({
-      data: { 34: { group_id: 18 } },
+      data: { 34: { groupID: 18 } },
       failedIds: [99],
     });
     renderPage({ searchParams: "?types=34,99" });

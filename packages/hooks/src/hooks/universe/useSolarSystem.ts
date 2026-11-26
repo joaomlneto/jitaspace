@@ -1,7 +1,11 @@
 "use client";
 
-import type { GetUniverseSystemsSystemIdQueryResponse } from "@jitaspace/esi-client";
+import type { Localized, SdeHookOptions, SdeSolarSystem } from "../../sde";
+import { useSdeRecord } from "../../sde";
 
-export type SolarSystem = GetUniverseSystemsSystemIdQueryResponse;
+export type SolarSystem = Localized<SdeSolarSystem>;
 
-export { useGetUniverseSystemsSystemId as useSolarSystem } from "@jitaspace/esi-client";
+export const useSolarSystem = (
+  solarSystemId: number | undefined,
+  options?: SdeHookOptions,
+) => useSdeRecord("mapSolarSystems", solarSystemId, options);

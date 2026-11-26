@@ -22,7 +22,6 @@ const mockGetStargate = jest.fn<(id: number) => Promise<unknown>>();
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   postUniverseNames: (ids: number[]) => mockPostUniverseNames(ids),
-  getUniverseStargatesStargateId: (id: number) => mockGetStargate(id),
   getAcceptLanguage: () => "en",
   subscribeToAcceptLanguage: () => () => undefined,
 }));
@@ -37,6 +36,12 @@ jest.mock("@jitaspace/esi-metadata", () => ({
   corporationIdRanges: [],
   stargateRanges: [],
   isStationId: () => false,
+}));
+
+// Stargates come from the SDE.
+jest.mock("../src/sde/client", () => ({
+  __esModule: true,
+  fetchSdeRecord: (_table: string, id: number) => mockGetStargate(id),
 }));
 
 jest.mock("../src/hooks/useEsiAcceptLanguage", () => ({
@@ -194,13 +199,22 @@ describe("batched name resolution", () => {
     expect(mockPostUniverseNames.mock.calls[0]?.[0]).toEqual([70_000]);
   });
 
-  it("resolves stargates through their own endpoint, outside the batch", async () => {
-    // /universe/names cannot resolve stargates.
-    mockGetStargate.mockResolvedValue({ data: { name: "Stargate (Jita)" } });
+  it("names a stargate after the system it leads to", async () => {
+    // /universe/names cannot resolve stargates, and the SDE does not name
+    // them: the gate gives its destination, whose name is batched as usual.
+    const JITA = 30000142;
+    mockGetStargate.mockResolvedValue({
+      stargateID: 50000001,
+      destination: { solarSystemID: JITA, stargateID: 50000002 },
+    });
+    mockPostUniverseNames.mockResolvedValue({
+      data: [{ id: JITA, name: "Jita", category: "solar_system" }],
+    });
 
     const { result } = renderHook(() => useEsiName(50000001, "stargate"));
 
     await waitFor(() => expect(result.current.name).toBe("Stargate (Jita)"));
-    expect(mockPostUniverseNames).not.toHaveBeenCalled();
+    expect(mockGetStargate).toHaveBeenCalledWith(50000001);
+    expect(mockPostUniverseNames).toHaveBeenCalledWith([JITA]);
   });
 });

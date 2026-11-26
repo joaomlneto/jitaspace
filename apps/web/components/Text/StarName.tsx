@@ -11,7 +11,7 @@ export type StarNameProps = TextProps & {
 };
 
 export const StarName = memo(({ starId, ...otherProps }: StarNameProps) => {
-  const { data } = useStar(starId ?? 0);
-  return <UIStarName name={data?.data.name} {...otherProps} />;
+  const { data } = useStar(starId);
+  return <UIStarName name={data?.name} {...otherProps} />;
 });
 StarName.displayName = "StarName";

@@ -1,17 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import type { Localized, SdeBloodline, SdeHookOptions } from "../../sde";
+import { useSdeRecord } from "../../sde";
 
-import { useGetUniverseBloodlines } from "@jitaspace/esi-client";
+/**
+ * A bloodline from the SDE. Its starter ship is its race's (`useRace`), which
+ * is where ESI's `ship_type_id` came from too.
+ */
+export type Bloodline = Localized<SdeBloodline>;
 
-export const useBloodline = (bloodlineId: number) => {
-  const { data, ...others } = useGetUniverseBloodlines();
-
-  const bloodline = useMemo(
-    () =>
-      data?.data.find((bloodline) => bloodline.bloodline_id === bloodlineId),
-    [data, bloodlineId],
-  );
-
-  return { data: bloodline, ...others };
-};
+export const useBloodline = (
+  bloodlineId: number | undefined,
+  options?: SdeHookOptions,
+) => useSdeRecord("bloodlines", bloodlineId, options);

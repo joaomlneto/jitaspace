@@ -14,15 +14,15 @@ export type GroupBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 export const GroupBreadcrumbs = memo(
   ({ groupId, ...otherProps }: GroupBreadcrumbsProps) => {
     const { data: group } = useGroup(groupId);
-    const categoryId = group?.data.category_id;
+    const categoryId = group?.categoryID;
     const { data: category } = useCategory(categoryId);
 
     return (
       <GroupBreadcrumbsDisplay
         groupId={groupId}
-        groupName={group?.data.name}
+        groupName={group?.name}
         categoryId={categoryId}
-        categoryName={category?.data.name}
+        categoryName={category?.name}
         {...otherProps}
       />
     );

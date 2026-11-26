@@ -10,6 +10,9 @@ import { SolarSystemAnchor, TypeAnchor } from "~/components/Anchor";
 import { StarAvatar } from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
+/** The SDE gives a star's age in seconds; EVE shows it in (Julian) years. */
+const SECONDS_PER_YEAR = 365.25 * 24 * 60 * 60;
+
 export default function Page() {
   const params = useParams();
   const rawStarId = params.starId;
@@ -28,49 +31,50 @@ export default function Page() {
         <Group gap="xl">
           <StarAvatar starId={starId} size="xl" radius={256} />
           <Title order={3}>
-            <Text>{star?.data.name}</Text>
+            <Text>{star?.name}</Text>
           </Title>
         </Group>
         <Group justify="space-between">
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
-              solarSystemId={star?.data.solar_system_id}
+              solarSystemId={star?.solarSystemID}
               size="sm"
             />
-            <SolarSystemAnchor solarSystemId={star?.data.solar_system_id}>
-              <SolarSystemName
-                span
-                solarSystemId={star?.data.solar_system_id}
-              />
+            <SolarSystemAnchor solarSystemId={star?.solarSystemID}>
+              <SolarSystemName span solarSystemId={star?.solarSystemID} />
             </SolarSystemAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Star Type</Text>
-          <TypeAnchor typeId={star?.data.type_id}>
-            <TypeName span typeId={star?.data.type_id} />
+          <TypeAnchor typeId={star?.typeID}>
+            <TypeName span typeId={star?.typeID} />
           </TypeAnchor>
         </Group>
         <Group justify="space-between">
           <Text>Age</Text>
-          <Text>{star?.data.age}</Text>
+          <Text>
+            {star?.statistics?.age === undefined
+              ? undefined
+              : Math.round(star.statistics.age / SECONDS_PER_YEAR)}
+          </Text>
         </Group>
         <Group justify="space-between">
           <Text>Luminosity</Text>
-          <Text>{star?.data.luminosity}</Text>
+          <Text>{star?.statistics?.luminosity}</Text>
         </Group>
         <Group justify="space-between">
           <Text>Radius</Text>
-          <Text>{star?.data.radius}</Text>
+          <Text>{star?.radius}</Text>
         </Group>
         <Group justify="space-between">
           <Text>Spectral Class</Text>
-          <Text>{star?.data.spectral_class}</Text>
+          <Text>{star?.statistics?.spectralClass}</Text>
         </Group>
         <Group justify="space-between">
           <Text>Temperature</Text>
-          <Text>{star?.data.temperature}</Text>
+          <Text>{star?.statistics?.temperature}</Text>
         </Group>
       </Stack>
     </Container>

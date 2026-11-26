@@ -1,23 +1,17 @@
 "use client";
 
-import type { GetUniverseCategoriesCategoryIdQueryResponse } from "@jitaspace/esi-client";
-import { useGetUniverseCategoriesCategoryId } from "@jitaspace/esi-client";
+import type { Localized, SdeCategory, SdeHookOptions } from "../../sde";
+import { useSdeRecord } from "../../sde";
 
-export type Category = GetUniverseCategoriesCategoryIdQueryResponse;
+export type Category = Localized<SdeCategory>;
 
 /**
- * An item category from ESI.
+ * An item category from the SDE.
  *
- * Category ids start at 0, like group ids — see `useGroup` for why this wraps
- * the generated hook rather than re-exporting it. Pass `undefined`, not a
- * `?? 0` placeholder, while the id is still unknown.
+ * Category ids start at 0, like group ids — see `useGroup`. Pass `undefined`,
+ * not a `?? 0` placeholder, while the id is still unknown.
  */
-export const useCategory: typeof useGetUniverseCategoriesCategoryId = (
-  categoryId,
-  headers,
-  options = {},
-) =>
-  useGetUniverseCategoriesCategoryId(categoryId, headers, {
-    ...options,
-    query: { enabled: categoryId !== undefined, ...options.query },
-  });
+export const useCategory = (
+  categoryId: number | undefined,
+  options?: SdeHookOptions,
+) => useSdeRecord("categories", categoryId, options);

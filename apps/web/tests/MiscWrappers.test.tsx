@@ -299,9 +299,7 @@ describe("EveMailSenderCard", () => {
 
 describe("SolarSystemCard", () => {
   it("renders sovereignty, security badge, name and breadcrumbs for the system", () => {
-    mockUseSolarSystem.mockReturnValue({
-      data: { data: { constellation_id: 20000001 } },
-    });
+    mockUseSolarSystem.mockReturnValue({ data: { constellationID: 20000001 } });
 
     const { SolarSystemCard } = require("../components/Card/SolarSystemCard");
 
@@ -323,9 +321,7 @@ describe("SolarSystemCard", () => {
 
 describe("StationCard", () => {
   it("renders the security badge when the station has a system id", () => {
-    mockUseStation.mockReturnValue({
-      data: { data: { system_id: 30000142 } },
-    });
+    mockUseStation.mockReturnValue({ data: { solarSystemID: 30000142 } });
 
     const { StationCard } = require("../components/Card/StationCard");
 
@@ -344,7 +340,7 @@ describe("StationCard", () => {
   });
 
   it("omits the security badge when the station has no system id", () => {
-    mockUseStation.mockReturnValue({ data: { data: {} } });
+    mockUseStation.mockReturnValue({ data: {} });
 
     const { StationCard } = require("../components/Card/StationCard");
 
@@ -360,10 +356,8 @@ describe("StationCard", () => {
 // ===========================================================================
 describe("GroupBreadcrumbs", () => {
   it("resolves the category from the group and forwards names/ids", () => {
-    mockUseGroup.mockReturnValue({
-      data: { data: { name: "Frigate", category_id: 6 } },
-    });
-    mockUseCategory.mockReturnValue({ data: { data: { name: "Ship" } } });
+    mockUseGroup.mockReturnValue({ data: { name: "Frigate", categoryID: 6 } });
+    mockUseCategory.mockReturnValue({ data: { name: "Ship" } });
 
     const { GroupBreadcrumbs } = require("~/components/Breadcrumbs");
 
@@ -393,10 +387,8 @@ describe("GroupBreadcrumbs", () => {
   });
 
   it("asks for group 0 and its category 0 like any other ids", () => {
-    mockUseGroup.mockReturnValue({
-      data: { data: { name: "#System", category_id: 0 } },
-    });
-    mockUseCategory.mockReturnValue({ data: { data: { name: "#System" } } });
+    mockUseGroup.mockReturnValue({ data: { name: "#System", categoryID: 0 } });
+    mockUseCategory.mockReturnValue({ data: { name: "#System" } });
     const { GroupBreadcrumbs } = require("~/components/Breadcrumbs");
 
     renderWithMantine(<GroupBreadcrumbs groupId={0} />);
@@ -408,12 +400,8 @@ describe("GroupBreadcrumbs", () => {
 
 describe("SolarSystemBreadcrumbs", () => {
   it("resolves the constellation/region chain from a numeric system id", () => {
-    mockUseSolarSystem.mockReturnValue({
-      data: { data: { constellation_id: 20000001 } },
-    });
-    mockUseConstellation.mockReturnValue({
-      data: { data: { region_id: 10000001 } },
-    });
+    mockUseSolarSystem.mockReturnValue({ data: { constellationID: 20000001 } });
+    mockUseConstellation.mockReturnValue({ data: { regionID: 10000001 } });
 
     const { SolarSystemBreadcrumbs } = require("~/components/Breadcrumbs");
 
@@ -441,25 +429,23 @@ describe("SolarSystemBreadcrumbs", () => {
     renderWithMantine(<SolarSystemBreadcrumbs solarSystemId="30000142" />);
 
     expect(mockUseSolarSystem).toHaveBeenCalledWith(30000142);
-    expect(mockUseConstellation).toHaveBeenCalledWith(0);
+    expect(mockUseConstellation).toHaveBeenCalledWith(undefined);
   });
 
-  it("defaults to 0 when no system id is provided", () => {
+  it("passes an omitted system id through as unknown", () => {
     const { SolarSystemBreadcrumbs } = require("~/components/Breadcrumbs");
 
     renderWithMantine(<SolarSystemBreadcrumbs />);
 
-    expect(mockUseSolarSystem).toHaveBeenCalledWith(0);
+    expect(mockUseSolarSystem).toHaveBeenCalledWith(undefined);
   });
 });
 
 describe("TypeInventoryBreadcrumbs", () => {
   it("resolves type -> group -> category and forwards them", () => {
-    mockUseType.mockReturnValue({ data: { data: { group_id: 25 } } });
-    mockUseGroup.mockReturnValue({
-      data: { data: { name: "Frigate", category_id: 6 } },
-    });
-    mockUseCategory.mockReturnValue({ data: { data: { name: "Ship" } } });
+    mockUseType.mockReturnValue({ data: { groupID: 25 } });
+    mockUseGroup.mockReturnValue({ data: { name: "Frigate", categoryID: 6 } });
+    mockUseCategory.mockReturnValue({ data: { name: "Ship" } });
 
     const { TypeInventoryBreadcrumbs } = require("~/components/Breadcrumbs");
 
@@ -491,11 +477,9 @@ describe("TypeInventoryBreadcrumbs", () => {
   });
 
   it("walks a type in group 0 up to category 0", () => {
-    mockUseType.mockReturnValue({ data: { data: { group_id: 0 } } });
-    mockUseGroup.mockReturnValue({
-      data: { data: { name: "#System", category_id: 0 } },
-    });
-    mockUseCategory.mockReturnValue({ data: { data: { name: "#System" } } });
+    mockUseType.mockReturnValue({ data: { groupID: 0 } });
+    mockUseGroup.mockReturnValue({ data: { name: "#System", categoryID: 0 } });
+    mockUseCategory.mockReturnValue({ data: { name: "#System" } });
     const { TypeInventoryBreadcrumbs } = require("~/components/Breadcrumbs");
 
     renderWithMantine(<TypeInventoryBreadcrumbs typeId={48464} />);
@@ -507,9 +491,7 @@ describe("TypeInventoryBreadcrumbs", () => {
 
 describe("TypeMarketBreadcrumbs", () => {
   it("walks the market group parent chain and builds an ordered list", () => {
-    mockUseType.mockReturnValue({
-      data: { data: { market_group_id: 1 } },
-    });
+    mockUseType.mockReturnValue({ data: { marketGroupID: 1 } });
     // Chain: group 1 -> parent 2 -> parent 3 (top).
     mockUseMarketGroup.mockImplementation((id: number) => {
       switch (id) {
@@ -544,9 +526,7 @@ describe("TypeMarketBreadcrumbs", () => {
   });
 
   it("drops a level whose market group failed to load instead of crashing", () => {
-    mockUseType.mockReturnValue({
-      data: { data: { market_group_id: 1 } },
-    });
+    mockUseType.mockReturnValue({ data: { marketGroupID: 1 } });
     // Group 1 resolves; its parent (2) failed, so there is no data for it.
     mockUseMarketGroup.mockImplementation((id: number) =>
       id === 1
@@ -567,7 +547,7 @@ describe("TypeMarketBreadcrumbs", () => {
   });
 
   it("yields undefined market groups when the type has no market group", () => {
-    mockUseType.mockReturnValue({ data: { data: {} } });
+    mockUseType.mockReturnValue({ data: {} });
 
     const { TypeMarketBreadcrumbs } = require("~/components/Breadcrumbs");
 

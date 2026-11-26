@@ -12,8 +12,8 @@ export type AsteroidBeltNameProps = TextProps & {
 
 export const AsteroidBeltName = memo(
   ({ asteroidBeltId, ...otherProps }: AsteroidBeltNameProps) => {
-    const { data } = useAsteroidBelt(asteroidBeltId ?? 0);
-    return <UIAsteroidBeltName name={data?.data.name} {...otherProps} />;
+    const { data } = useAsteroidBelt(asteroidBeltId);
+    return <UIAsteroidBeltName name={data?.name} {...otherProps} />;
   },
 );
 AsteroidBeltName.displayName = "AsteroidBeltName";

@@ -29,8 +29,9 @@ jest.mock("@mantine/tiptap", () => ({
   useRichTextEditorContext: () => ({ editor: mockEditor, unstyled: false }),
 }));
 
+// Stations come from the SDE.
 const mockGetUniverseStation = jest.fn((..._args: unknown[]) =>
-  Promise.resolve({ data: { type_id: 52678 } }),
+  Promise.resolve({ typeID: 52678 }),
 );
 
 const mockGetUniverseStructure = jest.fn(
@@ -39,13 +40,12 @@ const mockGetUniverseStructure = jest.fn(
 );
 
 jest.mock("@jitaspace/esi-client", () => ({
-  getUniverseStationsStationId: (...args: unknown[]) =>
-    mockGetUniverseStation(...args),
   getUniverseStructuresStructureId: (...args: unknown[]) =>
     mockGetUniverseStructure(...args),
 }));
 
 jest.mock("@jitaspace/hooks", () => ({
+  fetchSdeRecord: (_table: string, id: number) => mockGetUniverseStation(id),
   useAccessToken: () => ({
     authHeaders: { Authorization: "Bearer test-token" },
   }),

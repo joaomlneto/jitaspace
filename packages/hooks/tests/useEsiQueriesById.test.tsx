@@ -2,27 +2,30 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { act, renderHook, waitFor } from "@testing-library/react";
 
-// useTypes / useDogmaAttributes against a real QueryClient. The ESI fetchers
-// are mocked both as generated query options (what the hooks use now) and as
-// the raw request functions (what they used before), so the same assertions
-// run against either implementation. @swc/jest does not hoist jest.mock, so
-// the hooks are required lazily.
-const mockGetType =
-  jest.fn<
-    (id: number) => Promise<{ data: { type_id: number; name: string } }>
-  >();
+// useTypes (SDE) / useDogmaAttributes (ESI) against a real QueryClient, with
+// their fetchers mocked. @swc/jest does not hoist jest.mock, so the hooks are
+// required lazily.
+interface SdeTypeRecord {
+  typeID: number;
+  groupID: number;
+  name: { en: string };
+}
+const mockGetType = jest.fn<(id: number) => Promise<SdeTypeRecord>>();
 const mockGetAttribute =
   jest.fn<
     (id: number) => Promise<{ data: { attribute_id: number; name: string } }>
   >();
 
+jest.mock("../src/sde/client", () => ({
+  __esModule: true,
+  fetchSdeRecord: (_table: string, id: number) => mockGetType(id),
+}));
+jest.mock("../src/hooks/useEsiAcceptLanguage", () => ({
+  __esModule: true,
+  useEsiAcceptLanguage: () => "en",
+}));
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
-  getUniverseTypesTypeId: (id: number) => mockGetType(id),
-  getUniverseTypesTypeIdQueryOptions: (id: number) => ({
-    queryKey: ["type", id],
-    queryFn: () => mockGetType(id),
-  }),
   getDogmaAttributesAttributeId: (id: number) => mockGetAttribute(id),
   getDogmaAttributesAttributeIdQueryOptions: (id: number) => ({
     queryKey: ["attribute", id],
@@ -47,12 +50,16 @@ function wrapper({ children }: { children: ReactNode }) {
 
 const TYPE_IDS = [587, 588, 589];
 
+const sdeType = (id: number): SdeTypeRecord => ({
+  typeID: id,
+  groupID: 25,
+  name: { en: `Type ${id}` },
+});
+
 describe("useTypes", () => {
   beforeEach(() => {
     mockGetType.mockReset();
-    mockGetType.mockImplementation((id) =>
-      Promise.resolve({ data: { type_id: id, name: `Type ${id}` } }),
-    );
+    mockGetType.mockImplementation((id) => Promise.resolve(sdeType(id)));
   });
 
   it("returns every type keyed by its id", async () => {
@@ -61,8 +68,10 @@ describe("useTypes", () => {
     await waitFor(() =>
       expect(Object.keys(result.current.data)).toHaveLength(3),
     );
+    // Localized fields come back as one string, in the reader's language.
     expect(result.current.data[588]).toEqual({
-      type_id: 588,
+      typeID: 588,
+      groupID: 25,
       name: "Type 588",
     });
   });
@@ -72,8 +81,8 @@ describe("useTypes", () => {
     // failed, so the /compare table rendered empty until the selection changed.
     mockGetType.mockImplementation((id) =>
       id === 588
-        ? Promise.reject(new Error("ESI 502"))
-        : Promise.resolve({ data: { type_id: id, name: `Type ${id}` } }),
+        ? Promise.reject(new Error("SDE 502"))
+        : Promise.resolve(sdeType(id)),
     );
 
     const { result } = renderHook(() => useTypes(TYPE_IDS), { wrapper });
@@ -81,22 +90,20 @@ describe("useTypes", () => {
     await waitFor(() =>
       expect(Object.keys(result.current.data).sort()).toEqual(["587", "589"]),
     );
-    await waitFor(() => expect(result.current.errors).toHaveLength(1));
+    await waitFor(() => expect(result.current.failedIds).toEqual([588]));
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.failedIds).toEqual([588]);
   });
 
   it("keeps a failed id failed while another id loads", async () => {
     let resolveLate: (() => void) | undefined;
     mockGetType.mockImplementation((id) => {
-      if (id === 588) return Promise.reject(new Error("ESI 404"));
+      if (id === 588) return Promise.reject(new Error("SDE 404"));
       if (id === 600) {
         return new Promise((resolve) => {
-          resolveLate = () =>
-            resolve({ data: { type_id: id, name: `Type ${id}` } });
+          resolveLate = () => resolve(sdeType(id));
         });
       }
-      return Promise.resolve({ data: { type_id: id, name: `Type ${id}` } });
+      return Promise.resolve(sdeType(id));
     });
 
     const { result, rerender } = renderHook(
@@ -121,9 +128,7 @@ describe("useTypes on window focus", () => {
     // on focus), so without a staleTime every id refetched on every alt-tab —
     // 150+ requests on /compare for data that only changes with a game patch.
     mockGetType.mockReset();
-    mockGetType.mockImplementation((id) =>
-      Promise.resolve({ data: { type_id: id, name: `Type ${id}` } }),
-    );
+    mockGetType.mockImplementation((id) => Promise.resolve(sdeType(id)));
     const { result } = renderHook(() => useTypes(TYPE_IDS), { wrapper });
     await waitFor(() =>
       expect(Object.keys(result.current.data)).toHaveLength(3),

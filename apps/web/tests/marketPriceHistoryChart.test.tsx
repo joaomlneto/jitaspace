@@ -60,13 +60,13 @@ jest.mock("@jitaspace/esi-client", () => ({
     headers?: unknown,
     options?: unknown,
   ) => mockUseHistory(regionId, params, headers, options),
-  useGetUniverseRegions: () => ({
-    data: { data: [10000002, 10000001, 11000001, GLOBAL_PLEX_MARKET] },
-  }),
 }));
 // Over the shared stub, which carries the real hub list.
 jest.mock("@jitaspace/hooks", () => ({
   ...jest.requireActual<Record<string, unknown>>("@jitaspace/hooks"),
+  useRegionIds: () => ({
+    data: [10000002, 10000001, 11000001, GLOBAL_PLEX_MARKET],
+  }),
   useEsiNameLookup: (entries: { id: number; category?: string }[]) =>
     mockNameLookup(entries),
   useTradesOnGlobalMarket: (typeId?: number) =>

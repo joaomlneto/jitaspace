@@ -13,18 +13,18 @@ import {
 import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
-import type { SolarSystemSdeInfo } from "~/app/system/[systemId]/types";
+import type {
+  SolarSystemContents,
+  SolarSystemSdeInfo,
+} from "~/app/system/[systemId]/types";
 
 const SYSTEM_ID = 30000142;
 
 const mockUseSelectedCharacter = jest.fn();
-const mockUseSolarSystem = jest.fn();
 const mockUseSolarSystemCostIndices = jest.fn();
 const mockUseSolarSystemSovereignty = jest.fn();
 const mockUseAllSolarSystemJumps = jest.fn();
 const mockUseAllSolarSystemKills = jest.fn();
-const mockUseStar = jest.fn();
-const mockUseStargate = jest.fn();
 const mockUseGetFwSystems = jest.fn();
 const mockUseGetIncursions = jest.fn();
 const mockSolarSystemFindUnique =
@@ -49,14 +49,11 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
-  useSolarSystem: (...args: unknown[]) => mockUseSolarSystem(...args),
   useSolarSystemCostIndices: () => mockUseSolarSystemCostIndices(),
   useSolarSystemSovereignty: (...args: unknown[]) =>
     mockUseSolarSystemSovereignty(...args),
   useAllSolarSystemJumps: () => mockUseAllSolarSystemJumps(),
   useAllSolarSystemKills: () => mockUseAllSolarSystemKills(),
-  useStar: (...args: unknown[]) => mockUseStar(...args),
-  useStargate: (...args: unknown[]) => mockUseStargate(...args),
 }));
 
 jest.mock("@jitaspace/esi-client", () => ({
@@ -123,19 +120,36 @@ jest.mock("next/link", () => ({
 // handed to the client page as a plain prop, so tests pass it in directly.
 type SdeProp = SolarSystemSdeInfo | null;
 
+// What the system holds is read on the server too; each test sets its own.
+const EMPTY_CONTENTS: SolarSystemContents = {
+  securityStatus: 0.9,
+  securityClass: null,
+  starId: null,
+  star: null,
+  planets: [],
+  stargates: [],
+  stationIds: [],
+};
+let contents: SolarSystemContents = EMPTY_CONTENTS;
+
 function renderPage(sde: SdeProp = null, systemId: number = SYSTEM_ID) {
   const Page = require("~/app/system/[systemId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page systemId={systemId} systemName="Jita" sde={sde} />
+      <Page
+        systemId={systemId}
+        systemName="Jita"
+        sde={sde}
+        contents={contents}
+      />
     </MantineProvider>,
   );
 }
 
 describe("System page", () => {
   beforeEach(() => {
+    contents = EMPTY_CONTENTS;
     mockUseSelectedCharacter.mockReset().mockReturnValue(undefined);
-    mockUseSolarSystem.mockReset().mockReturnValue({ data: undefined });
     mockUseSolarSystemCostIndices.mockReset().mockReturnValue({ data: {} });
     mockUseSolarSystemSovereignty.mockReset().mockReturnValue(undefined);
     mockUseAllSolarSystemJumps
@@ -144,8 +158,6 @@ describe("System page", () => {
     mockUseAllSolarSystemKills
       .mockReset()
       .mockReturnValue({ data: { data: [] } });
-    mockUseStar.mockReset().mockReturnValue({ data: undefined });
-    mockUseStargate.mockReset().mockReturnValue({ data: undefined });
     mockUseGetFwSystems.mockReset().mockReturnValue({ data: { data: [] } });
     mockUseGetIncursions.mockReset().mockReturnValue({ data: { data: [] } });
     mockSolarSystemFindUnique.mockReset().mockResolvedValue({
@@ -164,6 +176,13 @@ describe("System page", () => {
       isCorridor: false,
       isInternational: false,
       isRegional: false,
+      securityStatus: "0.9",
+      securityClass: null,
+      starId: null,
+      star: null,
+      Planet: [],
+      stargates: [],
+      stations: [],
     });
   });
 
@@ -173,28 +192,21 @@ describe("System page", () => {
 
   it("renders every section for a rich system (sovereignty, FW, incursion)", () => {
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123456789 });
-    mockUseSolarSystem.mockReturnValue({
-      data: {
-        data: {
-          constellation_id: 20000020,
-          security_status: 0.9459,
-          security_class: "B",
-          star_id: 40000001,
-          planets: [
-            { planet_id: 40000010, moons: [1, 2], asteroid_belts: [3] },
-            { planet_id: 40000020, moons: [], asteroid_belts: [] },
-          ],
-          stargates: [50000001, 50000002],
-          stations: [60000001, 60000002],
-        },
-      },
-    });
-    mockUseStar.mockReturnValue({
-      data: { data: { spectral_class: "F1 V", temperature: 7305 } },
-    });
-    mockUseStargate.mockReturnValue({
-      data: { data: { destination: { system_id: 30000144 } } },
-    });
+    contents = {
+      securityStatus: 0.9459,
+      securityClass: "B",
+      starId: 40000001,
+      star: { spectralClass: "F1 V", temperature: 7305 },
+      planets: [
+        { planetId: 40000010, moonCount: 2, beltCount: 1 },
+        { planetId: 40000020, moonCount: 0, beltCount: 0 },
+      ],
+      stargates: [
+        { stargateId: 50000001, destinationSystemId: 30000144 },
+        { stargateId: 50000002, destinationSystemId: 30000144 },
+      ],
+      stationIds: [60000001, 60000002],
+    };
     mockUseSolarSystemCostIndices.mockReturnValue({
       data: {
         [SYSTEM_ID]: {
@@ -265,8 +277,6 @@ describe("System page", () => {
       isInternational: true,
       isRegional: false,
     });
-
-    expect(mockUseSolarSystem).toHaveBeenCalledWith(SYSTEM_ID);
 
     // Header widgets
     expect(screen.getByTestId("set-autopilot")).toBeInTheDocument();
@@ -353,17 +363,7 @@ describe("System page", () => {
   });
 
   it("labels a wormhole system as W-Space and shows its class", () => {
-    mockUseSolarSystem.mockReturnValue({
-      data: {
-        data: {
-          security_status: -1.0,
-          star_id: 40000001,
-          planets: [],
-          stargates: [],
-          stations: [],
-        },
-      },
-    });
+    contents = { ...EMPTY_CONTENTS, securityStatus: -1.0, starId: 40000001 };
     renderPage({
       luminosity: null,
       radius: null,
@@ -434,10 +434,6 @@ describe("System page", () => {
   });
 
   it("toggles the 3D system map on and off", () => {
-    mockUseSolarSystem.mockReturnValue({
-      data: { data: { security_status: 0.9 } },
-    });
-
     renderPage();
 
     // Collapsed by default: the section header shows but the map is not mounted.

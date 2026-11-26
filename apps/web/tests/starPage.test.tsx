@@ -46,14 +46,15 @@ describe("star page", () => {
   it("renders rich star details when data is available", () => {
     mockUseStar.mockReturnValue({
       data: {
-        data: {
-          name: "Jita - Star",
-          solar_system_id: 30000142,
-          type_id: 3802,
-          age: 9100000000,
+        name: "Jita - Star",
+        solarSystemID: 30000142,
+        typeID: 3802,
+        radius: 482000000,
+        // The SDE gives the age in seconds: 9.1 billion years.
+        statistics: {
+          age: 9_100_000_000 * 365.25 * 24 * 60 * 60,
           luminosity: 0.06713,
-          radius: 482000000,
-          spectral_class: "K7 V",
+          spectralClass: "K7 V",
           temperature: 4029,
         },
       },

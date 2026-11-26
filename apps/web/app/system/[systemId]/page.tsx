@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import type { SolarSystemSdeInfo } from "./types";
+import type { SolarSystemContents, SolarSystemSdeInfo } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { systemFactionId, systemFactionSelect } from "~/lib/factionTerritory";
@@ -82,7 +82,10 @@ export function generateStaticParams() {
 interface SolarSystemPageData {
   name: string;
   sde: SolarSystemSdeInfo;
+  contents: SolarSystemContents;
 }
+
+const NOT_DELETED = { where: { isDeleted: false } } as const;
 
 /**
  * Read the system identity and SDE columns from our database. Returns null for
@@ -117,6 +120,33 @@ async function readSolarSystemPageData(
       isCorridor: true,
       isInternational: true,
       isRegional: true,
+      securityStatus: true,
+      securityClass: true,
+      starId: true,
+      star: { select: { spectralClass: true, temperature: true } },
+      Planet: {
+        ...NOT_DELETED,
+        select: {
+          planetId: true,
+          _count: {
+            select: { moons: NOT_DELETED, asteroidBelts: NOT_DELETED },
+          },
+        },
+        orderBy: [{ celestialIndex: "asc" }, { planetId: "asc" }],
+      },
+      stargates: {
+        ...NOT_DELETED,
+        select: {
+          stargateId: true,
+          DestinationStargate: { select: { solarSystemId: true } },
+        },
+        orderBy: { stargateId: "asc" },
+      },
+      stations: {
+        ...NOT_DELETED,
+        select: { stationId: true },
+        orderBy: { stationId: "asc" },
+      },
     },
     where: { solarSystemId: systemId },
   });
@@ -142,6 +172,26 @@ async function readSolarSystemPageData(
       isInternational: system.isInternational ?? false,
       isRegional: system.isRegional ?? false,
     },
+    contents: {
+      securityStatus: Number(system.securityStatus),
+      securityClass: system.securityClass,
+      starId: system.starId,
+      star: system.star && {
+        spectralClass: system.star.spectralClass,
+        temperature: Number(system.star.temperature),
+      },
+      planets: system.Planet.map((planet) => ({
+        planetId: planet.planetId,
+        moonCount: planet._count.moons,
+        beltCount: planet._count.asteroidBelts,
+      })),
+      stargates: system.stargates.map((stargate) => ({
+        stargateId: stargate.stargateId,
+        destinationSystemId:
+          stargate.DestinationStargate?.solarSystemId ?? null,
+      })),
+      stationIds: system.stations.map((station) => station.stationId),
+    },
   };
 }
 
@@ -158,7 +208,14 @@ async function PageContent({
   const system = await readSolarSystemPageData(id);
   if (!system) notFound();
 
-  return <PageClient systemId={id} systemName={system.name} sde={system.sde} />;
+  return (
+    <PageClient
+      systemId={id}
+      systemName={system.name}
+      sde={system.sde}
+      contents={system.contents}
+    />
+  );
 }
 
 export default function Page({

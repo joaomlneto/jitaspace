@@ -1,16 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import type { Localized, SdeHookOptions, SdeRace } from "../../sde";
+import { useSdeRecord } from "../../sde";
 
-import { useGetUniverseRaces } from "@jitaspace/esi-client";
+export type Race = Localized<SdeRace>;
 
-export const useRace = (raceId: number) => {
-  const { data, ...others } = useGetUniverseRaces();
-
-  const race = useMemo(
-    () => data?.data.find((race) => race.race_id === raceId),
-    [data, raceId],
-  );
-
-  return { data: race, ...others };
-};
+export const useRace = (raceId: number | undefined, options?: SdeHookOptions) =>
+  useSdeRecord("races", raceId, options);

@@ -12,6 +12,6 @@ export type GroupNameProps = TextProps & {
 
 export const GroupName = memo(({ groupId, ...otherProps }: GroupNameProps) => {
   const { data } = useGroup(groupId);
-  return <UIGroupName name={data?.data.name} {...otherProps} />;
+  return <UIGroupName name={data?.name} {...otherProps} />;
 });
 GroupName.displayName = "GroupName";

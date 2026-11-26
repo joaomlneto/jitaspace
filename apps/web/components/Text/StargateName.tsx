@@ -12,8 +12,8 @@ export type StargateNameProps = TextProps & {
 
 export const StargateName = memo(
   ({ stargateId, ...otherProps }: StargateNameProps) => {
-    const { data } = useStargate(stargateId ?? 0);
-    return <UIStargateName name={data?.data.name} {...otherProps} />;
+    const { data } = useStargate(stargateId);
+    return <UIStargateName name={data?.name} {...otherProps} />;
   },
 );
 StargateName.displayName = "StargateName";
