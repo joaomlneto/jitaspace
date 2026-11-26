@@ -16,6 +16,18 @@ const server = z.object({
   NEXTAUTH_SECRET: z.string().min(1),
 
   DATABASE_URL: z.url(),
+  /**
+   * Most database connections one server instance may hold. Unset, it is 5,
+   * which suits Vercel: many instances share a small PgBouncer. A self-hosted
+   * deploy runs one long-lived instance, so 5 is its whole budget and a burst
+   * of uncached pages starves it; set this to what its pooler can spare.
+   * Read when the server starts, so it needs no rebuild. An empty value counts
+   * as unset: an emptied field in a deploy dashboard must not stop the server.
+   */
+  DATABASE_POOL_MAX: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.coerce.number().int().min(1).max(100).optional(),
+  ),
   REDIS_URL: z.string(),
 
   /**
@@ -90,6 +102,7 @@ const processEnv = {
   NEXT_RUNTIME: process.env.NEXT_RUNTIME,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
+  DATABASE_POOL_MAX: process.env.DATABASE_POOL_MAX,
   REDIS_URL: process.env.REDIS_URL,
   EVE_BUILDS_DATABASE_URL: process.env.EVE_BUILDS_DATABASE_URL,
   EVE_BUILDS_DATABASE_SCHEMA: process.env.EVE_BUILDS_DATABASE_SCHEMA,
