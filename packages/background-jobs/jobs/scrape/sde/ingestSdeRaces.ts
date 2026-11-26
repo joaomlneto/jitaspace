@@ -38,8 +38,11 @@ export const ingestSdeRaces = defineJob<IngestSdeRacesEventPayload["data"]>({
     const typeIds = await loadSdeFileIds("types.yaml");
 
     // FK order: Race first, then its starting-skill children.
-    // `factionId` is not set here — it is sourced from ESI, so the diff leaves
-    // it untouched (races.yaml has no factionID anyway).
+    // `factionId` is not set here: races.yaml has no faction, and ESI's
+    // `alliance_id` — its only source — went with /universe/races at
+    // compatibility date 2026-11-19. The diff leaves it untouched, so the six
+    // races ESI named a faction for keep it; a new race has none. Faction
+    // `memberRaces` cannot stand in: several factions list each race.
     const races = await ingestSdeTable({
       filename: "races.yaml",
       records: data,

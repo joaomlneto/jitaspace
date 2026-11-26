@@ -22,7 +22,8 @@ import {
  * {moons, asteroidBelts} → stations.
  *
  * Shared by {@link ingestSde} (the standalone pipeline) and `bootstrapDatabase`
- * (which runs the same set after the API scrapers). Adding a new `ingest-sde-*`
+ * (which runs the same set, with the NPC-corporation scrape slotted in before
+ * the races). Adding a new `ingest-sde-*`
  * job? Add its id here too — `registry.test.ts` asserts this list stays exactly
  * the set of `ingest-sde-*` jobs (minus this orchestrator).
  */

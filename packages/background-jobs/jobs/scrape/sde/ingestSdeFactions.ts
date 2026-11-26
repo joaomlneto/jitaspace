@@ -8,6 +8,7 @@ import {
   loadSdeFiles,
   optionalNumber,
   plainString,
+  present,
   requiredBoolean,
   requiredNumber,
 } from "../../../helpers";
@@ -63,19 +64,61 @@ export const ingestSdeFactions = defineJob<
       counts.set(factionId, entry);
     }
 
+    // The faction's corporations and home system are real foreign keys into
+    // tables this job does not write: Corporation is ESI's, and SolarSystem is
+    // ingested later in the pipeline. A reference to a row that is not there
+    // yet stays null until the next run, rather than failing the whole file —
+    // on a fresh database both are filled by the time `ingest-sde-all` runs
+    // again. In production every one resolves.
+    const referenced = (field: string) =>
+      Object.values(files["factions.yaml"]).flatMap((value) => {
+        const id = optionalNumber((value as Record<string, unknown>)[field]);
+        return id === null ? [] : [id];
+      });
+    const [corporationIds, solarSystemIds] = await Promise.all([
+      prisma.corporation
+        .findMany({
+          select: { corporationId: true },
+          where: {
+            corporationId: {
+              in: [
+                ...referenced("corporationID"),
+                ...referenced("militiaCorporationID"),
+              ],
+            },
+          },
+        })
+        .then((rows) => new Set(rows.map((row) => row.corporationId))),
+      prisma.solarSystem
+        .findMany({
+          select: { solarSystemId: true },
+          where: { solarSystemId: { in: referenced("solarSystemID") } },
+        })
+        .then((rows) => new Set(rows.map((row) => row.solarSystemId))),
+    ]);
+
     const factions = await ingestSdeTable({
       filename: "factions.yaml",
       records: files["factions.yaml"],
       idField: "factionId",
       delegate: prisma.faction,
-      // corporationId / militiaCorporationId / solarSystemId are left to the ESI
-      // faction scraper — setting them would require Corporation / SolarSystem
-      // rows to already exist.
       toRow: (record, id): Prisma.FactionCreateManyInput => ({
         factionId: id,
         name: enString(record.name) ?? "",
         description: enString(record.description) ?? "",
         isUnique: requiredBoolean(record.uniqueName),
+        corporationId: present(
+          corporationIds,
+          optionalNumber(record.corporationID),
+        ),
+        militiaCorporationId: present(
+          corporationIds,
+          optionalNumber(record.militiaCorporationID),
+        ),
+        solarSystemId: present(
+          solarSystemIds,
+          optionalNumber(record.solarSystemID),
+        ),
         sizeFactor: requiredNumber(record.sizeFactor),
         stationCount: counts.get(id)?.stations ?? 0,
         stationSystemCount: counts.get(id)?.systems.size ?? 0,

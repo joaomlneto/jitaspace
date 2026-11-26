@@ -25,8 +25,10 @@ import * as sdeFields from "../helpers/sdeFields";
  * not follow the "<planet> - Moon|Asteroid Belt <orbitIndex>" pattern. The moon
  * and belt jobs once built that pattern inline instead of going through these
  * helpers, and got 3 of 137 named moons and 16 of 46 named belts wrong in build
- * 3542233 — rows the ESI solar-system scraper, which writes the same `name`
- * column with the right value, then kept overwriting.
+ * 3542233 — rows the ESI solar-system scraper, which wrote the same `name`
+ * column with the right value, then kept overwriting. That scraper is gone (ESI
+ * stopped serving the map at compatibility date 2026-11-19), so these helpers
+ * are now the only source of the names.
  *
  * The fixtures are those real records, abridged.
  */
