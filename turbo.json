@@ -3,6 +3,8 @@
   "globalDependencies": ["**/.env"],
   "ui": "tui",
   "globalEnv": [
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ZONE_ID",
     "CRON_SECRET",
     "DATABASE_POOL_MAX",
     "DATABASE_URL",

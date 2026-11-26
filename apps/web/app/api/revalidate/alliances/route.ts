@@ -2,6 +2,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 
 import { allianceCacheTag, ALLIANCES_CACHE_TAG } from "~/lib/alliancesCache";
+import { isCdnPurgeEnabled, purgeCdnAfterResponse } from "~/lib/cdnPurge";
 import { isCronAuthorized } from "~/lib/cronAuth";
 
 // ESI lists ~3,650 open alliances; a run that touches more than this is not a
@@ -30,7 +31,12 @@ const bodySchema = z.object({
  *   an error page.
  * - The `/alliances` list is marked stale (`"max"`): the next visitor still
  *   gets the old copy while a fresh one renders, because that page reads the
- *   database and an outage must not replace it with an error page.
+ *   database and an outage must not replace it with an error page. Behind a
+ *   Cloudflare cache that this deploy purges (`lib/cdnPurge.ts`, never on
+ *   Vercel) it is expired too, since Cloudflare would re-cache a stale copy
+ *   for its full `s-maxage`.
+ * - With purging enabled, every changed alliance's pages and the list are
+ *   purged from Cloudflare once the response is sent.
  */
 export async function POST(request: Request): Promise<Response> {
   if (!isCronAuthorized(request)) {
@@ -56,7 +62,16 @@ export async function POST(request: Request): Promise<Response> {
     revalidateTag(allianceCacheTag(allianceId), { expire: 0 });
     revalidatePath(`/alliance/${allianceId}`);
   }
-  revalidateTag(ALLIANCES_CACHE_TAG, "max");
+  revalidateTag(
+    ALLIANCES_CACHE_TAG,
+    isCdnPurgeEnabled() ? { expire: 0 } : "max",
+  );
+  purgeCdnAfterResponse({
+    pathPrefixes: [
+      "/alliances",
+      ...allianceIds.map((allianceId) => `/alliance/${allianceId}`),
+    ],
+  });
 
   return Response.json({ revalidated: allianceIds.length });
 }
