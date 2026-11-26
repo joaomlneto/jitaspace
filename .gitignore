@@ -16,6 +16,8 @@ coverage
 
 # next.js
 .next/
+# copied from @eve-online-tools/eve-ship-tree by apps/web's dev and build scripts
+apps/web/public/ship-tree-data/
 out/
 next-env.d.ts
 

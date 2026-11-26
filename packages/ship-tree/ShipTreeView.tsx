@@ -109,7 +109,7 @@ export interface ShipTreeViewProps extends Omit<BoxProps, "children"> {
  * What this adds over using the library directly:
  *
  * - **Data.** The library fetches its tables at runtime; they are pointed at
- *   the app's own `/api/ship-tree-data` route by default, and loaded once per
+ *   the app's own `/ship-tree-data` files by default, and loaded once per
  *   mount rather than again on every faction switch.
  * - **Sizing.** The library fills its parent's height and draws nothing useful
  *   without one, so this supplies a default viewport (override with `h`/`mih`).

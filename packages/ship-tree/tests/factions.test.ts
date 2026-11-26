@@ -11,7 +11,7 @@ import {
   SHIP_TREE_FACTION_SLUGS,
   SHIP_TREE_FACTIONS,
 } from "../factions";
-import { readShipTreeDataFile } from "../server";
+import { readLibraryTable } from "./helpers";
 
 describe("SHIP_TREE_FACTIONS", () => {
   it("covers all seventeen factions the library draws", () => {
@@ -41,8 +41,8 @@ describe("SHIP_TREE_FACTIONS", () => {
   });
 
   // Checks our ids against the library's own data rather than a copy of them.
-  it("only lists factions present in the library's shipTreeFactions table", async () => {
-    const table = (await readShipTreeDataFile("shipTreeFactions.jsonl")) ?? "";
+  it("only lists factions present in the library's shipTreeFactions table", () => {
+    const table = readLibraryTable("shipTreeFactions.jsonl") ?? "";
     const idsInData = table
       .split("\n")
       .filter((line) => line !== "")

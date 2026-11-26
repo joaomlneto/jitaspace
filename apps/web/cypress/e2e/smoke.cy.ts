@@ -39,6 +39,18 @@ describe("app boots and serves pages", () => {
     });
   });
 
+  // Not in git: the build copies these out of the ship tree library, so a
+  // build that skipped the copy (or a cache that did not restore it) serves a
+  // ship tree with no data.
+  it("serves the ship tree's data tables", () => {
+    cy.request("/ship-tree-data/types.jsonl").then((res) => {
+      expect(res.status).to.eq(200);
+      // JSON Lines: one object per line.
+      const firstLine = `${res.body}`.split("\n")[0] ?? "";
+      expect(JSON.parse(firstLine)).to.be.an("object");
+    });
+  });
+
   it("returns 404 for an unknown route rather than crashing", () => {
     cy.request({ url: "/this-route-does-not-exist", failOnStatusCode: false })
       .its("status")

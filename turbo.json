@@ -91,6 +91,9 @@
       "outputs": [
         ".next/**",
         "!.next/cache/**",
+        // apps/web's build copies the ship tree's data tables here, and git
+        // ignores them: without this a cache hit restores a site with none.
+        "public/ship-tree-data/**",
         "next-env.d.ts",
         "dist/**",
         // apps/eve-icons-gallery is a static export, written to `out/`.
