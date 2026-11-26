@@ -21,9 +21,13 @@ const server = z.object({
    * which suits Vercel: many instances share a small PgBouncer. A self-hosted
    * deploy runs one long-lived instance, so 5 is its whole budget and a burst
    * of uncached pages starves it; set this to what its pooler can spare.
-   * Read when the server starts, so it needs no rebuild.
+   * Read when the server starts, so it needs no rebuild. An empty value counts
+   * as unset: an emptied field in a deploy dashboard must not stop the server.
    */
-  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(100).optional(),
+  DATABASE_POOL_MAX: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.coerce.number().int().min(1).max(100).optional(),
+  ),
   REDIS_URL: z.string(),
 
   /**
