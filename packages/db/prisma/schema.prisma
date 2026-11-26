@@ -997,6 +997,74 @@ model SolarSystemSovereignty {
   @@index([factionId])
 }
 
+/// Where a SolarSystemCostIndexSnapshot came from.
+enum SolarSystemCostIndexSource {
+  /// Our own `esi-sync-industry-cost-indices` job, reading ESI's GET /industry/systems.
+  esi
+  /// EVE Ref's archive of GET /industry/systems responses
+  /// (data.everef.net/industry-systems): hourly from 2017-11-29, with no
+  /// 2020 and most of 2019 and 2021 missing.
+  everef
+}
+
+/// One reading of ESI's GET /industry/systems: every solar system's industry
+/// cost indices at one moment. The values live in SolarSystemCostIndex, which
+/// stores only what changed, so this table is the record of *when* we looked:
+/// a stretch with no snapshots is a gap in the history, not a stretch where
+/// nothing changed.
+///
+/// Snapshots are appended in time order, by the hourly
+/// `esi-sync-industry-cost-indices` job and by the EVE Ref bootstrap
+/// (`packages/background-jobs/scripts/bootstrapIndustryCostIndices.ts`). One
+/// is never inserted before the latest, since the change log after it would no
+/// longer hold.
+model SolarSystemCostIndexSnapshot {
+  /// When these values were known to be in force: ESI's `Last-Modified` for
+  /// our own reads, or the time EVE Ref fetched the file for theirs (ESI
+  /// published that data up to an hour earlier). Also the `validFrom` of the
+  /// SolarSystemCostIndex rows this snapshot wrote.
+  snapshotAt         DateTime                   @id
+  /// The snapshot before this one, kept here so gaps in the history can be
+  /// found without scanning the table. Null for the first.
+  previousSnapshotAt DateTime?
+  source             SolarSystemCostIndexSource
+  /// The EVE Ref file it was read from (its path under data.everef.net), for
+  /// an `everef` snapshot.
+  sourceFile         String?
+  /// Solar systems the response listed.
+  systemCount        Int
+  /// SolarSystemCostIndex rows it wrote: systems whose indices changed since
+  /// the previous snapshot, appeared, or stopped being listed.
+  changedSystemCount Int
+  createdAt          DateTime                   @default(now())
+}
+
+/// A solar system's industry cost indices, as a change log: one row each time
+/// any of its six indices changed, holding all six from `validFrom` until the
+/// system's next row. The values at time T are the system's latest row with
+/// `validFrom` <= T, provided SolarSystemCostIndexSnapshot has a snapshot
+/// shortly before T (otherwise T falls in a gap).
+///
+/// Values are stored as ESI returned them: 4 decimals today, full doubles in
+/// older years. A row whose six indices are all null marks a system ESI
+/// stopped listing.
+///
+/// Not a foreign key to SolarSystem: the history must survive a system the SDE
+/// has not caught up with. Rows are never updated, and carry no
+/// `createdAt`/`updatedAt`: there are tens of millions of them.
+model SolarSystemCostIndex {
+  solarSystemId                 Int
+  validFrom                     DateTime
+  manufacturing                 Float?
+  researchingTimeEfficiency     Float?
+  researchingMaterialEfficiency Float?
+  copying                       Float?
+  invention                     Float?
+  reaction                      Float?
+
+  @@id([solarSystemId, validFrom])
+}
+
 /// Where a SovereigntySnapshot came from.
 enum SovereigntySource {
   /// Our `esi-track-sovereignty` job, polling ESI's GET /sovereignty/systems
