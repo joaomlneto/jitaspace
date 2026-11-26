@@ -11,6 +11,7 @@ import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { HoverPrefetchLink } from "~/components/Link";
+import { NotificationFeedButton } from "~/components/Notifications";
 import { ServerStatusIndicator } from "~/components/ServerStatus/ServerStatusIndicator";
 import { jitaApps } from "~/config/apps";
 import UserButton from "~/layouts/MainLayout/UserButton";
@@ -127,33 +128,39 @@ export function HeaderMenu() {
               </Suspense>
             </Group>
 
-            <Group gap="xs" visibleFrom="sm" wrap="nowrap">
-              <HeaderSearchButton />
-              {characterIds.length > 0 && <UserButton />}
-              {characterIds.length === 0 && (
-                <LoginWithEveOnlineButton
-                  size="small"
-                  onClick={() => {
-                    openContextModal({
-                      modal: "login",
-                      title: "Login",
-                      size: "xl",
-                      centered: false,
-                      innerProps: {},
-                    });
-                  }}
-                />
-              )}
-            </Group>
+            <Group gap="xs" wrap="nowrap">
+              <Group gap="xs" visibleFrom="sm" wrap="nowrap">
+                <HeaderSearchButton />
+              </Group>
+              {/* One feed for both layouts: beside the character button. */}
+              <NotificationFeedButton />
+              <Group gap="xs" visibleFrom="sm" wrap="nowrap">
+                {characterIds.length > 0 && <UserButton />}
+                {characterIds.length === 0 && (
+                  <LoginWithEveOnlineButton
+                    size="small"
+                    onClick={() => {
+                      openContextModal({
+                        modal: "login",
+                        title: "Login",
+                        size: "xl",
+                        centered: false,
+                        innerProps: {},
+                      });
+                    }}
+                  />
+                )}
+              </Group>
 
-            <Group gap="xs" hiddenFrom="sm" wrap="nowrap">
-              {characterIds.length > 0 && <UserButton compact />}
-              <Burger
-                className={classes.burger}
-                opened={drawerOpened}
-                onClick={toggleDrawer}
-                aria-label="Toggle navigation"
-              />
+              <Group gap="xs" hiddenFrom="sm" wrap="nowrap">
+                {characterIds.length > 0 && <UserButton compact />}
+                <Burger
+                  className={classes.burger}
+                  opened={drawerOpened}
+                  onClick={toggleDrawer}
+                  aria-label="Toggle navigation"
+                />
+              </Group>
             </Group>
           </Group>
         </Container>
