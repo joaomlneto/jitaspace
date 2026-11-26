@@ -1,5 +1,4 @@
 import { memo } from "react";
-import Link from "next/link";
 import { Anchor, Box, Group, Text } from "@mantine/core";
 import { addDays } from "date-fns";
 
@@ -12,6 +11,7 @@ import { DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 import { EveEntityAnchor } from "~/components/Anchor";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { DataTable } from "~/components/DataTable";
+import { HoverPrefetchLink } from "~/components/Link";
 import classes from "./MarketOrdersDataTable.module.css";
 
 interface MarketOrdersDataTableProps {
@@ -102,7 +102,7 @@ function LocationName({
   if (order.location_id > UNIVERSE_NAMES_MAX_ID) {
     return (
       <Anchor
-        component={Link}
+        component={HoverPrefetchLink}
         href={`/structure/${order.location_id}`}
         inherit
         target="_blank"

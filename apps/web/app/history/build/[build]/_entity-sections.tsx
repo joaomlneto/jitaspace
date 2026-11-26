@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { Anchor, Badge, Group, List, Text, Title } from "@mantine/core";
 
 import type { EntityChangeRow, EntityNames } from "~/lib/history";
+import { HoverPrefetchLink } from "~/components/Link";
 import {
   collectionMeta,
   entityHistoryHref,
@@ -105,7 +105,7 @@ function EntityRow({
       {/* No prefetch: a build lists hundreds of these, and prefetching every
           visible one fired a request per row. */}
       <Anchor
-        component={Link}
+        component={HoverPrefetchLink}
         href={entityHistoryHref(entityType, id)}
         prefetch={false}
       >

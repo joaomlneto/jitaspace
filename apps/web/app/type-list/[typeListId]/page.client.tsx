@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Badge,
@@ -26,6 +25,7 @@ import type { TypeListDetail, TypeListRuleDetail } from "./data";
 import type { TypeListRefType } from "~/lib/typeLists";
 import { CategoryAnchor, GroupAnchor, TypeAnchor } from "~/components/Anchor";
 import { DataTable } from "~/components/DataTable";
+import { HoverPrefetchLink } from "~/components/Link";
 import { TypeListMatchBadges } from "~/components/TypeLists";
 import {
   buildTypeListRuleIndex,
@@ -269,7 +269,7 @@ export default function TypeListPage({
     <Container size="xl">
       <Stack gap="lg">
         <Breadcrumbs>
-          <Anchor component={Link} href="/type-lists" size="sm">
+          <Anchor component={HoverPrefetchLink} href="/type-lists" size="sm">
             Type Lists
           </Anchor>
           <Text size="sm">{title}</Text>

@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { Fragment, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   Alert,
   Anchor,
@@ -25,6 +24,7 @@ import type {
   IncursionStateEventTuple,
 } from "./types";
 import { DataTable } from "~/components/DataTable";
+import { HoverPrefetchLink } from "~/components/Link";
 import { mergeLookups, useIncursionHistory } from "./history";
 import { formatDuration } from "./math";
 import {
@@ -162,7 +162,7 @@ function SpawnHistory({
                     <Table.Td>
                       {region && (
                         <Anchor
-                          component={Link}
+                          component={HoverPrefetchLink}
                           href={`/region/${region.regionId}`}
                           size="sm"
                         >
