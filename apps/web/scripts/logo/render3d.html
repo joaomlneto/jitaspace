@@ -1,0 +1,604 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>star render</title>
+<style>html,body{margin:0;background:#6b7684}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"./three/build/three.module.js","three/addons/":"./three/examples/jsm/"}}</script>
+<script type="module">
+// The JitaSpace star in 3D: a machined metal plate whose LOW-RESOLUTION render reproduces the
+// star in the Caldari Navy corporation logo ("native" below: the 128 px logo, see native.py).
+// Served by render3d.py, which prints the URL to open and saves the finished render.
+//
+// The page builds the star (a shallow lens-shaped face with a bevel down to the outline) and
+// then fits, on the native logo's pixel grid:
+//   1. the reflection map (matcap), by regularised least squares;
+//   2. shallow dents, then tarnish (a colour multiplier on the surface), by back-projection:
+//      render, shrink onto the native pixels, push the difference back, repeat;
+//   3. a worn-metal slope map and cavities, for the sharp detail the original cannot specify.
+// It can also search the shape and where the star sits on the native grid (see `search`).
+// The title shows progress and reads "done ..." at the end; window.__result holds the numbers.
+//
+// URL parameters (render3d.py holds the values behind the committed render):
+//   tag               name of the saved files: <tag>-render.png and <tag>-matcap.png
+//   size, ppu         height of the saved render in pixels; pixels per logo unit while fitting
+//   outline           regular: a regular pentagram, identity mapping onto the native grid
+//   g                 JSON, fixed shape and placement: bevel (width), rise (bevel height), dome
+//                     (lens height), round (0 chamfer .. 1 quarter-round), in star radii;
+//                     s (logo units per native pixel), ox, oy (frame offset in native pixels)
+//   search, start, bounds, iters, kshape   the optional shape and placement search
+//   m, lambda, cg     reflection map: resolution, smoothness weight, solver iterations
+//   dents, dmax, dblur, dgain, deps        dents: rounds, depth limit, blur, gain, probe tilt
+//   tarnish, tblur, tmin, tmax, tsat, tpu, gain   tarnish: rounds, blur, limits, how much hue
+//                     it may carry, resolution, step size
+//   smear             how far tarnish on a bevel is averaged along its edge
+//   rugged, tex, wb, wm, wp, ws, seed      surface wear: tilt strength, map size, and the mix
+//                     of brushed grain, mottle, pits and scratches
+//   cavity, warp      darkening in hollows; organic warp of the fitted patches
+import * as THREE from 'three';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+
+// ---- the star's outline and camera
+const { OUTLINE, inset, phi, camera } = (() => {
+  // Star outline: logo.svg's regular pentagram, outer radius 1, centre at the origin, y up.
+  const K = Math.cos(72 * Math.PI / 180) / Math.cos(36 * Math.PI / 180);
+  const OUTLINE = [...Array(10)].map((_, i) => {
+    const r = i % 2 ? K : 1, a = (90 - 36 * i) * Math.PI / 180;
+    return new THREE.Vector2(r * Math.cos(a), r * Math.sin(a));
+  });
+
+  // The outline offset inward by d (mitred, so the tips stay sharp). It runs clockwise.
+  function inset(pts, d) {
+    const n = pts.length, lines = pts.map((a, i) => {
+      const b = pts[(i + 1) % n], dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy);
+      return { px: a.x + (dy / l) * d, py: a.y - (dx / l) * d, dx, dy };
+    });
+    return pts.map((_, i) => {
+      const L1 = lines[(i + n - 1) % n], L2 = lines[i], det = L1.dx * L2.dy - L1.dy * L2.dx;
+      const t = ((L2.px - L1.px) * L2.dy - (L2.py - L1.py) * L2.dx) / det;
+      return new THREE.Vector2(L1.px + L1.dx * t, L1.py + L1.dy * t);
+    });
+  }
+
+  // ---- Inflation height: solve the Poisson equation (laplacian = -1, zero on the outline) on a
+  // grid, so the star puffs up smoothly like a pillow: highest at the centre, rounded across each
+  // arm, no creases. Computed once; normalised so its maximum is 1.
+  const G = 200, EXT = 1.02;
+  const insidePoly = (x, y, pts) => {
+    let c = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const a = pts[i], b = pts[j];
+      if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) c = !c;
+    }
+    return c;
+  };
+  const PHI = (() => {
+    const h = (2 * EXT) / (G - 1), u = new Float64Array(G * G), m = new Uint8Array(G * G);
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) m[j * G + i] = insidePoly(-EXT + i * h, -EXT + j * h, OUTLINE);
+    for (let it = 0; it < 2500; it++) {            // successive over-relaxation
+      for (let j = 1; j < G - 1; j++) for (let i = 1; i < G - 1; i++) {
+        const k = j * G + i; if (!m[k]) continue;
+        const v = 0.25 * (u[k - 1] + u[k + 1] + u[k - G] + u[k + G] + h * h);
+        u[k] += 1.9 * (v - u[k]);
+      }
+    }
+    let mx = 0; for (const v of u) mx = Math.max(mx, v);
+    for (let k = 0; k < u.length; k++) u[k] /= mx;
+    return { u, h };
+  })();
+  function phi(x, y) {
+    const fx = (x + EXT) / PHI.h, fy = (y + EXT) / PHI.h;
+    const i = Math.min(G - 2, Math.max(0, Math.floor(fx))), j = Math.min(G - 2, Math.max(0, Math.floor(fy)));
+    const tx = fx - i, ty = fy - j, U = PHI.u;
+    return (U[j * G + i] * (1 - tx) + U[j * G + i + 1] * tx) * (1 - ty) + (U[(j + 1) * G + i] * (1 - tx) + U[(j + 1) * G + i + 1] * tx) * ty;
+  }
+
+  /** Frame logo.svg's 176 x 168 view (star centre 88, 93.58; radius 88.92) through a perspective camera. */
+  function camera(fov = 28) {
+    const R = 88.92, f = { l: -88 / R, r: 88 / R, t: 93.58 / R, b: -(168 - 93.58) / R };
+    const D = ((f.t - f.b) / 2) / Math.tan(fov * Math.PI / 360);
+    const cam = new THREE.PerspectiveCamera();
+    cam.position.set(0, 0, D);
+    const near = 0.1, k = near / D;
+    cam.projectionMatrix.makePerspective(f.l * k, f.r * k, f.t * k, f.b * k, near, D + 10);
+    cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+    return cam;
+  }
+  return { OUTLINE, inset, phi, camera };
+})();
+
+// ---- the star's geometry
+const { starGeometry3: starGeometry2, DEFAULTS3: DEFAULTS2 } = (() => {
+  // A machined star: a shallow lens-shaped face (one broad dome over the whole star, not a
+  // pillow per arm) with a chamfered or rounded bevel down to the outline, and a side wall.
+
+  const DEFAULTS3 = { bevel: 0.05, rise: 0.035, dome: 0.12, pillow: 0.0, round: 0.3 };
+
+  /** P.bevel: bevel width; P.rise: bevel height; P.dome: lens height; P.pillow: per-arm puff; P.round: 0 chamfer .. 1 quarter-round. */
+  function starGeometry3(P, n = 28, m = 14) {
+    const OL = P.outline ?? OUTLINE;   // P.outline: another ten-corner star outline (clockwise, same units)
+    const inner = inset(OL, P.bevel);
+    const zAt = (x, y) => P.rise + P.dome * (1 - (x * x + y * y)) + P.pillow * Math.sqrt(Math.max(0, phi(x, y)));
+    const pos = [], uv = [];
+    for (let i = 0; i < 10; i++) {
+      const A = inner[i], B = inner[(i + 1) % 10];
+      const q = (a, b) => { const u = a / n, v = b / n, x = u * A.x + v * B.x, y = u * A.y + v * B.y; return [x, y, zAt(x, y)]; };
+      for (let a = 0; a < n; a++) for (let b = 0; b < n - a; b++) {
+        for (const v of [q(a, b), q(a, b + 1), q(a + 1, b)]) { pos.push(...v); uv.push(v[0], v[1]); }
+        if (a + b < n - 1) for (const v of [q(a + 1, b), q(a, b + 1), q(a + 1, b + 1)]) { pos.push(...v); uv.push(v[0], v[1]); }
+      }
+    }
+    let face = new THREE.BufferGeometry();
+    face.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    face.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    face.setAttribute('guv', new THREE.Float32BufferAttribute(uv, 2));                       // the face is brushed along x
+    face.setAttribute('gdir', new THREE.Float32BufferAttribute(Array.from({ length: uv.length / 2 * 3 }, (_, k) => (k % 3 === 0 ? 1 : 0)), 3));
+    face = mergeVertices(face, 1e-5);
+    face.computeVertexNormals();
+
+    // Bevel: one smooth strip per edge (creased against its neighbours and against the face).
+    // Profile across the bevel (0 at the outline, 1 where it meets the face): a chamfer that eases
+    // into the face over its last third (no razor crease), mixed with a quarter-round.
+    const FI = 0.34, ramp = (u) => (u < 1 - FI ? u : u - (u - (1 - FI)) ** 2 / (2 * FI)) / (1 - FI / 2);
+    const prof = (u) => (1 - P.round) * ramp(u) + P.round * Math.sqrt(1 - (1 - u) ** 2);
+    const strips = [];
+    for (let i = 0; i < 10; i++) {
+      const j = (i + 1) % 10, p = [], t2 = [], idx = [], gu = [], gd = [];
+      // each bevel is machined along its own edge: grain coordinates run along and across it
+      const el = Math.hypot(OL[j].x - OL[i].x, OL[j].y - OL[i].y), ex = (OL[j].x - OL[i].x) / el, ey = (OL[j].y - OL[i].y) / el;
+      for (let k = 0; k <= n; k++) for (let s = 0; s <= m; s++) {
+        const t = k / n, u = s / m;
+        const ox = OL[i].x + (OL[j].x - OL[i].x) * t, oy = OL[i].y + (OL[j].y - OL[i].y) * t;
+        const ix = inner[i].x + (inner[j].x - inner[i].x) * t, iy = inner[i].y + (inner[j].y - inner[i].y) * t;
+        const x = ox + (ix - ox) * u, y = oy + (iy - oy) * u;
+        p.push(x, y, zAt(ix, iy) * prof(u)); t2.push(x, y);
+        gu.push(x * ex + y * ey + 0.37 * i, -x * ey + y * ex + 0.61 * i); gd.push(ex, ey, 1);
+      }
+      const at = (k, s) => k * (m + 1) + s;
+      for (let k = 0; k < n; k++) for (let s = 0; s < m; s++) {
+        const a = at(k, s), b = at(k, s + 1), c = at(k + 1, s), d = at(k + 1, s + 1);
+        idx.push(a, d, c, a, b, d);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(t2, 2));
+      g.setAttribute('guv', new THREE.Float32BufferAttribute(gu, 2)); g.setAttribute('gdir', new THREE.Float32BufferAttribute(gd, 3));
+      g.setIndex(idx); g.computeVertexNormals();
+      strips.push(g.toNonIndexed());
+      // side wall under this edge
+      const O1 = OL[i], O2 = OL[j], w = new THREE.BufferGeometry();
+      w.setAttribute('position', new THREE.Float32BufferAttribute([O1.x, O1.y, 0, O2.x, O2.y, 0, O2.x, O2.y, -0.05, O1.x, O1.y, 0, O2.x, O2.y, -0.05, O1.x, O1.y, -0.05], 3));
+      w.setAttribute('uv', new THREE.Float32BufferAttribute([O1.x, O1.y, O2.x, O2.y, O2.x, O2.y, O1.x, O1.y, O2.x, O2.y, O1.x, O1.y], 2));
+      w.setAttribute('guv', w.getAttribute('uv').clone()); w.setAttribute('gdir', new THREE.Float32BufferAttribute([1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1], 3));
+      w.computeVertexNormals(); strips.push(w);
+    }
+    return { face, bevel: mergeGeometries(strips) };
+  }
+  return { starGeometry3, DEFAULTS3 };
+})();
+
+// ---- the worn-metal surface
+const { ruggedSlopeMap } = (() => {
+  // Worn metal as a slope map (how far the surface tilts, in x and y), built from four layers that
+  // are each normalised to a peak tilt of 1 and then mixed: brushed grain, gentle unevenness,
+  // pits and dents, and a few scratches. Everything is drawn anti-aliased. Deterministic per seed.
+
+  function ruggedSlopeMap({ seed = 7, N = 2048, brushed = 1, mottle = 1, pits = 1, scratches = 1 } = {}) {
+    let s = seed >>> 0 || 1;
+    const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+    const NN = N * N, idx = (x, y) => ((y + N) % N) * N + ((x + N) % N);
+    const slopes = (h, mode) => {            // central differences, normalised to a peak of about 1
+      const dx = new Float32Array(NN), dy = new Float32Array(NN); let m = 0, ss = 0;
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const k = y * N + x, a = (h[idx(x + 1, y)] - h[idx(x - 1, y)]) * 0.5, b = (h[idx(x, y + 1)] - h[idx(x, y - 1)]) * 0.5;
+        dx[k] = a; dy[k] = b; m = Math.max(m, Math.abs(a), Math.abs(b)); ss += a * a + b * b;
+      }
+      const norm = mode === 'peak' ? m : 3 * Math.sqrt(ss / (2 * NN));
+      for (let k = 0; k < NN; k++) { dx[k] /= norm; dy[k] /= norm; }
+      return [dx, dy];
+    };
+    const boxX = (a, L) => {                 // running-sum box blur along x, wrapping
+      const o = new Float32Array(NN);
+      for (let y = 0; y < N; y++) { let sum = 0; for (let x = -L; x <= L; x++) sum += a[idx(x, y)]; for (let x = 0; x < N; x++) { o[y * N + x] = sum / (2 * L + 1); sum += a[idx(x + L + 1, y)] - a[idx(x - L, y)]; } }
+      return o;
+    };
+    const blurY = (a) => { const o = new Float32Array(NN); for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) o[y * N + x] = 0.25 * a[idx(x, y - 1)] + 0.5 * a[y * N + x] + 0.25 * a[idx(x, y + 1)]; return o; };
+    const F = [new Float32Array(NN), new Float32Array(NN)], cav = new Float32Array(NN);
+    const dig = (h, w) => { let m = 1e-9; for (let k = 0; k < NN; k++) m = Math.max(m, -h[k]); for (let k = 0; k < NN; k++) cav[k] += w * Math.max(0, -h[k]) / m; };
+    const mix = (h, w, mode) => { if (!w) return; const [dx, dy] = slopes(h, mode); for (let k = 0; k < NN; k++) { F[0][k] += w * dx[k]; F[1][k] += w * dy[k]; } };
+
+    if (brushed) {
+      // Streaks along x in three widths. Each width is mixed by its own slope, so the finest lines
+      // do not swamp the rest (mixing heights instead gives a one-pixel pitch that reads as scanlines).
+      const boxY = (a, L) => {
+        const o = new Float32Array(NN);
+        for (let x = 0; x < N; x++) { let sum = 0; for (let y = -L; y <= L; y++) sum += a[idx(x, y)]; for (let y = 0; y < N; y++) { o[y * N + x] = sum / (2 * L + 1); sum += a[idx(x, y + L + 1)] - a[idx(x, y - L)]; } }
+        return o;
+      };
+      // how strongly an area is brushed varies slowly
+      const G = 7, g = Float32Array.from({ length: G * G }, () => rnd()), sm = (t) => t * t * (3 - 2 * t), mod = new Float32Array(NN);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const fx = x / N * G, fy = y / N * G, ix = Math.floor(fx), iy = Math.floor(fy), tx = sm(fx - ix), ty = sm(fy - iy);
+        const v = (i, j) => g[((iy + j) % G) * G + (ix + i) % G];
+        mod[y * N + x] = 0.45 + 0.75 * ((v(0, 0) * (1 - tx) + v(1, 0) * tx) * (1 - ty) + (v(0, 1) * (1 - tx) + v(1, 1) * tx) * ty);
+      }
+      const S = N / 3072;       // widths are set for a 3072 texture
+      for (const [len, wide, w] of [[150, 4, 1], [70, 2, 0.75], [30, 1, 0.45], [14, 0, 0.18]]) {
+        let a = new Float32Array(NN); for (let k = 0; k < NN; k++) a[k] = rnd() - 0.5;
+        for (let p = 0; p < 3; p++) a = boxX(a, Math.max(2, Math.round(len * S)));
+        if (wide) { const L = Math.max(1, Math.round(wide * S)); for (let p = 0; p < 3; p++) a = boxY(a, L); } else a = blurY(a);
+        for (let k = 0; k < NN; k++) a[k] *= mod[k];
+        mix(a, brushed * w, 'rms');
+      }
+    }
+    if (mottle) {                            // smooth unevenness at three scales, equal slope each
+      const h = new Float32Array(NN);
+      for (const cell of [20, 56, 160]) {
+        const G = Math.round(N / cell), g = Float32Array.from({ length: G * G }, () => rnd() - 0.5), sm = (t) => t * t * (3 - 2 * t);
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+          const fx = x / N * G, fy = y / N * G, ix = Math.floor(fx), iy = Math.floor(fy), tx = sm(fx - ix), ty = sm(fy - iy);
+          const v = (i, j) => g[((iy + j) % G) * G + (ix + i) % G];
+          h[y * N + x] += cell * ((v(0, 0) * (1 - tx) + v(1, 0) * tx) * (1 - ty) + (v(0, 1) * (1 - tx) + v(1, 1) * tx) * ty);
+        }
+      }
+      mix(h, mottle, 'rms');
+    }
+    const splat = (h, cx, cy, sig, d) => { const r = Math.ceil(3 * sig); for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) h[idx(Math.round(cx) + x, Math.round(cy) + y)] += d * Math.exp(-((x + Math.round(cx) - cx) ** 2 + (y + Math.round(cy) - cy) ** 2) / (2 * sig * sig)); };
+    if (pits) {
+      const h = new Float32Array(NN);
+      for (let i = 0; i < 900; i++) { const sig = 1.5 + rnd() * rnd() * 7; splat(h, rnd() * N, rnd() * N, sig, -sig * (0.4 + rnd())); }
+      for (let i = 0; i < 40; i++) { const sig = 10 + rnd() * 22; splat(h, rnd() * N, rnd() * N, sig, -sig * (0.15 + 0.3 * rnd())); }
+      mix(h, pits, 'peak'); dig(h, Math.min(1, pits));
+    }
+    if (scratches) {
+      const h = new Float32Array(NN);
+      for (let i = 0; i < 70; i++) {
+        const x0 = rnd() * N, y0 = rnd() * N, ang = rnd() * Math.PI, len = 60 + rnd() * rnd() * 700, sig = 0.9 + rnd() * 0.9, d = -(0.3 + rnd());
+        const bend = (rnd() - 0.5) * 0.0015;
+        for (let t = 0; t < len; t += 0.5) { const a = ang + bend * t; splat(h, x0 + Math.cos(a) * t, y0 + Math.sin(a) * t, sig, d * Math.sin(Math.PI * t / len) ** 0.5 * 0.5); }
+      }
+      mix(h, scratches, 'peak'); dig(h, Math.min(1, scratches));
+    }
+    let m = 1e-9; for (let k = 0; k < NN; k++) m = Math.max(m, Math.abs(F[0][k]), Math.abs(F[1][k]));
+    const data = new Uint8Array(NN * 4);
+    for (let k = 0; k < NN; k++) { data[k * 4] = Math.round((F[0][k] / m * 0.5 + 0.5) * 255); data[k * 4 + 1] = Math.round((F[1][k] / m * 0.5 + 0.5) * 255); data[k * 4 + 2] = Math.round(Math.min(1, cav[k]) * 255); data[k * 4 + 3] = 255; }
+    const tex = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.colorSpace = THREE.NoColorSpace;
+    tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearMipmapLinearFilter; tex.generateMipmaps = true; tex.anisotropy = 8;
+    tex.needsUpdate = true; tex.userData.scale = m;    // multiply the stored value by this to get the mixed tilt
+    return tex;
+  }
+  return { ruggedSlopeMap };
+})();
+
+// ---- fitting and rendering
+
+const q = new URLSearchParams(location.search), num = (k, d) => +(q.get(k) ?? d);
+const TAG = q.get('tag') ?? 'n', M = num('m', 128), LAMBDA = num('lambda', 0.05), CGN = num('cg', 250);
+const RUG = num('rugged', 0), CAV = num('cavity', 0), ITERS = num('iters', 0), OUT_H = num('size', 1344), SEED = num('seed', 7);
+const FIX = JSON.parse(q.get('g') ?? '{}'), COV = num('cov', 0.15);
+const PPU = num('ppu', 8), W = 176 * PPU, H = 168 * PPU, NW = 128;
+const TPU = num('tpu', 1), TW = 176 * TPU, TH = 168 * TPU, TARN_IT = num('tarnish', 0), TSIG = num('tblur', 1.6);
+const DENT_IT = num('dents', 0), DMAX = num('dmax', 0.06), DSIG = num('dblur', 2), DGAIN = num('dgain', 0.6), DEPS = num('deps', 150);
+const GAIN = num('gain', 0.7), BORDER = num('border', 0), WARP = num('warp', 0), TMIN = num('tmin', 0.3), TMAX = num('tmax', 2), TSAT = num('tsat', 1);
+const tick = () => new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = r; c.port2.postMessage(0); });
+
+const nImg = await createImageBitmap(await (await fetch('native-128.png')).blob(), { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+const nc = new OffscreenCanvas(NW, NW); const nctx = nc.getContext('2d'); nctx.drawImage(nImg, 0, 0);
+const NAT = nctx.getImageData(0, 0, NW, NW).data;
+
+// ---- symmetric star (logo units) -> the lopsided source star -> native pixel
+const CX = 88, CY = 93.58, R = 88.92, KK = Math.cos(72 * Math.PI / 180) / Math.cos(36 * Math.PI / 180);
+const STAR = [...Array(10)].map((_, i) => { const r = R * (i % 2 ? KK : 1), a = (-90 + 36 * i) * Math.PI / 180; return [CX + r * Math.cos(a), CY + r * Math.sin(a)]; });
+const SRC = [[88, 5], [109.5, 64.75], [172.2, 65.8], [121.3, 105.5], [139.4, 166], [88, 128.5], [35.8, 163.5], [53.9, 105.8], [4.3, 66.2], [66.6, 64.75]], SC = [87.90, 93.58];
+const SECT = STAR.map((_, i) => {
+  const a = [STAR[i][0] - CX, STAR[i][1] - CY], b = [STAR[(i + 1) % 10][0] - CX, STAR[(i + 1) % 10][1] - CY];
+  return { a, b, det: a[0] * b[1] - a[1] * b[0], A: [SRC[i][0] - SC[0], SRC[i][1] - SC[1]], B: [SRC[(i + 1) % 10][0] - SC[0], SRC[(i + 1) % 10][1] - SC[1]] };
+});
+// source coordinates of every render pixel (fixed), then the native pixel for a given alignment
+// outline=native: the star is built with the original's own (slightly lopsided) outline, so a render
+// pixel's logo position IS its source position and no warp is needed
+// outline=regular: the symmetric logo star, placed straight onto the native grid (also no warp)
+const OUTL = q.get('outline'), NATIVE = OUTL === 'native' || OUTL === 'regular';
+const OL = OUTL === 'native' ? SRC.map(([x, y]) => new THREE.Vector2((x - 88) / 88.92, (93.58 - y) / 88.92)) : undefined;
+const srcXY = new Float32Array(W * H * 2);
+for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+  if (NATIVE) { srcXY[(j * W + i) * 2] = (i + 0.5) / PPU; srcXY[(j * W + i) * 2 + 1] = (j + 0.5) / PPU; continue; }
+  const dx = (i + 0.5) / PPU - CX, dy = (j + 0.5) / PPU - CY;
+  for (const s of SECT) {
+    const u = (dx * s.b[1] - dy * s.b[0]) / s.det, v = (s.a[0] * dy - s.a[1] * dx) / s.det;
+    if (u >= -1e-9 && v >= -1e-9) { srcXY[(j * W + i) * 2] = SC[0] + u * s.A[0] + v * s.B[0]; srcXY[(j * W + i) * 2 + 1] = SC[1] + u * s.A[1] + v * s.B[1]; break; }
+  }
+}
+const pIdx = new Int32Array(W * H), tot = new Float64Array(NW * NW);
+function align(AL) {
+  tot.fill(0);
+  for (let k = 0; k < W * H; k++) {
+    const X = Math.floor(AL.ox + srcXY[k * 2] / AL.s), Y = Math.floor(AL.oy + srcXY[k * 2 + 1] / AL.s);
+    if (X >= 0 && Y >= 0 && X < NW && Y < NW) { pIdx[k] = Y * NW + X; tot[Y * NW + X]++; } else pIdx[k] = -1;
+  }
+}
+
+// ---- renderer and the one material (mode 0: matcap coordinate; 1: colour; 2: object xy)
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.toneMapping = THREE.NoToneMapping; renderer.setClearColor(0x000000, 0);
+document.body.appendChild(renderer.domElement);
+const cam = camera();
+const nm = ruggedSlopeMap({ seed: SEED, N: num('tex', 2048), brushed: num('wb', 1), mottle: num('wm', 1), pits: num('wp', 1), scratches: num('ws', 1) });
+const capBytes = new Uint8Array(M * M * 4).fill(255);
+const capTex = new THREE.DataTexture(capBytes, M, M, THREE.RGBAFormat);
+capTex.colorSpace = THREE.NoColorSpace; capTex.magFilter = capTex.minFilter = THREE.LinearFilter; capTex.needsUpdate = true;
+const tarnBytes = new Uint8Array(TW * TH * 4).fill(128);
+const tarnTex = new THREE.DataTexture(tarnBytes, TW, TH, THREE.RGBAFormat);
+tarnTex.colorSpace = THREE.NoColorSpace; tarnTex.magFilter = tarnTex.minFilter = THREE.LinearFilter; tarnTex.needsUpdate = true;
+const dentBytes = new Uint8Array(TW * TH * 4).fill(128);
+const dentTex = new THREE.DataTexture(dentBytes, TW, TH, THREE.RGBAFormat);
+dentTex.colorSpace = THREE.NoColorSpace; dentTex.magFilter = dentTex.minFilter = THREE.LinearFilter; dentTex.needsUpdate = true;
+const mat = new THREE.ShaderMaterial({
+  uniforms: { mode: { value: 0 }, cap: { value: capTex }, nm: { value: nm }, rug: { value: RUG * nm.userData.scale }, cav: { value: CAV }, warp: { value: WARP }, tarn: { value: tarnTex }, dent: { value: dentTex }, dmax: { value: DMAX }, smear: { value: num('smear', 0) }, bevclean: { value: num('bevclean', 0) }, gt: { value: new THREE.Vector2() } },
+  vertexShader: `attribute vec2 guv; attribute vec3 gdir; varying vec3 vN; varying vec3 vV; varying vec2 vUv; varying vec2 vG; varying vec3 vD;
+    void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = -mv.xyz; vUv = uv; vG = guv; vD = gdir; gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `uniform int mode; uniform sampler2D cap; uniform sampler2D nm; uniform sampler2D tarn; uniform float rug; uniform float cav; uniform float warp; uniform sampler2D dent; uniform float dmax; uniform vec2 gt; uniform float smear;
+    varying vec3 vN; varying vec3 vV; varying vec2 vUv; varying vec2 vG; varying vec3 vD; uniform float bevclean;
+    void main(){ vec3 n = normalize(vN);
+      vec2 puv = vec2((88.0 + vUv.x * 88.92) / 176.0, (93.58 - vUv.y * 88.92) / 168.0);
+      // shallow dents: a smooth extra tilt of the surface (plus gt, a probe used while fitting)
+      n = normalize(n + vec3((texture2D(dent, puv).xy * 2.0 - 1.0) * dmax * (255.0 / 254.0) * (1.0 - vD.z) + gt, 0.0));   // dents on the face only
+      vec3 t = texture2D(nm, vG * 0.5 + 0.5).xyz;
+      vec2 gd = normalize(vD.xy), sl = t.xy * 2.0 - 1.0, tilt = sl.x * gd + sl.y * vec2(-gd.y, gd.x);   // the slope, turned to the grain direction
+      if (rug > 0.0) n = normalize(n + rug * vec3(tilt, 0.0));
+      vec3 d = normalize(vV); vec3 x = normalize(vec3(d.z, 0.0, -d.x)); vec3 y = cross(d, x);
+      vec2 uv = vec2(dot(x, n), dot(y, n)) * 0.495 + 0.5;
+      // the tarnish is looked up a little way along the local tilt, so its patches get ragged, brushed edges
+      vec2 tuv = vec2((88.0 + vUv.x * 88.92 + warp * tilt.x) / 176.0, (93.58 - vUv.y * 88.92 - warp * tilt.y) / 168.0);
+      vec3 tv = texture2D(tarn, tuv).rgb;
+      if (vD.z > 0.5 && smear > 0.0) {      // on a bevel, average the tarnish along the edge: gradual variation, not dabs
+        vec2 e = vec2(gd.x / 176.0, -gd.y / 168.0) * smear;
+        tv = (tv + texture2D(tarn, tuv + e).rgb + texture2D(tarn, tuv - e).rgb + texture2D(tarn, tuv + 2.0 * e).rgb + texture2D(tarn, tuv - 2.0 * e).rgb) / 5.0;
+      }
+      if (mode == 0) gl_FragColor = vec4(uv, 0.0, 1.0);
+      else if (mode == 2) gl_FragColor = vec4(tuv, 0.0, 1.0);
+      else if (mode == 3) gl_FragColor = vec4(puv, 0.0, 1.0);
+      else if (mode == 4) gl_FragColor = vec4(gd, vD.z, 1.0);
+      else gl_FragColor = vec4(min(vec3(1.0), texture2D(cap, uv).rgb * mix(tv * (255.0 / 127.5), vec3(1.0), bevclean * vD.z) * (1.0 - cav * t.z)), 1.0); }`,
+});
+const rt = new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType });
+const uvBuf = new Float32Array(W * H * 4);
+const scene = new THREE.Scene();
+function build(G) {
+  for (const o of [...scene.children]) { scene.remove(o); o.geometry.dispose(); }
+  const g = starGeometry2({ ...DEFAULTS2, ...G, outline: OL });
+  scene.add(new THREE.Mesh(g.face, mat), new THREE.Mesh(g.bevel, mat));
+}
+
+/** Solve the matcap for parameters G (shape + alignment). Rows are native pixels; a row's weight is how much of the pixel both stars cover. */
+function fit(G) {
+  align(G); build(G);
+  mat.uniforms.mode.value = 0;
+  renderer.setRenderTarget(rt); renderer.render(scene, cam);
+  renderer.readRenderTargetPixels(rt, 0, 0, W, H, uvBuf);   // bottom-up rows
+  renderer.setRenderTarget(null);
+  const maps = new Map(), inside = new Float64Array(NW * NW);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const p = pIdx[j * W + i]; if (p < 0) continue;
+    const r = ((H - 1 - j) * W + i) * 4; if (uvBuf[r + 3] < 0.5) continue;
+    inside[p]++;
+    let m = maps.get(p); if (!m) maps.set(p, m = new Map());
+    const fx = Math.min(M - 1, Math.max(0, uvBuf[r] * M - 0.5)), fy = Math.min(M - 1, Math.max(0, uvBuf[r + 1] * M - 0.5));
+    const x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(M - 1, x0 + 1), y1 = Math.min(M - 1, y0 + 1), tx = fx - x0, ty = fy - y0;
+    const add = (k, w) => { if (w > 0) m.set(k, (m.get(k) ?? 0) + w); };
+    add(y0 * M + x0, (1 - tx) * (1 - ty)); add(y0 * M + x1, tx * (1 - ty)); add(y1 * M + x0, (1 - tx) * ty); add(y1 * M + x1, tx * ty);
+  }
+  const rp = [], rk = [], rw = [], rowW = [], rowT = [], rowStart = [0];
+  let shapeErr = 0, shapeN = 0;      // how well the outlines agree: our coverage against the native alpha
+  for (let p = 0; p < NW * NW; p++) if (inside[p] > 0) { const c = inside[p] / tot[p], a = NAT[p * 4 + 3] / 255; shapeErr += (c - a) ** 2; shapeN++; }   // pixels our star touches (keeps the wings out of it)
+  for (const [p, m] of maps) {
+    const cov = inside[p] / tot[p], w = Math.min(cov, NAT[p * 4 + 3] / 255);
+    if (w < COV) continue;
+    for (const [k, v] of m) { rk.push(k); rw.push(v / inside[p]); }
+    rowStart.push(rk.length); rp.push(p); rowW.push(w); rowT.push([NAT[p * 4], NAT[p * 4 + 1], NAT[p * 4 + 2]]);
+  }
+  const NR = rp.length, N = M * M;
+  const Ax = (x, out) => { for (let r = 0; r < NR; r++) { let s = 0; for (let e = rowStart[r]; e < rowStart[r + 1]; e++) s += rw[e] * x[rk[e]]; out[r] = s; } };
+  const op = (x, out) => {
+    const t = new Float64Array(NR); Ax(x, t); out.fill(0);
+    for (let r = 0; r < NR; r++) { const v = t[r] * rowW[r]; for (let e = rowStart[r]; e < rowStart[r + 1]; e++) out[rk[e]] += rw[e] * v; }
+    for (let y = 0; y < M; y++) for (let xx = 0; xx < M; xx++) {
+      const k = y * M + xx; let l = 0;
+      if (xx > 0) l += x[k] - x[k - 1]; if (xx < M - 1) l += x[k] - x[k + 1]; if (y > 0) l += x[k] - x[k - M]; if (y < M - 1) l += x[k] - x[k + M];
+      out[k] += LAMBDA * l + 1e-7 * x[k];
+    }
+  };
+  const cap = new Float32Array(N * 3); let se = 0, sw = 0;
+  for (let c = 0; c < 3; c++) {
+    const b = new Float64Array(N); let mean = 0;
+    for (let r = 0; r < NR; r++) { mean += rowT[r][c] / NR; const v = rowT[r][c] * rowW[r]; for (let e = rowStart[r]; e < rowStart[r + 1]; e++) b[rk[e]] += rw[e] * v; }
+    const x = new Float64Array(N).fill(mean), res = new Float64Array(N), d = new Float64Array(N), Ad = new Float64Array(N);
+    op(x, Ad); let rr = 0; for (let k = 0; k < N; k++) { res[k] = b[k] - Ad[k]; d[k] = res[k]; rr += res[k] * res[k]; }
+    for (let it = 0; it < CGN && rr > 1e-9; it++) {
+      op(d, Ad); let dAd = 0; for (let k = 0; k < N; k++) dAd += d[k] * Ad[k];
+      const al = rr / dAd; let rr2 = 0;
+      for (let k = 0; k < N; k++) { x[k] += al * d[k]; res[k] -= al * Ad[k]; rr2 += res[k] * res[k]; }
+      const be = rr2 / rr; rr = rr2; for (let k = 0; k < N; k++) d[k] = res[k] + be * d[k];
+    }
+    for (let k = 0; k < N; k++) cap[k * 3 + c] = Math.min(255, Math.max(0, x[k]));
+    const xc = Float64Array.from({ length: N }, (_, k) => cap[k * 3 + c]), t = new Float64Array(NR); Ax(xc, t);
+    for (let r = 0; r < NR; r++) { se += rowW[r] * (t[r] - rowT[r][c]) ** 2; sw += rowW[r]; }
+  }
+  const rmse = Math.sqrt(se / sw), shape = Math.sqrt(shapeErr / shapeN);
+  return { rmse, shape, score: rmse + num('kshape', 25) * shape, cap, rows: NR, rp, rowW, rowT };
+}
+
+// ---- optional search over the shape and the alignment
+const ALL = [['bevel', 0.03, 0.09], ['rise', 0.01, 0.08], ['dome', 0.06, 0.3], ['round', 0, 1], ['s', 3.8, 4.15], ['ox', 39.8, 41.8], ['oy', 8.8, 11.0]];
+for (const [k, r] of Object.entries(JSON.parse(q.get('bounds') ?? '{}'))) { const e = ALL.find((x) => x[0] === k); e[1] = r[0]; e[2] = r[1]; }   // optional tighter search limits
+const BASE = { ...DEFAULTS2, s: 4.02, ox: 41.0, oy: 10.3, ...JSON.parse(q.get('start') ?? '{}') };   // start: where a search begins
+const SPACE = ALL.filter(([k]) => !(k in FIX) && (q.get('search') ?? 'bevel,rise,dome,round,s,ox,oy').split(',').includes(k));
+const toG = (v) => ({ ...BASE, ...FIX, ...Object.fromEntries(SPACE.map(([k, lo, hi], i) => [k, lo + v[i] * (hi - lo)])) });
+let x = SPACE.map(([k, lo, hi]) => (({ ...BASE, ...FIX })[k] - lo) / (hi - lo));
+let f = fit(toG(x)); let best = f.score; const start = { rmse: f.rmse, shape: f.shape };
+let s = 99; const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
+let sigma = 0.12, wins = 0;
+for (let it = 1; it <= ITERS; it++) {
+  const y = x.map((v) => (rnd() < 0.6 ? Math.min(1, Math.max(0, v + sigma * gauss())) : v));
+  const r = fit(toG(y));
+  if (r.score < best) { best = r.score; x = y; f = r; wins++; }
+  if (it % 5 === 0) { sigma = Math.min(0.3, Math.max(0.01, sigma * (wins / 5 > 0.2 ? 1.3 : 0.8))); wins = 0; }
+  document.title = `it ${it} rmse ${f.rmse.toFixed(2)} shape ${f.shape.toFixed(3)}`; await tick();
+}
+const G = toG(x);
+if (ITERS > 0) f = fit(G);
+
+for (let k = 0; k < M * M; k++) for (let c = 0; c < 3; c++) capBytes[k * 4 + c] = Math.round(f.cap[k * 3 + c]);
+capTex.needsUpdate = true;
+{
+  const cc = new OffscreenCanvas(M, M), cx = cc.getContext('2d'), im = cx.createImageData(M, M);
+  for (let y = 0; y < M; y++) for (let xx = 0; xx < M; xx++) for (let c = 0; c < 4; c++) im.data[(y * M + xx) * 4 + c] = capBytes[((M - 1 - y) * M + xx) * 4 + c];
+  cx.putImageData(im, 0, 0);
+  await fetch(`/save?name=${TAG}-matcap.png`, { method: 'POST', body: await cc.convertToBlob({ type: 'image/png' }) });
+}
+
+// ---- dents: for each native pixel, tilt the surface the way that moves its brightness toward the
+// original (found by probing: render with a small global tilt in x, then in y), then smooth.
+const dentHist = [];
+if (DENT_IT > 0) {
+  const rt8 = new THREE.WebGLRenderTarget(W, H), pix = new Uint8Array(W * H * 4);
+  mat.uniforms.mode.value = 3; renderer.setRenderTarget(rt); renderer.render(scene, cam);
+  renderer.readRenderTargetPixels(rt, 0, 0, W, H, uvBuf); renderer.setRenderTarget(null);
+  const tg = new Int32Array(W * H).fill(-1);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const r = ((H - 1 - j) * W + i) * 4; if (uvBuf[r + 3] < 0.5) continue;
+    tg[j * W + i] = Math.min(TH - 1, Math.max(0, Math.floor(uvBuf[r + 1] * TH))) * TW + Math.min(TW - 1, Math.max(0, Math.floor(uvBuf[r] * TW)));
+  }
+  const NR = f.rp.length, rowOf = new Int32Array(NW * NW).fill(-1); f.rp.forEach((p, r) => { rowOf[p] = r; });
+  const Lt = Float64Array.from(f.rowT, (t) => (t[0] + t[1] + t[2]) / 3);
+  const rows = (gx, gy) => {
+    mat.uniforms.gt.value.set(gx, gy); mat.uniforms.mode.value = 1;
+    renderer.setRenderTarget(rt8); renderer.render(scene, cam); renderer.readRenderTargetPixels(rt8, 0, 0, W, H, pix); renderer.setRenderTarget(null);
+    const sum = new Float64Array(NR), n = new Float64Array(NR);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const p = pIdx[j * W + i]; if (p < 0) continue; const r = rowOf[p]; if (r < 0) continue;
+      const o = ((H - 1 - j) * W + i) * 4; if (pix[o + 3] < 128) continue;
+      n[r]++; sum[r] += (pix[o] + pix[o + 1] + pix[o + 2]) / 3;
+    }
+    for (let r = 0; r < NR; r++) sum[r] /= Math.max(1, n[r]);
+    return sum;
+  };
+  const rad = Math.ceil(3 * DSIG), ker = [...Array(2 * rad + 1)].map((_, k) => Math.exp(-((k - rad) ** 2) / (2 * DSIG * DSIG)));
+  const blur = (a, ch) => {
+    const t = new Float64Array(a.length), o = new Float64Array(a.length);
+    for (let y = 0; y < TH; y++) for (let xx = 0; xx < TW; xx++) for (let c = 0; c < ch; c++) { let v = 0; for (let k = -rad; k <= rad; k++) { const X = xx + k; if (X >= 0 && X < TW) v += ker[k + rad] * a[(y * TW + X) * ch + c]; } t[(y * TW + xx) * ch + c] = v; }
+    for (let y = 0; y < TH; y++) for (let xx = 0; xx < TW; xx++) for (let c = 0; c < ch; c++) { let v = 0; for (let k = -rad; k <= rad; k++) { const Y = y + k; if (Y >= 0 && Y < TH) v += ker[k + rad] * t[(Y * TW + xx) * ch + c]; } o[(y * TW + xx) * ch + c] = v; }
+    return o;
+  };
+  const UD = new Float64Array(TW * TH * 2), DN = new Float64Array(TW * TH * 2), PROBE = 0.012;
+  for (let it = 0; it <= DENT_IT; it++) {
+    for (let k = 0; k < TW * TH; k++) { dentBytes[k * 4] = Math.round(127 + 127 * DN[k * 2] / DMAX); dentBytes[k * 4 + 1] = Math.round(127 + 127 * DN[k * 2 + 1] / DMAX); }
+    dentTex.needsUpdate = true;
+    const L0 = rows(0, 0);
+    let se = 0, sw = 0; for (let r = 0; r < NR; r++) { se += f.rowW[r] * (L0[r] - Lt[r]) ** 2; sw += f.rowW[r]; }
+    dentHist.push(+Math.sqrt(se / sw).toFixed(2));
+    if (it === DENT_IT) break;
+    const Lx = rows(PROBE, 0), Ly = rows(0, PROBE), step = new Float64Array(NR * 2);
+    for (let r = 0; r < NR; r++) {
+      const gx = (Lx[r] - L0[r]) / PROBE, gy = (Ly[r] - L0[r]) / PROBE, k = (Lt[r] - L0[r]) / (gx * gx + gy * gy + DEPS * DEPS);
+      step[r * 2] = Math.min(0.03, Math.max(-0.03, k * gx)); step[r * 2 + 1] = Math.min(0.03, Math.max(-0.03, k * gy));
+    }
+    const acc = new Float64Array(TW * TH * 2), cnt = new Float64Array(TW * TH);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const t = tg[j * W + i]; if (t < 0) continue; const p = pIdx[j * W + i], r = p < 0 ? -1 : rowOf[p];
+      cnt[t]++; if (r >= 0) { acc[t * 2] += step[r * 2]; acc[t * 2 + 1] += step[r * 2 + 1]; }
+    }
+    const wc = new Float64Array(TW * TH);
+    for (let t = 0; t < TW * TH; t++) if (cnt[t] > 0) { wc[t] = 1; UD[t * 2] += DGAIN * acc[t * 2] / cnt[t]; UD[t * 2 + 1] += DGAIN * acc[t * 2 + 1] / cnt[t]; }
+    const bs = blur(UD, 2), bc = blur(wc, 1);
+    for (let t = 0; t < TW * TH; t++) for (let c = 0; c < 2; c++) DN[t * 2 + c] = bc[t] > 1e-3 ? Math.min(DMAX, Math.max(-DMAX, bs[t * 2 + c] / bc[t])) : 0;
+    document.title = `dents ${it} lum rmse ${dentHist[it]}`; await tick();
+  }
+  mat.uniforms.gt.value.set(0, 0);
+}
+
+// ---- tarnish by iterative back-projection: render, shrink to native pixels, compare, correct
+let tarnRmse = null; const hist = [];
+if (TARN_IT > 0) {
+  const rt8 = new THREE.WebGLRenderTarget(W, H), pix = new Uint8Array(W * H * 4);
+  mat.uniforms.mode.value = 2; renderer.setRenderTarget(rt); renderer.render(scene, cam);
+  renderer.readRenderTargetPixels(rt, 0, 0, W, H, uvBuf); renderer.setRenderTarget(null);
+  const tg = new Int32Array(W * H).fill(-1);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const r = ((H - 1 - j) * W + i) * 4; if (uvBuf[r + 3] < 0.5) continue;
+    const tx = Math.min(TW - 1, Math.max(0, Math.floor(uvBuf[r] * TW))), ty = Math.min(TH - 1, Math.max(0, Math.floor(uvBuf[r + 1] * TH)));
+    tg[j * W + i] = ty * TW + tx;
+  }
+  // with bevel smoothing on, a bevel pixel reads five texels along its edge: corrections must go to all five
+  const SMEAR = num('smear', 0); let taps = null;
+  if (SMEAR > 0) {
+    const eb = new Float32Array(W * H * 4);
+    mat.uniforms.mode.value = 4; renderer.setRenderTarget(rt); renderer.render(scene, cam);
+    renderer.readRenderTargetPixels(rt, 0, 0, W, H, eb); renderer.setRenderTarget(null);
+    taps = new Int32Array(W * H * 4).fill(-1);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const r = ((H - 1 - j) * W + i) * 4; if (tg[j * W + i] < 0 || eb[r + 2] < 0.5) continue;
+      const ex = eb[r] / 176 * SMEAR, ey = -eb[r + 1] / 168 * SMEAR;
+      [1, -1, 2, -2].forEach((k, n) => {
+        const tx = Math.min(TW - 1, Math.max(0, Math.floor((uvBuf[r] + k * ex) * TW))), ty = Math.min(TH - 1, Math.max(0, Math.floor((uvBuf[r + 1] + k * ey) * TH)));
+        taps[(j * W + i) * 4 + n] = ty * TW + tx;
+      });
+    }
+  }
+  const NR = f.rp.length, rowOf = new Int32Array(NW * NW).fill(-1); f.rp.forEach((p, r) => { rowOf[p] = r; });
+  const TG = new Float64Array(TW * TH * 3).fill(1), U = new Float64Array(TW * TH * 3).fill(1);
+  const rad = Math.ceil(3 * TSIG), ker = [...Array(2 * rad + 1)].map((_, k) => Math.exp(-((k - rad) ** 2) / (2 * TSIG * TSIG)));
+  const blur = (a, ch, w, h) => {
+    const t = new Float64Array(a.length), o = new Float64Array(a.length);
+    for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) for (let c = 0; c < ch; c++) { let v = 0; for (let k = -rad; k <= rad; k++) { const X = xx + k; if (X >= 0 && X < w) v += ker[k + rad] * a[(y * w + X) * ch + c]; } t[(y * w + xx) * ch + c] = v; }
+    for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) for (let c = 0; c < ch; c++) { let v = 0; for (let k = -rad; k <= rad; k++) { const Y = y + k; if (Y >= 0 && Y < h) v += ker[k + rad] * t[(Y * w + xx) * ch + c]; } o[(y * w + xx) * ch + c] = v; }
+    return o;
+  };
+  for (let it = 0; it <= TARN_IT; it++) {
+    for (let k = 0; k < TW * TH; k++) for (let c = 0; c < 3; c++) tarnBytes[k * 4 + c] = Math.min(255, Math.max(0, Math.round(TG[k * 3 + c] * 127.5)));
+    tarnTex.needsUpdate = true;
+    mat.uniforms.mode.value = 1; renderer.setRenderTarget(rt8); renderer.render(scene, cam);
+    renderer.readRenderTargetPixels(rt8, 0, 0, W, H, pix); renderer.setRenderTarget(null);
+    const sum = new Float64Array(NR * 3), n = new Float64Array(NR);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const p = pIdx[j * W + i]; if (p < 0) continue; const r = rowOf[p]; if (r < 0) continue;
+      const o = ((H - 1 - j) * W + i) * 4; if (pix[o + 3] < 128) continue;
+      n[r]++; for (let c = 0; c < 3; c++) sum[r * 3 + c] += pix[o + c];
+    }
+    let se = 0, sw = 0, si = 0, ni = 0; const qv = new Float64Array(NR * 3);
+    for (let r = 0; r < NR; r++) for (let c = 0; c < 3; c++) {
+      const m = sum[r * 3 + c] / Math.max(1, n[r]); se += f.rowW[r] * (m - f.rowT[r][c]) ** 2; sw += f.rowW[r];
+      if (f.rowW[r] > 0.95) { si += (m - f.rowT[r][c]) ** 2; ni++; }
+      qv[r * 3 + c] = Math.min(1.8, Math.max(0.5, (f.rowT[r][c] + 2) / (m + 2)));
+    }
+    tarnRmse = Math.sqrt(se / sw); hist.push(+tarnRmse.toFixed(2)); window.__interior = { rmse: Math.sqrt(si / ni), px: ni / 3 };
+    if (it === TARN_IT) break;
+    const upd = new Float64Array(TW * TH * 3), cnt = new Float64Array(TW * TH);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const t = tg[j * W + i]; if (t < 0) continue; const p = pIdx[j * W + i], r = p < 0 ? -1 : rowOf[p], k4 = (j * W + i) * 4;
+      const add = (tt, w) => { cnt[tt] += w; for (let c = 0; c < 3; c++) upd[tt * 3 + c] += w * (r < 0 ? 1 : qv[r * 3 + c]); };
+      if (taps && taps[k4] >= 0) { add(t, 0.2); for (let n = 0; n < 4; n++) add(taps[k4 + n], 0.2); } else add(t, 1);
+    }
+    const wsum = new Float64Array(TW * TH * 3), wcnt = new Float64Array(TW * TH);
+    for (let t = 0; t < TW * TH; t++) if (cnt[t] > 0) { wcnt[t] = 1; for (let c = 0; c < 3; c++) wsum[t * 3 + c] = U[t * 3 + c] = Math.min(5, Math.max(0.08, U[t * 3 + c] * (upd[t * 3 + c] / cnt[t]) ** GAIN)); }
+    const bs = blur(wsum, 3, TW, TH), bc = blur(wcnt, 1, TW, TH);
+    // limits keep the tarnish a tarnish: bounded strength, and mostly a change of brightness, not of hue
+    for (let t = 0; t < TW * TH; t++) {
+      if (bc[t] <= 1e-3) { TG[t * 3] = TG[t * 3 + 1] = TG[t * 3 + 2] = 1; continue; }
+      const v = [0, 1, 2].map((c) => bs[t * 3 + c] / bc[t]), lum = (v[0] + v[1] + v[2]) / 3;
+      for (let c = 0; c < 3; c++) TG[t * 3 + c] = Math.min(TMAX, Math.max(TMIN, lum + TSAT * (v[c] - lum)));
+    }
+    document.title = `tarnish ${it} rmse ${tarnRmse.toFixed(2)}`; await tick();
+  }
+}
+mat.uniforms.mode.value = 1;
+if (BORDER > 0) {
+  const plate = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(inset(OUTLINE, -BORDER / 88.92))), new THREE.MeshBasicMaterial({ color: 0x0b0d11, side: THREE.DoubleSide }));
+  plate.position.z = -0.03; scene.add(plate);
+}
+renderer.setSize(Math.round(OUT_H * 176 / 168), OUT_H);
+renderer.render(scene, cam);
+await fetch(`/save?name=${TAG}-render.png`, { method: 'POST', body: await new Promise((r) => renderer.domElement.toBlob(r, 'image/png')) });
+window.__result = { dentHist, G, rmse: f.rmse, shape: f.shape, tarnRmse, interior: window.__interior, hist, start, rows: f.rows };
+document.title = `done rmse ${f.rmse.toFixed(2)} tarnished ${tarnRmse?.toFixed(2)} shape ${f.shape.toFixed(3)} rows ${f.rows}`;
+</script>
