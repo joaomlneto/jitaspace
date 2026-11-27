@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/is-bot.js";
 import { withCache } from "@mrjasonroy/cache-components-cache-handler";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { withBotId } from "botid/next/config";
 import { createJiti } from "jiti";
 
