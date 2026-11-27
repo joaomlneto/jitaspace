@@ -1,6 +1,8 @@
 import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/is-bot.js";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withCache } from "@mrjasonroy/cache-components-cache-handler";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { withBotId } from "botid/next/config";
 import { createJiti } from "jiti";
 
@@ -378,11 +380,41 @@ function getModifiedDate() {
   return new Date().toISOString();
 }
 
+/**
+ * Shares the page cache and tag revalidations between several copies of the
+ * server, through a Redis of the cache's own (`NEXT_CACHE_REDIS_URL`).
+ *
+ * Without it each copy keeps its own cache, so `/api/revalidate/*` reaches only
+ * the copy that received the call and the others serve the old pages until
+ * they expire, up to 30 days for SDE data.
+ *
+ * Off on Vercel, which shares its cache itself, and wherever the variable is
+ * unset: a single self-hosted server keeps Next's own cache, on its disk. Set
+ * the variable for the build as well as the server. The build never connects
+ * to Redis, but it records when it ran, which is what lets the servers serve
+ * the pages it prerendered instead of rendering each one again.
+ */
+const sharedCache = !process.env.VERCEL && !!process.env.NEXT_CACHE_REDIS_URL;
+/** @param {"page" | "default" | "remote"} name */
+const cacheHandlerPath = (name) =>
+  fileURLToPath(new URL(`./cache/${name}.mjs`, import.meta.url));
+/** @param {import("next").NextConfig} nextConfig */
+const withSharedCache = (nextConfig) =>
+  sharedCache
+    ? withCache(nextConfig, {
+        handlers: {
+          page: cacheHandlerPath("page"),
+          default: cacheHandlerPath("default"),
+          remote: cacheHandlerPath("remote"),
+        },
+      })
+    : nextConfig;
+
 // `withBotId` injects the rewrites that proxy BotID's challenge script through
 // our own origin, so ad-blockers and third-party script blockers can't defeat
 // it. It wraps the Sentry-wrapped config (outermost) so its rewrites survive.
 export default withBotId(
-  withSentryConfig(config, {
+  withSentryConfig(withSharedCache(config), {
     // For all available options, see:
     // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
